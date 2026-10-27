@@ -77,6 +77,11 @@ private:
   int prepare_next_char();
 
   ObCollationType coll_type_;
+  // Resolved once per tokenize call: resolving them per character showed up as
+  // a measurable part of the tokenizer hot path (ObCharset::get_charset and
+  // ObCharset::charset_type_by_coll were called for every input character).
+  const ObCharsetInfo *cs_;
+  ObCharsetType cs_type_;
   const char *fulltext_;
   int64_t fulltext_len_;
 
