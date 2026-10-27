@@ -81,17 +81,27 @@ int ObAiModelEndpointInfo::deep_copy(
   int ret = OB_SUCCESS;
   reset();
   endpoint_id_ = other.endpoint_id_;
-  if (OB_FAIL(ob_write_string(allocator, other.name_, name_))) {
-  } else if (OB_FAIL(ob_write_string(allocator, other.scope_, scope_))) {
-  } else if (OB_FAIL(ob_write_string(allocator, other.ai_model_name_, ai_model_name_))) {
-  } else if (OB_FAIL(ob_write_string(allocator, other.url_, url_))) {
-  } else if (OB_FAIL(ob_write_string(allocator, other.access_key_, access_key_))) {
-  } else if (OB_FAIL(ob_write_string(allocator, other.provider_, provider_))) {
-  } else if (OB_FAIL(ob_write_string(allocator, other.request_model_name_, request_model_name_))) {
-  } else if (OB_FAIL(ob_write_string(allocator, other.parameters_, parameters_))) {
-  } else if (OB_FAIL(ob_write_string(allocator, other.request_transform_fn_, request_transform_fn_))) {
-  } else if (OB_FAIL(ob_write_string(allocator, other.response_transform_fn_, response_transform_fn_))) {
-  }
+  // Optional fields (e.g. access_key for local providers) may be unset in the
+  // catalog, a null ObString can not be copied by ob_write_string.
+#define OB_AI_ENDPOINT_COPY_STR(field)                                        \
+  do {                                                                        \
+    if (other.field.empty()) {                                                \
+      field = ObString(0, "");                                                \
+    } else if (OB_FAIL(ob_write_string(allocator, other.field, field))) {     \
+      LOG_WARN("failed to copy endpoint field", K(ret));                      \
+    }                                                                         \
+  } while (0)
+  OB_AI_ENDPOINT_COPY_STR(name_);
+  OB_AI_ENDPOINT_COPY_STR(scope_);
+  OB_AI_ENDPOINT_COPY_STR(ai_model_name_);
+  OB_AI_ENDPOINT_COPY_STR(url_);
+  OB_AI_ENDPOINT_COPY_STR(access_key_);
+  OB_AI_ENDPOINT_COPY_STR(provider_);
+  OB_AI_ENDPOINT_COPY_STR(request_model_name_);
+  OB_AI_ENDPOINT_COPY_STR(parameters_);
+  OB_AI_ENDPOINT_COPY_STR(request_transform_fn_);
+  OB_AI_ENDPOINT_COPY_STR(response_transform_fn_);
+#undef OB_AI_ENDPOINT_COPY_STR
   return ret;
 }
 
@@ -200,7 +210,11 @@ int ObAiModelEndpointInfo::encrypt_access_key_(ObIAllocator &allocator, const Ob
 int ObAiModelEndpointInfo::decrypt_access_key_(ObIAllocator &allocator, const ObString &encrypted_access_key, ObString &unencrypted_access_key) const
 {
   int ret = OB_SUCCESS;
-  if (OB_FAIL(ob_write_string(allocator, encrypted_access_key, unencrypted_access_key))) {
+  if (encrypted_access_key.empty()) {
+    // local providers (e.g. ollama) are registered without an access key, and
+    // altering an endpoint may leave the access key unset.
+    unencrypted_access_key.reset();
+  } else if (OB_FAIL(ob_write_string(allocator, encrypted_access_key, unencrypted_access_key))) {
   }
   return ret;
 }
