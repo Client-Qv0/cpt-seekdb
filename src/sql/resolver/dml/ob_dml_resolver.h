@@ -63,6 +63,10 @@ struct ResolverJoinInfo {
                K_(coalesce_expr));
 };
 
+// defined in sql/engine/basic/file/ob_file_type_infer.h, forward declared here to
+// keep this widely included header free of the file reader headers.
+enum ObFileColumnType : uint8_t;
+
 struct ObDmlJtColDef
 {
   ObDmlJtColDef()
@@ -211,7 +215,25 @@ public:
   int resolve_file_scan_table_item(const ParseNode &table_node, TableItem *&table_item);
   int resolve_file_scan_const_arg(const ParseNode &arg_node, ObObjParam &val);
   int resolve_file_scan_path(const ParseNode &path_node, ObString &path);
-  int resolve_file_scan_option(const ParseNode &option_node);
+  int resolve_file_scan_option(const ParseNode &option_node, bool &header);
+  // M1b: read the whole csv file through ObFileCsvReader and materialize it into
+  // an ObValuesTableDef (ACCESS_OBJ), so that the existing values table access
+  // operator can be reused without any new physical operator.
+  int resolve_file_scan_values_table(const ObString &path,
+                                     const bool header,
+                                     ObValuesTableDef &table_def,
+                                     ObIArray<ObString> &column_names);
+  int resolve_file_scan_column_type(const ObFileColumnType column_type,
+                                    const int64_t max_length,
+                                    ObRawExprResType &res_type);
+  int resolve_file_scan_cell(const ObString &cell,
+                             const bool is_null,
+                             const ObFileColumnType column_type,
+                             ObObjParam &obj_param);
+  int gen_file_scan_column_items(const ObIArray<ObString> &column_names,
+                                 const ObIArray<ObRawExprResType> &res_types,
+                                 TableItem &table_item);
+  int check_file_scan_path(ObString &path);
   int create_unnest_table_item(TableItem *&table_item, ObString table_name);
   int unnest_table_add_column(TableItem *&table_item, ColumnItem *&col_item, ObString col_name);
   int resolve_hybrid_search_item(const ParseNode &parse_tree, TableItem *&table_item);

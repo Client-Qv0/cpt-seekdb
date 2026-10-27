@@ -335,6 +335,13 @@ bool ObSqlParameterization::is_tree_not_param(const ParseNode *tree)
     ret_bool = true;
   } else if (T_EXTERNAL_FILE_FORMAT == tree->type_) {
     ret_bool = true;
+  } else if (T_FILE_SCAN_EXPRESSION == tree->type_) {
+    // read_csv('path'[, options]) is materialized into a constant values table at
+    // resolve time, the path and the options decide the content of that table and
+    // can not be re-bound at execution time.  Keep the whole node literal, otherwise
+    // two statements that differ only in the file share one plan cache entry and
+    // the later one returns the data of the first file.
+    ret_bool = true;
   } else if (T_CHAR_CHARSET == tree->type_) {
     ret_bool = true;
   } else if (T_WIN_NAMED_WINDOWS == tree->type_) {//name window cannot be parameterized because the order of parameterization cannot be guaranteed
