@@ -497,7 +497,7 @@ END_P SET_VAR DELIMITER
 %type <node> dynamic_sampling_hint
 %type <node> skip_index_type opt_skip_index_type_list
 %type <node> vec_index_params vec_index_param vec_index_param_value opt_with_vector_index_parameters
-%type <node> json_table_expr unnest_expr mock_jt_on_error_on_empty jt_column_list json_table_column_def
+%type <node> json_table_expr unnest_expr file_scan_expr mock_jt_on_error_on_empty jt_column_list json_table_column_def
 %type <node> json_table_ordinality_column_def json_table_exists_column_def json_table_value_column_def json_table_nested_column_def
 %type <node> opt_value_on_empty_or_error_or_mismatch opt_on_mismatch
 %type <node> table_values_clause table_values_clause_with_order_by_and_limit values_row_list row_value
@@ -10847,6 +10847,35 @@ tbl_name
 | hybrid_search_expr
 {
   $$ = $1;
+}
+| file_scan_expr
+{
+  $$ = $1;
+}
+;
+
+/*
+  File scan table function, e.g.:
+    FROM read_csv('path')
+    FROM read_csv('path') f
+    FROM read_csv('path') AS f
+  The first argument is positional, the rest are either positional or
+  "name = value" options, which are carried as ordinary expressions here and
+  recognized by the resolver later on.
+  children: [function name node, expression list, alias node (nullable)]
+*/
+file_scan_expr:
+NAME_OB '(' expr_list ')'
+{
+  malloc_non_terminal_node($$, result->malloc_pool_, T_FILE_SCAN_EXPRESSION, 3, $1, $3, NULL);
+}
+| NAME_OB '(' expr_list ')' relation_name
+{
+  malloc_non_terminal_node($$, result->malloc_pool_, T_FILE_SCAN_EXPRESSION, 3, $1, $3, $5);
+}
+| NAME_OB '(' expr_list ')' AS relation_name
+{
+  malloc_non_terminal_node($$, result->malloc_pool_, T_FILE_SCAN_EXPRESSION, 3, $1, $3, $6);
 }
 ;
 

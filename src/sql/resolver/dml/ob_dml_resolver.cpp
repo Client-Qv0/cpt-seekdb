@@ -2724,6 +2724,11 @@ int ObDMLResolver::resolve_table(const ParseNode &parse_tree,
         }
         break;
       }
+      case T_FILE_SCAN_EXPRESSION: {
+        if (OB_FAIL(resolve_file_scan_table_item(*table_node, table_item))) {
+        }
+        break;
+      }
       default:
         /* won't be here */
         ret = OB_ERR_PARSER_SYNTAX;
@@ -11071,6 +11076,199 @@ int ObDMLResolver::resolve_table_dynamic_sampling_hint(const ParseNode &hint_nod
     dynamic_sampling_hint->set_qb_name(qb_name);
     dynamic_sampling_hint->set_sample_block_cnt(sample_block_cnt);
     opt_hint = dynamic_sampling_hint;
+  }
+  return ret;
+}
+
+// M1a: FROM read_csv('path' [, option = value]) [AS] alias
+//
+// Only the parser/resolver plumbing lives here. The table item is created and
+// its names are filled in, so the next milestone can attach the file scan
+// definition to it; then an explicit "not implemented yet" error is returned.
+// No file is opened and the table item is deliberately NOT added to the
+// statement.
+int ObDMLResolver::resolve_file_scan_table_item(const ParseNode &table_node, TableItem *&table_item)
+{
+  int ret = OB_SUCCESS;
+  TableItem *item = NULL;
+  ParseNode *name_node = NULL;
+  ParseNode *params_node = NULL;
+  ParseNode *alias_node = NULL;
+  ObString func_name;
+  ObString path;
+  ObString alias_name;
+
+  if (OB_UNLIKELY(T_FILE_SCAN_EXPRESSION != table_node.type_ || 3 != table_node.num_child_)) {
+    ret = OB_ERR_UNEXPECTED;
+    LOG_WARN("unexpected file scan table node", K(table_node.type_), K(table_node.num_child_));
+  } else if (OB_ISNULL(name_node = table_node.children_[0])
+             || OB_ISNULL(params_node = table_node.children_[1])
+             || OB_ISNULL(allocator_)) {
+    ret = OB_ERR_UNEXPECTED;
+    LOG_WARN("invalid file scan table node", K(name_node), K(params_node));
+  } else if (OB_UNLIKELY(T_EXPR_LIST != params_node->type_ || params_node->num_child_ <= 0)) {
+    ret = OB_INVALID_ARGUMENT;
+    LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: the file path argument is required");
+    LOG_WARN("read_csv: invalid parameter list", K(params_node->type_), K(params_node->num_child_));
+  } else {
+    alias_node = table_node.children_[2];
+    func_name.assign_ptr(name_node->str_value_, name_node->str_len_);
+    // read_json/read_parquet/glob will be recognized together with the reader.
+    if (0 != func_name.case_compare("read_csv")) {
+      ret = OB_NOT_SUPPORTED;
+      LOG_USER_ERROR(OB_NOT_SUPPORTED, "file scan table function other than read_csv is");
+      LOG_WARN("file scan table function is not supported", K(func_name));
+    } else if (OB_FAIL(resolve_file_scan_path(*params_node->children_[0], path))) {
+      LOG_WARN("failed to resolve read_csv file path", K(ret));
+    } else {
+      for (int64_t i = 1; OB_SUCC(ret) && i < params_node->num_child_; ++i) {
+        if (OB_ISNULL(params_node->children_[i])) {
+          ret = OB_ERR_UNEXPECTED;
+          LOG_WARN("invalid read_csv option node", K(i));
+        } else if (OB_FAIL(resolve_file_scan_option(*params_node->children_[i]))) {
+          LOG_WARN("failed to resolve read_csv option", K(ret), K(i));
+        }
+      }
+    }
+  }
+
+  if (OB_SUCC(ret)) {
+    if (OB_NOT_NULL(alias_node)) {
+      alias_name.assign_ptr(alias_node->str_value_, alias_node->str_len_);
+    }
+    if (OB_ISNULL(item = ObDMLStmt::create_table_item(*allocator_))) {
+      ret = OB_ALLOCATE_MEMORY_FAILED;
+      LOG_WARN("failed to create table item for read_csv");
+    } else {
+      // The file path is kept as the table name and the user alias as the
+      // alias name; the file scan/values table definition is added in M1b.
+      item->table_name_ = path;
+      item->alias_name_ = alias_name;
+      item->table_id_ = generate_table_id();
+      item->type_ = TableItem::VALUES_TABLE;
+      table_item = item;
+      ret = OB_NOT_SUPPORTED;
+      LOG_USER_ERROR(OB_NOT_SUPPORTED, "read_csv() table function in FROM clause is not implemented yet, and it is");
+      LOG_WARN("read_csv() table function is not implemented yet, file scan is rejected",
+               K(path), K(alias_name));
+    }
+  }
+  return ret;
+}
+
+// Resolve one read_csv() argument into a constant value.
+// The SQL text is parameterized (constants are replaced with '?') before the
+// statement is resolved, so the literal value usually has to be fetched from
+// the parameter store. Literals are also handled for the non-parameterized
+// path (inner SQL / PL static SQL).
+int ObDMLResolver::resolve_file_scan_const_arg(const ParseNode &arg_node, ObObjParam &val)
+{
+  int ret = OB_SUCCESS;
+  val.reset();
+  if (T_QUESTIONMARK == arg_node.type_) {
+    const ParamStore *param_store = params_.param_list_;
+    const int64_t idx = arg_node.value_;
+    if (OB_ISNULL(param_store) || OB_UNLIKELY(idx < 0 || idx >= param_store->count())) {
+      ret = OB_INVALID_ARGUMENT;
+      LOG_WARN("read_csv: invalid parameter placeholder", K(idx), KPC(param_store));
+    } else {
+      val = param_store->at(idx);
+    }
+  } else if (T_VARCHAR == arg_node.type_ || T_CHAR == arg_node.type_ || T_NCHAR == arg_node.type_) {
+    val.set_varchar(ObString(arg_node.str_len_, arg_node.str_value_));
+    val.set_collation_type(CS_TYPE_UTF8MB4_GENERAL_CI);
+  } else if (T_INT == arg_node.type_) {
+    val.set_int(arg_node.value_);
+  } else if (T_BOOL == arg_node.type_) {
+    val.set_bool(0 != arg_node.value_);
+  } else if (T_OP_NEG == arg_node.type_ && 1 == arg_node.num_child_
+             && OB_NOT_NULL(arg_node.children_[0])) {
+    ObObjParam sub_val;
+    if (OB_FAIL(SMART_CALL(resolve_file_scan_const_arg(*arg_node.children_[0], sub_val)))) {
+    } else if (OB_UNLIKELY(!sub_val.is_integer_type())) {
+      ret = OB_INVALID_ARGUMENT;
+      LOG_WARN("read_csv: negative constant is not an integer", K(sub_val));
+    } else {
+      val = sub_val;
+      val.set_int(-sub_val.get_int());
+    }
+  } else {
+    ret = OB_INVALID_ARGUMENT;
+    LOG_WARN("read_csv: argument is not a constant", K(arg_node.type_));
+  }
+  return ret;
+}
+
+int ObDMLResolver::resolve_file_scan_path(const ParseNode &path_node, ObString &path)
+{
+  int ret = OB_SUCCESS;
+  ObObjParam val;
+  if (OB_FAIL(resolve_file_scan_const_arg(path_node, val))) {
+    ret = OB_INVALID_ARGUMENT;
+    LOG_USER_ERROR(OB_INVALID_ARGUMENT,
+                   "read_csv: the first argument must be a non-empty string literal file path");
+  } else if (OB_UNLIKELY(!ob_is_string_type(val.get_type())) || OB_UNLIKELY(val.get_string().empty())) {
+    ret = OB_INVALID_ARGUMENT;
+    LOG_USER_ERROR(OB_INVALID_ARGUMENT,
+                   "read_csv: the first argument must be a non-empty string literal file path");
+    LOG_WARN("read_csv: file path must be a string literal", K(val));
+  } else if (OB_ISNULL(allocator_)) {
+    ret = OB_NOT_INIT;
+    LOG_WARN("allocator is null when resolving read_csv file path");
+  } else if (OB_FAIL(ob_write_string(*allocator_, val.get_string(), path))) {
+    LOG_WARN("failed to copy read_csv file path", K(ret));
+  }
+  return ret;
+}
+
+int ObDMLResolver::resolve_file_scan_option(const ParseNode &option_node)
+{
+  int ret = OB_SUCCESS;
+  const ParseNode *name_node = NULL;
+  const ParseNode *value_node = NULL;
+  ObString option_name;
+  ObObjParam value;
+
+  if (OB_UNLIKELY(T_OP_EQ != option_node.type_ || 2 != option_node.num_child_)) {
+    ret = OB_INVALID_ARGUMENT;
+    LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: options must be written as name = value");
+    LOG_WARN("read_csv: invalid option node", K(option_node.type_), K(option_node.num_child_));
+  } else if (OB_ISNULL(name_node = option_node.children_[0])
+             || OB_ISNULL(value_node = option_node.children_[1])
+             || OB_UNLIKELY(T_COLUMN_REF != name_node->type_ || 3 != name_node->num_child_)
+             || OB_ISNULL(name_node = name_node->children_[2])) {
+    ret = OB_INVALID_ARGUMENT;
+    LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: the option name must be an identifier");
+    LOG_WARN("read_csv: invalid option name", K(option_node.type_));
+  } else if (OB_FAIL(resolve_file_scan_const_arg(*value_node, value))) {
+    ret = OB_INVALID_ARGUMENT;
+    LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: the option value must be a constant");
+    LOG_WARN("read_csv: invalid option value", K(ret));
+  } else {
+    option_name.assign_ptr(name_node->str_value_, name_node->str_len_);
+    if (0 == option_name.case_compare("header")) {
+      if (OB_UNLIKELY(!value.is_boolean() && !value.is_integer_type())) {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: header must be a boolean literal");
+      }
+    } else if (0 == option_name.case_compare("sample_size")) {
+      if (OB_UNLIKELY(!value.is_integer_type())) {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: sample_size must be an integer literal");
+      }
+    } else if (0 == option_name.case_compare("format")) {
+      if (OB_UNLIKELY(!ob_is_string_type(value.get_type()))) {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: format must be a string literal");
+      }
+    } else {
+      ret = OB_INVALID_ARGUMENT;
+      LOG_USER_ERROR(OB_INVALID_ARGUMENT,
+                     "read_csv: unknown option name, only header/sample_size/format are supported");
+    }
+    if (OB_FAIL(ret)) {
+      LOG_WARN("read_csv: invalid option", K(ret), K(option_name), K(value));
+    }
   }
   return ret;
 }

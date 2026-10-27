@@ -208,6 +208,10 @@ public:
   int resolve_json_table_item(const ParseNode &table_node,
                               TableItem *&table_item);
   int resolve_unnest_item(const ParseNode &table_node, TableItem *&table_item);
+  int resolve_file_scan_table_item(const ParseNode &table_node, TableItem *&table_item);
+  int resolve_file_scan_const_arg(const ParseNode &arg_node, ObObjParam &val);
+  int resolve_file_scan_path(const ParseNode &path_node, ObString &path);
+  int resolve_file_scan_option(const ParseNode &option_node);
   int create_unnest_table_item(TableItem *&table_item, ObString table_name);
   int unnest_table_add_column(TableItem *&table_item, ColumnItem *&col_item, ObString col_name);
   int resolve_hybrid_search_item(const ParseNode &parse_tree, TableItem *&table_item);
