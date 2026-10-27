@@ -51,7 +51,12 @@ private:
   ObObjMeta meta_;
 };
 
-typedef common::hash::ObHashMap<ObFTWord, int64_t> ObFTWordMap;
+// The word map is always created as a per-call local container (it is filled and
+// consumed on one thread inside a single segment() invocation), so it does not
+// need latch protection.  Using the plain defend mode removes one rwlock
+// acquire/release pair from every token lookup and insert of the tokenizer hot
+// path.
+typedef common::hash::ObHashMap<ObFTWord, int64_t, common::hash::NoPthreadDefendMode> ObFTWordMap;
 
 class ObAddWordFlag final
 {

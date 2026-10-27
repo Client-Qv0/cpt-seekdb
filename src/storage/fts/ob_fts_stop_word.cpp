@@ -205,12 +205,14 @@ int ObAddWord::groupby_word(const ObFTWord &word, const int64_t word_freq)
     if (OB_FAIL(word_map_.set_refactored(word, 1/*word count*/))) {
     }
   } else if (OB_FAIL(word_map_.get_refactored(word, word_count)) && OB_HASH_NOT_EXIST != ret) {
-  } else {
-    if (OB_HASH_NOT_EXIST == ret) {
-      word_count = 1;
-    } else {
-      word_count += word_freq;
+  } else if (OB_HASH_NOT_EXIST == ret) {
+    // The word is seen for the first time: insert it without the overwrite
+    // path, which would otherwise look the key up a second time.  The initial
+    // count stays 1 to preserve the existing aggregation semantics.
+    if (OB_FAIL(word_map_.set_refactored(word, 1/*word count*/))) {
     }
+  } else {
+    word_count += word_freq;
     if (OB_FAIL(word_map_.set_refactored(word, word_count, 1/*overwrite*/))) {
     }
   }
