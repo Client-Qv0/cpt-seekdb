@@ -234,6 +234,10 @@ public:
                                  const ObIArray<ObRawExprResType> &res_types,
                                  TableItem &table_item);
   int check_file_scan_path(ObString &path);
+  // M1c: file SQL is gated by the enable_file_sql system variable (default OFF)
+  // and the path must stay inside the secure_file_priv directory whitelist.
+  int check_file_scan_enabled();
+  int check_file_scan_secure_path(const ObString &path);
   int create_unnest_table_item(TableItem *&table_item, ObString table_name);
   int unnest_table_add_column(TableItem *&table_item, ColumnItem *&col_item, ObString col_name);
   int resolve_hybrid_search_item(const ParseNode &parse_tree, TableItem *&table_item);

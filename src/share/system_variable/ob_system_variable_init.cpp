@@ -74,6 +74,7 @@ const ObSysVarClassType ESSENTIAL_SYS_VARS[] = {
   SYS_VAR_CARDINALITY_ESTIMATION_MODEL,        // cardinality_estimation_model
   SYS_VAR_DEFAULT_COLLATION_FOR_UTF8MB4,        // default_collation_for_utf8mb4
   SYS_VAR__PUSH_JOIN_PREDICATE,        // _push_join_predicate
+  SYS_VAR_ENABLE_FILE_SQL,        // enable_file_sql
 };
 
 const int64_t ESSENTIAL_SYS_VARS_COUNT = sizeof(ESSENTIAL_SYS_VARS) / sizeof(ESSENTIAL_SYS_VARS[0]);
@@ -307,7 +308,6 @@ static struct VarsInit{
     [&] (){
       ObSysVars[13].default_value_ = "0" ;
       ObSysVars[13].info_ = "" ;
-      ObSysVars[13].session_special_update_func_ = "ObSysVarSessionSpecialUpdateFuncs::update_last_insert_id" ;
       ObSysVars[13].name_ = "last_insert_id" ;
       ObSysVars[13].data_type_ = ObUInt64Type ;
       ObSysVars[13].min_val_ = "0" ;
@@ -318,6 +318,7 @@ static struct VarsInit{
       cur_max_var_id = MAX(cur_max_var_id, static_cast<int64_t>(SYS_VAR_LAST_INSERT_ID)) ;
       ObSysVarsIdToArrayIdx[SYS_VAR_LAST_INSERT_ID] = 13 ;
       ObSysVars[13].base_value_ = "0" ;
+      ObSysVars[13].session_special_update_func_ = "ObSysVarSessionSpecialUpdateFuncs::update_last_insert_id" ;
     ObSysVars[13].alias_ = "OB_SV_LAST_INSERT_ID" ;
     }();
 
@@ -339,11 +340,10 @@ static struct VarsInit{
 
     [&] (){
       ObSysVars[15].default_value_ = "281018368" ;
-      ObSysVars[15].on_update_func_ = "ObSysVarOnUpdateFuncs::update_sql_mode" ;
+      ObSysVars[15].info_ = "" ;
       ObSysVars[15].name_ = "sql_mode" ;
       ObSysVars[15].data_type_ = ObUInt64Type ;
       ObSysVars[15].to_show_str_func_ = "ObSysVarToStrFuncs::to_str_sql_mode" ;
-      ObSysVars[15].info_ = "" ;
       ObSysVars[15].flags_ = ObSysVarFlag::GLOBAL_SCOPE | ObSysVarFlag::SESSION_SCOPE | ObSysVarFlag::INFLUENCE_PLAN | ObSysVarFlag::NEED_SERIALIZE | ObSysVarFlag::MYSQL_ONLY ;
       ObSysVars[15].base_class_ = "ObSqlModeVar" ;
       ObSysVars[15].to_select_obj_func_ = "ObSysVarToObjFuncs::to_obj_sql_mode" ;
@@ -353,6 +353,7 @@ static struct VarsInit{
       ObSysVarsIdToArrayIdx[SYS_VAR_SQL_MODE] = 15 ;
       ObSysVars[15].get_meta_type_func_ = "ObSysVarGetMetaTypeFuncs::get_meta_type_varchar" ;
       ObSysVars[15].base_value_ = "12582912" ;
+      ObSysVars[15].on_update_func_ = "ObSysVarOnUpdateFuncs::update_sql_mode" ;
     ObSysVars[15].alias_ = "OB_SV_SQL_MODE" ;
     }();
 
@@ -373,11 +374,9 @@ static struct VarsInit{
 
     [&] (){
       ObSysVars[17].default_value_ = "READ-COMMITTED" ;
-      ObSysVars[17].on_update_func_ = "ObSysVarOnUpdateFuncs::update_tx_isolation" ;
-      ObSysVars[17].session_special_update_func_ = "ObSysVarSessionSpecialUpdateFuncs::update_tx_isolation" ;
+      ObSysVars[17].info_ = "Transaction Isolcation Levels: READ-UNCOMMITTED READ-COMMITTED REPEATABLE-READ SERIALIZABLE" ;
       ObSysVars[17].name_ = "tx_isolation" ;
       ObSysVars[17].data_type_ = ObVarcharType ;
-      ObSysVars[17].info_ = "Transaction Isolcation Levels: READ-UNCOMMITTED READ-COMMITTED REPEATABLE-READ SERIALIZABLE" ;
       ObSysVars[17].flags_ = ObSysVarFlag::GLOBAL_SCOPE | ObSysVarFlag::SESSION_SCOPE | ObSysVarFlag::NEED_SERIALIZE ;
       ObSysVars[17].base_class_ = "ObSessionSpecialVarcharSysVar" ;
       ObSysVars[17].on_check_and_convert_func_ = "ObSysVarOnCheckFuncs::check_and_convert_tx_isolation" ;
@@ -385,6 +384,8 @@ static struct VarsInit{
       cur_max_var_id = MAX(cur_max_var_id, static_cast<int64_t>(SYS_VAR_TX_ISOLATION)) ;
       ObSysVarsIdToArrayIdx[SYS_VAR_TX_ISOLATION] = 17 ;
       ObSysVars[17].base_value_ = "READ-COMMITTED" ;
+      ObSysVars[17].session_special_update_func_ = "ObSysVarSessionSpecialUpdateFuncs::update_tx_isolation" ;
+      ObSysVars[17].on_update_func_ = "ObSysVarOnUpdateFuncs::update_tx_isolation" ;
     ObSysVars[17].alias_ = "OB_SV_TX_ISOLATION" ;
     }();
 
@@ -535,7 +536,6 @@ static struct VarsInit{
     [&] (){
       ObSysVars[28].default_value_ = "0" ;
       ObSysVars[28].info_ = "This variable is a synonym for the last_insert_id variable. It exists for compatibility with other database systems." ;
-      ObSysVars[28].session_special_update_func_ = "ObSysVarSessionSpecialUpdateFuncs::update_identity" ;
       ObSysVars[28].name_ = "identity" ;
       ObSysVars[28].data_type_ = ObUInt64Type ;
       ObSysVars[28].min_val_ = "0" ;
@@ -546,6 +546,7 @@ static struct VarsInit{
       cur_max_var_id = MAX(cur_max_var_id, static_cast<int64_t>(SYS_VAR_IDENTITY)) ;
       ObSysVarsIdToArrayIdx[SYS_VAR_IDENTITY] = 28 ;
       ObSysVars[28].base_value_ = "0" ;
+      ObSysVars[28].session_special_update_func_ = "ObSysVarSessionSpecialUpdateFuncs::update_identity" ;
     ObSysVars[28].alias_ = "OB_SV_IDENTITY" ;
     }();
 
@@ -653,17 +654,17 @@ static struct VarsInit{
     [&] (){
       ObSysVars[36].default_value_ = "0" ;
       ObSysVars[36].info_ = "" ;
-      ObSysVars[36].session_special_update_func_ = "ObSysVarSessionSpecialUpdateFuncs::update_tx_read_only" ;
       ObSysVars[36].name_ = "tx_read_only" ;
       ObSysVars[36].data_type_ = ObIntType ;
       ObSysVars[36].flags_ = ObSysVarFlag::GLOBAL_SCOPE | ObSysVarFlag::SESSION_SCOPE | ObSysVarFlag::NEED_SERIALIZE ;
-      ObSysVars[36].on_update_func_ = "ObSysVarOnUpdateFuncs::update_tx_read_only_no_scope" ;
       ObSysVars[36].base_class_ = "ObSessionSpecialBoolSysVar" ;
       ObSysVars[36].on_check_and_convert_func_ = "ObSysVarOnCheckFuncs::check_and_convert_tx_read_only" ;
       ObSysVars[36].id_ = SYS_VAR_TX_READ_ONLY ;
       cur_max_var_id = MAX(cur_max_var_id, static_cast<int64_t>(SYS_VAR_TX_READ_ONLY)) ;
       ObSysVarsIdToArrayIdx[SYS_VAR_TX_READ_ONLY] = 36 ;
       ObSysVars[36].base_value_ = "0" ;
+      ObSysVars[36].session_special_update_func_ = "ObSysVarSessionSpecialUpdateFuncs::update_tx_read_only" ;
+      ObSysVars[36].on_update_func_ = "ObSysVarOnUpdateFuncs::update_tx_read_only_no_scope" ;
     ObSysVars[36].alias_ = "OB_SV_TX_READ_ONLY" ;
     }();
 
@@ -1841,11 +1842,9 @@ static struct VarsInit{
 
     [&] (){
       ObSysVars[123].default_value_ = "READ-COMMITTED" ;
-      ObSysVars[123].on_update_func_ = "ObSysVarOnUpdateFuncs::update_tx_isolation" ;
-      ObSysVars[123].session_special_update_func_ = "ObSysVarSessionSpecialUpdateFuncs::update_tx_isolation" ;
+      ObSysVars[123].info_ = "Transaction Isolcation Levels: READ-UNCOMMITTED READ-COMMITTED REPEATABLE-READ SERIALIZABLE" ;
       ObSysVars[123].name_ = "transaction_isolation" ;
       ObSysVars[123].data_type_ = ObVarcharType ;
-      ObSysVars[123].info_ = "Transaction Isolcation Levels: READ-UNCOMMITTED READ-COMMITTED REPEATABLE-READ SERIALIZABLE" ;
       ObSysVars[123].flags_ = ObSysVarFlag::GLOBAL_SCOPE | ObSysVarFlag::SESSION_SCOPE | ObSysVarFlag::NEED_SERIALIZE ;
       ObSysVars[123].base_class_ = "ObSessionSpecialVarcharSysVar" ;
       ObSysVars[123].on_check_and_convert_func_ = "ObSysVarOnCheckFuncs::check_and_convert_tx_isolation" ;
@@ -1853,6 +1852,8 @@ static struct VarsInit{
       cur_max_var_id = MAX(cur_max_var_id, static_cast<int64_t>(SYS_VAR_TRANSACTION_ISOLATION)) ;
       ObSysVarsIdToArrayIdx[SYS_VAR_TRANSACTION_ISOLATION] = 123 ;
       ObSysVars[123].base_value_ = "READ-COMMITTED" ;
+      ObSysVars[123].session_special_update_func_ = "ObSysVarSessionSpecialUpdateFuncs::update_tx_isolation" ;
+      ObSysVars[123].on_update_func_ = "ObSysVarOnUpdateFuncs::update_tx_isolation" ;
     ObSysVars[123].alias_ = "OB_SV_TRANSACTION_ISOLATION" ;
     }();
 
@@ -2055,11 +2056,9 @@ static struct VarsInit{
 
     [&] (){
       ObSysVars[138].default_value_ = "0" ;
-      ObSysVars[138].on_update_func_ = "ObSysVarOnUpdateFuncs::update_tx_read_only_no_scope" ;
-      ObSysVars[138].session_special_update_func_ = "ObSysVarSessionSpecialUpdateFuncs::update_tx_read_only" ;
+      ObSysVars[138].info_ = "Transaction access mode" ;
       ObSysVars[138].name_ = "transaction_read_only" ;
       ObSysVars[138].data_type_ = ObIntType ;
-      ObSysVars[138].info_ = "Transaction access mode" ;
       ObSysVars[138].flags_ = ObSysVarFlag::GLOBAL_SCOPE | ObSysVarFlag::SESSION_SCOPE | ObSysVarFlag::NEED_SERIALIZE ;
       ObSysVars[138].base_class_ = "ObSessionSpecialBoolSysVar" ;
       ObSysVars[138].on_check_and_convert_func_ = "ObSysVarOnCheckFuncs::check_and_convert_tx_read_only" ;
@@ -2067,6 +2066,8 @@ static struct VarsInit{
       cur_max_var_id = MAX(cur_max_var_id, static_cast<int64_t>(SYS_VAR_TRANSACTION_READ_ONLY)) ;
       ObSysVarsIdToArrayIdx[SYS_VAR_TRANSACTION_READ_ONLY] = 138 ;
       ObSysVars[138].base_value_ = "0" ;
+      ObSysVars[138].session_special_update_func_ = "ObSysVarSessionSpecialUpdateFuncs::update_tx_read_only" ;
+      ObSysVars[138].on_update_func_ = "ObSysVarOnUpdateFuncs::update_tx_read_only_no_scope" ;
     ObSysVars[138].alias_ = "OB_SV_TRANSACTION_READ_ONLY" ;
     }();
 
@@ -9911,13 +9912,26 @@ static struct VarsInit{
     ObSysVars[718].alias_ = "OB_SV_SPARSE_DROP_RATIO_SEARCH" ;
     }();
 
+    [&] (){
+      ObSysVars[719].default_value_ = "0" ;
+      ObSysVars[719].info_ = "enable file SQL such as the read_csv table function that reads files on the server" ;
+      ObSysVars[719].name_ = "enable_file_sql" ;
+      ObSysVars[719].data_type_ = ObIntType ;
+      ObSysVars[719].flags_ = ObSysVarFlag::GLOBAL_SCOPE | ObSysVarFlag::SESSION_SCOPE | ObSysVarFlag::INFLUENCE_PLAN ;
+      ObSysVars[719].id_ = SYS_VAR_ENABLE_FILE_SQL ;
+      cur_max_var_id = MAX(cur_max_var_id, static_cast<int64_t>(SYS_VAR_ENABLE_FILE_SQL)) ;
+      ObSysVarsIdToArrayIdx[SYS_VAR_ENABLE_FILE_SQL] = 719 ;
+      ObSysVars[719].base_value_ = "0" ;
+    ObSysVars[719].alias_ = "OB_SV_ENABLE_FILE_SQL" ;
+    }();
+
     if (cur_max_var_id >= ObSysVarMeta::OB_MAX_SYS_VAR_ID) {
       HasInvalidSysVar = true;
     }
   }
 }vars_init;
 
-static int64_t var_amount = 719;
+static int64_t var_amount = 720;
 
 int64_t ObSysVariables::get_all_sys_var_count(){ return ObSysVarMeta::ALL_SYS_VARS_COUNT;}
 ObSysVarClassType ObSysVariables::get_sys_var_id(int64_t i){ return ObSysVars[i].id_;}

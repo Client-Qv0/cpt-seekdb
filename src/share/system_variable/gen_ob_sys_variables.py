@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import io
 import json
 import os
 import stat
@@ -60,14 +61,48 @@ file_head_annotation = """/*
 
 """
 
+def iter_items(d):
+  # dict.iteritems() on python2, dict.items() on python3
+  return d.iteritems() if hasattr(d, 'iteritems') else iter(d.items())
+
+# Order of the emitted ObSysVars fields.  It used to be the python2 dict hash
+# order; keeping it explicit makes the generated cpp file reproducible and keeps
+# the diff of a regeneration limited to the changed variables.
+CPP_ATTRIBUTE_ORDER = ["default_value", "info", "name", "data_type",
+                       "min_val", "max_val", "enum_names", "to_show_str_func",
+                       "flags", "base_class", "to_select_obj_func",
+                       "on_check_and_convert_func", "id", "get_meta_type_func",
+                       "base_value", "session_special_update_func",
+                       "on_update_func"]
+
+def ordered_attributes(attributes):
+  ordered = []
+  for key in CPP_ATTRIBUTE_ORDER:
+    if key in attributes:
+      ordered.append((key, attributes[key]))
+  for key, value in iter_items(attributes):
+    if key not in ignored_attrs and key not in CPP_ATTRIBUTE_ORDER:
+      ordered.append((key, value))
+  return ordered
+
+def python2_value_str(value):
+  # python2 formatted json arrays (enum_names) as [u'x', u'y']; keep that exact
+  # form so a python3 run does not rewrite every enum_names_ line of the cpp
+  if isinstance(value, list):
+    return "[" + ", ".join(
+        ["u" + repr(item) if isinstance(item, str) else repr(item) for item in value]) + "]"
+  else:
+    return str(value)
+
 def parse_json(json_file_name):
-  json_file = open(json_file_name,'r')
+  # the catalog is always utf-8, do not depend on the platform locale
+  json_file = io.open(json_file_name, 'r', encoding='utf-8')
   all_the_vars = json_file.read( )
   json_Dict = json.loads(all_the_vars)
-  filtered_json = filter(lambda d: 'placeholder' not in d[1] or d[1]['placeholder'] is False, json_Dict.iteritems())
+  filtered_json = filter(lambda d: 'placeholder' not in d[1] or d[1]['placeholder'] is False, iter_items(json_Dict))
   filtered_dict = dict(filtered_json)
-  list_sorted_by_name= sorted(filtered_dict.iteritems(), key=lambda d:d[0].lower())
-  list_sorted_by_id= sorted(filtered_dict.iteritems(), key=lambda d:d[1]['id'])
+  list_sorted_by_name= sorted(iter_items(filtered_dict), key=lambda d:d[0].lower())
+  list_sorted_by_id= sorted(iter_items(filtered_dict), key=lambda d:d[1]['id'])
   json_file.close()
   return (json_Dict, list_sorted_by_name, list_sorted_by_id)
 
@@ -219,6 +254,10 @@ def make_type_value(type):
   return type_dict[type.strip()]
 
 def make_cpp_file(pdir, cpp_file_name, sorted_list):
+  # the previous run leaves the file read-only (see the essential array step),
+  # make it writable again so that the generator can be re-run in place
+  if os.path.exists(cpp_file_name):
+    os.chmod(cpp_file_name, stat.S_IRUSR + stat.S_IWUSR + stat.S_IRGRP + stat.S_IROTH)
   cpp_file =  open(cpp_file_name,'w')
   cpp_file.write(file_head_annotation)
   cpp_file.write("#define USING_LOG_PREFIX SHARE\n")
@@ -255,7 +294,7 @@ def make_cpp_file(pdir, cpp_file_name, sorted_list):
     for required_attr in required_attrs:
       if required_attr not in attributes:
         sys.exit("attribute '" + str(required_attr) + "' is required for item '" + str(name) + "'")
-    for (attribute_key, attribute_value) in attributes.items():
+    for (attribute_key, attribute_value) in ordered_attributes(attributes):
       if attribute_value == " ":
         attribute_value = str("")
       if attribute_key in ignored_attrs:
@@ -267,7 +306,7 @@ def make_cpp_file(pdir, cpp_file_name, sorted_list):
       elif attribute_key == "data_type":
         out = "      ObSysVars[" + str(var_num) + "]." + str(attribute_key) + "_ = " + make_type_value(attribute_value) + " ;\n"
       else:
-        out = "      ObSysVars[" + str(var_num) + "]." + str(attribute_key) + "_ = \"" + str(attribute_value) + "\" ;\n"
+        out = "      ObSysVars[" + str(var_num) + "]." + str(attribute_key) + "_ = \"" + python2_value_str(attribute_value) + "\" ;\n"
       cpp_file.write(out)
       if attribute_key == "id":
         out = "      cur_max_var_id = MAX(cur_max_var_id, "+"static_cast<int64_t>(SYS_VAR_" + str(name).upper()+")"+") ;\n"
@@ -1162,7 +1201,6 @@ def generate_essential_sys_vars_in_init_cpp(cpp_filename, list_sorted_by_id):
   os.chmod(cpp_filename, stat.S_IRUSR + stat.S_IWUSR + stat.S_IRGRP + stat.S_IROTH)
   with codecs.open(cpp_filename, 'w', encoding='utf-8') as wfile:
     wfile.write('\n'.join(lines).rstrip() + '\n')
-  os.chmod(cpp_filename, stat.S_IRUSR + stat.S_IRGRP + stat.S_IROTH)
 
   print("Generate ESSENTIAL_SYS_VARS array in " + str(cpp_filename) + " successfully!")
   print("Generated " + str(len(essential_vars)) + " essential system variables:")

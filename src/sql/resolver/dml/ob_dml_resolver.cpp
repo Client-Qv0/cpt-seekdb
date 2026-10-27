@@ -16,6 +16,7 @@
 
 #define USING_LOG_PREFIX SQL_RESV
 #include "config_bridge.h"
+#include <string>
 #include "ob_dml_resolver.h"
 #include "sql/resolver/dml/ob_view_table_resolver.h"
 #include "sql/optimizer/ob_optimizer_util.h"
@@ -11084,6 +11085,27 @@ int ObDMLResolver::resolve_table_dynamic_sampling_hint(const ParseNode &hint_nod
   return ret;
 }
 
+// M1c: file SQL (read_csv today) is OFF by default so that no connection can
+// read server files without an explicit opt in.  The switch is a session system
+// variable; it carries INFLUENCE_PLAN, so a plan resolved while file SQL was on
+// is not reused after it is turned off and the statement is resolved again.
+int ObDMLResolver::check_file_scan_enabled()
+{
+  int ret = OB_SUCCESS;
+  bool enabled = false;
+  if (OB_ISNULL(session_info_)) {
+    ret = OB_NOT_INIT;
+    LOG_WARN("session info is null when checking enable_file_sql", K(ret));
+  } else if (OB_FAIL(session_info_->get_sys_variable(share::SYS_VAR_ENABLE_FILE_SQL, enabled))) {
+    LOG_WARN("failed to read enable_file_sql", K(ret));
+  } else if (OB_UNLIKELY(!enabled)) {
+    ret = OB_NOT_SUPPORTED;
+    LOG_USER_ERROR(OB_NOT_SUPPORTED, "file SQL (SET enable_file_sql = ON is required)");
+    LOG_WARN("file sql is disabled, set enable_file_sql = ON to use it", K(ret));
+  }
+  return ret;
+}
+
 // M1b: FROM read_csv('path' [, option = value]) [AS] alias
 //
 // The whole file is read at resolve time and materialized as an ObValuesTableDef
@@ -11126,6 +11148,8 @@ int ObDMLResolver::resolve_file_scan_table_item(const ParseNode &table_node, Tab
       ret = OB_NOT_SUPPORTED;
       LOG_USER_ERROR(OB_NOT_SUPPORTED, "file scan table function other than read_csv is");
       LOG_WARN("file scan table function is not supported", K(func_name));
+    } else if (OB_FAIL(check_file_scan_enabled())) {
+      LOG_WARN("read_csv is disabled by enable_file_sql", K(ret));
     } else if (OB_FAIL(resolve_file_scan_path(*params_node->children_[0], path))) {
       LOG_WARN("failed to resolve read_csv file path", K(ret));
     } else {
@@ -11499,9 +11523,97 @@ int ObDMLResolver::gen_file_scan_column_items(const ObIArray<ObString> &column_n
   return ret;
 }
 
-// An absolute path is required and ".." is rejected, so that a file SQL cannot
-// walk out of its directory.  Windows separators are normalized to '/' because
-// the reader (fopen) accepts them and the error messages stay consistent.
+namespace {
+
+// Normalize a path for the directory whitelist comparison.  Windows accepts
+// both separators and its filesystem is case insensitive, so '\\' is folded to
+// '/', duplicated separators are dropped, the letters are lower cased and a
+// trailing separator is removed (a filesystem root such as "/" or "F:/" keeps
+// it).  The result is only used for comparisons, never to open the file.
+std::string normalize_file_scan_secure_path(const char *ptr, const int64_t length)
+{
+  std::string normalized;
+  normalized.reserve(static_cast<size_t>(length));
+  for (int64_t i = 0; i < length; ++i) {
+    char c = ptr[i];
+    if ('\\' == c) {
+      c = '/';
+    }
+#ifdef _WIN32
+    if (c >= 'A' && c <= 'Z') {
+      c = static_cast<char>(c - 'A' + 'a');
+    }
+#endif
+    if ('/' == c && !normalized.empty() && '/' == normalized.back()) {
+      continue;
+    }
+    normalized.push_back(c);
+  }
+  while (normalized.length() > 1 && '/' == normalized.back()
+         && !(3 == normalized.length() && ':' == normalized[1])) {
+    normalized.pop_back();
+  }
+  return normalized;
+}
+
+// Whether "path" is "dir" itself or a file below it.  Both arguments must come
+// from normalize_file_scan_secure_path(), so the separator is always '/'.
+bool is_file_scan_path_under_dir(const std::string &dir, const std::string &path)
+{
+  bool under = false;
+  if (!dir.empty() && path.length() >= dir.length()
+      && 0 == path.compare(0, dir.length(), dir)) {
+    under = (path.length() == dir.length())
+            || ('/' == path[dir.length()])
+            || ('/' == dir[dir.length() - 1]);
+  }
+  return under;
+}
+
+}  // namespace
+
+// M1c: the file path must stay inside the directory allowed by secure_file_priv.
+// Following MySQL, an empty secure_file_priv forbids every path.  "/" means the
+// whole filesystem, which is the OceanBase default and also the semantic of
+// ObResolverUtils::check_secure_path() used by LOAD DATA / SELECT INTO.
+// secure_file_priv is a GLOBAL variable and this build only accepts changing it
+// from a local connection (a unix socket on POSIX, run/sql.pipe on Windows), so
+// a deployment has to narrow it before file SQL can read a directory.
+int ObDMLResolver::check_file_scan_secure_path(const ObString &path)
+{
+  int ret = OB_SUCCESS;
+  ObString secure_file_priv;
+  std::string normalized_path;
+  if (OB_ISNULL(session_info_)) {
+    ret = OB_NOT_INIT;
+    LOG_WARN("session info is null when checking secure_file_priv", K(ret));
+  } else if (OB_FAIL(session_info_->get_secure_file_priv(secure_file_priv))) {
+    LOG_WARN("failed to read secure_file_priv", K(ret));
+  } else if (secure_file_priv.empty() || 0 == secure_file_priv.case_compare("NULL")) {
+    ret = OB_INVALID_ARGUMENT;
+    LOG_USER_ERROR(OB_INVALID_ARGUMENT,
+                   "read_csv: secure_file_priv is empty, file access is disabled");
+    LOG_WARN("read_csv: secure_file_priv is empty", K(path));
+  } else {
+    normalized_path = normalize_file_scan_secure_path(path.ptr(), path.length());
+    const std::string normalized_priv =
+        normalize_file_scan_secure_path(secure_file_priv.ptr(), secure_file_priv.length());
+    if ("/" != normalized_priv
+        && !is_file_scan_path_under_dir(normalized_priv, normalized_path)) {
+      ret = OB_INVALID_ARGUMENT;
+      LOG_USER_ERROR(OB_INVALID_ARGUMENT,
+                     "read_csv: the file path is outside of secure_file_priv");
+      LOG_WARN("read_csv: file path is outside of secure_file_priv",
+               K(path), K(secure_file_priv));
+    }
+  }
+  return ret;
+}
+
+// An absolute path is required, ".." is rejected and the path must pass the
+// secure_file_priv whitelist.  Windows separators are normalized to '/' because
+// the reader (fopen) accepts them, the whitelist comparison is separator
+// agnostic and the error messages stay consistent.
 int ObDMLResolver::check_file_scan_path(ObString &path)
 {
   int ret = OB_SUCCESS;
@@ -11517,25 +11629,82 @@ int ObDMLResolver::check_file_scan_path(ObString &path)
         ptr[i] = '/';
       }
     }
-    const bool is_absolute = ('/' == ptr[0])
-        || (length >= 3 && ((ptr[0] >= 'a' && ptr[0] <= 'z') || (ptr[0] >= 'A' && ptr[0] <= 'Z'))
-            && ':' == ptr[1] && '/' == ptr[2]);
-    bool has_parent_dir = false;
-    for (int64_t i = 0; !has_parent_dir && i + 1 < length; ++i) {
-      if ('.' == ptr[i] && '.' == ptr[i + 1]
-          && (0 == i || '/' == ptr[i - 1])
-          && (i + 2 == length || '/' == ptr[i + 2])) {
-        has_parent_dir = true;
-      }
+#ifdef _WIN32
+    // A UNC path ("//server/share/file") points outside the per-drive directory
+    // whitelist, it is rejected explicitly instead of being prefix matched.
+    if (length >= 2 && '/' == ptr[0] && '/' == ptr[1]) {
+      ret = OB_INVALID_ARGUMENT;
+      LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: UNC file paths are not allowed");
+      LOG_WARN("read_csv: UNC file path is not allowed", K(path));
     }
-    if (OB_UNLIKELY(!is_absolute)) {
-      ret = OB_INVALID_ARGUMENT;
-      LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: the file path must be an absolute path");
-      LOG_WARN("read_csv file path is not absolute", K(path));
-    } else if (OB_UNLIKELY(has_parent_dir)) {
-      ret = OB_INVALID_ARGUMENT;
-      LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: the file path must not contain '..'");
-      LOG_WARN("read_csv file path contains '..'", K(path));
+#endif
+    // collapse the duplicated separators, so "F://a///b.csv" and "F:/a/b.csv"
+    // are compared as the same path
+    if (OB_SUCC(ret)) {
+      int64_t write_pos = 0;
+      for (int64_t i = 0; i < length; ++i) {
+        if ('/' != ptr[i] || 0 == write_pos || '/' != ptr[write_pos - 1]) {
+          ptr[write_pos++] = ptr[i];
+        }
+      }
+      path.assign_ptr(ptr, static_cast<int32_t>(write_pos));
+    }
+    if (OB_SUCC(ret)) {
+      const int64_t path_len = path.length();
+      const bool is_absolute = ('/' == ptr[0])
+          || (path_len >= 3
+              && ((ptr[0] >= 'a' && ptr[0] <= 'z') || (ptr[0] >= 'A' && ptr[0] <= 'Z'))
+              && ':' == ptr[1] && '/' == ptr[2]);
+      bool has_parent_dir = false;
+      for (int64_t i = 0; !has_parent_dir && i + 1 < path_len; ++i) {
+        if ('.' == ptr[i] && '.' == ptr[i + 1]
+            && (0 == i || '/' == ptr[i - 1])
+            && (i + 2 == path_len || '/' == ptr[i + 2])) {
+          has_parent_dir = true;
+        }
+      }
+      bool has_invalid_component = false;
+#ifdef _WIN32
+      // Windows strips trailing spaces and dots from every path component, so
+      // ".. " / "..." would still resolve to the parent directory and must be
+      // rejected as well.
+      for (int64_t i = 0; !has_parent_dir && !has_invalid_component && i < path_len; ) {
+        int64_t end = i;
+        while (end < path_len && '/' != ptr[end]) {
+          ++end;
+        }
+        const int64_t component_len = end - i;
+        int64_t trimmed_len = component_len;
+        while (trimmed_len > 0
+               && (' ' == ptr[i + trimmed_len - 1] || '.' == ptr[i + trimmed_len - 1])) {
+          --trimmed_len;
+        }
+        if (trimmed_len > 0 && 2 == trimmed_len
+            && '.' == ptr[i] && '.' == ptr[i + 1]) {
+          has_parent_dir = true;
+        } else if (component_len > 1 && 0 == trimmed_len) {
+          has_invalid_component = true;
+        }
+        i = end + 1;
+      }
+#endif
+      if (OB_UNLIKELY(!is_absolute)) {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: the file path must be an absolute path");
+        LOG_WARN("read_csv file path is not absolute", K(path));
+      } else if (OB_UNLIKELY(has_parent_dir)) {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: the file path must not contain '..'");
+        LOG_WARN("read_csv file path contains '..'", K(path));
+      } else if (OB_UNLIKELY(has_invalid_component)) {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT,
+                       "read_csv: the file path must not contain '.'-only components");
+        LOG_WARN("read_csv file path contains an invalid component", K(path));
+      } else if (OB_FAIL(check_file_scan_secure_path(path))) {
+        LOG_WARN("read_csv file path is not allowed by the secure path whitelist",
+                 K(ret), K(path));
+      }
     }
   }
   return ret;
