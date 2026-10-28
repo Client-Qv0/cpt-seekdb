@@ -405,6 +405,7 @@ static bool ob_cuvs_serialize(void *key, std::ostream &out, int &ret) {
     ent->bridge_ = nb; ent->built_n_ = n; ent->ids_ = ent->buf_ids_;
     built = true;
   }
+  const int64_t t_cuvs_ser_start = ObTimeUtility::current_time();
   ObCuvsSnapshotFile graph;
   ObCuvsSnapshotJob job{graph.path_, ent->bridge_.get(), static_cast<long>(n), ent->dim_, false, -1};
   if (graph.file_ == nullptr || !ob_cuvs_snapshot_big_stack(job) ||
@@ -414,6 +415,7 @@ static bool ob_cuvs_serialize(void *key, std::ostream &out, int &ret) {
   }
   const uint64_t graph_bytes = static_cast<uint64_t>(::ftello(graph.file_));
   ::rewind(graph.file_);
+  const int64_t cuvs_ser_us = ObTimeUtility::current_time() - t_cuvs_ser_start;
   const int64_t build_us = ObTimeUtility::current_time() - start_us;
   const int32_t dim32 = ent->dim_;
   const int32_t reserved = 0;
@@ -429,6 +431,7 @@ static bool ob_cuvs_serialize(void *key, std::ostream &out, int &ret) {
     LOG_WARN("[OBVSAG][cuVS] failed to write snapshot stream", K(ret), KP(key), K(n));
     return true;
   }
+  const int64_t t_hdr_done = ObTimeUtility::current_time();
   std::vector<char> chunk(16UL * 1024 * 1024);
   uint64_t remaining = graph_bytes;
   while (remaining > 0) {
@@ -439,8 +442,13 @@ static bool ob_cuvs_serialize(void *key, std::ostream &out, int &ret) {
     }
     remaining -= bytes;
   }
+  const int64_t t_copy_done = ObTimeUtility::current_time();
+  const int64_t hdr_us = t_hdr_done - t_cuvs_ser_start - cuvs_ser_us;
+  const int64_t copy_us = t_copy_done - t_hdr_done;
+  const int64_t ser_total_us = t_copy_done - t_cuvs_ser_start;
   LOG_INFO("[OBVSAG][cuVS] serialized GPU CAGRA snapshot", KP(key), K(n), K(dim32),
-           K(built), K(build_us), K(graph_bytes));
+           K(built), K(build_us), K(graph_bytes),
+           K(cuvs_ser_us), K(hdr_us), K(copy_us), K(ser_total_us));
   return true;
 }
 
