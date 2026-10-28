@@ -34,11 +34,121 @@
 
 #define USING_LOG_PREFIX SQL_ENG
 #include "sql/engine/expr/ob_expr_json_func_helper.h" // file not self-contained, there're logs inside.
+#include "common/json_type/ob_json_bin.h"
+#include "lib/allocator/ob_malloc.h"
+#include "lib/hash/ob_hashutils.h"
+#include "sql/session/ob_basic_session_info.h"
 
 namespace oceanbase
 {
 namespace sql
 {
+
+namespace
+{
+
+// A bounded per-thread cache for the serialized result of TOKENIZE().
+//
+// TOKENIZE() is a pure function of its arguments and the same text is analyzed
+// repeatedly: a document column is re-analyzed for every row of an index build,
+// and applications routinely analyze the same literal on every execution of the
+// same statement.  The cache keeps the serialized JSON result of recent calls,
+// keyed by a hash over every input that can change the output.
+//
+// It is per thread (no synchronization) and bounded in both entry count and
+// bytes; when it fills up it is dropped as a whole.
+class TokenizeResultCache
+{
+public:
+  static const int64_t MAX_ENTRIES = 64;
+  static const int64_t MAX_BYTES = 256 * 1024;
+
+public:
+  TokenizeResultCache() : buf_(NULL), used_(0)
+  {
+    MEMSET(entries_, 0, sizeof(entries_));
+  }
+
+  static TokenizeResultCache &instance()
+  {
+    static thread_local TokenizeResultCache cache;
+    return cache;
+  }
+
+  // On a hit the value is copied into @param allocator; cached bytes are never
+  // handed out directly because they can be evicted by a later insertion.
+  int get(const uint64_t key, common::ObIAllocator &allocator, common::ObString &value)
+  {
+    int ret = OB_ENTRY_NOT_EXIST;
+    for (int64_t i = 0; i < MAX_ENTRIES && OB_ENTRY_NOT_EXIST == ret; ++i) {
+      const Entry &entry = entries_[i];
+      if (0 != entry.len_ && entry.key_ == key) {
+        char *buf = static_cast<char *>(allocator.alloc(entry.len_));
+        if (OB_ISNULL(buf)) {
+          ret = OB_ALLOCATE_MEMORY_FAILED;
+        } else {
+          MEMCPY(buf, buf_ + entry.offset_, entry.len_);
+          value.assign_ptr(buf, static_cast<common::ObString::obstr_size_t>(entry.len_));
+          ret = OB_SUCCESS;
+        }
+      }
+    }
+    return ret;
+  }
+
+  // Best effort: a failure to cache must never fail the statement.
+  int put(const uint64_t key, const common::ObString &value)
+  {
+    int ret = OB_SUCCESS;
+    if (value.empty() || value.length() > MAX_BYTES) {
+      // not worth caching
+    } else if (OB_ISNULL(buf_)
+               && OB_ISNULL(buf_ = static_cast<char *>(
+                                 ob_malloc(MAX_BYTES, common::ObMemAttr("FTSTokCache"))))) {
+      ret = OB_ALLOCATE_MEMORY_FAILED;
+    } else {
+      Entry *slot = NULL;
+      if (used_ + value.length() > MAX_BYTES) {
+        reset();
+      }
+      for (int64_t i = 0; i < MAX_ENTRIES && NULL == slot; ++i) {
+        if (0 == entries_[i].len_ || entries_[i].key_ == key) {
+          slot = &entries_[i];
+        }
+      }
+      if (NULL != slot) {
+        MEMCPY(buf_ + used_, value.ptr(), value.length());
+        slot->key_ = key;
+        slot->offset_ = used_;
+        slot->len_ = value.length();
+        used_ += value.length();
+      }
+    }
+    return ret;
+  }
+
+private:
+  struct Entry
+  {
+    uint64_t key_;
+    int64_t offset_;
+    int64_t len_;
+  };
+
+  void reset()
+  {
+    MEMSET(entries_, 0, sizeof(entries_));
+    used_ = 0;
+  }
+
+private:
+  Entry entries_[MAX_ENTRIES];
+  char *buf_;
+  int64_t used_;
+};
+
+} // anonymous namespace
+
 ObExprTokenize::ObExprTokenize(common::ObIAllocator &alloc)
     : ObStringExprOperator(alloc,
                            T_FUN_TOKENIZE,
@@ -64,12 +174,46 @@ int ObExprTokenize::eval_tokenize(const ObExpr &expr, ObEvalCtx &ctx, ObDatum &e
   if (OB_UNLIKELY(expr.arg_cnt_ < 1 || expr.arg_cnt_ > 3)) {
     ret = OB_INVALID_ARGUMENT;
   } else if (OB_FAIL(parse_param(expr, ctx, temp_allocator, param))) {
-  } else if (OB_FAIL(tokenize_fulltext(param, param.output_mode_, temp_allocator, json_result))) {
-  } else if (OB_FAIL(ObJsonExprHelper::pack_json_res(expr,
-                                                     ctx,
-                                                     temp_allocator,
-                                                     json_result,
-                                                     expr_datum))) {
+  } else {
+    // Key over every input that can change the tokenization result.  The tenant
+    // is included because the dictionaries are tenant scoped.
+    uint64_t cache_key = 0;
+    cache_key = common::murmurhash(param.fulltext_.ptr(), param.fulltext_.length(), cache_key);
+    cache_key = common::murmurhash(param.parser_name_.ptr(), param.parser_name_.length(), cache_key);
+    cache_key = common::murmurhash(param.properties_.ptr(), param.properties_.length(), cache_key);
+    const int64_t cache_coll_type = static_cast<int64_t>(param.meta_.get_collation_type());
+    cache_key = common::murmurhash(&cache_coll_type, sizeof(cache_coll_type), cache_key);
+    const int64_t cache_mode = static_cast<int64_t>(param.output_mode_);
+    cache_key = common::murmurhash(&cache_mode, sizeof(cache_mode), cache_key);
+    // Scope the cache to the session so that results can never leak across
+    // tenants: dictionaries and parser settings are session scoped.
+    const ObBasicSessionInfo *cache_session = ctx.exec_ctx_.get_my_session();
+    const uint64_t cache_scope = reinterpret_cast<uint64_t>(cache_session);
+    cache_key = common::murmurhash(&cache_scope, sizeof(cache_scope), cache_key);
+
+    bool cache_hit = false;
+    ObString cached_value;
+    if (OB_SUCCESS == TokenizeResultCache::instance().get(cache_key, temp_allocator, cached_value)) {
+      cache_hit = true;
+      // Pack the reused bytes exactly like a freshly produced result so that the
+      // datum layout stays identical.
+      if (OB_FAIL(ObJsonExprHelper::pack_json_str_res(expr, ctx, expr_datum, cached_value))) {
+      }
+    }
+    if (OB_SUCC(ret) && !cache_hit) {
+      // Both the miss and the hit path pack the raw binary JSON with the same
+      // helper, so the produced datum is identical whichever path is taken.
+      ObString raw_bin;
+      if (OB_FAIL(tokenize_fulltext(param, param.output_mode_, temp_allocator, json_result))) {
+      } else if (OB_FAIL(share::ObJsonWrapper::get_raw_binary(json_result,
+                                                              raw_bin,
+                                                              &temp_allocator))) {
+      } else if (OB_FAIL(ObJsonExprHelper::pack_json_str_res(expr, ctx, expr_datum, raw_bin))) {
+      } else {
+        // Best effort: a failure to cache must never fail the statement.
+        TokenizeResultCache::instance().put(cache_key, raw_bin);
+      }
+    }
   }
 
   return ret;
