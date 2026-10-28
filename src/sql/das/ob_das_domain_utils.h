@@ -155,6 +155,18 @@ private:
   DISALLOW_COPY_AND_ASSIGN(ObDomainDMLParam);
 };
 
+// Monotonic counter advanced every time full-text index rows are produced,
+// i.e. on every action that can change what a full-text query returns (index
+// build included).  A reader that caches full-text results can use it as a
+// cheap "has anything changed since?" version, so a stale entry is never
+// served.  It is intentionally global: a false bump only costs a cache miss.
+class ObFTSWriteEpoch final
+{
+public:
+  static uint64_t get();
+  static void bump();
+};
+
 class ObDASDomainUtils final
 {
 public:

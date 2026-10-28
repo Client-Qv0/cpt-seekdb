@@ -20,6 +20,7 @@
 #include "share/ob_errno.h"
 #define USING_LOG_PREFIX SQL_DAS
 
+#include "lib/atomic/ob_atomic.h"
 #include "ob_das_domain_utils.h"
 #include "data_plane/blocksstable/ob_datum_row.h"
 #include "data_plane/access/ob_datum_reshape.h"
@@ -274,6 +275,22 @@ int ObDASDomainUtils::build_ft_doc_word_infos(
   return ret;
 }
 
+namespace {
+// Single process wide counter shared by get() and bump().
+uint64_t g_fts_write_epoch = 0;
+}
+
+uint64_t ObFTSWriteEpoch::get()
+{
+  return ATOMIC_LOAD(&g_fts_write_epoch);
+}
+
+void ObFTSWriteEpoch::bump()
+{
+  const uint64_t new_val = ATOMIC_AAF(&g_fts_write_epoch, 1);
+  LOG_TRACE("fulltext write epoch bumped", K(new_val));
+}
+
 /*static*/ int ObDASDomainUtils::generate_fulltext_word_rows(common::ObIAllocator &allocator,
                                                              storage::ObFTParseHelper *helper,
                                                              const common::ObObjMeta &ft_obj_meta,
@@ -283,6 +300,8 @@ int ObDASDomainUtils::build_ft_doc_word_infos(
                                                              ObDomainIndexRow &word_rows)
 {
   int ret = OB_SUCCESS;
+  // Any write that reaches this point can change full-text query results.
+  ObFTSWriteEpoch::bump();
   static int64_t FT_WORD_DOC_COL_CNT = 4;
   static constexpr int64_t FT_MAX_WORD_BUCKET = 997;
   const int64_t ft_word_bkt_cnt = MIN(MAX(fulltext.length() / 10, 2), FT_MAX_WORD_BUCKET);
