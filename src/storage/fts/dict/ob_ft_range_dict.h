@@ -35,13 +35,11 @@ namespace storage
 class ObFTRangeDict final : public ObIFTDict
 {
 public:
-  static constexpr uint32_t INVALID_FIRST_CHAR = static_cast<uint32_t>(-1);
   ObFTRangeDict(ObIAllocator &alloc,
                 ObFTCacheRangeContainer *range_container,
                 const ObFTDictDesc &desc)
       : is_inited_(false), desc_(desc), range_alloc_(lib::ObMemAttr("Range Dict")),
-        range_dicts_(&range_alloc_), range_container_(range_container),
-        cached_first_char_(INVALID_FIRST_CHAR), cached_first_char_dict_(nullptr)
+        range_dicts_(&range_alloc_), range_container_(range_container)
   {
   }
   ~ObFTRangeDict() override{};
@@ -102,23 +100,12 @@ private:
   int find_first_char_range(const ObString &single_word, ObIFTDict *&dict) const;
 
 private:
-  // find_first_char_range() walks the range list and compares against every
-  // range boundary with collation aware string comparison.  The dictionary is
-  // immutable once built, so the result only depends on the first character of
-  // the searched word; remembering the last lookup removes that walk for the
-  // repeated characters that dominate real text.
-  static int decode_first_char(const ObString &word, uint32_t &first_char);
-
-private:
   static constexpr int DEFAULT_KEY_PER_RANGE = 50000; // by estimated
   bool is_inited_;
   ObFTDictDesc desc_;
   ObArenaAllocator range_alloc_;
   ObVector<ObFTRange, ObArenaAllocator> range_dicts_;
   ObFTCacheRangeContainer *range_container_; // only used to read cache
-
-  mutable uint32_t cached_first_char_;
-  mutable ObIFTDict *cached_first_char_dict_;
 
 private:
   DISALLOW_COPY_AND_ASSIGN(ObFTRangeDict);

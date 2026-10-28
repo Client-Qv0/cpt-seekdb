@@ -378,47 +378,11 @@ int ObFTRangeDict::match_with_hit(const ObString &single_word,
   return last_hit.dict_->match_with_hit(single_word, last_hit, hit);
 }
 
-int ObFTRangeDict::decode_first_char(const ObString &word, uint32_t &first_char)
-{
-  int ret = OB_SUCCESS;
-  const unsigned char *ptr = reinterpret_cast<const unsigned char *>(word.ptr());
-  const int64_t len = word.length();
-  if (OB_ISNULL(ptr) || OB_UNLIKELY(len <= 0)) {
-    ret = OB_INVALID_ARGUMENT;
-  } else if (ptr[0] < 0x80) {
-    first_char = ptr[0];
-  } else if (ptr[0] < 0xE0 && len >= 2) {
-    first_char = ((ptr[0] & 0x1F) << 6) | (ptr[1] & 0x3F);
-  } else if (ptr[0] < 0xF0 && len >= 3) {
-    first_char = ((ptr[0] & 0x0F) << 12) | ((ptr[1] & 0x3F) << 6) | (ptr[2] & 0x3F);
-  } else if (len >= 4) {
-    first_char = ((ptr[0] & 0x07) << 18) | ((ptr[1] & 0x3F) << 12)
-                 | ((ptr[2] & 0x3F) << 6) | (ptr[3] & 0x3F);
-  } else {
-    ret = OB_INVALID_ARGUMENT;
-  }
-  return ret;
-}
-
 int ObFTRangeDict::find_first_char_range(const ObString &single_word, ObIFTDict *&dict) const
 {
   int ret = OB_SUCCESS;
-  uint32_t first_char = 0;
   bool found = false;
-  bool cached = false;
-
-  // The range list only changes when the dictionary is (re)built, so the range
-  // that owns a word is fully determined by the first character of the word.
-  if (OB_FAIL(decode_first_char(single_word, first_char))) {
-    // unusual word (empty or truncated), fall back to the plain lookup below
-    ret = OB_SUCCESS;
-  } else if (INVALID_FIRST_CHAR != cached_first_char_ && cached_first_char_ == first_char) {
-    dict = cached_first_char_dict_;
-    found = (nullptr != dict);
-    cached = true;
-  }
-
-  for (int i = 0; OB_SUCC(ret) && !cached && !found && i < range_dicts_.size(); ++i) {
+  for (int i = 0; OB_SUCC(ret) && !found && i < range_dicts_.size(); ++i) {
     if (ObCharset::strcmp(ObCollationType::CS_TYPE_UTF8MB4_BIN,
                           range_dicts_[i].start_.get_word(),
                           single_word)
@@ -431,11 +395,7 @@ int ObFTRangeDict::find_first_char_range(const ObString &single_word, ObIFTDict 
       found = true;
     }
   }
-  if (OB_SUCC(ret) && !cached && first_char != 0) {
-    cached_first_char_ = first_char;
-    cached_first_char_dict_ = found ? dict : nullptr;
-  }
-  if (OB_SUCC(ret) && !found) {
+  if (!found) {
     // not found, dis match
     ret = OB_ENTRY_NOT_EXIST;
   }
