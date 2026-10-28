@@ -227,6 +227,10 @@ int ObDASDomainUtils::build_ft_doc_word_infos(
     common::ObIArray<ObFTDocWordInfo> &doc_word_infos)
 {
   int ret = OB_SUCCESS;
+  // Deleting or updating a row removes inverted index entries without going
+  // through generate_fulltext_word_rows(), so the write epoch is bumped here to
+  // keep count-only query results from outliving the rows they were taken from.
+  bool has_fts_related = false;
   if (OB_UNLIKELY(OB_ISNULL(snapshot))) {
     ret = OB_INVALID_ARGUMENT;
   }
@@ -236,12 +240,14 @@ int ObDASDomainUtils::build_ft_doc_word_infos(
     if (OB_ISNULL(related_ctdef)) {
       ret = OB_ERR_UNEXPECTED;
     } else if (related_ctdef->table_param_.get_data_table().is_fts_doc_word_aux()) {
+      has_fts_related = true;
       doc_word_info.table_id_ = related_ctdef->table_param_.get_data_table().get_table_id();
       doc_word_info.doc_word_table_id_ = related_ctdef->table_param_.get_data_table().get_table_id();
       doc_word_info.doc_word_tablet_id_ = related_tablet_ids.at(i);
       doc_word_info.doc_word_schema_version_ = related_ctdef->table_param_.get_data_table().get_schema_version();
       doc_word_info.doc_word_found_ = true;
     } else if (related_ctdef->table_param_.get_data_table().is_fts_index_aux()) {
+      has_fts_related = true;
       doc_word_info.table_id_ = related_ctdef->table_param_.get_data_table().get_table_id();
       doc_word_info.doc_word_found_ = false;
       int nwrite = 0;
@@ -271,6 +277,9 @@ int ObDASDomainUtils::build_ft_doc_word_infos(
     } else if (OB_FAIL(doc_word_infos.at(doc_word_infos.count()-1).snapshot_.refresh_seq_no(
                            data_plane::tx_desc_seq_base(trans_desc)))) {
     }
+  }
+  if (has_fts_related) {
+    ObFTSWriteEpoch::bump();
   }
   return ret;
 }

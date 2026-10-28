@@ -45,6 +45,7 @@ struct ObDASTRMergeIterParam : public ObDASIterParam
       dim_weights_(),
       max_batch_size_(0),
       boolean_compute_node_(nullptr),
+      result_cache_allowed_(false),
       flags_(0)
   {}
 
@@ -61,6 +62,9 @@ struct ObDASTRMergeIterParam : public ObDASIterParam
   ObArray<double> dim_weights_;
   int64_t max_batch_size_;
   ObFtsEvalNode *boolean_compute_node_;
+  // Set when the caller knows that nothing above this iterator consumes the
+  // scan output (no lookup and no sort), so the row count alone is enough.
+  bool result_cache_allowed_;
   union {
     struct {
       uint32_t function_lookup_mode_  : 1;
@@ -105,9 +109,29 @@ public:
   int get_query_max_score(double &score);
 
 private:
+  // Replay support for count-only scans.  A COUNT(*) query over a full-text
+  // index is planned as a scan without output columns, so only the number of
+  // produced rows matters.  Once such a scan has run to its end, the row count
+  // can be replayed on the next execution of the same query against the same
+  // index tablet, as long as no full-text row was written in between (see
+  // ObFTSWriteEpoch).
+  int init_result_cache(const ObDASTRMergeIterParam &param);
+  void reset_result_cache();
+  int lookup_result_cache();
+  int replay_cached_rows(int64_t &count, int64_t capacity);
+
   common::ObArenaAllocator engine_allocator_;
   ObIDASTextRetrievalEngine *engine_;
   bool is_inited_;
+  bool result_cache_usable_;
+  bool result_cache_hit_;
+  bool result_cache_stored_;
+  uint64_t result_cache_token_hash_;
+  uint64_t result_cache_key_;
+  uint64_t result_cache_epoch_;
+  int64_t result_cache_tablet_id_;
+  int64_t result_cache_remaining_;
+  int64_t result_cache_scanned_cnt_;
   DISALLOW_COPY_AND_ASSIGN(ObDASTRMergeIter);
 };
 
