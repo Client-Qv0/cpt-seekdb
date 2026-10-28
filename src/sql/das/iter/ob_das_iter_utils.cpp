@@ -1069,10 +1069,12 @@ int ObDASIterUtils::create_text_retrieval_tree(ObTableScanParam &scan_param,
       trans_desc,
       snapshot,
       text_retrieval_result,
-      // Only a scan whose result is consumed directly by the scan operator can
-      // be replayed from its row count: a lookup or a sort above it reads the
-      // doc id and the relevance score of every row.
-      ObDASOpType::DAS_OP_IR_SCAN == attach_ctdef->op_type_ && !has_lookup))) {
+      // Two shapes can be replayed.  A scan consumed directly by the scan
+      // operator is replayed from its row count alone, because nothing above it
+      // reads the rows.  A scan with a pushed down top-n is replayed row by row
+      // instead, since the lookup above it needs the document ids.
+      (ObDASOpType::DAS_OP_IR_SCAN == attach_ctdef->op_type_ && !has_lookup)
+      || ir_scan_ctdef->has_pushdown_topk()))) {
   } else {
     root_iter = text_retrieval_result;
     if (has_lookup) {

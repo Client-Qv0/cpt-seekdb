@@ -115,14 +115,39 @@ private:
   // can be replayed on the next execution of the same query against the same
   // index tablet, as long as no full-text row was written in between (see
   // ObFTSWriteEpoch).
+  enum ResultCacheMode
+  {
+    RC_NONE = 0,
+    RC_COUNT = 1,  // the row count alone is replayed
+    RC_ROWS = 2,   // the produced rows are replayed, column values included
+  };
+
   int init_result_cache(const ObDASTRMergeIterParam &param);
   void reset_result_cache();
+  void reset_result_cache_progress();
   int lookup_result_cache();
   int replay_cached_rows(int64_t &count, int64_t capacity);
+  int capture_cached_rows(int64_t count);
+  int store_cached_rows();
+  int replay_cached_row_data(int64_t &count, int64_t capacity);
 
   common::ObArenaAllocator engine_allocator_;
   ObIDASTextRetrievalEngine *engine_;
   bool is_inited_;
+  ResultCacheMode result_cache_mode_;
+  ObEvalCtx *result_cache_eval_ctx_;
+  const ExprFixedArray *result_cache_output_;
+  char *result_cache_buf_;
+  int64_t result_cache_buf_len_;
+  int64_t result_cache_row_cnt_;
+  int64_t result_cache_col_cnt_;
+  int64_t result_cache_replayed_;
+  // Evaluated top-n bound of the scan, -1 when the scan has no bound.  It is
+  // part of the key: two queries that differ only by their limit produce
+  // different row sets.
+  int64_t result_cache_topn_limit_;
+  int64_t result_cache_topn_offset_;
+  bool result_cache_engine_opened_;
   bool result_cache_usable_;
   bool result_cache_hit_;
   bool result_cache_stored_;
