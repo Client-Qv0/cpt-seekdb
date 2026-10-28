@@ -175,11 +175,16 @@ int ObExprTokenize::eval_tokenize(const ObExpr &expr, ObEvalCtx &ctx, ObDatum &e
     ret = OB_INVALID_ARGUMENT;
   } else if (OB_FAIL(parse_param(expr, ctx, temp_allocator, param))) {
   } else {
-    // Key over every input that can change the tokenization result.  The tenant
-    // is included because the dictionaries are tenant scoped.
+    // Key over every input that can change the tokenization result.  The
+    // parser name is the one the user wrote rather than the versioned internal
+    // name and the properties are in their first canonical form rather than in
+    // the form rebuilt for the parser: both are refinements of the internal
+    // identity, so they can only split one entry into two, never mix two
+    // different results.  The session is included because the dictionaries and
+    // the parser settings are session scoped.
     uint64_t cache_key = 0;
     cache_key = common::murmurhash(param.fulltext_.ptr(), param.fulltext_.length(), cache_key);
-    cache_key = common::murmurhash(param.parser_name_.ptr(), param.parser_name_.length(), cache_key);
+    cache_key = common::murmurhash(param.raw_parser_name_.ptr(), param.raw_parser_name_.length(), cache_key);
     cache_key = common::murmurhash(param.properties_.ptr(), param.properties_.length(), cache_key);
     const int64_t cache_coll_type = static_cast<int64_t>(param.meta_.get_collation_type());
     cache_key = common::murmurhash(&cache_coll_type, sizeof(cache_coll_type), cache_key);
@@ -201,10 +206,11 @@ int ObExprTokenize::eval_tokenize(const ObExpr &expr, ObEvalCtx &ctx, ObDatum &e
       }
     }
     if (OB_SUCC(ret) && !cache_hit) {
-      // Both the miss and the hit path pack the raw binary JSON with the same
-      // helper, so the produced datum is identical whichever path is taken.
+      // The expensive half of the parameter parsing is only needed to actually
+      // tokenize, so a cache hit skips it entirely.
       ObString raw_bin;
-      if (OB_FAIL(tokenize_fulltext(param, param.output_mode_, temp_allocator, json_result))) {
+      if (OB_FAIL(finish_param(param))) {
+      } else if (OB_FAIL(tokenize_fulltext(param, param.output_mode_, temp_allocator, json_result))) {
       } else if (OB_FAIL(share::ObJsonWrapper::get_raw_binary(json_result,
                                                               raw_bin,
                                                               &temp_allocator))) {
@@ -269,6 +275,7 @@ int ObExprTokenize::tokenize_fulltext(const TokenizeParam &param,
 
 ObExprTokenize::TokenizeParam ::TokenizeParam()
   : allocator_(ObMemAttr("TokenizeParam")),
+    raw_parser_name_(ObString(OB_DEFAULT_FULLTEXT_PARSER_NAME)),
     parser_name_(ObString(OB_DEFAULT_FULLTEXT_PARSER_NAME)),
     meta_(),
     fulltext_(),
@@ -351,11 +358,23 @@ int ObExprTokenize::parse_param(const ObExpr &expr,
   
   MultimodeAlloctor temp_allocator(tmp_alloc_g.get_allocator());
 
+  // Only the inputs that can change the tokenization result are parsed here.
+  // Building the versioned parser name, canonicalizing the parser properties
+  // and loading the IK dictionary are deferred to finish_param(), which runs
+  // only when the result cache misses.
   if (OB_UNLIKELY(expr.arg_cnt_ < 1 || expr.arg_cnt_ > 3)) {
     ret = OB_INVALID_ARGUMENT;
   } else if (OB_FAIL(parse_fulltext(expr, ctx, param))) {
   } else if (OB_FAIL(parse_parser_name(expr, ctx, param))) {
   } else if (OB_FAIL(parse_parser_properties(expr, ctx, temp_allocator, param))) {
+  }
+  return ret;
+}
+
+int ObExprTokenize::finish_param(TokenizeParam &param)
+{
+  int ret = OB_SUCCESS;
+  if (OB_FAIL(construct_ft_parser_inner_name(param.raw_parser_name_, param))) {
   } else if (OB_FAIL(param.reform_parser_properties(param.properties_))) {
   } else if (OB_FAIL(param.try_load_dictionary_for_ik())) {
   }
@@ -477,7 +496,8 @@ int ObExprTokenize::parse_parser_name(const ObExpr &expr, ObEvalCtx &ctx, Tokeni
 
   if (OB_FAIL(ret)) {
     // already logged
-  } else if (OB_FAIL(construct_ft_parser_inner_name(raw_parser_name, param))) {
+  } else {
+    param.raw_parser_name_ = raw_parser_name;
   }
 
   return ret;

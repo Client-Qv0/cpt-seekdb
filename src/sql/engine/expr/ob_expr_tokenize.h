@@ -69,6 +69,11 @@ private:
   public:
     // for property and tmp json string
     mutable ObArenaAllocator allocator_;
+    // Parser name as written by the user, without the version suffix that
+    // construct_ft_parser_inner_name() adds.  The result cache keys on this
+    // because it is available without building the versioned name.
+    ObString raw_parser_name_;
+    // Parser name in its internal (versioned) form, filled on the miss path.
     ObString parser_name_;
     ObString properties_;
     ObObjMeta meta_;
@@ -81,10 +86,13 @@ private:
   };
 
 private:
+  // Cheap part of parameter parsing: everything the result cache key needs.
   static int parse_param(const ObExpr &expr,
                          ObEvalCtx &ctx,
                          common::ObArenaAllocator &allocator,
                          TokenizeParam &param);
+  // Expensive part of parameter parsing, only needed to really tokenize.
+  static int finish_param(TokenizeParam &param);
 
   static int parse_fulltext(const ObExpr &expr, ObEvalCtx &ctx, TokenizeParam &param);
   static int parse_parser_name(const ObExpr &expr, ObEvalCtx &ctx, TokenizeParam &param);
