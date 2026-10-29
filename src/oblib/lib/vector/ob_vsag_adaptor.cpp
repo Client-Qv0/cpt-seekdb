@@ -17,6 +17,7 @@
 #define USING_LOG_PREFIX LIB
 
 #include "ob_vsag_adaptor.h"
+#include "ob_cuvs_snapshot_io.h"
 #include <map>
 #include <set>
 #include <mutex>
@@ -170,17 +171,20 @@ static void ob_cuvs_register(void *key, const float *vectors, const int64_t *ids
 // Buffer vectors arriving via add_index. Plain HNSW builds BOTH its delta and its
 // snapshot incrementally via add_index (one row at a time), so this is where the
 // real data flows -- unlike build_index which is only used by the HNSW_SQ bulk path.
-static void ob_cuvs_add(void *key, const float *vectors, const int64_t *ids,
+static bool ob_cuvs_add(void *key, const float *vectors, const int64_t *ids,
                         int dim, int size) {
-  if (vectors == nullptr || ids == nullptr || dim <= 0 || size <= 0) { return; }
+  if (vectors == nullptr || ids == nullptr || dim <= 0 || size <= 0) { return false; }
   std::lock_guard<std::mutex> guard(g_ob_cuvs_mu);
   ObCuvsEntry *&slot = g_ob_cuvs_reg[key];
   if (slot == nullptr) { slot = new ObCuvsEntry(); slot->dim_ = dim; }
   if (slot->dim_ == 0) { slot->dim_ = dim; }
-  if (slot->dim_ != dim) { return; }
+  if (slot->dim_ != dim ||
+      !cuvs_materialize_host_vectors(slot->buf_vecs_, slot->buf_ids_.size(),
+          dim, slot->bridge_.get(), seekdb_cuvs_get_dataset)) { return false; }
   slot->buf_vecs_.insert(slot->buf_vecs_.end(), vectors,
                          vectors + static_cast<size_t>(dim) * size);
   slot->buf_ids_.insert(slot->buf_ids_.end(), ids, ids + size);
+  return true;
 }
 static bool ob_cuvs_vsag_ready(void *key) {
   std::lock_guard<std::mutex> guard(g_ob_cuvs_mu);
@@ -389,13 +393,17 @@ static bool ob_cuvs_serialize(void *key, std::ostream &out, int &ret) {
   if (it == g_ob_cuvs_reg.end()) { return false; }
   ObCuvsEntry *ent = it->second;
   const size_t n = ent->buf_ids_.size();
-  if (n < OB_CUVS_MIN_PTS || ent->dim_ <= 0 ||
-      ent->buf_vecs_.size() != n * static_cast<size_t>(ent->dim_)) {
+  if (n < OB_CUVS_MIN_PTS || ent->dim_ <= 0) {
     return false;
   }
   const int64_t start_us = ObTimeUtility::current_time();
   bool built = false;
   if (ent->bridge_ == nullptr || ent->built_n_ != n) {
+    if (!cuvs_materialize_host_vectors(ent->buf_vecs_, n, ent->dim_,
+                                       ent->bridge_.get(), seekdb_cuvs_get_dataset)) {
+      ret = OB_ERR_VSAG_RETURN_ERROR;
+      return true;
+    }
     std::shared_ptr<void> nb = ob_cuvs_build_big_stack(ent->buf_vecs_.data(),
                                                        static_cast<long>(n), ent->dim_);
     if (nb == nullptr) {
@@ -433,15 +441,26 @@ static bool ob_cuvs_serialize(void *key, std::ostream &out, int &ret) {
     return true;
   }
   const int64_t t_hdr_done = ObTimeUtility::current_time();
-  std::vector<char> chunk(16UL * 1024 * 1024);
-  uint64_t remaining = graph_bytes;
-  while (remaining > 0) {
-    const size_t bytes = std::min<uint64_t>(remaining, chunk.size());
-    if (::fread(chunk.data(), 1, bytes, graph.file_) != bytes || !ob_cuvs_write(out, chunk.data(), bytes)) {
+  CuvsSnapshotMapping mapping;
+  if (mapping.open(::fileno(graph.file_), graph_bytes, false)) {
+    if (!ob_cuvs_write(out, mapping.data(), static_cast<size_t>(graph_bytes))) {
       ret = OB_ERR_UNEXPECTED;
       return true;
     }
-    remaining -= bytes;
+  } else {
+    // Low address-space limits/filesystems may reject mmap. Keep the existing
+    // streaming path as an I/O fallback; it does not substitute GPU computation.
+    std::vector<char> chunk(16UL * 1024 * 1024);
+    uint64_t remaining = graph_bytes;
+    while (remaining > 0) {
+      const size_t bytes = std::min<uint64_t>(remaining, chunk.size());
+      if (::fread(chunk.data(), 1, bytes, graph.file_) != bytes ||
+          !ob_cuvs_write(out, chunk.data(), bytes)) {
+        ret = OB_ERR_UNEXPECTED;
+        return true;
+      }
+      remaining -= bytes;
+    }
   }
   const int64_t t_copy_done = ObTimeUtility::current_time();
   const int64_t hdr_us = t_hdr_done - t_cuvs_ser_start - cuvs_ser_us;
@@ -476,21 +495,24 @@ static int ob_cuvs_deserialize(void *key, int expected_dim, std::istream &in) {
     ObCuvsEntry *ent = new ObCuvsEntry();
     ent->dim_ = dim32;
     ent->buf_ids_.resize(n);
-    ent->buf_vecs_.resize(n * static_cast<size_t>(dim32));
     if (!ob_cuvs_read(in, ent->buf_ids_.data(), n * sizeof(int64_t))) {
       delete ent;
       ret = OB_ERR_UNEXPECTED;
       LOG_WARN("[OBVSAG][cuVS] truncated snapshot payload", K(ret), KP(key), K(n64));
     } else {
       ObCuvsSnapshotFile graph;
-      std::vector<char> chunk(16UL * 1024 * 1024);
       uint64_t remaining = graph_bytes;
-      while (graph.file_ != nullptr && remaining > 0) {
-        const size_t bytes = std::min<uint64_t>(remaining, chunk.size());
-        if (!ob_cuvs_read(in, chunk.data(), bytes) || ::fwrite(chunk.data(), 1, bytes, graph.file_) != bytes) {
-          break;
+      CuvsSnapshotMapping mapping;
+      if (graph.file_ != nullptr && mapping.open(::fileno(graph.file_), graph_bytes, true)) {
+        if (ob_cuvs_read(in, mapping.data(), static_cast<size_t>(graph_bytes))) { remaining = 0; }
+      } else {
+        std::vector<char> chunk(16UL * 1024 * 1024);
+        while (graph.file_ != nullptr && remaining > 0) {
+          const size_t bytes = std::min<uint64_t>(remaining, chunk.size());
+          if (!ob_cuvs_read(in, chunk.data(), bytes) ||
+              ::fwrite(chunk.data(), 1, bytes, graph.file_) != bytes) { break; }
+          remaining -= bytes;
         }
-        remaining -= bytes;
       }
       ObCuvsSnapshotJob job{graph.path_, nullptr, static_cast<long>(n), dim32, true, -1};
       if (graph.file_ == nullptr || remaining != 0 || ::fflush(graph.file_) != 0 ||
@@ -503,16 +525,9 @@ static int ob_cuvs_deserialize(void *key, int expected_dim, std::istream &in) {
       ent->bridge_ = ob_cuvs_wrap(job.handle_);
       ent->built_n_ = n;
       ent->ids_ = ent->buf_ids_;
-      /* The CAGRA graph is serialized together with its dataset, so the vector
-       * payload is not duplicated in the snapshot. Pull it back for rebuilds. */
-      if (seekdb_cuvs_get_dataset(ent->bridge_.get(), ent->buf_vecs_.data(),
-                                  static_cast<long>(n), dim32) != 0) {
-        ent->bridge_.reset();
-        delete ent;
-        ret = OB_ERR_VSAG_RETURN_ERROR;
-        LOG_WARN("[OBVSAG][cuVS] failed to restore dataset from CAGRA snapshot", K(ret), KP(key), K(n));
-        return ret;
-      }
+      // Search uses the restored GPU index directly. Do not allocate, zero and
+      // download another n*dim FP32 host copy on the DDL/first-query path.
+      // add_index/ensure_vsag_fallback materialize it before it is needed.
       {
         std::lock_guard<std::mutex> guard(g_ob_cuvs_mu);
         ObCuvsEntry *&slot = g_ob_cuvs_reg[key];
@@ -778,8 +793,14 @@ int HnswIndexHandler::ensure_vsag_fallback()
         ret = OB_ERR_UNEXPECTED;
       } else {
         dim = it->second->dim_;
-        vectors = it->second->buf_vecs_;
-        ids = it->second->buf_ids_;
+        if (!cuvs_materialize_host_vectors(it->second->buf_vecs_,
+              it->second->buf_ids_.size(), dim, it->second->bridge_.get(),
+              seekdb_cuvs_get_dataset)) {
+          ret = OB_ERR_VSAG_RETURN_ERROR;
+        } else {
+          vectors = it->second->buf_vecs_;
+          ids = it->second->buf_ids_;
+        }
       }
     }
     if (OB_SUCC(ret) && (dim <= 0 || vectors.empty() || ids.empty())) {
@@ -1610,7 +1631,9 @@ int add_index(VectorIndexPtr &index_handler, float *vector,
   ob_vsag_trace("add_dense", (const void*)index_handler, (long)(dim), (long)(size));
   if (ob_cuvs_marked(index_handler) && index_handler != nullptr &&
       strcmp(static_cast<HnswIndexHandler *>(index_handler)->get_metric(), "l2") == 0) {
-    ob_cuvs_add(index_handler, vector, ids, dim, size);
+    if (!ob_cuvs_add(index_handler, vector, ids, dim, size)) {
+      return OB_ERR_VSAG_RETURN_ERROR;
+    }
     if (!ob_cuvs_vsag_ready(index_handler)) {
       return OB_SUCCESS;
     }
