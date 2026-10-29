@@ -376,7 +376,16 @@ struct ObDatumStrCmpImpl
   static int OB_INLINE cmp(const ObDatum &l, const ObDatum &r, int &cmp_ret,
                            const ObCollationType cs, const bool with_end_space)
   {
-    cmp_ret = ObCharset::strcmpsp(cs, l.ptr_, l.len_, r.ptr_, r.len_, with_end_space);
+    if (CS_TYPE_BINARY == cs && OB_LIKELY(NULL != l.ptr_ && NULL != r.ptr_)) {
+      // The binary collation compares the bytes one by one and then the lengths, which is what
+      // ob_strnncollsp_binary() does. The end space is meaningless to it.
+      cmp_ret = memcmp(l.ptr_, r.ptr_, l.len_ < r.len_ ? l.len_ : r.len_);
+      if (0 == cmp_ret) {
+        cmp_ret = l.len_ > r.len_ ? 1 : (l.len_ < r.len_ ? -1 : 0);
+      }
+    } else {
+      cmp_ret = ObCharset::strcmpsp(cs, l.ptr_, l.len_, r.ptr_, r.len_, with_end_space);
+    }
     cmp_ret = cmp_ret > 0 ? 1 : (cmp_ret < 0 ? -1 : 0);
     return OB_SUCCESS;
   }
