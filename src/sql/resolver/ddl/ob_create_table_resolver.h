@@ -58,6 +58,9 @@ public:
                                   const ObString &table_name,
                                   common::ObIAllocator &allocator,
                                   ObStmt *stmt);
+  // The column ids of a CREATE TABLE statement are generated here, so the hidden
+  // companion columns of an AI COLUMN take their ids from the same counter.
+  virtual uint64_t gen_ai_column_id() { return gen_column_id(); }
 private:
   enum ResolveRule
     {

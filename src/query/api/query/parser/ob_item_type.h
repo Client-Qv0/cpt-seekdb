@@ -2276,6 +2276,8 @@ typedef enum ObItemType
   T_MERGE_TABLE = 4919,
   T_FLUSH_PRIVILEGES = 4920,
   T_FILE_SCAN_EXPRESSION = 4921, // file scan table function, e.g. read_csv('path')
+  T_AI_COLUMN = 4922, // AI COLUMN (<ai function call>) [WITH (...)] column clause
+  T_AI_COLUMN_OPTION = 4923, // one "name = value" option of the AI COLUMN WITH list
   T_MAX //Attention: add a new type before T_MAX
 } ObItemType;
 

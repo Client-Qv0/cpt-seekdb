@@ -59,7 +59,11 @@ enum NUMCHILD {
   COLUMN_DEFINITION_NUM_CHILD = 4,
   COLUMN_DEF_NUM_CHILD = 3,
   INDEX_NUM_CHILD = 5,
-  GEN_COLUMN_DEFINITION_NUM_CHILD = 7
+  GEN_COLUMN_DEFINITION_NUM_CHILD = 7,
+  /* A normal column definition that carries an `AI COLUMN (...)` clause keeps
+   * the four regular children and appends the AI clause node as the last one,
+   * so no existing child index changes meaning. */
+  AI_COLUMN_DEFINITION_NUM_CHILD = 6
 };
 
 struct ObColumnResolveStat
@@ -519,6 +523,31 @@ protected:
       const bool is_create_table_as = false,
       const bool allow_has_default = true);
   int drop_not_null_constraint(const share::schema::ObColumnSchemaV2 &column);
+  ///////////////////////////////////////////////////////////////////////////
+  // AI COLUMN support
+  ///////////////////////////////////////////////////////////////////////////
+  /// Resolve one `AI COLUMN (ai_func(...)) [WITH (...)]` clause of `column`:
+  /// validate the AI function against the result column type, reject
+  /// dependencies on another AI column of the same table, then create the three
+  /// hidden companion columns (and register the spec) so that the DDL layer can
+  /// publish `__all_ai_column` once the table schema is committed.
+  int resolve_ai_column_definition(share::schema::ObColumnSchemaV2 &column,
+                                   ParseNode *ai_node,
+                                   ParseNode *type_node,
+                                   const ObTableSchema &table_schema);
+  /// The column id generator of the statement, OB_INVALID_ID when the statement
+  /// assigns column ids in the DDL layer (ALTER TABLE).
+  virtual uint64_t gen_ai_column_id() { return common::OB_INVALID_ID; }
+  /// True when `column_name` of `table_schema` is an AI result column, i.e. it
+  /// owns a `__ai_state_<column_name>` hidden column.
+  static bool is_ai_column_of_schema(const share::schema::ObTableSchema &table_schema,
+                                     const common::ObString &column_name);
+  static int check_ai_column_dependency(const ParseNode *expr_node,
+                                       const share::schema::ObTableSchema &table_schema,
+                                       bool &has_ai_dependency);
+  static int get_ai_function_info(const ParseNode *expr_node,
+                                  common::ObString &func_name,
+                                  const ParseNode *&params_node);
   int resolve_normal_column_attribute_constr_not_null(ObColumnSchemaV2 &column,
                                                       ParseNode *attrs_node,
                                                       ObColumnResolveStat &resolve_stat);
