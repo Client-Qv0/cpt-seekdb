@@ -1,0 +1,42 @@
+# owner: seekdb
+# owner group: storage
+# Parser metadata reuse and direct binary string-array boundaries.
+--result_format 4
+set names utf8mb4;
+select tokenize('Alpha Beta Alpha', ' beng '), tokenize('全文索引 数据库 Database', 'IK'), tokenize('Alpha Beta', 'space');
+select tokenize('Alpha Beta', 'BENG'), tokenize('全文索引 数据库 Database', 'ik'), tokenize('Alpha Beta', NULL);
+select tokenize(concat(tokenize('Alpha Beta', 'BENG'), ' 中文'), 'ik');
+select tokenize('', 'beng'), json_storage_size(tokenize('', 'beng'));
+select tokenize('数据库 中文 Abc', 'ngram'), tokenize('数据库 中文 Abc', 'ngram2');
+select tokenize('Alpha alpha Beta', 'beng', '[{"output":"all"}]');
+select tokenize('全文索引 数据库', 'ik', '[{"additional_args":[{"ik_mode":"smart"}]}]');
+select tokenize('中文 ÉCOLE CAFÉ "quote" back\\slash', 'space');
+--disable_query_log
+set @tokens = '';
+--let $i = 0
+while ($i < 258)
+{
+  eval set @tokens = concat(@tokens, ' word$i');
+  --inc $i
+  if ($i == 255)
+  {
+    select json_length(tokenize(@tokens, 'space')), json_storage_size(tokenize(@tokens, 'space')), md5(cast(tokenize(@tokens, 'space') as char));
+  }
+  if ($i == 256)
+  {
+    select json_length(tokenize(@tokens, 'space')), json_storage_size(tokenize(@tokens, 'space')), md5(cast(tokenize(@tokens, 'space') as char));
+  }
+}
+select json_length(tokenize(@tokens, 'space')), json_storage_size(tokenize(@tokens, 'space')), md5(cast(tokenize(@tokens, 'space') as char));
+set @tokens = '';
+--let $i = 0
+while ($i < 1000)
+{
+  eval set @tokens = concat(@tokens, ' word$i', repeat('a', 70));
+  --inc $i
+}
+select json_length(tokenize(@tokens, 'space')), json_storage_size(tokenize(@tokens, 'space')), md5(cast(tokenize(@tokens, 'space') as char));
+--enable_query_log
+--error 1128
+select tokenize('Alpha', 'nonexistent');
+select tokenize('Alpha Beta', 'beng');

@@ -1,0 +1,16 @@
+# owner: seekdb
+# owner group: storage
+# Short-token storage, arena fallback, charsets and nested TOKENIZE lifetimes.
+--result_format 4
+set names utf8mb4;
+select tokenize('FIRST Second THIRD third (Mixed-Case) ABC123', 'beng', '[{"output":"all"}]');
+select tokenize(concat('FIRST ', repeat('A', 255), ' Second ', repeat('B', 256), ' THIRD ', repeat('C', 257), ' final'), 'beng', '[{"output":"all"}]');
+select tokenize('ÉCOLE CAFÉ ÄPFEL ΣΟΣ OceanBase 中文', 'beng');
+select tokenize('FIRST 中文 Second' collate utf8mb4_bin, 'beng');
+select tokenize('FIRST Second THIRD' collate utf8mb4_general_ci, 'beng');
+select tokenize(concat(tokenize('FIRST Second THIRD', 'beng'), ' LAST'), 'beng');
+select tokenize('Alpha Beta Alpha', 'beng', '[{"output":"all"},{"additional_args":[{"min_token_size":2},{"max_token_size":20}]}]');
+select tokenize('全文索引 数据库 Database', 'ik', '[{"output":"all"},{"additional_args":[{"ik_mode":"smart"}]}]');
+select tokenize('', 'beng');
+--error ER_NOT_SUPPORTED_YET
+select tokenize(NULL, 'ik');

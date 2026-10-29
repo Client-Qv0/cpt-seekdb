@@ -1,0 +1,326 @@
+drop database if exists fts_hotpath_idx;
+create database fts_hotpath_idx;
+use fts_hotpath_idx;
+set ob_query_timeout = 10000000000;
+result_format: 4
+create table docs(
+  id bigint primary key auto_increment,
+  title varchar(200),
+  content text,
+  content_en text);
+
+insert into docs(title, content, content_en) values
+  ('OceanBase', 'OceanBase是一款非常稳定的数据库，全文索引的分词器热路径优化', 'The quick brown fox jumps over the lazy dog'),
+  ('全文索引', '全文索引的构建需要对每个文档分词，然后对分词结果排序并写入索引表', 'Full-text search indexing requires efficient tokenization'),
+  ('分词器', '分词器负责把文档切分为词语，IK分词器支持智能模式和最大词长模式', 'A tokenizer splits a document into words'),
+  ('数据库', '数据库系统需要在大量文档的索引和查询场景下降低 CPU 开销', 'Database systems must lower the CPU cost of indexing and query'),
+  ('Security Audit', 'Completed the annual security audit, 没有发现重大漏洞', 'Completed the annual security audit. No major vulnerabilities were found'),
+  ('Employee Training', '为全体员工安排了最新行业标准和合规要求的培训', 'Scheduled training sessions for all employees on the latest standards'),
+  ('Client Meeting', 'Prepared for the client meeting next week 客户会议下周举行', 'We will present our progress and discuss future plans'),
+  ('Sales Report', 'Sales have increased by 15% 销售额同比增长百分之十五', 'The sales team is working on strategies to maintain this growth'),
+  ('the THE The', '的 了 是 在 the a an of about', 'the a an of about where what when who will with'),
+  ('', '', ''),
+  (NULL, NULL, NULL),
+  ('重复 重复 重复', '热路径 热路径 热路径 hot path hot path hot path', 'repeat repeat repeat Repeat REPEAT'),
+  ('Mixed 混合 Text 文本', 'database 数据库 Database DATABASE 数据库', 'database performance audit performance performance'),
+  ('日本語 한국어', '日本語のテキスト 한국어 텍스트 Привет мир', 'plain english text only'),
+  ('𠮷野家 😀', '龘靐齉 ＡＢＣ ａｂｃ ABC abc', 'x y z 1 2 3 10 100 1000');
+
+alter table docs add fulltext index fti_ik(title, content) with parser ik;
+alter table docs add fulltext index fti_beng(title, content_en) with parser beng;
+alter table docs add fulltext index fti_ngram(title) with parser ngram;
+alter table docs add fulltext index fti_space(content_en) with parser space;
+alter table docs add fulltext index fti_content(content) with parser ik;
+
+select id from docs where match(title, content) against('全文索引') order by id;
++----+
+| id |
++----+
+|  1 |
+|  2 |
++----+
+select id from docs where match(title, content) against('数据库 分词器') order by id;
++----+
+| id |
++----+
+|  1 |
+|  3 |
+|  4 |
+| 13 |
++----+
+select id from docs where match(title, content) against('OceanBase 稳定 database') order by id;
++----+
+| id |
++----+
+|  1 |
+| 13 |
++----+
+select id from docs where match(title, content) against('热路径') order by id;
++----+
+| id |
++----+
+|  1 |
+| 12 |
++----+
+select id from docs where match(title, content) against('的 了 是 在') order by id;
++----+
+| id |
++----+
+|  1 |
+|  2 |
+|  4 |
+|  6 |
+|  9 |
++----+
+select id from docs where match(title, content) against('日本語 한국어') order by id;
++----+
+| id |
++----+
+| 14 |
++----+
+select id from docs where match(title, content_en) against('quick fox') order by id;
++----+
+| id |
++----+
+|  1 |
++----+
+select id from docs where match(title, content_en) against('database performance audit') order by id;
++----+
+| id |
++----+
+|  4 |
+|  5 |
+| 13 |
++----+
+select id from docs where match(title, content_en) against('the a an of about') order by id;
++----+
+| id |
++----+
++----+
+select id from docs where match(title, content_en) against('repeat') order by id;
++----+
+| id |
++----+
+| 12 |
++----+
+select id from docs where match(title) against('重复') order by id;
++----+
+| id |
++----+
+| 12 |
++----+
+select id from docs where match(content_en) against('Audit') order by id;
++----+
+| id |
++----+
+|  5 |
+| 13 |
++----+
+select id from docs where match(content_en) against('training sessions') order by id;
++----+
+| id |
++----+
+|  6 |
++----+
+select count(*) from docs where match(title, content) against('全文索引 分词器');
++----------+
+| count(*) |
++----------+
+|        3 |
++----------+
+
+select id from docs where match(title, content) against('数据库 分词器 全文索引') order by match(title, content) against('数据库 分词器 全文索引') desc, id;
++----+
+| id |
++----+
+|  1 |
+|  3 |
+|  2 |
+| 13 |
+|  4 |
++----+
+select id from docs where match(content_en) against('performance database') order by match(content_en) against('performance database') desc, id;
++----+
+| id |
++----+
+| 13 |
+|  4 |
++----+
+select id from docs where match(content) against('倒排索引 tokenizer') order by id limit 3;
++----+
+| id |
++----+
+|  2 |
+|  4 |
++----+
+
+select id, match(title, content) against('全文索引') > 0 as hit from docs where match(title, content) against('全文索引') order by id;
++----+------+
+| id | hit  |
++----+------+
+|  1 |    1 |
+|  2 |    1 |
++----+------+
+select id from docs where match(title, content) against('数据库 分词器') > 0 order by id;
++----+
+| id |
++----+
+|  1 |
+|  3 |
+|  4 |
+| 13 |
++----+
+select id from docs where match(title, content) against('全文索引 数据库') > 100 order by id;
++----+
+| id |
++----+
++----+
+select id from docs where match(title, content) against('数据库') and id > 2 order by id;
++----+
+| id |
++----+
+|  4 |
+| 13 |
++----+
+select count(*) from docs where match(content_en) against('database') or id = 1;
++----------+
+| count(*) |
++----------+
+|        3 |
++----------+
+
+select id from docs where match(title, content) against('+数据库 -分词器' in boolean mode) order by id;
++----+
+| id |
++----+
+|  4 |
+| 13 |
++----+
+select id from docs where match(title, content) against('+全文索引 +分词' in boolean mode) order by id;
++----+
+| id |
++----+
+|  2 |
++----+
+select id from docs where match(content_en) against('"quick brown"' in boolean mode) order by id;
++----+
+| id |
++----+
+|  1 |
++----+
+select id from docs where match(content_en) against('+database -audit' in boolean mode) order by id;
++----+
+| id |
++----+
+|  4 |
++----+
+
+insert into docs(title, content, content_en) values
+  ('新增文档', '新增的文档也要能够被全文索引检索到，数据库分词器正常工作', 'A new document must be found by the fulltext index as well'),
+  ('Another new', 'another new document 另一个新文档', 'another document about database performance');
+select id from docs where match(title, content) against('新增 文档') order by id;
++----+
+| id |
++----+
+|  2 |
+|  3 |
+|  4 |
+| 16 |
+| 17 |
++----+
+select id from docs where match(title, content_en) against('another new') order by id;
++----+
+| id |
++----+
+| 16 |
+| 17 |
++----+
+update docs set content = '更新后的内容：倒排索引与分词器', content_en = 'updated text about tokenizer' where id in (1, 4, 16);
+select id from docs where match(title, content) against('倒排索引') order by id;
++----+
+| id |
++----+
+|  1 |
+|  2 |
+|  4 |
+| 16 |
++----+
+select id from docs where match(title, content) against('全文索引') order by id;
++----+
+| id |
++----+
+|  2 |
++----+
+select id from docs where match(title, content_en) against('tokenizer') order by id;
++----+
+| id |
++----+
+|  1 |
+|  3 |
+|  4 |
+| 16 |
++----+
+delete from docs where id in (2, 5, 17);
+select id from docs where match(title, content) against('全文索引') order by id;
++----+
+| id |
++----+
++----+
+select id from docs where match(title, content_en) against('audit') order by id;
++----+
+| id |
++----+
+| 13 |
++----+
+select count(*) from docs where match(title, content) against('数据库');
++----------+
+| count(*) |
++----------+
+|        2 |
++----------+
+
+alter table docs drop index fti_ik;
+alter table docs add fulltext index fti_ik(title, content) with parser ik parser_properties=(ik_mode='max_word');
+select id from docs where match(title, content) against('全文索引') order by id;
++----+
+| id |
++----+
+|  1 |
+|  4 |
+| 16 |
++----+
+select id from docs where match(title, content) against('数据库 分词器') order by id;
++----+
+| id |
++----+
+|  1 |
+|  3 |
+|  4 |
+| 13 |
+| 16 |
++----+
+alter table docs drop index fti_beng;
+alter table docs add fulltext index fti_beng(title, content_en) with parser ngram;
+select id from docs where match(title, content_en) against('quick fox') order by id;
++----+
+| id |
++----+
+|  6 |
+| 13 |
++----+
+alter table docs drop index fti_space;
+alter table docs add fulltext index fti_space(content_en) with parser space parser_properties=(min_token_size=3, max_token_size=12);
+select id from docs where match(content_en) against('database performance') order by id;
++----+
+| id |
++----+
+| 13 |
++----+
+select id from docs where match(content_en) against('Audit') order by id;
++----+
+| id |
++----+
+| 13 |
++----+
+
+drop database fts_hotpath_idx;

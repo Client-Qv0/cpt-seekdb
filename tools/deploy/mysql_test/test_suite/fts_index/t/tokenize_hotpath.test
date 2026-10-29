@@ -1,0 +1,113 @@
+# owner: seekdb
+# owner group: storage
+# description: hot path of the fulltext tokenization, which covers the reuse of the parser name and
+#   the parser properties, the dictionary lookups of ik, the stop words, the grouping of words and
+#   the order of the tokens.
+
+--disable_warnings
+drop database if exists fts_hotpath;
+create database fts_hotpath;
+use fts_hotpath;
+set ob_query_timeout = 10000000000;
+--enable_warnings
+
+--result_format 4
+
+# the same call again and again, the result never changes
+select tokenize('OceanBase是一款非常稳定的数据库，全文索引的分词器热路径优化包括解析器实例复用、停用词全局单例、内存池化数据结构等技术，在大量文档索引和查询场景下可以显著降低 CPU 开销。', 'ik');
+select tokenize('OceanBase是一款非常稳定的数据库，全文索引的分词器热路径优化包括解析器实例复用、停用词全局单例、内存池化数据结构等技术，在大量文档索引和查询场景下可以显著降低 CPU 开销。', 'ik');
+select tokenize('OceanBase是一款非常稳定的数据库，全文索引的分词器热路径优化包括解析器实例复用、停用词全局单例、内存池化数据结构等技术，在大量文档索引和查询场景下可以显著降低 CPU 开销。', 'ik');
+select tokenize('The quick brown fox jumps over the lazy dog. Full-text search indexing requires efficient tokenization on the hot path.', 'beng');
+select tokenize('The quick brown fox jumps over the lazy dog. Full-text search indexing requires efficient tokenization on the hot path.', 'beng');
+
+# different parsers and properties in turn, they must not mix up
+select tokenize('全文索引的分词器热路径优化', 'ik', '[{"additional_args": [{"ik_mode": "max_word"}]}]');
+select tokenize('全文索引的分词器热路径优化', 'ik', '[{"additional_args": [{"ik_mode": "smart"}]}]');
+select tokenize('全文索引的分词器热路径优化', 'ik');
+select tokenize('全文索引的分词器热路径优化', 'ik', '[{"additional_args": [{"ik_mode": "max_word"}]}]');
+select tokenize('全文索引的分词器热路径优化', 'ngram');
+select tokenize('全文索引的分词器热路径优化', 'ngram', '[{"additional_args": [{"ngram_token_size": 3}]}]');
+select tokenize('全文索引的分词器热路径优化', 'ngram');
+select tokenize('全文索引的分词器热路径优化', 'space');
+select tokenize('全文索引的分词器热路径优化', 'ik');
+
+# output all keeps the counts of the words
+select tokenize('全文索引的分词器热路径优化 全文索引', 'ik', '[{"output": "all"}]');
+select tokenize('全文索引的分词器热路径优化 全文索引', 'ik', '[{"output": "all"}, {"additional_args": [{"ik_mode": "max_word"}]}]');
+select tokenize('to be or not to be that is the question', 'space', '[{"output": "all"}]');
+select tokenize('to be or not to be that is the question', 'beng', '[{"output": "all"}]');
+select tokenize('To Be OR not TO be THAT is The Question', 'beng', '[{"output": "all"}]');
+select tokenize('Hello HELLO hello hELLo World world', 'space', '[{"output": "all"}]');
+select tokenize('Hello HELLO hello hELLo World world', 'beng', '[{"output": "all"}]');
+select tokenize('Hello HELLO hello hELLo World world', 'ik', '[{"output": "all"}]');
+
+# stop words
+select tokenize('the a an of about where what when who will with', 'beng');
+select tokenize('the a an of about where what when who will with', 'ik');
+select tokenize('The Database of the World', 'beng', '[{"output": "all"}]');
+select tokenize('The Database of the World', 'ik', '[{"output": "all"}]');
+
+# a long text, which is cut into several batches by ik
+create table longdoc(id int primary key, c varchar(8000));
+insert into longdoc values (1, repeat('数据库全文索引 ', 300)), (2, repeat('hello world ', 400));
+select id, tokenize(c, 'ik', '[{"output": "all"}]') from longdoc order by id;
+select id, tokenize(c, 'beng', '[{"output": "all"}]') from longdoc order by id;
+select id, tokenize(c, 'ik') from longdoc order by id;
+
+# characters of various kinds and classes
+select tokenize('2024年10月27日 3.14 1,000 一二三四五 三千五百 12个 5块钱 abc123 a-b_c x@y.com', 'ik');
+select tokenize('2024年10月27日 3.14 1,000 一二三四五 三千五百 12个 5块钱 abc123 a-b_c x@y.com', 'ik', '[{"additional_args": [{"ik_mode": "max_word"}]}]');
+select tokenize('日本語のテキスト 한국어 텍스트 Привет мир', 'ik', '[{"output": "all"}]');
+select tokenize('𠮷野家 😀 ok ＡＢＣ ａｂｃ ABC 龘靐齉', 'ik', '[{"output": "all"}]');
+select tokenize('，。！？!?,.;:()[]{}', 'ik');
+select tokenize('，。！？!?,.;:()[]{}', 'beng');
+select tokenize('   ', 'ik');
+select tokenize('   ', 'beng');
+select tokenize('', 'ik');
+--error ER_NOT_SUPPORTED_YET
+select tokenize(NULL, 'ik');
+select tokenize(NULL, 'beng');
+select tokenize(cast(NULL as char), 'ik');
+
+# the size limits of the words
+select tokenize('a ab abc abcd abcde abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz', 'beng', '[{"output": "all"}]');
+select tokenize('a ab abc abcd abcde abcdefghij abcdefghijk abcdefghijklmnopqrstuvwxyz', 'space', '[{"output": "all"}, {"additional_args": [{"min_token_size": 3}, {"max_token_size": 10}]}]');
+select tokenize('a ab abc abcd abcde abcdefghij abcdefghijk abcdefghijklmnopqrstuvwxyz', 'beng', '[{"output": "all"}, {"additional_args": [{"min_token_size": 3}, {"max_token_size": 10}]}]');
+select tokenize('a ab abc abcd abcde abcdefghijklmnopqrstuvwxyz', 'space', '[{"output": "all"}]');
+
+# errors never stick, neither do the results before them
+--error ER_WRONG_ARGUMENTS
+select tokenize('全文索引', 'ik', '[{"additional_args": [{"ik_mode": "bad"}]}]');
+select tokenize('全文索引', 'ik', '[{"additional_args": [{"ik_mode": "max_word"}]}]');
+--error ER_WRONG_ARGUMENTS
+select tokenize('全文索引', 'ik', '[{"additional_args": [{"ik_mode": "bad"}]}]');
+select tokenize('全文索引', 'ik');
+--error ER_NOT_SUPPORTED_YET
+select tokenize('全文索引', 'ik', '[{"additional_args": [{"min_token_size": 3}]}]');
+select tokenize('全文索引', 'ik');
+--error ER_FUNCTION_NOT_DEFINED
+select tokenize('全文索引', 'ikk');
+select tokenize('全文索引', 'ik');
+--error ER_WRONG_ARGUMENTS
+select tokenize('hello world', 'ngram', '[{"additional_args": [{"ngram_token_size": 0}]}]');
+select tokenize('hello world', 'ngram');
+select tokenize('hello world', 'ngram', '[{"additional_args": [{"ngram_token_size": 2}]}]');
+
+# from a table, the parser and the properties may differ from row to row
+create table doc(id int primary key, parser varchar(20), c1 varchar(500), c2 varchar(500));
+insert into doc values
+  (1, 'ik', '数据库的全文索引', 'OceanBase数据库'),
+  (2, 'beng', 'The quick brown fox', 'jumps over the lazy dog'),
+  (3, 'ngram', '全文索引', 'abcdef'),
+  (4, 'space', 'hello world hello', 'a b c a b'),
+  (5, 'ik', '', NULL),
+  (6, 'beng', NULL, ''),
+  (7, 'ik', '分词器分词器分词器', '热路径 热路径 hot path hot path');
+select id, tokenize(c1, parser) from doc order by id;
+select id, tokenize(c2, parser, '[{"output": "all"}]') from doc order by id;
+select id, tokenize(c1, 'ik'), tokenize(c1, 'ngram'), tokenize(c1, 'space'), tokenize(c1, 'beng') from doc order by id;
+select id, json_length(tokenize(concat(c1, ' ', c2), 'ik')) from doc order by id;
+select id from doc where '数据库' member of (tokenize(c1, 'ik')) order by id;
+select id from doc where 'hello' member of (tokenize(c1, parser)) order by id;
+
+drop database fts_hotpath;

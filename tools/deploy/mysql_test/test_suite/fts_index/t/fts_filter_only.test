@@ -1,0 +1,96 @@
+# owner: seekdb
+# owner group: storage
+# Filter-only retrieval must agree with scored retrieval, including plan reuse.
+--disable_warnings
+drop database if exists fts_filter_only;
+create database fts_filter_only;
+use fts_filter_only;
+--enable_warnings
+set names utf8mb4;
+set ob_query_timeout = 10000000000;
+--result_format 4
+create table docs(id int primary key, body text, fulltext key ft(body) with parser beng);
+insert into docs values (1, 'database performance audit'), (2, 'database database'),
+ (3, 'performance audit'), (4, 'unrelated words'), (5, ''), (6, NULL),
+ (7, 'audit database'), (8, 'the of and');
+select count(*) from docs where match(body) against('database audit');
+select id from docs where match(body) against('database audit') order by id;
+select count(*) from docs where match(body) against('nonexistent');
+select count(*) from docs where match(body) against('the of and');
+select count(*) from docs where match(body) against('');
+select count(*) from docs where match(body) against(NULL);
+select count(*) from (select id from docs where match(body) against('database audit') limit 2) s;
+select count(*) from (select id from docs where match(body) against('database audit') limit 2 offset 1) s;
+select count(*) from (select id from docs where match(body) against('database audit') limit 0) s;
+select count(*) from (select id from docs where match(body) against('database audit') limit 2 offset 99) s;
+select count(*) from (select id from docs where match(body) against('database audit') order by match(body) against('database audit') desc limit 3) s;
+select count(id) from (select id from docs where match(body) against('database audit') limit 2) s;
+select sum(id) from (select id from docs where match(body) against('database audit') order by match(body) against('database audit') desc, id limit 2) s;
+select count(*) from (select id from docs where match(body) against('database audit') order by match(body) against('database audit') desc, id limit 2) s where id > 1;
+select count(*) from docs where match(body) against('database audit') and id > 1;
+select id from docs where not match(body) against('database audit') order by id;
+select id from docs where match(body) against('database audit') or id = 4 order by id;
+select id from docs where match(body) against('database audit') and match(body) against('performance') order by id;
+select id from docs where match(body) against('database') or match(body) against('performance') order by id;
+# Numeric comparisons, projections, aliases and ordering must retain real scores.
+select id, round(match(body) against('database audit'), 8) as score from docs order by id;
+select id, round(match(body) against('database audit'), 8) as score from docs where match(body) against('database audit') order by score desc, id;
+select id from docs where match(body) against('database audit') > 0.1 order by id;
+select id from docs where match(body) against('database audit') > 0 order by id;
+select id from docs where match(body) against('database audit') = 0 order by id;
+select id from docs where match(body) against('database audit') order by match(body) against('database audit') desc, id limit 3;
+select round(sum(match(body) against('database audit')), 8) from docs;
+select round(match(body) against('database audit'), 8) as score, count(*) from docs group by score order by score;
+# Boolean mode retains its weighting and required/excluded-term rules.
+select id from docs where match(body) against('+database -performance' in boolean mode) order by id;
+select id from docs where match(body) against('database audit' in boolean mode) order by id;
+select id, round(match(body) against('database audit' in boolean mode), 8) from docs order by id;
+prepare ps from 'select count(*) from docs where match(body) against(?)';
+set @q = 'database';
+execute ps using @q;
+set @q = 'performance';
+execute ps using @q;
+set @q = 'nonexistent';
+execute ps using @q;
+set @q = 'database';
+execute ps using @q;
+deallocate prepare ps;
+prepare ps from 'select id from docs where match(body) against(?) > ? order by id';
+set @q = 'database audit', @cutoff = 0;
+execute ps using @q, @cutoff;
+set @cutoff = 0.1;
+execute ps using @q, @cutoff;
+deallocate prepare ps;
+# Reuse after changed postings and transaction rollback.
+begin;
+insert into docs values (9, 'database performance');
+select count(*) from docs where match(body) against('database');
+rollback;
+select count(*) from docs where match(body) against('database');
+update docs set body = 'performance' where id = 2;
+delete from docs where id = 7;
+select id from docs where match(body) against('database audit') order by id;
+select id, round(match(body) against('database audit'), 8) from docs where match(body) against('database audit') order by id;
+create table cn(id int primary key, body text, fulltext key ft(body) with parser ik);
+insert into cn values (1, '数据库全文索引分词器'), (2, '倒排索引数据库'), (3, '查询性能优化'), (4, NULL);
+select id from cn where match(body) against('数据库 索引') order by id;
+select id from cn where match(body) against('数据库 索引') order by match(body) against('数据库 索引') desc, id;
+# Posting lists span multiple batches and overlap at different positions.
+create table digits(n int primary key);
+insert into digits values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
+create table many(id int primary key, body text);
+insert into many select a.n + 10*b.n + 100*c.n,
+ concat(if(mod(a.n+10*b.n+100*c.n, 2)=0, 'alpha beta ', ''),
+        if(mod(a.n+10*b.n+100*c.n, 3)=0, 'gamma delta ', ''),
+        if(mod(a.n+10*b.n+100*c.n, 5)=0, 'epsilon zeta ', ''),
+        if(mod(a.n+10*b.n+100*c.n, 7)=0, 'theta kappa omega', 'lambda'))
+ from digits a, digits b, digits c;
+alter table many add fulltext index ft(body) with parser beng;
+select count(*), sum(id), min(id), max(id) from many where match(body) against('alpha gamma');
+select count(*), sum(id) from many where match(body) against('alpha');
+select count(*), sum(id) from many where match(body) against('absent alpha absent');
+select count(*), sum(id) from many where match(body) against('alpha beta gamma delta epsilon zeta theta kappa');
+select count(*), sum(id) from many where match(body) against('alpha beta gamma delta epsilon zeta theta kappa omega lambda');
+select count(*) from (select id from many where match(body) against('alpha gamma') limit 257 offset 255) s;
+select count(*), sum(id) from many where match(body) against('alpha gamma') and id between 240 and 780;
+drop database fts_filter_only;
