@@ -379,7 +379,13 @@ class AiColumnWorker : public share::ObThreadPool
       // Renew the whole group's lease between external calls. A deleted or
       // superseded group must not dispatch the next request from this snapshot.
       sql.reset();
-      sql.append("UPDATE oceanbase.__all_ai_column_task SET lease_until=DATE_ADD(NOW(6),INTERVAL 300 SECOND) WHERE ");
+      // Internal SQL reports changed rows. Two renewals can observe the same
+      // NOW(6), so an unchanged deadline must not look like lost ownership.
+      // Advance by at least one microsecond while retaining the owner/expiry
+      // predicate: zero changed rows then really means the lease is gone.
+      sql.append("UPDATE oceanbase.__all_ai_column_task SET lease_until="
+                 "GREATEST(DATE_ADD(NOW(6),INTERVAL 300 SECOND),"
+                 "DATE_ADD(lease_until,INTERVAL 1 MICROSECOND)) WHERE ");
       sql.append(owned.string());
       int64_t renewed_rows=0;
       if (OB_FAIL(client.write(sql.ptr(),renewed_rows))) { break; }
