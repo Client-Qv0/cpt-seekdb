@@ -23,6 +23,8 @@
 #include "common/mysqlclient/ob_mysql_transaction.h"
 #include "common/mysqlclient/ob_mysql_result.h"
 #include "share/ob_server_struct.h"
+#include "share/rc/ob_server_runtime.h"
+#include "config_bridge.h"
 #include "share/schema/ob_multi_version_schema_service.h"
 #include "sql/engine/expr/ob_expr_uuid.h"
 #include "lib/time/ob_time_utility.h"
@@ -458,6 +460,13 @@ public:
   void run1() override
   {
     while (!has_set_stop()) {
+      // Bootstrap and system-package loading own startup resources. Do not
+      // contend with the first user CALL or write into a read-only runtime.
+      if (!share::server_is_write_enabled()
+          || (config::_enable_async_load_sys_package() && !GCTX.sys_package_ready_)) {
+        ob_usleep(100*1000);
+        continue;
+      }
       if (recovery_state_.load()!=2) {
         int expected=0;
         if (recovery_state_.compare_exchange_strong(expected,1)) {

@@ -35,6 +35,8 @@ public:
   int create_ai_model(const obcall::ObCreateAiModelArg &arg);
   int drop_ai_model(const obcall::ObDropAiModelArg &arg);
 private:
+  int create_ai_model_once(const obcall::ObCreateAiModelArg &arg, bool &retry_schema);
+  int drop_ai_model_once(const obcall::ObDropAiModelArg &arg, bool &retry_schema);
   ObDDLService &ddl_service_;
 };
 

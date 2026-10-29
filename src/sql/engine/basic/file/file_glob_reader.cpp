@@ -20,6 +20,11 @@ using namespace common;
 namespace {
 bool file_glob_match(const std::string &pattern, const std::string &text)
 {
+  // Filename expansion requires an explicit leading dot to discover hidden
+  // files. Wildcards still match dots elsewhere in a filename.
+  if (!text.empty() && text.front() == '.' && (pattern.empty() || pattern.front() != '.')) {
+    return false;
+  }
   size_t p = 0, t = 0, star = std::string::npos, retry = 0;
   while (t < text.size()) {
     if (p < pattern.size() && (pattern[p] == '?' || pattern[p] == text[t])) {

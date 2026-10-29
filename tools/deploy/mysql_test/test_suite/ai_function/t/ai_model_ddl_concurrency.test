@@ -1,0 +1,35 @@
+# Model DDL must refresh its schema after waiting behind concurrent table DDL.
+connection default;
+--disable_query_log
+--disable_result_log
+--disable_warnings
+drop database if exists ai_model_ddl_concurrency;
+--enable_warnings
+create database ai_model_ddl_concurrency;
+--error 0,11118
+call DBMS_AI_SERVICE.DROP_AI_MODEL('ddl_race_model');
+connect (ddl_peer,$OBMYSQL_MS0,admin,$OBMYSQL_PWD,test,$OBMYSQL_PORT);
+let $remaining = 30;
+while ($remaining)
+{
+  connection default;
+  --send
+  call DBMS_AI_SERVICE.CREATE_AI_MODEL('ddl_race_model','{"type":"completion","model_name":"mock"}');
+  connection ddl_peer;
+  create table ai_model_ddl_concurrency.docs(id int primary key);
+  connection default;
+  --reap
+  --send
+  call DBMS_AI_SERVICE.DROP_AI_MODEL('ddl_race_model');
+  connection ddl_peer;
+  drop table ai_model_ddl_concurrency.docs;
+  connection default;
+  --reap
+  dec $remaining;
+}
+disconnect ddl_peer;
+connection default;
+drop database ai_model_ddl_concurrency;
+--enable_result_log
+--enable_query_log
+select 1 as concurrent_model_and_table_ddl_completed;

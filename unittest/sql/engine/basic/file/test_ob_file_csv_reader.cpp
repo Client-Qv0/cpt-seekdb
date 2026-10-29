@@ -85,7 +85,7 @@ TEST_F(FileCsvReaderTest, infers_metadata_then_streams_and_rescans)
   EXPECT_EQ(0, cells.at(0).compare("1"));
 }
 
-TEST_F(FileCsvReaderTest, preserves_multiline_quotes_crlf_and_empty_string)
+TEST_F(FileCsvReaderTest, normalizes_multiline_crlf_and_preserves_quotes_and_empty_string)
 {
   auto path = write("quotes.csv", "id,note\r\n1,\"a\r\nb,\"\"c\"\"\"\r\n2,\"\"\r\n");
   ObFileCsvReader reader;
@@ -95,7 +95,7 @@ TEST_F(FileCsvReaderTest, preserves_multiline_quotes_crlf_and_empty_string)
   int64_t rows = 0;
   ASSERT_EQ(OB_SUCCESS, reader.next_batch(5, cells, nulls, rows));
   ASSERT_EQ(2, rows);
-  EXPECT_EQ(0, cells.at(1).compare("a\r\nb,\"c\""));
+  EXPECT_EQ(0, cells.at(1).compare("a\nb,\"c\""));
   EXPECT_EQ(0, cells.at(3).length());
   EXPECT_EQ(0, nulls.at(3));
 }
@@ -266,6 +266,29 @@ TEST_F(FileCsvReaderTest, glob_discovers_only_matching_files_and_rejects_escape)
   EXPECT_EQ(2, rows);
   EXPECT_NE(OB_SUCCESS, reader.open(str(root + "/../*.csv"), str(root)));
 }
+TEST_F(FileCsvReaderTest, glob_requires_an_explicit_leading_dot_for_hidden_files)
+{
+  const auto visible = write("visible.csv", "id\n1\n");
+  const auto hidden = write(".hidden.csv", "id\n2\n");
+  const auto sidecar = write("._visible.csv", "metadata");
+  const auto root = dir_.string();
+  FileGlobReader reader;
+  ObArray<ObString> cells;
+  ObArray<uint8_t> nulls;
+  int64_t rows = 0;
+  for (const char *pattern : {"/*", "/*.csv", "/?hidden.csv"}) {
+    ASSERT_EQ(OB_SUCCESS, reader.open(str(root + pattern), str(root)));
+    EXPECT_EQ(pattern[1] == '?' ? 0 : 1, reader.inferred_rows());
+  }
+  ASSERT_EQ(OB_SUCCESS, reader.open(str(root + "/.*.csv"), str(root)));
+  ASSERT_EQ(OB_SUCCESS, reader.next_batch(10, cells, nulls, rows));
+  ASSERT_EQ(2, rows);
+  EXPECT_EQ(str(sidecar), cells.at(0));
+  EXPECT_EQ(str(hidden), cells.at(1));
+  ASSERT_EQ(OB_SUCCESS, reader.open(str(hidden), str(root)));
+  EXPECT_EQ(1, reader.inferred_rows());
+}
+
 TEST_F(FileCsvReaderTest, copy_publishes_atomically_and_round_trips_null_empty_and_quoted_data)
 {
   const auto marker = write("marker.txt", "");

@@ -100,12 +100,17 @@ int ObSystemPackageLoadTask::load_system_package_()
       LOG_INFO("find a success job or job_id not exist", KR(ret), K(job_id));
     } else {
     }
-  } else if (OB_FAIL(pl::ObPLPackageManager::load_all_common_sys_package(
+  }
+  // A newly created job is already in progress. Execute it in this tick too,
+  // rather than making the first CALL wait another scheduling interval.
+  if (OB_SUCC(ret) && !GCTX.sys_package_ready_ && OB_INVALID_ID != job_id) {
+    if (OB_FAIL(pl::ObPLPackageManager::load_all_common_sys_package(
                          *sql_proxy,
                          false/*from_file*/))) {
-  } else if (OB_FAIL(ADMIN_JOB_COMPLETE(job_id, 0/*result_code*/))) {
-  } else {
-    GCTX.sys_package_ready_ = true;
+    } else if (OB_FAIL(ADMIN_JOB_COMPLETE(job_id, 0/*result_code*/))) {
+    } else {
+      GCTX.sys_package_ready_ = true;
+    }
   }
   return ret;
 }

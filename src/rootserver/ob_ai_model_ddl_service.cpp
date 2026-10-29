@@ -17,13 +17,50 @@
  #define USING_LOG_PREFIX RS
  #include "rootserver/ob_ai_model_ddl_service.h"
  #include "rootserver/ob_ai_model_ddl_operator.h"
+ #include "lib/worker.h"
+ #include "lib/time/ob_time_utility.h"
 
 namespace oceanbase
 {
 namespace rootserver
 {
 
+namespace {
+template <typename Operation>
+int retry_model_schema_change(Operation &&operation)
+{
+  int ret = OB_SUCCESS;
+  bool retry_schema = false;
+  do {
+    retry_schema = false;
+    ret = operation(retry_schema);
+    if (retry_schema) {
+      if (common::ObTimeUtility::current_time() >= THIS_WORKER.get_timeout_ts()) {
+        ret = OB_TIMEOUT;
+        break;
+      }
+      ob_usleep(1000);
+    }
+  } while (retry_schema);
+  return ret;
+}
+}
+
 int ObAiModelDDLService::create_ai_model(const obcall::ObCreateAiModelArg &arg)
+{
+  return retry_model_schema_change([&](bool &retry_schema) {
+    return create_ai_model_once(arg, retry_schema);
+  });
+}
+
+int ObAiModelDDLService::drop_ai_model(const obcall::ObDropAiModelArg &arg)
+{
+  return retry_model_schema_change([&](bool &retry_schema) {
+    return drop_ai_model_once(arg, retry_schema);
+  });
+}
+
+int ObAiModelDDLService::create_ai_model_once(const obcall::ObCreateAiModelArg &arg, bool &retry_schema)
 {
   int ret = OB_SUCCESS;
   
@@ -42,6 +79,9 @@ int ObAiModelDDLService::create_ai_model(const obcall::ObCreateAiModelArg &arg)
     int64_t refreshed_schema_version = 0;
     if (OB_FAIL(schema_guard.get_schema_version(refreshed_schema_version))) {
     } else if (OB_FAIL(trans.start(&ddl_service_.get_sql_proxy(), refreshed_schema_version))) {
+      // Another DDL may publish while we wait for the runtime schema lock.
+      // Retry only this pre-write conflict, after rolling back this attempt.
+      retry_schema = ret == OB_EAGAIN;
     } else if (OB_FAIL(ddl_operator.create_ai_model(new_schema, arg.ddl_stmt_str_, trans))) {
     }
 
@@ -50,6 +90,7 @@ int ObAiModelDDLService::create_ai_model(const obcall::ObCreateAiModelArg &arg)
       if (OB_SUCCESS != (temp_ret = trans.end(OB_SUCC(ret)))) {
         LOG_ERROR("trans end failed", "is_commit", OB_SUCCESS == ret, K(temp_ret));
         ret = (OB_SUCC(ret)) ? temp_ret : ret;
+        retry_schema = false;
       }
     }
     if (OB_SUCC(ret)) {
@@ -61,7 +102,7 @@ int ObAiModelDDLService::create_ai_model(const obcall::ObCreateAiModelArg &arg)
   return ret;
 }
 
-int ObAiModelDDLService::drop_ai_model(const obcall::ObDropAiModelArg &arg)
+int ObAiModelDDLService::drop_ai_model_once(const obcall::ObDropAiModelArg &arg, bool &retry_schema)
 {
   int ret = OB_SUCCESS;
   
@@ -80,6 +121,7 @@ int ObAiModelDDLService::drop_ai_model(const obcall::ObDropAiModelArg &arg)
     int64_t refreshed_schema_version = 0;
     if (OB_FAIL(schema_guard.get_schema_version(refreshed_schema_version))) {
     } else if (OB_FAIL(trans.start(&ddl_service_.get_sql_proxy(), refreshed_schema_version))) {
+      retry_schema = ret == OB_EAGAIN;
     } else if (OB_FAIL(ddl_operator.drop_ai_model(*old_schema, arg.ddl_stmt_str_, trans))) {
     }
 
@@ -88,6 +130,7 @@ int ObAiModelDDLService::drop_ai_model(const obcall::ObDropAiModelArg &arg)
       if (OB_SUCCESS != (temp_ret = trans.end(OB_SUCC(ret)))) {
         LOG_ERROR("trans end failed", "is_commit", OB_SUCCESS == ret, K(temp_ret));
         ret = (OB_SUCC(ret)) ? temp_ret : ret;
+        retry_schema = false;
       }
     }
 
