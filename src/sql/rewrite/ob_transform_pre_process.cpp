@@ -32,6 +32,37 @@ namespace oceanbase
 using namespace common;
 namespace sql
 {
+// COUNT(*) over a sole derived table observes cardinality only, including after
+// LIMIT/OFFSET. Do not introduce an implicit relevance order in that input.
+// Keep ordering for counts of nullable columns, other aggregates and predicates.
+static bool is_count_only_input(const ObIArray<ObParentDMLStmt> &parents, const ObDMLStmt *stmt)
+{
+  const ObDMLStmt *parent = parents.empty() ? nullptr : parents.at(parents.count() - 1).stmt_;
+  bool count_only = false;
+  if (nullptr != parent && parent->is_select_stmt() && stmt->is_select_stmt()
+      && stmt->get_match_exprs().count() == 1 && nullptr != stmt->get_match_exprs().at(0)
+      && !stmt->get_match_exprs().at(0)->is_es_match()) {
+    const auto &select = *static_cast<const ObSelectStmt *>(parent);
+    const auto &input = *static_cast<const ObSelectStmt *>(stmt);
+    if (select.is_scala_group_by() && select.get_select_item_size() == 1
+        && select.get_aggr_item_size() == 1 && select.get_condition_size() == 0
+        && select.get_having_exprs().empty() && !select.has_order_by()
+        && !select.has_window_function() && !select.is_contains_assignment()
+        && select.get_semi_infos().empty() && select.get_table_size() == 1
+        && select.get_from_item_size() == 1 && !select.get_from_item(0).is_joined_
+        && !input.is_fetch_with_ties() && nullptr == input.get_limit_percent_expr()
+        && !input.is_contains_assignment() && !input.has_for_update()) {
+      const TableItem *table = select.get_table_item(0);
+      const ObAggFunRawExpr *agg = select.get_aggr_item(0);
+      count_only = nullptr != table && table->is_generated_table() && table->ref_query_ == stmt
+          && nullptr != agg && T_FUN_COUNT == agg->get_expr_type()
+          && agg->get_param_count() == 0 && !agg->is_param_distinct()
+          && select.get_select_item(0).expr_ == agg;
+    }
+  }
+  return count_only;
+}
+
 int ObTransformPreProcess::transform_one_stmt(common::ObIArray<ObParentDMLStmt> &parent_stmts,
                                               ObDMLStmt *&stmt,
                                               bool &trans_happened)
@@ -178,10 +209,34 @@ int ObTransformPreProcess::transform_one_stmt(common::ObIArray<ObParentDMLStmt> 
       }
     }
     if (OB_SUCC(ret)) {
-      if (stmt->get_match_exprs().count() > 0 &&
-          OB_FAIL(preserve_order_for_fulltext_search(stmt, is_happened))) {
-      } else {
-        trans_happened |= is_happened;
+      if (stmt->get_match_exprs().count() > 0) {
+        if (!is_count_only_input(parent_stmts, stmt)) {
+          if (OB_FAIL(preserve_order_for_fulltext_search(stmt, is_happened))) {
+          } else {
+            trans_happened |= is_happened;
+          }
+        } else {
+          auto &input = *static_cast<ObSelectStmt *>(stmt);
+          bool prune_columns = !input.has_order_by() && !input.has_distinct()
+              && !input.has_group_by() && !input.has_window_function() && !input.is_set_stmt()
+              && input.get_aggr_item_size() == 0 && input.get_having_exprs().empty();
+          for (int64_t i = 0; prune_columns && i < input.get_select_item_size(); ++i) {
+            const ObRawExpr *expr = input.get_select_item(i).expr_;
+            prune_columns = nullptr != expr && expr->is_column_ref_expr();
+          }
+          // None of these columns is consumed by COUNT(*). A constant projection
+          // avoids looking up data rows solely to populate an unused output.
+          if (prune_columns) {
+            ObConstRawExpr *one = nullptr;
+            if (OB_FAIL(ObRawExprUtils::build_const_int_expr(*ctx_->expr_factory_, ObIntType, 1, one))) {
+            } else {
+              for (int64_t i = 0; i < input.get_select_item_size(); ++i) {
+                input.get_select_item(i).expr_ = one;
+              }
+              trans_happened = true;
+            }
+          }
+        }
       }
     }
     if (OB_SUCC(ret) && OB_FAIL(reset_view_base(stmt))) {
