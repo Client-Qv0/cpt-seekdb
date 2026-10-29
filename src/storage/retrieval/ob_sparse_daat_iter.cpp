@@ -69,6 +69,20 @@ int ObSRMergeCmp::cmp(
   return ret;
 }
 
+// The filter pushed down to a text retrieval is, in most cases, the match expression converted to a boolean.
+// As the relevance is calculated by the iterator itself, such a filter is true if and only if the relevance is
+// not zero, which saves evaluating the expression for every document.
+static bool is_bool_of_relevance(const sql::ObExpr *filter_expr, const sql::ObExpr *relevance_expr)
+{
+  return nullptr != filter_expr && nullptr != relevance_expr
+         && T_OP_BOOL == filter_expr->type_
+         && 1 == filter_expr->arg_cnt_
+         && nullptr != filter_expr->args_
+         && relevance_expr == filter_expr->args_[0]
+         && (common::ObDoubleType == relevance_expr->datum_meta_.type_
+             || common::ObUDoubleType == relevance_expr->datum_meta_.type_);
+}
+
 ObSRDaaTIterImpl::ObSRDaaTIterImpl()
   : ObISparseRetrievalMergeIter(),
     iter_allocator_(nullptr),
@@ -82,6 +96,7 @@ ObSRDaaTIterImpl::ObSRDaaTIterImpl()
     buffered_relevances_(),
     next_round_iter_idxes_(),
     next_round_cnt_(0),
+    is_relevance_bool_filter_(false),
     set_datum_func_(nullptr)
 {
 }
@@ -102,6 +117,7 @@ int ObSRDaaTIterImpl::init(
     iter_param_ = &iter_param;
     dim_iters_ = &dim_iters;
     relevance_collector_ = &relevance_collector;
+    is_relevance_bool_filter_ = is_bool_of_relevance(iter_param_->filter_expr_, iter_param_->relevance_proj_expr_);
     const int64_t max_batch_size = OB_MAX(iter_param_->eval_ctx_->max_batch_size_, iter_param_->max_batch_size_);
     if (iter_param_->id_proj_expr_->datum_meta_.type_ == common::ObUInt64Type) {
       set_datum_func_ = ObISparseRetrievalMergeIter::set_datum_int;
@@ -347,6 +363,23 @@ int ObSRDaaTIterImpl::process_collected_row(const ObDatum &id_datum, const doubl
 }
 
 int ObSRDaaTIterImpl::filter_on_demand(const int64_t count, const double relevance, bool &need_project)
+{
+  int ret = OB_SUCCESS;
+  if (is_relevance_bool_filter_ && iter_param_->eval_ctx_->is_vectorized()) {
+    // The filter only depends on the relevance, which is projected by project_results() for the documents
+    // passing the filter. So there is nothing to evaluate or to write here.
+    if (OB_UNLIKELY(count >= iter_param_->eval_ctx_->max_batch_size_)) {
+      ret = OB_ERR_UNEXPECTED;
+    } else {
+      need_project = !(0 == relevance);
+    }
+  } else {
+    ret = filter_by_expr(count, relevance, need_project);
+  }
+  return ret;
+}
+
+int ObSRDaaTIterImpl::filter_by_expr(const int64_t count, const double relevance, bool &need_project)
 {
   int ret = OB_SUCCESS;
   ObExpr *filter_expr = iter_param_->filter_expr_;

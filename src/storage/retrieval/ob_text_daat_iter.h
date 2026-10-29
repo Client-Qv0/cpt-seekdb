@@ -55,10 +55,12 @@ public:
   ObTextDaaTIter() : ObSRDaaTIterImpl(),
       bm25_param_estimator_(),
       mode_flag_(sql::ObMatchAgainstMode::NATURAL_LANGUAGE_MODE),
-      function_lookup_mode_(false) {}
+      function_lookup_mode_(false), filter_batch_ids_{}, filter_batch_counts_{},
+      filter_ended_mask_(0) {}
   virtual ~ObTextDaaTIter() { reset(); }
 
   int init(const ObTextDaaTParam &param);
+  virtual int get_next_rows(const int64_t capacity, int64_t &count) override;
   virtual void reuse(const bool switch_tablet = false) override;
   virtual void reset() override;
 protected:
@@ -68,6 +70,10 @@ protected:
   sql::ObMatchAgainstMode mode_flag_;
   bool function_lookup_mode_;
 private:
+  static constexpr int64_t FILTER_BATCH_MAX_DIMS = 8;
+  const ObDocIdExt *filter_batch_ids_[FILTER_BATCH_MAX_DIMS];
+  int64_t filter_batch_counts_[FILTER_BATCH_MAX_DIMS];
+  uint64_t filter_ended_mask_;
   DISALLOW_COPY_AND_ASSIGN(ObTextDaaTIter);
 };
 

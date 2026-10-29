@@ -90,6 +90,7 @@ protected:
   virtual int collect_dims_by_id(const ObDatum *&id_datum, double &relevance, bool &got_valid_id);
   virtual int process_collected_row(const ObDatum &id_datum, const double relevance);
   virtual int filter_on_demand(const int64_t count, const double relevance, bool &need_project);
+  int filter_by_expr(const int64_t count, const double relevance, bool &need_project);
   virtual int cache_result(int64_t &count, const ObDatum &id_datum, const double relevance);
   virtual int project_results(const int64_t count);
   int init_merge_heap(const int64_t count);
@@ -105,6 +106,8 @@ protected:
   ObFixedArray<double, ObIAllocator> buffered_relevances_;
   ObFixedArray<int64_t, ObIAllocator> next_round_iter_idxes_;
   int64_t next_round_cnt_;
+  // true if the filter is the relevance converted to a boolean, so it only depends on the relevance
+  bool is_relevance_bool_filter_;
   void (*set_datum_func_)(ObDatum &, const ObDocIdExt &);
 private:
   DISALLOW_COPY_AND_ASSIGN(ObSRDaaTIterImpl);
