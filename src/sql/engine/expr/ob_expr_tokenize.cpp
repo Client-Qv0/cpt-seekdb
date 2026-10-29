@@ -19,7 +19,10 @@
 #include "lib/alloc/alloc_struct.h"
 #include "lib/allocator/page_arena.h"
 #include "lib/charset/ob_charset.h"
+#include "lib/hash_func/murmur_hash.h"
+#include "lib/lock/ob_spin_lock.h"
 #include "common/json_type/ob_json_base.h"
+#include "common/json_type/ob_json_bin.h"
 #include "common/json_type/ob_json_tree.h"
 #include "lib/ob_errno.h"
 #include "lib/oblog/ob_log_module.h"
@@ -39,6 +42,233 @@ namespace oceanbase
 {
 namespace sql
 {
+namespace
+{
+// Only successful builtin-name normalization is cached. Each invocation owns
+// its copy, including when argument evaluation invokes TOKENIZE recursively.
+class ObTokenizeParserNameCache
+{
+public:
+  bool get(const ObString &raw, char *buffer, ObString &name) const
+  {
+    for (const Slot &slot : slots_) {
+      if (slot.raw_len_ > 0 && slot.raw_len_ == raw.length()
+          && 0 == MEMCMP(slot.raw_, raw.ptr(), slot.raw_len_)) {
+        MEMCPY(buffer, slot.name_, slot.name_len_);
+        buffer[slot.name_len_] = '\0';
+        name.assign_ptr(buffer, slot.name_len_);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void put(const ObString &raw, const ObString &name)
+  {
+    if (!raw.empty() && raw.length() < storage::OB_FT_PARSER_NAME_LENGTH
+        && name.length() < storage::OB_FT_PARSER_NAME_LENGTH) {
+      Slot &slot = slots_[next_++ % SLOT_COUNT];
+      slot.raw_len_ = raw.length();
+      slot.name_len_ = name.length();
+      MEMCPY(slot.raw_, raw.ptr(), slot.raw_len_);
+      MEMCPY(slot.name_, name.ptr(), slot.name_len_);
+    }
+  }
+
+private:
+  static constexpr uint64_t SLOT_COUNT = 8;
+  struct Slot
+  {
+    int32_t raw_len_ = 0;
+    int32_t name_len_ = 0;
+    char raw_[storage::OB_FT_PARSER_NAME_LENGTH];
+    char name_[storage::OB_FT_PARSER_NAME_LENGTH];
+  };
+  Slot slots_[SLOT_COUNT];
+  uint64_t next_ = 0;
+};
+
+int serialize_token_array(const storage::ObFTWordMap &words,
+                          ObIAllocator &allocator, ObString &result)
+{
+  int ret = OB_SUCCESS;
+  uint64_t count = 0;
+  uint64_t payload_size = 0;
+  uint64_t last_size = 0;
+  for (auto it = words.begin(); it != words.end(); ++it) {
+    const int64_t len = it->first.get_word().get_string().length();
+    last_size = 1 + serialization::encoded_length_vi64(len) + len;
+    payload_size += last_size;
+    ++count;
+  }
+  // Match ObJsonArray::update_serialize_size, including its conservative
+  // offset width. This preserves JSON_STORAGE_SIZE as well as token order.
+  const uint64_t count_size = ObJsonVar::get_var_size(ObJsonVar::get_var_type(count));
+  const uint64_t estimated_size = OB_JSON_BIN_ARR_HEADER_LEN + count_size
+      + sizeof(uint32_t) + (sizeof(uint32_t) + 1) * count + payload_size;
+  const uint64_t offset_size = ObJsonVar::get_var_size(
+      ObJsonVar::get_var_type(estimated_size - last_size));
+  const uint64_t total_size = OB_JSON_BIN_ARR_HEADER_LEN + count_size
+      + sizeof(uint32_t) + (offset_size + 1) * count + payload_size;
+  uint64_t obj_size = OB_JSON_BIN_ARR_HEADER_LEN + count_size
+      + ObJsonVar::get_var_size(ObJsonVar::get_var_type(total_size))
+      + (offset_size + 1) * count + payload_size;
+  ObJsonBinMeta meta;
+  meta.set_type(J_ARRAY_V0, false);
+  meta.set_element_count(count);
+  meta.set_element_count_var_type(ObJsonVar::get_var_type(count));
+  meta.set_is_continuous(true);
+  // The generic serializer retries if the actual header needs a wider field.
+  // Calculate that width before writing, avoiding an intermediate JSON tree.
+  uint64_t real_size = 0;
+  do {
+    meta.set_obj_size_var_type(ObJsonVar::get_var_type(obj_size));
+    meta.set_entry_var_type(meta.obj_size_var_type());
+    real_size = OB_JSON_BIN_ARR_HEADER_LEN + count_size
+        + ObJsonVar::get_var_size(meta.obj_size_var_type())
+        + (meta.entry_var_size() + 1) * count + payload_size;
+    if (ObJsonVar::get_var_type(real_size) <= meta.obj_size_var_type()) {
+      break;
+    }
+    obj_size = real_size;
+  } while (true);
+  meta.set_obj_size(real_size);
+  meta.calc_entry_array();
+  ObJsonBuffer buffer(&allocator);
+  if (OB_UNLIKELY(count > INT32_MAX || real_size > INT32_MAX - sizeof(ObJsonBinDocHeader))) {
+    ret = OB_SIZE_OVERFLOW;
+  } else if (OB_FAIL(buffer.reserve(real_size + sizeof(ObJsonBinDocHeader)))) {
+  } else if (OB_FAIL(ObJsonBin::add_doc_header_v0(buffer))) {
+  } else {
+    const int64_t start = buffer.length();
+    if (OB_FAIL(meta.to_header(buffer))) {
+    } else {
+      int index = 0;
+      for (auto it = words.begin(); OB_SUCC(ret) && it != words.end(); ++it, ++index) {
+        const ObString word = it->first.get_word().get_string();
+        if (OB_FAIL(ObJsonBinSerializer::set_value_entry(meta, buffer.ptr() + start,
+                      index, buffer.length() - start, J_STRING_V0))) {
+        } else if (OB_FAIL(ObJsonBinSerializer::serialize_json_string(J_STRING_V0, word, buffer))) {
+        }
+      }
+    }
+    if (OB_FAIL(ret)) {
+    } else if (OB_FAIL(ObJsonBin::set_doc_header_v0(buffer, buffer.length(), false))) {
+    } else {
+      buffer.get_result_string(result);
+    }
+  }
+  return ret;
+}
+
+// Reforming the parser properties parses, rebuilds and prints a JSON document. Its result only
+// depends on the parser name and the properties given to TOKENIZE(), which are the same for most
+// of the calls. So the results of the latest calls are kept and reused.
+class ObReformedPropsCache final
+{
+public:
+  static ObReformedPropsCache &instance()
+  {
+    static ObReformedPropsCache cache;
+    return cache;
+  }
+
+  // Return true and the reformed properties, allocated by the allocator, if they are cached.
+  bool get(const ObString &parser_name,
+           const ObString &properties,
+           ObIAllocator &allocator,
+           ObString &reformed)
+  {
+    bool is_hit = false;
+    char buf[MAX_PROPS_LEN];
+    int64_t reformed_len = 0;
+    if (is_cacheable(parser_name, properties)) {
+      const Slot &slot = slots_[slot_idx(parser_name, properties)];
+      common::ObSpinLockGuard guard(lock_);
+      if (slot.is_same(parser_name, properties)) {
+        reformed_len = slot.reformed_len_;
+        if (reformed_len > 0) {
+          MEMCPY(buf, slot.reformed_, reformed_len);
+        }
+        is_hit = true;
+      }
+    }
+    if (is_hit) {
+      if (0 == reformed_len) {
+        reformed.reset();
+      } else if (OB_SUCCESS != ob_write_string(allocator, ObString(reformed_len, buf), reformed)) {
+        is_hit = false;
+      }
+    }
+    return is_hit;
+  }
+
+  void put(const ObString &parser_name, const ObString &properties, const ObString &reformed)
+  {
+    if (is_cacheable(parser_name, properties) && reformed.length() <= MAX_PROPS_LEN
+        && (reformed.empty() || OB_NOT_NULL(reformed.ptr()))) {
+      Slot &slot = slots_[slot_idx(parser_name, properties)];
+      common::ObSpinLockGuard guard(lock_);
+      slot.name_len_ = parser_name.length();
+      MEMCPY(slot.name_, parser_name.ptr(), slot.name_len_);
+      slot.props_len_ = properties.length();
+      if (slot.props_len_ > 0) {
+        MEMCPY(slot.props_, properties.ptr(), slot.props_len_);
+      }
+      slot.reformed_len_ = reformed.length();
+      if (slot.reformed_len_ > 0) {
+        MEMCPY(slot.reformed_, reformed.ptr(), slot.reformed_len_);
+      }
+      slot.is_used_ = true;
+    }
+  }
+
+private:
+  static const int64_t SLOT_CNT = 8;
+  static const int64_t MAX_PROPS_LEN = 256;
+
+  struct Slot
+  {
+    Slot() : is_used_(false), name_len_(0), props_len_(0), reformed_len_(0) {}
+    bool is_same(const ObString &parser_name, const ObString &properties) const
+    {
+      return is_used_ && name_len_ == parser_name.length() && props_len_ == properties.length()
+             && 0 == MEMCMP(name_, parser_name.ptr(), name_len_)
+             && (0 == props_len_ || 0 == MEMCMP(props_, properties.ptr(), props_len_));
+    }
+    bool is_used_;
+    int64_t name_len_;
+    int64_t props_len_;
+    int64_t reformed_len_;
+    char name_[storage::OB_FT_PARSER_NAME_LENGTH];
+    char props_[MAX_PROPS_LEN];
+    char reformed_[MAX_PROPS_LEN];
+  };
+
+  ObReformedPropsCache() = default;
+
+  static bool is_cacheable(const ObString &parser_name, const ObString &properties)
+  {
+    return !parser_name.empty() && OB_NOT_NULL(parser_name.ptr())
+           && parser_name.length() < storage::OB_FT_PARSER_NAME_LENGTH
+           && properties.length() <= MAX_PROPS_LEN
+           && (properties.empty() || OB_NOT_NULL(properties.ptr()));
+  }
+
+  static int64_t slot_idx(const ObString &parser_name, const ObString &properties)
+  {
+    uint64_t hash_val = murmurhash(parser_name.ptr(), static_cast<int32_t>(parser_name.length()), 0);
+    if (!properties.empty()) {
+      hash_val = murmurhash(properties.ptr(), static_cast<int32_t>(properties.length()), hash_val);
+    }
+    return hash_val % SLOT_CNT;
+  }
+
+  common::ObSpinLock lock_;
+  Slot slots_[SLOT_CNT];
+};
+} // end anonymous namespace
+
 ObExprTokenize::ObExprTokenize(common::ObIAllocator &alloc)
     : ObStringExprOperator(alloc,
                            T_FUN_TOKENIZE,
@@ -58,13 +288,16 @@ int ObExprTokenize::eval_tokenize(const ObExpr &expr, ObEvalCtx &ctx, ObDatum &e
   common::ObArenaAllocator &temp_allocator = tmp_alloc_g.get_allocator();
 
   ObIJsonBase *json_result = nullptr;
-  TokenizeParam param;
+  ObString binary_result;
+  TokenizeParam param(temp_allocator);
 
   // check param num, which is checked in ObExprOperator::calc_result_typeN.
   if (OB_UNLIKELY(expr.arg_cnt_ < 1 || expr.arg_cnt_ > 3)) {
     ret = OB_INVALID_ARGUMENT;
   } else if (OB_FAIL(parse_param(expr, ctx, temp_allocator, param))) {
-  } else if (OB_FAIL(tokenize_fulltext(param, param.output_mode_, temp_allocator, json_result))) {
+  } else if (OB_FAIL(tokenize_fulltext(param, param.output_mode_, temp_allocator, json_result, binary_result))) {
+  } else if (TokenizeParam::DEFAULT == param.output_mode_) {
+    ret = ObJsonExprHelper::pack_json_str_res(expr, ctx, expr_datum, binary_result);
   } else if (OB_FAIL(ObJsonExprHelper::pack_json_res(expr,
                                                      ctx,
                                                      temp_allocator,
@@ -78,15 +311,14 @@ int ObExprTokenize::eval_tokenize(const ObExpr &expr, ObEvalCtx &ctx, ObDatum &e
 int ObExprTokenize::tokenize_fulltext(const TokenizeParam &param,
                                       TokenizeParam::OUTPUT_MODE mode,
                                       ObIAllocator &allocator,
-                                      ObIJsonBase *&result)
+                                      ObIJsonBase *&result,
+                                      ObString &binary_result)
 {
   int ret = OB_SUCCESS;
   storage::ObFTParseHelper tokenize_helper;
   const int64_t ft_word_bkt_cnt = MIN(MAX(param.fulltext_.length() / 2, 2), 997);
   int64_t doc_len = 0;
   storage::ObFTWordMap token_map;
-
-  ObArenaAllocator tmp_parse_alloc(ObMemAttr("Tmp buffer"));
 
   if (TokenizeParam::OUTPUT_MODE::DEFAULT != mode && TokenizeParam::OUTPUT_MODE::ALL != mode) {
     ret = OB_INVALID_ARGUMENT;
@@ -103,7 +335,7 @@ int ObExprTokenize::tokenize_fulltext(const TokenizeParam &param,
   } else {
     switch (param.output_mode_) {
     case TokenizeParam::OUTPUT_MODE::DEFAULT: {
-      if (OB_FAIL(tokenize_helper.make_token_array_json(token_map, result))) {
+      if (OB_FAIL(serialize_token_array(token_map, allocator, binary_result))) {
       } else {
         // pass
       }
@@ -123,8 +355,8 @@ int ObExprTokenize::tokenize_fulltext(const TokenizeParam &param,
   return ret;
 }
 
-ObExprTokenize::TokenizeParam ::TokenizeParam()
-  : allocator_(ObMemAttr("TokenizeParam")),
+ObExprTokenize::TokenizeParam::TokenizeParam(ObIAllocator &allocator)
+  : allocator_(allocator),
     parser_name_(ObString(OB_DEFAULT_FULLTEXT_PARSER_NAME)),
     meta_(),
     fulltext_(),
@@ -200,12 +432,9 @@ int ObExprTokenize::parse_param(const ObExpr &expr,
 {
   int ret = OB_SUCCESS;
 
-  ObDatum *parser_params_datum;
-  ObString raw_parser_name = ObString::make_string(OB_DEFAULT_FULLTEXT_PARSER_NAME);
-
-  ObEvalCtx::TempAllocGuard tmp_alloc_g(ctx);
-  
-  MultimodeAlloctor temp_allocator(tmp_alloc_g.get_allocator());
+  // The caller keeps this arena alive through JSON serialization. Reusing it
+  // avoids creating a separate arena for the name and parser properties.
+  MultimodeAlloctor temp_allocator(allocator);
 
   if (OB_UNLIKELY(expr.arg_cnt_ < 1 || expr.arg_cnt_ > 3)) {
     ret = OB_INVALID_ARGUMENT;
@@ -222,15 +451,14 @@ int ObExprTokenize::construct_ft_parser_inner_name(const ObString &input_str, To
 {
   int ret = OB_SUCCESS;
   storage::ObFTParser parser;
-
-  char *parser_name_buf = nullptr;
-  if (OB_ISNULL(parser_name_buf
-                = static_cast<char *>(param.allocator_.alloc(storage::OB_FT_PARSER_NAME_LENGTH)))) {
-    ret = OB_ALLOCATE_MEMORY_FAILED;
+  static thread_local ObTokenizeParserNameCache cache;
+  char *parser_name_buf = param.parser_name_buf_;
+  if (cache.get(input_str, parser_name_buf, param.parser_name_)) {
   } else if (OB_FAIL(parser.init(input_str))) {
   } else if (OB_FAIL(parser.serialize_to_str(parser_name_buf, storage::OB_FT_PARSER_NAME_LENGTH))) {
   } else {
     param.parser_name_ = ObString::make_string(parser_name_buf);
+    cache.put(input_str, param.parser_name_);
   }
   return ret;
 }
@@ -375,15 +603,24 @@ int ObExprTokenize::parse_parser_properties(const ObExpr &expr,
 int ObExprTokenize::TokenizeParam::reform_parser_properties(const ObString &properties)
 {
   int ret = OB_SUCCESS;
-  storage::ObFTParserJsonProps parser_properties;
+  // the properties may be properties_ itself, which is replaced by the reformed one below
+  const ObString raw_properties = properties;
+  ObString reformed;
 
-  if (OB_FAIL(parser_properties.init())) {
-  } else if (OB_FAIL(parser_properties.parse_from_valid_str(properties))) {
-    LOG_USER_ERROR(OB_INVALID_ARGUMENT, "parser properties invalid.");
-  } else if (OB_FAIL(parser_properties.rebuild_props_for_ddl(parser_name_,
-                                                             ObCollationType::CS_TYPE_UTF8MB4_BIN,
-                                                             true))) {
-  } else if (OB_FAIL(parser_properties.to_format_json(allocator_, properties_))) {
+  if (ObReformedPropsCache::instance().get(parser_name_, raw_properties, allocator_, reformed)) {
+    properties_ = reformed;
+  } else {
+    storage::ObFTParserJsonProps parser_properties;
+    if (OB_FAIL(parser_properties.init())) {
+    } else if (OB_FAIL(parser_properties.parse_from_valid_str(raw_properties))) {
+      LOG_USER_ERROR(OB_INVALID_ARGUMENT, "parser properties invalid.");
+    } else if (OB_FAIL(parser_properties.rebuild_props_for_ddl(parser_name_,
+                                                               ObCollationType::CS_TYPE_UTF8MB4_BIN,
+                                                               true))) {
+    } else if (OB_FAIL(parser_properties.to_format_json(allocator_, properties_))) {
+    } else {
+      ObReformedPropsCache::instance().put(parser_name_, raw_properties, properties_);
+    }
   }
 
   return ret;

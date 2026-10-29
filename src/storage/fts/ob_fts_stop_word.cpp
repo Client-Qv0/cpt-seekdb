@@ -74,16 +74,19 @@ void ObStopWordChecker::destroy()
 int ObStopWordChecker::check_stopword(const ObFTWord &word, bool &is_stopword)
 {
   int ret = OB_SUCCESS;
-  
-  
-  common::ObArenaAllocator allocator(lib::ObMemAttr("ChkStopWord"));
   if (OB_UNLIKELY(!inited_)) {
     ret = OB_NOT_INIT;
   } else if (OB_UNLIKELY(word.empty())) {
     ret = OB_INVALID_ARGUMENT;
+  } else if (word.get_collation_type() == stopword_type_.get_collation_type()) {
+    // nothing to convert, which is the usual case, so neither an allocator nor the charset
+    // conversion is needed.
+    const common::ObString &word_str = word.get_word().get_string();
+    ObFTWord converted(word_str.length(), word_str.ptr(), stopword_type_);
+    ret = lookup_stopword(converted, is_stopword);
   } else {
+    common::ObArenaAllocator allocator(lib::ObMemAttr("ChkStopWord"));
     common::ObString cmp_str;
-    // do nothing set out with in if type is the same.
     if (OB_FAIL(common::ObCharset::charset_convert(
                                        allocator,
                                        word.get_word().get_string(),
@@ -92,18 +95,24 @@ int ObStopWordChecker::check_stopword(const ObFTWord &word, bool &is_stopword)
                                        cmp_str))) {
     } else {
       ObFTWord converted(cmp_str.length(), cmp_str.ptr(), stopword_type_);
-      ret = stopword_set_.exist_refactored(converted);
-      if (OB_HASH_NOT_EXIST == ret) {
-        is_stopword = false;
-        ret = OB_SUCCESS;
-      } else if (OB_HASH_EXIST == ret) {
-        is_stopword = true;
-        ret = OB_SUCCESS;
-      } else if (OB_SUCC(ret)) {
-        ret = OB_ERR_UNEXPECTED;
-      } else {
-      }
+      ret = lookup_stopword(converted, is_stopword);
     }
+  }
+  return ret;
+}
+
+int ObStopWordChecker::lookup_stopword(const ObFTWord &converted, bool &is_stopword)
+{
+  int ret = stopword_set_.exist_refactored(converted);
+  if (OB_HASH_NOT_EXIST == ret) {
+    is_stopword = false;
+    ret = OB_SUCCESS;
+  } else if (OB_HASH_EXIST == ret) {
+    is_stopword = true;
+    ret = OB_SUCCESS;
+  } else if (OB_SUCC(ret)) {
+    ret = OB_ERR_UNEXPECTED;
+  } else {
   }
   return ret;
 }
@@ -195,23 +204,30 @@ int ObAddWord::check_stopword(const ObFTWord &ft_word, bool &is_stopword)
   return ret;
 }
 
+namespace
+{
+// increase the count of a word which is already in the word map
+struct ObIncreaseWordCount
+{
+  explicit ObIncreaseWordCount(const int64_t word_freq) : word_freq_(word_freq) {}
+  void operator()(common::hash::HashMapPair<ObFTWord, int64_t> &pair) { pair.second += word_freq_; }
+  const int64_t word_freq_;
+};
+} // end anonymous namespace
+
 int ObAddWord::groupby_word(const ObFTWord &word, const int64_t word_freq)
 {
   int ret = OB_SUCCESS;
-  int64_t word_count = 0;
   if (OB_UNLIKELY(word.empty() || word_freq <= 0)) {
     ret = OB_INVALID_ARGUMENT;
   } else if (!flag_.groupby_word()) {
     if (OB_FAIL(word_map_.set_refactored(word, 1/*word count*/))) {
     }
-  } else if (OB_FAIL(word_map_.get_refactored(word, word_count)) && OB_HASH_NOT_EXIST != ret) {
   } else {
-    if (OB_HASH_NOT_EXIST == ret) {
-      word_count = 1;
-    } else {
-      word_count += word_freq;
-    }
-    if (OB_FAIL(word_map_.set_refactored(word, word_count, 1/*overwrite*/))) {
+    // A word is counted as 1 when it is added for the first time, and then increased by its
+    // frequency every time it is added again. Find it only once for both cases.
+    ObIncreaseWordCount increase_count(word_freq);
+    if (OB_FAIL(word_map_.set_or_update(word, 1/*word count*/, increase_count))) {
     }
   }
   return ret;

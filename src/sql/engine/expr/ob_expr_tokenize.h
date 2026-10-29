@@ -22,6 +22,7 @@
 #include "lib/string/ob_string.h"
 #include "sql/engine/expr/ob_expr_operator.h"
 #include "data_plane/fts/ob_fts_parser_property.h"
+#include "data_plane/fts/ob_fts_parser_name.h"
 
 namespace oceanbase
 {
@@ -58,7 +59,7 @@ private:
     static constexpr const char *ADDITIONAL_ARGS_STR = "additional_args";
 
   public:
-    TokenizeParam();
+    explicit TokenizeParam(ObIAllocator &allocator);
 
     int parse_json_param(const ObIJsonBase *obj);
 
@@ -68,8 +69,9 @@ private:
 
   public:
     // for property and tmp json string
-    mutable ObArenaAllocator allocator_;
+    ObIAllocator &allocator_;
     ObString parser_name_;
+    char parser_name_buf_[storage::OB_FT_PARSER_NAME_LENGTH];
     ObString properties_;
     ObObjMeta meta_;
     ObString fulltext_;
@@ -96,7 +98,8 @@ private:
   static int tokenize_fulltext(const TokenizeParam &param,
                                TokenizeParam::OUTPUT_MODE mode,
                                common::ObIAllocator &allocator,
-                               ObIJsonBase *&result);
+                               ObIJsonBase *&result,
+                               ObString &binary_result);
 
   static int construct_ft_parser_inner_name(const ObString &input_str, TokenizeParam &param);
 

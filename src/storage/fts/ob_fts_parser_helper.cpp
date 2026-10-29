@@ -21,6 +21,8 @@
 #include "storage/fts/ob_fts_parser_helper.h"
 
 #include "common/json_type/ob_json_tree.h"
+#include "lib/hash_func/murmur_hash.h"
+#include "lib/lock/ob_spin_lock.h"
 #include "share/ob_force_print_log.h"
 #include "storage/fts/dict/ob_ft_dict_hub.h"
 #include "storage/fts/ob_beng_ft_parser.h"
@@ -254,6 +256,123 @@ int ObFTParseData::get_dict_hub(ObFTDictHub *&hub)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// ObFTParserInfoCache
+namespace
+{
+// Parsing the parser name and the parser properties is repeated for every initialization of a
+// ObFTParseHelper, for example for every call of TOKENIZE() and every MATCH query, but its result
+// only depends on the two strings. So the results of the latest calls are kept and reused.
+class ObFTParserInfoCache final
+{
+public:
+  static ObFTParserInfoCache &instance()
+  {
+    static ObFTParserInfoCache cache;
+    return cache;
+  }
+
+  bool get(const ObString &parser_name,
+           const ObString &properties,
+           ObFTParser &parser,
+           ObFTParserProperty &property)
+  {
+    bool is_hit = false;
+    if (is_cacheable(parser_name, properties)) {
+      const Slot &slot = slots_[slot_idx(parser_name, properties)];
+      common::ObSpinLockGuard guard(lock_);
+      if (slot.is_same(parser_name, properties)) {
+        parser = slot.parser_;
+        property = slot.property_;
+        is_hit = true;
+      }
+    }
+    return is_hit;
+  }
+
+  void put(const ObString &parser_name,
+           const ObString &properties,
+           const ObFTParser &parser,
+           const ObFTParserProperty &property)
+  {
+    if (is_cacheable(parser_name, properties)) {
+      Slot &slot = slots_[slot_idx(parser_name, properties)];
+      common::ObSpinLockGuard guard(lock_);
+      slot.name_len_ = parser_name.length();
+      MEMCPY(slot.name_, parser_name.ptr(), slot.name_len_);
+      slot.props_len_ = properties.length();
+      if (slot.props_len_ > 0) {
+        MEMCPY(slot.props_, properties.ptr(), slot.props_len_);
+      }
+      slot.parser_ = parser;
+      slot.property_ = property;
+      slot.is_used_ = true;
+    }
+  }
+
+private:
+  static const int64_t SLOT_CNT = 8;
+  static const int64_t MAX_PROPS_LEN = 256;
+
+  struct Slot
+  {
+    Slot() : is_used_(false), name_len_(0), props_len_(0) {}
+    bool is_same(const ObString &parser_name, const ObString &properties) const
+    {
+      return is_used_ && name_len_ == parser_name.length() && props_len_ == properties.length()
+             && 0 == MEMCMP(name_, parser_name.ptr(), name_len_)
+             && (0 == props_len_ || 0 == MEMCMP(props_, properties.ptr(), props_len_));
+    }
+    bool is_used_;
+    int64_t name_len_;
+    int64_t props_len_;
+    char name_[OB_FT_PARSER_NAME_LENGTH];
+    char props_[MAX_PROPS_LEN];
+    ObFTParser parser_;
+    ObFTParserProperty property_;
+  };
+
+  ObFTParserInfoCache() = default;
+
+  static bool is_cacheable(const ObString &parser_name, const ObString &properties)
+  {
+    return !parser_name.empty() && OB_NOT_NULL(parser_name.ptr())
+           && parser_name.length() < OB_FT_PARSER_NAME_LENGTH
+           && properties.length() <= MAX_PROPS_LEN
+           && (properties.empty() || OB_NOT_NULL(properties.ptr()));
+  }
+
+  static int64_t slot_idx(const ObString &parser_name, const ObString &properties)
+  {
+    uint64_t hash_val = murmurhash(parser_name.ptr(), static_cast<int32_t>(parser_name.length()), 0);
+    if (!properties.empty()) {
+      hash_val = murmurhash(properties.ptr(), static_cast<int32_t>(properties.length()), hash_val);
+    }
+    return hash_val % SLOT_CNT;
+  }
+
+  common::ObSpinLock lock_;
+  Slot slots_[SLOT_CNT];
+};
+
+// Parse the parser name and the parser properties, or take the results from the cache.
+int parse_parser_info(const ObString &parser_name,
+                      const ObString &properties,
+                      ObFTParser &parser,
+                      ObFTParserProperty &property)
+{
+  int ret = OB_SUCCESS;
+  if (!ObFTParserInfoCache::instance().get(parser_name, properties, parser, property)) {
+    if (OB_FAIL(parser.parse_from_str(parser_name.ptr(), parser_name.length()))) {
+    } else if (OB_FAIL(property.parse_for_parser_helper(parser, properties))) {
+    } else {
+      ObFTParserInfoCache::instance().put(parser_name, properties, parser, property);
+    }
+  }
+  return ret;
+}
+} // end anonymous namespace
+
+////////////////////////////////////////////////////////////////////////////////
 // ObFTParseHelper
 int ObFTParseHelper::segment(
     const ObFTParserProperty &property,
@@ -334,8 +453,7 @@ int ObFTParseHelper::init(
     ret = OB_INIT_TWICE;
   } else if (OB_ISNULL(allocator) || OB_UNLIKELY(parser_name.empty())) {
     ret = OB_INVALID_ARGUMENT;
-  } else if (OB_FAIL(parser_name_.parse_from_str(parser_name.ptr(), parser_name.length()))) {
-  } else if (OB_FAIL(parser_property_.parse_for_parser_helper(parser_name_, parser_properties))) {
+  } else if (OB_FAIL(parse_parser_info(parser_name, parser_properties, parser_name_, parser_property_))) {
   } else if (OB_FAIL(parser_name_.get_desc(parser_desc_))) {
   } else if (OB_ISNULL(parser_desc_)) {
     ret = OB_ERR_UNEXPECTED;
