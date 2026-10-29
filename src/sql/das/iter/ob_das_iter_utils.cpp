@@ -1068,7 +1068,11 @@ int ObDASIterUtils::create_text_retrieval_tree(ObTableScanParam &scan_param,
       false,
       trans_desc,
       snapshot,
-      text_retrieval_result))) {
+      text_retrieval_result,
+      // Only a scan whose result is consumed directly by the scan operator can
+      // be replayed from its row count: a lookup or a sort above it reads the
+      // doc id and the relevance score of every row.
+      ObDASOpType::DAS_OP_IR_SCAN == attach_ctdef->op_type_ && !has_lookup))) {
   } else {
     root_iter = text_retrieval_result;
     if (has_lookup) {
@@ -1460,7 +1464,8 @@ int ObDASIterUtils::create_text_retrieval_sub_tree(
     const bool is_func_lookup,
     transaction::ObTxDesc *trans_desc,
     transaction::ObTxReadSnapshot *snapshot,
-    ObDASIter *&retrieval_result)
+    ObDASIter *&retrieval_result,
+    const bool allow_result_cache)
 {
   int ret = OB_SUCCESS;
   ObExpr *search_text = ir_scan_ctdef->search_text_;
@@ -1477,6 +1482,7 @@ int ObDASIterUtils::create_text_retrieval_sub_tree(
   merge_iter_param.tx_desc_ = trans_desc;
   merge_iter_param.snapshot_ = snapshot;
   merge_iter_param.max_batch_size_ = merge_iter_param.max_size_;
+  merge_iter_param.result_cache_allowed_ = allow_result_cache;
   merge_iter_param.flags_ = 0;
 
   if (0 != merge_iter_param.query_tokens_.count()) {
