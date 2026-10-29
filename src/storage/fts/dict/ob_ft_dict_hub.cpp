@@ -28,6 +28,18 @@ namespace oceanbase
 {
 namespace storage
 {
+struct ObFTSharedDict
+{
+  explicit ObFTSharedDict(const ObFTDictDesc &desc)
+      : allocator_("FTSharedDict"), container_(allocator_),
+        dict_(allocator_, &container_, desc) {}
+
+  // Destruction order matters: readers, pinned cache handles, then their arena.
+  ObArenaAllocator allocator_;
+  ObFTCacheRangeContainer container_;
+  ObFTRangeDict dict_;
+};
+
 int ObFTDictHub::init()
 {
   static constexpr int K_MAX_DICT_BUCKET = 128; // for now, only built-in dicts.
@@ -43,7 +55,53 @@ int ObFTDictHub::init()
 int ObFTDictHub::destroy()
 {
   int ret = OB_SUCCESS;
+  for (auto &entry : builtin_dicts_) {
+    ObFTSharedDict *dict = entry.exchange(nullptr);
+    OB_DELETE(ObFTSharedDict, "FTSharedDict", dict);
+  }
   is_inited_ = false;
+  return ret;
+}
+
+int ObFTDictHub::get_builtin_dict(const ObFTDictDesc &desc, ObIFTDict *&dict)
+{
+  int ret = OB_SUCCESS;
+  dict = nullptr;
+  const int64_t index = static_cast<int64_t>(desc.type_) - 1;
+  if (!is_inited_) {
+    ret = OB_NOT_INIT;
+  } else if (index < 0 || index >= 3 || desc.charset_ != CHARSET_UTF8MB4
+             || desc.coll_type_ != CS_TYPE_UTF8MB4_BIN) {
+    ret = OB_INVALID_ARGUMENT;
+  } else {
+    ObFTSharedDict *entry = builtin_dicts_[index].load(std::memory_order_acquire);
+    if (nullptr == entry) {
+      // This is separate from rw_dict_lock_: build_cache takes that lock itself.
+      std::lock_guard<std::mutex> guard(builtin_dict_mutex_);
+      entry = builtin_dicts_[index].load(std::memory_order_acquire);
+      if (nullptr == entry) {
+        const ObFTDictDesc builtin_desc("builtin_ik", desc.type_, desc.charset_, desc.coll_type_);
+        if (OB_ISNULL(entry = OB_NEW(ObFTSharedDict, "FTSharedDict", builtin_desc))) {
+          ret = OB_ALLOCATE_MEMORY_FAILED;
+        } else {
+          if (OB_FAIL(load_cache(builtin_desc, entry->container_)) && OB_ENTRY_NOT_EXIST == ret) {
+            ret = build_cache(builtin_desc, entry->container_);
+          }
+          if (OB_SUCC(ret) && OB_FAIL(entry->dict_.init())) {
+          }
+          if (OB_SUCC(ret)) {
+            builtin_dicts_[index].store(entry, std::memory_order_release);
+          } else {
+            OB_DELETE(ObFTSharedDict, "FTSharedDict", entry);
+            entry = nullptr;
+          }
+        }
+      }
+    }
+    if (OB_SUCC(ret)) {
+      dict = &entry->dict_;
+    }
+  }
   return ret;
 }
 int ObFTDictHub::build_cache(const ObFTDictDesc &desc, ObFTCacheRangeContainer &container)

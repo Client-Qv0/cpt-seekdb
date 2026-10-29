@@ -378,20 +378,40 @@ int ObFTRangeDict::match_with_hit(const ObString &single_word,
   return last_hit.dict_->match_with_hit(single_word, last_hit, hit);
 }
 
+bool ObFTRangeDict::pack_word(const char *word, const int64_t len, uint64_t &key)
+{
+  bool packed = false;
+  if (OB_NOT_NULL(word) && len > 0 && len <= 4) {
+    // The words are zero padded to 4 bytes, so a shorter word is not greater than any word it
+    // is a prefix of. The length is the lowest part of the key to order the words which only
+    // differ by trailing zero bytes.
+    uint64_t value = 0;
+    for (int64_t i = 0; i < 4; ++i) {
+      value = (value << 8) | (i < len ? static_cast<uint8_t>(word[i]) : 0);
+    }
+    key = (value << 3) | static_cast<uint64_t>(len);
+    packed = true;
+  }
+  return packed;
+}
+
 int ObFTRangeDict::find_first_char_range(const ObString &single_word, ObIFTDict *&dict) const
 {
   int ret = OB_SUCCESS;
   bool found = false;
-  for (int i = 0; OB_SUCC(ret) && !found && i < range_dicts_.size(); ++i) {
-    if (ObCharset::strcmp(ObCollationType::CS_TYPE_UTF8MB4_BIN,
-                          range_dicts_[i].start_.get_word(),
-                          single_word)
-            <= 0
-        && ObCharset::strcmp(ObCollationType::CS_TYPE_UTF8MB4_BIN,
-                             range_dicts_[i].end_.get_word(),
-                             single_word)
-               >= 0) {
-      dict = range_dicts_[i].dict_;
+  uint64_t word_key = 0;
+  const bool word_packed = pack_word(single_word.ptr(), single_word.length(), word_key);
+  for (int64_t i = 0; !found && i < range_dicts_.count(); ++i) {
+    const ObFTRange &range = range_dicts_.at(i);
+    bool in_range = false;
+    if (OB_LIKELY(word_packed && range.key_valid_)) {
+      in_range = range.start_key_ <= word_key && word_key <= range.end_key_;
+    } else {
+      in_range = ObCharset::strcmp(ObCollationType::CS_TYPE_UTF8MB4_BIN, range.start_.get_word(), single_word) <= 0
+                 && ObCharset::strcmp(ObCollationType::CS_TYPE_UTF8MB4_BIN, range.end_.get_word(), single_word) >= 0;
+    }
+    if (in_range) {
+      dict = range.dict_;
       found = true;
     }
   }
@@ -418,7 +438,10 @@ int ObFTRangeDict::build_dict_from_cache(const ObFTCacheRangeContainer &range_co
       range.start_ = dat->start_word_;
       range.end_ = dat->end_word_;
       range.dict_ = dict;
+      range.key_valid_ = pack_word(range.start_.word, range.start_.word_len, range.start_key_)
+                         && pack_word(range.end_.word, range.end_.word_len, range.end_key_);
       if (OB_FAIL(range_dicts_.push_back(range))) {
+        OB_DELETEx(ObFTCacheDict, &range_alloc_, dict);
       }
     }
   }

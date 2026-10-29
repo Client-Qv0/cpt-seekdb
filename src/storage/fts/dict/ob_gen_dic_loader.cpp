@@ -125,20 +125,40 @@ int ObGenDicLoader::get_dic_loader(const ObString &parser_name,
     ret = OB_INVALID_ARGUMENT;
   } else if (OB_FAIL(dic_loader_key.init(parser_name, charset))) {
   } else {
-    TCWLockGuard guard(lock_);
-    if (OB_FAIL(dic_loader_map_.get_refactored(dic_loader_key, dic_loader))) {
-      if (OB_HASH_NOT_EXIST == ret) {
-        if (OB_FAIL(gen_dic_loader(dic_loader_key, dic_loader))) {
-        } else if (OB_ISNULL(dic_loader)) {
-          ret = OB_ERR_UNEXPECTED;
-        } else if (OB_FAIL(dic_loader_map_.set_refactored(dic_loader_key, dic_loader))) {
-        } else if (OB_FALSE_IT(dic_loader->inc_ref())) {
-        } else if (OB_FAIL(loader_handle.set_loader(dic_loader))) {
-        }
-      } else {
-        ret = OB_ERR_UNEXPECTED;
+    {
+      TCRLockGuard guard(lock_);
+      ret = dic_loader_map_.get_refactored(dic_loader_key, dic_loader);
+      if (OB_SUCC(ret)) {
+        ret = loader_handle.set_loader(dic_loader);
       }
-    } else if (OB_FAIL(loader_handle.set_loader(dic_loader))) {
+    }
+    if (OB_HASH_NOT_EXIST == ret) {
+      // A concurrent miss may have published the loader before this lock.
+      TCWLockGuard guard(lock_);
+      if (OB_FAIL(dic_loader_map_.get_refactored(dic_loader_key, dic_loader))) {
+        if (OB_HASH_NOT_EXIST != ret) {
+          ret = OB_ERR_UNEXPECTED;
+        } else {
+          if (OB_FAIL(gen_dic_loader(dic_loader_key, dic_loader))) {
+          } else if (OB_ISNULL(dic_loader)) {
+            ret = OB_ERR_UNEXPECTED;
+          } else if (OB_FAIL(dic_loader_map_.set_refactored(dic_loader_key, dic_loader))) {
+          }
+          if (OB_FAIL(ret)) {
+            if (OB_NOT_NULL(dic_loader)) {
+              ObMemAttr attr("dic_loader");
+              OB_DELETE(ObDicLoader, attr, dic_loader);
+              dic_loader = nullptr;
+            }
+          } else {
+            dic_loader->inc_ref(); // map ownership
+            ret = loader_handle.set_loader(dic_loader);
+          }
+        }
+      } else if (OB_FAIL(loader_handle.set_loader(dic_loader))) {
+      }
+    } else if (OB_FAIL(ret)) {
+      ret = OB_ERR_UNEXPECTED;
     }
   }
   return ret;

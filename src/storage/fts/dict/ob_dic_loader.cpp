@@ -88,7 +88,7 @@ int ObDicLoader::try_load_dictionary_in_trans(ObMySQLTransaction &trans)
   if (OB_UNLIKELY(!is_inited_)) {
     ret = OB_NOT_INIT;
   } else {
-    if (!is_load_) {
+    if (!ATOMIC_LOAD(&is_load_)) {
       bool is_need_load_dic = false;
       if (OB_FAIL(check_need_load_dic(is_need_load_dic))) {
       } else if (is_need_load_dic) {
@@ -106,7 +106,7 @@ int ObDicLoader::try_load_dictionary_in_trans(ObMySQLTransaction &trans)
         }
       }
       if (OB_SUCC(ret)) {
-        is_load_ = true;
+        ATOMIC_STORE(&is_load_, true);
       }
     }
   }
@@ -119,7 +119,7 @@ int ObDicLoader::try_load_dictionary_in_trans()
   if (OB_UNLIKELY(!is_inited_)) {
     ret = OB_NOT_INIT;
   } else {
-    if (!is_load_) {
+    if (!ATOMIC_LOAD(&is_load_)) {
       ObTimeoutCtx timeout_ctx;
       const int64_t default_timeout = DEFAULT_TIMEOUT_US;
       const int64_t timeout = MAX(default_timeout, config::internal_sql_execute_timeout());

@@ -25,6 +25,7 @@
 #include "share/rc/ob_server_runtime.h"
 #include "storage/fts/dict/ob_ft_cache_container.h"
 #include "storage/fts/dict/ob_ft_dict.h"
+#include "lib/container/ob_se_array.h"
 #include "storage/fts/dict/ob_ft_dict_def.h"
 #include "storage/fts/dict/ob_ft_dict_iterator.h"
 
@@ -38,11 +39,11 @@ public:
   ObFTRangeDict(ObIAllocator &alloc,
                 ObFTCacheRangeContainer *range_container,
                 const ObFTDictDesc &desc)
-      : is_inited_(false), desc_(desc), range_alloc_(lib::ObMemAttr("Range Dict")),
-        range_dicts_(&range_alloc_), range_container_(range_container)
+      : is_inited_(false), desc_(desc), range_alloc_(alloc),
+        range_dicts_(), range_container_(range_container)
   {
   }
-  ~ObFTRangeDict() override{};
+  ~ObFTRangeDict() override { destroy(); }
 
 public:
   struct ObFTRange final
@@ -50,6 +51,11 @@ public:
     ObFTSingleWord start_;
     ObFTSingleWord end_;
     ObIFTDict *dict_; // a cache dict
+    // start_ and end_ packed by pack_word(), so that a range can be checked with plain
+    // integer comparisons. Only valid if key_valid_ is true.
+    uint64_t start_key_ = 0;
+    uint64_t end_key_ = 0;
+    bool key_valid_ = false;
   };
 
 public:
@@ -90,21 +96,28 @@ private:
 private:
   void destroy()
   {
-    for (int64_t i = 0; i < range_dicts_.size(); i++) {
-      range_dicts_[i].dict_->~ObIFTDict(); // destroy dict
+    for (int64_t i = 0; i < range_dicts_.count(); i++) {
+      range_dicts_.at(i).dict_->~ObIFTDict(); // destroy dict
+      range_alloc_.free(range_dicts_.at(i).dict_);
     }
     range_dicts_.reset();
-    range_alloc_.reset();
   }
 
   int find_first_char_range(const ObString &single_word, ObIFTDict *&dict) const;
+
+  // Pack a word of at most 4 bytes into an integer, so that comparing two packed words
+  // is the same as comparing the words byte by byte (the order of utf8mb4_bin).
+  // Return false if the word can not be packed.
+  static bool pack_word(const char *word, const int64_t len, uint64_t &key);
 
 private:
   static constexpr int DEFAULT_KEY_PER_RANGE = 50000; // by estimated
   bool is_inited_;
   ObFTDictDesc desc_;
-  ObArenaAllocator range_alloc_;
-  ObVector<ObFTRange, ObArenaAllocator> range_dicts_;
+  // The owner's arena outlives these views and already owns the cache handles.
+  // Share it instead of allocating another arena page for every dictionary.
+  ObIAllocator &range_alloc_;
+  ObSEArray<ObFTRange, 8> range_dicts_;
   ObFTCacheRangeContainer *range_container_; // only used to read cache
 
 private:
