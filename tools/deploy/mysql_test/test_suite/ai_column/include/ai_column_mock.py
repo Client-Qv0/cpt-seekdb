@@ -131,6 +131,14 @@ def serve(port):
             if fail:
                 status = 400
                 response = {"error": {"message": "injected failure"}}
+            elif "always-503" in parsed.path or (
+                "retry-503" in user_text and attempt == 1
+            ):
+                status = 503
+                response = {"error": {"message": "injected service failure"}}
+            elif "retry-429" in user_text and attempt == 1:
+                status = 429
+                response = {"error": {"message": "injected rate limit"}}
             elif parsed.path.endswith("/embeddings"):
                 values = body.get("input", [])
                 if not isinstance(values, list):
@@ -193,6 +201,15 @@ def assert_events(port, assertion):
     events = read_events(port)
     if assertion == "no-requests":
         ok = not events
+    elif assertion == "bounded-transport-retries":
+        retry_events = [event for event in events if event["user"] in ("retry-429", "retry-503")]
+        failed_events = [event for event in events if event["user"] == "never-ready"]
+        ok = len(retry_events) == 8 and len(failed_events) == 2
+        for value in ("retry-429", "retry-503"):
+            for suffix in ("/chat/completions", "/embeddings"):
+                calls = [event for event in retry_events if event["user"] == value and event["path"].endswith(suffix)]
+                ok = ok and len(calls) == 2 and calls[-1]["status"] == 200
+        ok = ok and all(event["status"] == 503 for event in failed_events)
     elif assertion == "no-rollback-value":
         ok = not any("rollback-value" in event["user"] for event in events)
     elif assertion == "json-prompt":

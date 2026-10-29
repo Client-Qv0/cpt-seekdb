@@ -10988,5 +10988,18 @@
     "info_cn": "是否允许文件 SQL（如 read_csv）读取服务器文件",
     "background_cn": "文件 SQL 默认关闭，避免任意读取服务器文件",
     "ref_url": ""
-  }
+  },
+  "ai_column_strict_read": {
+    "id": 10755,
+    "name": "ai_column_strict_read",
+    "default_value": "0",
+    "base_value": "0",
+    "data_type": "bool",
+    "info": "reject statements referencing AI columns with unfinished rows",
+    "flags": "SESSION",
+    "publish_version": "1.0.0.0",
+    "info_cn": "引用的 AI 列有未就绪行时拒绝语句",
+    "background_cn": "",
+    "ref_url": ""
+}
 }

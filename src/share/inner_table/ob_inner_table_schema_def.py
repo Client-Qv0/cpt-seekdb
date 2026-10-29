@@ -2500,6 +2500,29 @@ def_table_schema(**all_ai_column_def)
 
 # 1135: __all_ai_column
 
+def_table_schema(
+    owner = 'ai-column',
+    table_name = '__all_ai_column_task',
+    table_id = '1136',
+    table_type = 'SYSTEM_TABLE',
+    gm_columns = ['gmt_create', 'gmt_modified'],
+    is_cluster_private = False,
+    meta_record_in_sys = False,
+    rowkey_columns = [('table_id', 'int'), ('rowkey_hash', 'varchar:64'), ('column_id', 'int')],
+    normal_columns = [
+        ('rowkey_predicate', 'longtext', 'true'),
+        ('request_id', 'varchar:64', 'false', ''),
+        ('spec_text', 'longtext', 'true'),
+        ('user_id', 'int', 'false', '0'),
+        ('state', 'int', 'false', '1'),
+        ('retry_count', 'int', 'false', '0'),
+        ('eligible_ts', 'timestamp:6', 'true'),
+        ('lease_until', 'timestamp:6', 'true'),
+        ('owner', 'varchar:64', 'true'),
+        ('result_value', 'longtext', 'true')
+    ]
+)
+
 # Reserved position (placeholder before this line)
 # Placeholder suggestion for this section: Use actual table names for placeholders
 ################################################################################

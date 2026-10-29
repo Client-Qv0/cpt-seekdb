@@ -16,6 +16,7 @@
 
 #define USING_LOG_PREFIX SQL_RESV
 #include "sql/resolver/dml/ob_update_resolver.h"
+#include "share/ai_column/ob_ai_column_schema.h"
 
 namespace oceanbase
 {
@@ -34,11 +35,42 @@ ObUpdateResolver::~ObUpdateResolver()
 {
 }
 
+namespace {
+int replace_ai_retry_status(ParseNode *&node, ParseNode *status_expr)
+{
+  if (node == nullptr) { return OB_SUCCESS; }
+  if (node->type_ == T_COLUMN_REF && node->num_child_ == 3 && node->children_[2] != nullptr) {
+    const ParseNode *name=node->children_[2];
+    if (node->children_[0] == nullptr && node->children_[1] == nullptr && !name->is_input_quoted_
+        && ObString(name->str_len_,name->str_value_).case_compare("status")==0) {
+      node=status_expr;
+      return OB_SUCCESS;
+    }
+  }
+  int ret=OB_SUCCESS;
+  for (int64_t i=0; OB_SUCC(ret) && i<node->num_child_; ++i) {
+    ret=SMART_CALL(replace_ai_retry_status(node->children_[i],status_expr));
+  }
+  return ret;
+}
+} // namespace
+
 int ObUpdateResolver::resolve(const ParseNode &parse_tree)
 {
   int ret = OB_SUCCESS;
   ObUpdateStmt *update_stmt = NULL;
   ObSEArray<ObTableAssignment, 2> tables_assign;
+  const bool retry_ai = parse_tree.num_child_ == 12 && parse_tree.children_ != nullptr
+      && parse_tree.children_[11] != nullptr && parse_tree.children_[11]->type_ == T_AI_COLUMN_RETRY;
+  const bool old_hidden = session_info_ == nullptr ? false : session_info_->is_table_name_hidden();
+  struct HiddenFlagGuard {
+    ObSQLSessionInfo *session_; bool hidden_;
+    ~HiddenFlagGuard() { if (session_ != nullptr) { session_->set_table_name_hidden(hidden_); } }
+  } hidden_guard{session_info_,old_hidden};
+  if (retry_ai && parse_tree.children_[11]->value_ != 0) {
+    LOG_USER_ERROR(OB_NOT_SUPPORTED,"combining AI COLUMN RETRY with another ALTER action");
+    return OB_NOT_SUPPORTED;
+  }
   if (T_UPDATE != parse_tree.type_
       || 3 > parse_tree.num_child_
       || OB_ISNULL(parse_tree.children_)
@@ -74,6 +106,33 @@ int ObUpdateResolver::resolve(const ParseNode &parse_tree)
   if (OB_SUCC(ret)) {
     ParseNode *table_node = parse_tree.children_[TABLE];
     if (OB_FAIL(resolve_table_list(*table_node))) {
+    }
+  }
+
+  if (OB_SUCC(ret) && retry_ai) {
+    // Resolve the user table with ordinary visibility first. The flag below
+    // is only needed to resolve the AI companion expressions/assignments.
+    session_info_->set_table_name_hidden(true);
+    const auto *item=update_stmt->get_table_item(0);
+    const ObTableSchema *table=nullptr;
+    const ParseNode *name=parse_tree.children_[11]->children_[0];
+    ObString column_name(name->str_len_,name->str_value_);
+    if (item==nullptr) { ret=OB_ERR_UNEXPECTED; }
+    else if (OB_FAIL(schema_checker_->get_table_schema(item->ref_id_,table))) {}
+    else if (table==nullptr || ai_column_spec_column(*table,column_name)==nullptr) {
+      ret=OB_NOT_SUPPORTED;
+      LOG_USER_ERROR(OB_NOT_SUPPORTED,"retrying a column that is not an AI column");
+    } else {
+      ObString state_name;
+      ObSqlString status;
+      const ParseNode *status_node=nullptr;
+      if (OB_FAIL(build_ai_hidden_column_name(*allocator_,AI_COLUMN_STATE_PREFIX,column_name,state_name))) {}
+      else if (OB_FAIL(status.append("CASE IFNULL("))) {}
+      else if (OB_FAIL(ai_column_quote_identifier(status,state_name))) {}
+      else if (OB_FAIL(status.append(",1) WHEN 1 THEN 'PENDING' WHEN 2 THEN 'READY' ELSE 'FAILED' END"))) {}
+      else if (OB_FAIL(ObRawExprUtils::parse_expr_node_from_str(status.string(),session_info_->get_charsets4parser(),
+              *allocator_,status_node,session_info_->get_sql_mode()))) {}
+      else { ret=replace_ai_retry_status(parse_tree.children_[WHERE],const_cast<ParseNode *>(status_node)); }
     }
   }
 

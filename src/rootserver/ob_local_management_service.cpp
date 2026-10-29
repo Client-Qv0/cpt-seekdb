@@ -58,7 +58,6 @@
 #include "rootserver/ob_ai_model_ddl_service.h"
 #include "lib/utility/ob_print_utils.h"     // databuff_printf
 #include "share/ob_ex_rpc.h"
-#include "share/ai_column/ob_ai_column_util.h"
 #include "share/ob_dml_sql_splicer.h"
 #include "share/ob_share_util.h"
 #include "common/mysqlclient/ob_mysql_transaction.h"
@@ -74,136 +73,7 @@ using namespace storage;
 namespace rootserver
 {
 
-namespace
-{
 
-////////////////////////////////////////////////////////////////////////////////
-// AI COLUMN metadata publishing
-//
-// The physical AI column definition is entirely carried by the table schema: a
-// result column `c` owns the hidden columns `__ai_state_c` / `__ai_request_c` /
-// `__ai_spec_c`, and the computation spec is persisted in the comment of
-// `__ai_spec_c`. Publishing one `__all_ai_column` row per AI result column right
-// after the table schema is committed therefore needs nothing but the schema.
-////////////////////////////////////////////////////////////////////////////////
-
-// Insert (or refresh) one `__all_ai_column` row.
-int write_ai_column_row(common::ObMySQLProxy &sql_proxy,
-                        const uint64_t table_id,
-                        const share::schema::ObColumnSchemaV2 &result_column,
-                        const share::schema::ObColumnSchemaV2 &state_column,
-                        const share::schema::ObColumnSchemaV2 &request_column,
-                        const share::schema::ObColumnSchemaV2 &result_spec_column,
-                        const share::ObAiColumnSpec &spec)
-{
-  int ret = OB_SUCCESS;
-  common::ObMySQLTransaction trans;
-  share::ObDMLSqlSplicer dml;
-  common::ObSqlString buffer;
-  int64_t affected_rows = 0;
-  if (OB_FAIL(dml.add_pk_column("table_id", static_cast<int64_t>(table_id)))) {
-  } else if (OB_FAIL(dml.add_pk_column("column_id",
-                                       static_cast<int64_t>(result_column.get_column_id())))) {
-  } else if (OB_FAIL(dml.add_column("column_name", ObHexEscapeSqlStr(spec.result_column_name_)))) {
-  } else if (OB_FAIL(dml.add_column("state_column_id",
-                                    static_cast<int64_t>(state_column.get_column_id())))) {
-  } else if (OB_FAIL(dml.add_column("request_column_id",
-                                    static_cast<int64_t>(request_column.get_column_id())))) {
-  } else if (OB_FAIL(dml.add_column("result_spec_column_id",
-                                    static_cast<int64_t>(result_spec_column.get_column_id())))) {
-  } else if (OB_FAIL(dml.add_column("max_retries", spec.max_retries_))) {
-  } else if (OB_FAIL(dml.add_column("sync_mode", ObHexEscapeSqlStr(spec.sync_mode_)))) {
-  } else if (OB_FAIL(dml.add_column("model_name", ObHexEscapeSqlStr(spec.model_name_)))) {
-  } else if (OB_FAIL(dml.add_column("ai_func_name", ObHexEscapeSqlStr(spec.ai_func_name_)))) {
-  } else if (OB_FAIL(dml.add_column("result_type", spec.result_type_))) {
-  } else if (OB_FAIL(dml.add_column("normalized_expr",
-                                    ObHexEscapeSqlStr(spec.normalized_expr_)))) {
-  } else if (OB_FAIL(dml.add_gmt_create())) {
-  } else if (OB_FAIL(dml.add_gmt_modified())) {
-  } else if (OB_FAIL(dml.splice_insert_update_sql(OB_ALL_AI_COLUMN_TNAME, buffer))) {
-    LOG_WARN("failed to splice insert sql for ai column", K(ret));
-  } else if (OB_FAIL(trans.start(&sql_proxy))) {
-    LOG_WARN("failed to start transaction to write ai column", K(ret));
-  } else if (OB_FAIL(trans.write(buffer.ptr(), affected_rows))) {
-    LOG_WARN("failed to write ai column metadata", K(ret), K(buffer));
-  } else if (affected_rows <= 0) {
-    ret = OB_ERR_UNEXPECTED;
-    LOG_WARN("unexpected affected rows for ai column metadata", K(ret), K(affected_rows));
-  }
-  if (trans.is_started()) {
-    int tmp_ret = OB_SUCCESS;
-    if (OB_SUCCESS != (tmp_ret = trans.end(OB_SUCC(ret)))) {
-      LOG_WARN("failed to end transaction to write ai column", K(tmp_ret));
-      ret = OB_SUCC(ret) ? tmp_ret : ret;
-    }
-  }
-  return ret;
-}
-
-// Publish the AI COLUMN metadata of one table whose schema has just been
-// committed. `table_id` is passed explicitly because a freshly created table
-// takes its id in the DDL layer.
-int publish_ai_column_meta(common::ObMySQLProxy &sql_proxy,
-                           const share::schema::ObTableSchema &table_schema,
-                           const uint64_t table_id)
-{
-  int ret = OB_SUCCESS;
-  int64_t published = 0;
-  common::ObArenaAllocator allocator(lib::ObLabel("AiColumnMeta"));
-  for (share::schema::ObTableSchema::const_column_iterator iter = table_schema.column_begin();
-       OB_SUCC(ret) && iter != table_schema.column_end(); ++iter) {
-    const share::schema::ObColumnSchemaV2 *result_spec_column = *iter;
-    ObString result_column_name;
-    if (OB_ISNULL(result_spec_column)) {
-      ret = OB_ERR_UNEXPECTED;
-      LOG_WARN("unexpected null column schema", K(ret));
-    } else if (!result_spec_column->is_hidden() ||
-               !share::get_ai_hidden_column_suffix(result_spec_column->get_column_name_str(),
-                                                   share::AI_COLUMN_SPEC_PREFIX,
-                                                   result_column_name)) {
-      // not the spec column of an ai column
-    } else {
-      share::ObAiColumnSpec spec;
-      const share::schema::ObColumnSchemaV2 *result_column = NULL;
-      const share::schema::ObColumnSchemaV2 *state_column = NULL;
-      const share::schema::ObColumnSchemaV2 *request_column = NULL;
-      ObString state_column_name;
-      ObString request_column_name;
-      if (OB_FAIL(share::deserialize_ai_column_spec(result_spec_column->get_comment_str(),
-                                                    allocator,
-                                                    spec))) {
-        LOG_WARN("failed to read ai column spec", K(ret), K(result_column_name));
-      } else if (OB_ISNULL(result_column = table_schema.get_column_schema(result_column_name))) {
-        ret = OB_ERR_UNEXPECTED;
-        LOG_WARN("ai result column not found in table schema", K(ret), K(result_column_name));
-      } else if (OB_FAIL(share::build_ai_hidden_column_name(allocator,
-                                                            share::AI_COLUMN_STATE_PREFIX,
-                                                            result_column_name,
-                                                            state_column_name))) {
-      } else if (OB_ISNULL(state_column = table_schema.get_column_schema(state_column_name))) {
-        ret = OB_ERR_UNEXPECTED;
-        LOG_WARN("ai state hidden column not found", K(ret), K(state_column_name));
-      } else if (OB_FAIL(share::build_ai_hidden_column_name(allocator,
-                                                            share::AI_COLUMN_REQUEST_PREFIX,
-                                                            result_column_name,
-                                                            request_column_name))) {
-      } else if (OB_ISNULL(request_column = table_schema.get_column_schema(request_column_name))) {
-        ret = OB_ERR_UNEXPECTED;
-        LOG_WARN("ai request hidden column not found", K(ret), K(request_column_name));
-      } else if (OB_FAIL(write_ai_column_row(sql_proxy, table_id, *result_column, *state_column,
-                                             *request_column, *result_spec_column, spec))) {
-      } else {
-        ++published;
-      }
-    }
-  }
-  if (OB_SUCC(ret) && published > 0) {
-    LOG_INFO("published ai column metadata of table", K(table_id), K(published));
-  }
-  return ret;
-}
-
-} // anonymous namespace
 
 int ObLocalManagementService::check_partition_exchange_schema_for_user(
     const share::schema::ObTableSchema &base_table_schema,
@@ -799,13 +669,6 @@ int ObLocalManagementService::parallel_create_table(const ObCreateTableArg &arg,
     } else if (OB_FAIL(create_table_helper.execute())) {
     }
   }
-  if (OB_SUCC(ret)) {
-    int tmp_ret = OB_SUCCESS;
-    if (OB_SUCCESS != (tmp_ret = publish_ai_column_meta(sql_proxy_, arg.schema_,
-                                                        res.table_id_))) {
-      LOG_WARN("failed to publish ai column metadata", K(tmp_ret), K(res.table_id_));
-    }
-  }
   int64_t cost = ObTimeUtility::current_time() - begin_time;
   MANAGEMENT_EVENT_ADD("ddl scheduler", "parallel create table",
                         "ret", ret,
@@ -834,13 +697,6 @@ int ObLocalManagementService::create_table(const ObCreateTableArg &arg, ObCreate
     ObCreateTableHelper create_table_helper(schema_service_, arg, res, nullptr/*external trans*/, false /*is_parallel*/);
     if (OB_FAIL(create_table_helper.init(ddl_service_))) {
     } else if (OB_FAIL(create_table_helper.execute())) {
-    }
-  }
-  if (OB_SUCC(ret)) {
-    int tmp_ret = OB_SUCCESS;
-    if (OB_SUCCESS != (tmp_ret = publish_ai_column_meta(sql_proxy_, arg.schema_,
-                                                        res.table_id_))) {
-      LOG_WARN("failed to publish ai column metadata", K(tmp_ret), K(res.table_id_));
     }
   }
   int64_t cost = ObTimeUtility::current_time() - begin_time;
@@ -1194,13 +1050,6 @@ int ObLocalManagementService::alter_table(const obcall::ObAlterTableArg &arg, ob
       }
     } else if (OB_FAIL(ddl_service_.alter_table(nonconst_arg, res))) {
     } else {
-      int tmp_ret = OB_SUCCESS;
-      if (OB_SUCCESS != (tmp_ret = publish_ai_column_meta(
-                             sql_proxy_, nonconst_arg.alter_table_schema_,
-                             nonconst_arg.alter_table_schema_.get_table_id()))) {
-        LOG_WARN("failed to publish ai column metadata", K(tmp_ret),
-                 K(nonconst_arg.alter_table_schema_.get_table_id()));
-      }
       const ObSimpleTableSchemaV2 *simple_table_schema = NULL;
       // there are multiple DDL except alter table, ctas, comment on, eg.
       // but only alter_table specify table_id, so if no table_id, it indicates DDL is not alter table, skip.

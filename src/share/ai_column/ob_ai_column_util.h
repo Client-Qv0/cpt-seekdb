@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef OCEANBASE_SHARE_AI_COLUMN_OB_AI_COLUMN_UTIL_H_
-#define OCEANBASE_SHARE_AI_COLUMN_OB_AI_COLUMN_UTIL_H_
+#pragma once
 
 #include <string.h>
 #include "lib/ob_define.h"
+#include "common/sql_mode/ob_sql_mode.h"
 #include "lib/ob_errno.h"
 #include "lib/string/ob_string.h"
 #include "lib/string/ob_sql_string.h"
@@ -53,6 +53,7 @@ namespace share
 const char *const AI_COLUMN_STATE_PREFIX = "__ai_state_";
 const char *const AI_COLUMN_REQUEST_PREFIX = "__ai_request_";
 const char *const AI_COLUMN_SPEC_PREFIX = "__ai_spec_";
+const char *const AI_COLUMN_INSTRUCTION_KEY = "__ai_column_instruction";
 
 // state encoding of `__ai_state_<col>`
 const int64_t AI_COLUMN_STATE_PENDING = 1;
@@ -189,6 +190,7 @@ public:
     model_name_.reset();
     ai_func_name_.reset();
     normalized_expr_.reset();
+    dependencies_.reset();
     sync_mode_.reset();
     result_column_id_ = OB_INVALID_ID;
     state_column_id_ = OB_INVALID_ID;
@@ -196,6 +198,7 @@ public:
     result_spec_column_id_ = OB_INVALID_ID;
     max_retries_ = 0;
     result_type_ = AI_COLUMN_RESULT_INVALID;
+    sql_mode_ = DEFAULT_MYSQL_MODE;
   }
   bool is_valid() const { return !result_column_name_.empty() && !ai_func_name_.empty(); }
   int assign(const ObAiColumnSpec &other)
@@ -205,6 +208,7 @@ public:
     model_name_ = other.model_name_;
     ai_func_name_ = other.ai_func_name_;
     normalized_expr_ = other.normalized_expr_;
+    dependencies_ = other.dependencies_;
     sync_mode_ = other.sync_mode_;
     result_column_id_ = other.result_column_id_;
     state_column_id_ = other.state_column_id_;
@@ -212,6 +216,7 @@ public:
     result_spec_column_id_ = other.result_spec_column_id_;
     max_retries_ = other.max_retries_;
     result_type_ = other.result_type_;
+    sql_mode_ = other.sql_mode_;
     return ret;
   }
   TO_STRING_KV(K_(result_column_name), K_(model_name), K_(ai_func_name),
@@ -224,6 +229,9 @@ public:
   common::ObString model_name_;
   common::ObString ai_func_name_;
   common::ObString normalized_expr_;
+  // Length-prefixed column names: "<byte length>:<name>...". Names may
+  // contain separators, quotes or newlines without becoming ambiguous.
+  common::ObString dependencies_;
   common::ObString sync_mode_;
   uint64_t result_column_id_;
   uint64_t state_column_id_;
@@ -231,6 +239,7 @@ public:
   uint64_t result_spec_column_id_;
   int64_t max_retries_;
   int64_t result_type_;
+  uint64_t sql_mode_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,9 +288,10 @@ inline int serialize_ai_column_spec(common::ObIAllocator &alloc,
   } else if (OB_FAIL(append_ai_spec_string(buf, "model", spec.model_name_))) {
   } else if (OB_FAIL(append_ai_spec_string(buf, "func", spec.ai_func_name_))) {
   } else if (OB_FAIL(append_ai_spec_string(buf, "expr", spec.normalized_expr_))) {
+  } else if (OB_FAIL(append_ai_spec_string(buf, "dependencies", spec.dependencies_))) {
   } else if (OB_FAIL(append_ai_spec_string(buf, "sync_mode", spec.sync_mode_))) {
-  } else if (OB_FAIL(num.append_fmt("max_retries=%ld\nresult_type=%ld\n",
-                                    spec.max_retries_, spec.result_type_))) {
+  } else if (OB_FAIL(num.append_fmt("max_retries=%ld\nresult_type=%ld\nsql_mode=%lu\n",
+                                    spec.max_retries_, spec.result_type_, spec.sql_mode_))) {
     SHARE_LOG(WARN, "failed to append ai column spec numbers", K(ret));
   } else if (OB_FAIL(buf.append(num.ptr(), num.length()))) {
     SHARE_LOG(WARN, "failed to append ai column spec numbers", K(ret));
@@ -315,6 +325,41 @@ inline int unescape_ai_spec_value(common::ObIAllocator &alloc,
     SHARE_LOG(WARN, "failed to write unescaped ai spec value", K(ret));
   }
   return ret;
+}
+
+inline int parse_ai_spec_integer(const common::ObString &value, int64_t &number)
+{
+  int ret = OB_SUCCESS;
+  number = 0;
+  if (value.empty()) {
+    ret = OB_INVALID_ARGUMENT;
+  }
+  for (int64_t i = 0; OB_SUCC(ret) && i < value.length(); ++i) {
+    const char c = value.ptr()[i];
+    if (c < '0' || c > '9' || number > (INT64_MAX - (c - '0')) / 10) {
+      ret = OB_INVALID_ARGUMENT;
+    } else {
+      number = number * 10 + c - '0';
+    }
+  }
+  return ret;
+}
+
+// The type instruction is a fixed suffix, not part of the executable SQL.
+// Match from the end so a user string containing " => " remains intact.
+inline common::ObString ai_column_expression(const ObAiColumnSpec &spec)
+{
+  const char *instruction = ai_column_result_type_instruction(spec.result_type_);
+  const int64_t suffix_len = strlen(instruction) + 4;
+  const common::ObString &text = spec.normalized_expr_;
+  common::ObString expression = text;
+  if (text.length() > suffix_len
+      && 0 == MEMCMP(text.ptr() + text.length() - suffix_len, " => ", 4)
+      && 0 == MEMCMP(text.ptr() + text.length() - suffix_len + 4,
+                    instruction, suffix_len - 4)) {
+    expression.assign_ptr(text.ptr(), text.length() - suffix_len);
+  }
+  return expression;
 }
 
 inline int deserialize_ai_column_spec(const common::ObString &serialized,
@@ -352,14 +397,20 @@ inline int deserialize_ai_column_spec(const common::ObString &serialized,
         spec.normalized_expr_ = value;
       } else if (4 == key_len && 0 == MEMCMP(key, "func", 4)) {
         spec.ai_func_name_ = value;
+      } else if (12 == key_len && 0 == MEMCMP(key, "dependencies", 12)) {
+        spec.dependencies_ = value;
       } else if (5 == key_len && 0 == MEMCMP(key, "model", 5)) {
         spec.model_name_ = value;
       } else if (9 == key_len && 0 == MEMCMP(key, "sync_mode", 9)) {
         spec.sync_mode_ = value;
       } else if (11 == key_len && 0 == MEMCMP(key, "max_retries", 11)) {
-        spec.max_retries_ = strtol(value.ptr(), NULL, 10);
+        ret = parse_ai_spec_integer(value, spec.max_retries_);
       } else if (11 == key_len && 0 == MEMCMP(key, "result_type", 11)) {
-        spec.result_type_ = strtol(value.ptr(), NULL, 10);
+        ret = parse_ai_spec_integer(value, spec.result_type_);
+      } else if (8 == key_len && 0 == MEMCMP(key, "sql_mode", 8)) {
+        int64_t mode = 0;
+        if (OB_FAIL(parse_ai_spec_integer(value, mode))) {
+        } else { spec.sql_mode_ = static_cast<uint64_t>(mode); }
       } else if (13 == key_len && 0 == MEMCMP(key, "result_column", 13)) {
         spec.result_column_name_ = value;
       } else {
@@ -377,5 +428,3 @@ inline int deserialize_ai_column_spec(const common::ObString &serialized,
 
 } // namespace share
 } // namespace oceanbase
-
-#endif // OCEANBASE_SHARE_AI_COLUMN_OB_AI_COLUMN_UTIL_H_

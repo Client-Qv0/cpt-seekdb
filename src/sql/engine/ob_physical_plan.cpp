@@ -130,6 +130,7 @@ void ObPhysicalPlan::reset()
   field_columns_.reset();
   param_columns_.reset();
   autoinc_params_.reset();
+  ai_column_reads_.reset();
   stmt_need_privs_.reset();
   vars_.reset();
   sql_expression_factory_.destroy();
@@ -602,6 +603,8 @@ inline bool ObPhysicalPlan::inner_check_if_is_expired(const int64_t first_exec_r
 }
 
 // force_trace_log is coordinator-local and is not serialized with the plan.
+OB_SERIALIZE_MEMBER(AiColumnReadCheck, table_id_, column_id_, state_column_id_);
+
 OB_SERIALIZE_MEMBER(ObPhysicalPlan,
                     runtime_schema_version_, // this field is not used at runtime
                     phy_hint_.query_timeout_,
@@ -649,7 +652,8 @@ OB_SERIALIZE_MEMBER(ObPhysicalPlan,
                     need_switch_to_table_lock_worker_,
                     data_complement_gen_doc_id_,
                     px_parallel_rule_,
-                    px_worker_share_plan_enabled_);
+                    px_worker_share_plan_enabled_,
+                    ai_column_reads_);
 
 int ObPhysicalPlan::set_table_locations(const ObTablePartitionInfoArray &infos,
                                         ObSchemaGetterGuard &schema_guard)

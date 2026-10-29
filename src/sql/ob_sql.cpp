@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "share/ai_column/ob_ai_column_schema.h"
+#include "sql/resolver/dml/ob_stmt_expr_visitor.h"
 #define USING_LOG_PREFIX SQL
 #include "config_bridge.h"
 #include "sql/ob_sql.h"
@@ -2306,6 +2308,55 @@ int ObSql::generate_physical_plan(ParseResult &parse_result,
   return ret;
 }
 
+namespace {
+int collect_ai_column_reads(ObDMLStmt &stmt, share::schema::ObSchemaGetterGuard &schema,
+                            common::ObIArray<AiColumnReadCheck> &checks)
+{
+  int ret = OB_SUCCESS;
+  ObSEArray<ObRawExpr *, 8> expressions, columns;
+  ObStmtExprGetter visitor;
+  visitor.set_relation_scope();
+  visitor.remove_scope(SCOPE_DML_COLUMN);
+  visitor.remove_scope(SCOPE_DML_CONSTRAINT);
+  if (OB_FAIL(stmt.get_relation_exprs(expressions, visitor))) {}
+  else if (OB_FAIL(ObRawExprUtils::extract_column_exprs(expressions, columns))) {}
+  for (int64_t i = 0; OB_SUCC(ret) && i < columns.count(); ++i) {
+    if (!columns.at(i)->is_column_ref_expr()) { continue; }
+    auto *ref = static_cast<ObColumnRefRawExpr *>(columns.at(i));
+    const auto *table_item = stmt.get_table_item_by_id(ref->get_table_id());
+    const share::schema::ObTableSchema *table = nullptr;
+    if (table_item == nullptr || !table_item->is_basic_table()) { continue; }
+    if (OB_FAIL(schema.get_table_schema(table_item->ref_id_, table))) {}
+    else if (table == nullptr) { ret = OB_ERR_UNEXPECTED; }
+    else {
+      const auto *column = table->get_column_schema(ref->get_column_id());
+      if (column == nullptr || share::ai_column_spec_column(*table,column->get_column_name_str()) == nullptr) { continue; }
+      bool exists = false;
+      for (int64_t j=0; j<checks.count(); ++j) {
+        exists = exists || (checks.at(j).table_id_==table->get_table_id() && checks.at(j).column_id_==column->get_column_id());
+      }
+      if (exists) { continue; }
+      for (auto it=table->column_begin(); OB_SUCC(ret) && it!=table->column_end(); ++it) {
+        ObString suffix;
+        if ((*it)->is_hidden() && share::get_ai_hidden_column_suffix((*it)->get_column_name_str(),share::AI_COLUMN_STATE_PREFIX,suffix)
+            && suffix.case_compare(column->get_column_name_str())==0) {
+          AiColumnReadCheck check;
+          check.table_id_=table->get_table_id(); check.column_id_=column->get_column_id(); check.state_column_id_=(*it)->get_column_id();
+          ret=checks.push_back(check);
+          break;
+        }
+      }
+    }
+  }
+  ObSEArray<ObSelectStmt *,4> children;
+  if (OB_SUCC(ret)) { ret=stmt.get_child_stmts(children); }
+  for (int64_t i=0; OB_SUCC(ret) && i<children.count(); ++i) {
+    ret=SMART_CALL(collect_ai_column_reads(*children.at(i),schema,checks));
+  }
+  return ret;
+}
+} // namespace
+
 int ObSql::generate_plan(ParseResult &parse_result,
                         ObPlanCacheCtx *pc_ctx,
                         ObSqlCtx &sql_ctx,
@@ -2363,6 +2414,8 @@ int ObSql::generate_plan(ParseResult &parse_result,
       ret = OB_ALLOCATE_MEMORY_FAILED;
       LOG_ERROR("Failed to alloc physical plan from tc factory", K(ret));
     } else {
+      if (OB_FAIL(collect_ai_column_reads(*stmt, *sql_ctx.schema_guard_, phy_plan->get_ai_column_reads()))) {
+      }
       if (NULL != pc_ctx) {
         pc_ctx->should_add_plan_ = true;
       }

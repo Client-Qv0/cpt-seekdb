@@ -16,6 +16,7 @@
 
 #define USING_LOG_PREFIX SQL_ENG
 #include "ob_ai_func_client.h"
+#include "share/ai_column/ai_column_execution.h"
 
 namespace oceanbase 
 {
@@ -145,7 +146,8 @@ int ObAIFuncClient::send_post(ObJsonObject *data, ObJsonObject *&response)
     if (OB_FAIL(init_easy_handle(curl_, data, response_buf))) {
     } 
     // retry if need
-    for (int64_t i = 0; OB_SUCC(ret) && i <= max_retry_times_; ++i) {
+    const int64_t retry_count=share::ai_column_task_execution ? 0 : max_retry_times_;
+    for (int64_t i = 0; OB_SUCC(ret) && i <= retry_count; ++i) {
       http_code = 0;
       if (CURLE_OK != (res = curl_easy_perform(curl_))) {
         LOG_WARN("perform curl failed", K(res));
@@ -157,6 +159,8 @@ int ObAIFuncClient::send_post(ObJsonObject *data, ObJsonObject *&response)
       } else if (res != CURLE_OK) {
         // retry
       } else if (!is_retryable_status_code(http_code)) {
+        break;
+      } else if (share::ai_column_task_execution) {
         break;
       } else {
         LOG_WARN("retryable http status code", K(http_code), K(i));
@@ -280,11 +284,12 @@ int ObAIFuncClient::send_post_batch(common::ObIAllocator &allocator,
     if (OB_FAIL(init(allocator, url, headers))) {
     }
     // retry if need
-    for (int64_t i = 0; OB_SUCC(ret) && i < max_retry_times_; ++i) {
+    const int64_t attempt_count=share::ai_column_task_execution ? 1 : max_retry_times_;
+    for (int64_t i = 0; OB_SUCC(ret) && i < attempt_count; ++i) {
       ret = send_post_batch(data_array, responses);
       if (is_timeout()) {
         ret = OB_TIMEOUT;
-      } else if (OB_CURL_ERROR == ret) {
+      } else if (OB_CURL_ERROR == ret && !share::ai_column_task_execution) {
         ret = OB_SUCCESS;
         int64_t delay_ms = 1000 * (1 << i) + rand() % 1000;
         ob_usleep(delay_ms * 1000);
@@ -407,7 +412,8 @@ int ObAIFuncClient::init_easy_handle(CURL *curl, ObJsonObject *body, ObStringBuf
       LOG_WARN("set no signal failed", K(res), K(no_signal));
     } else if (CURLE_OK !=(res = curl_easy_setopt(curl, CURLOPT_TCP_NODELAY, no_delay))) {
       LOG_WARN("set no delay failed", K(res), K(no_delay));
-    } else if (CURLE_OK !=(res = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, 10000))) {
+    } else if (CURLE_OK !=(res = curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS,
+                                                share::ai_column_task_execution ? 3000L : 10000L))) {
       LOG_WARN("set connection timeout ms failed", K(res));
     } else if (CURLE_OK != (res = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout_sec_))) {
       LOG_WARN("set timeout failed", K(res), K(timeout_sec_));

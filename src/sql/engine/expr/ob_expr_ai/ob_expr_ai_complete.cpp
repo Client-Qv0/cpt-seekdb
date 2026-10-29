@@ -18,6 +18,8 @@
 #include "ob_expr_ai_complete.h"
 #include "query/ai/ob_ai_endpoint_resolver.h"
 #include "share/rc/ob_server_runtime.h"
+#include "share/ai_column/ob_ai_column_util.h"
+#include "sql/session/ob_sql_session_info.h"
 
 using namespace oceanbase::common;
 using namespace oceanbase::sql;
@@ -152,6 +154,18 @@ int ObExprAIComplete::eval_ai_complete(const ObExpr &expr,
       res.set_null();
     }
 
+    ObString system_instruction;
+    const ObString *instruction = nullptr;
+    if (OB_SUCC(ret) && config != nullptr && ctx.exec_ctx_.get_my_session() != nullptr
+        && ctx.exec_ctx_.get_my_session()->is_real_inner_session()) {
+      auto *node = config->get_value(ObString::make_string(share::AI_COLUMN_INSTRUCTION_KEY));
+      if (node != nullptr) {
+        if (node->json_type() != ObJsonNodeType::J_STRING) { ret = OB_INVALID_ARGUMENT; }
+        else if (OB_FAIL(ObAIFuncJsonUtils::print_json_to_str(temp_allocator,node,system_instruction))) {}
+        else if (OB_FAIL(config->remove(ObString::make_string(share::AI_COLUMN_INSTRUCTION_KEY)))) {}
+        else { instruction = &system_instruction; }
+      }
+    }
     if (OB_FAIL(ret)){
     } else if (OB_FAIL(ObAIFuncUtils::get_ai_func_info(temp_allocator, model_id, info))) {
     } else if (OB_ISNULL(endpoint_resolver)) {
@@ -161,7 +175,7 @@ int ObExprAIComplete::eval_ai_complete(const ObExpr &expr,
     } else {
       ObAIFuncModel model(temp_allocator, *info, *endpoint_info);
       ObString result;
-      if (OB_FAIL(model.call_completion(prompt, config, result))) {
+      if (OB_FAIL(model.call_completion(prompt, config, result, instruction))) {
       } else if (result.empty()) {
         ret = OB_ERR_UNEXPECTED;
         LOG_USER_ERROR(OB_ERR_UNEXPECTED, "ai_complete, model returns an empty response");

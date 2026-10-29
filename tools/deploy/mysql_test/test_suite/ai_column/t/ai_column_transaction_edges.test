@@ -1,0 +1,105 @@
+# AI tasks must follow accepted writes, including duplicate and ignored rows.
+connection default;
+--exec python3 mysql_test/test_suite/ai_column/include/ai_column_mock.py start 19125
+create database ai_column_edges;
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('edges_model','{"type":"completion","model_name":"mock"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('edges_ep',
+'{"ai_model_name":"edges_model","url":"http://127.0.0.1:19125/v1/chat/completions","access_key":"local-test","provider":"openai","request_model_name":"mock"}');
+create table ai_column_edges.docs(id bigint primary key, n int check(n>=0), content varchar(200),
+result varchar(400) AI COLUMN(AI_COMPLETE('edges_model',content)));
+insert into ai_column_edges.docs(id,n,content) values(1,0,'slow-old');
+insert ignore into ai_column_edges.docs(id,n,content) values(1,0,'rollback-value');
+--real_sleep 2
+select content='slow-old' and result='mock:slow-old' as ignored_duplicate_keeps_original_request
+from ai_column_edges.docs where id=1;
+--exec python3 mysql_test/test_suite/ai_column/include/ai_column_mock.py assert 19125 no-rollback-value
+update ignore ai_column_edges.docs set content='rollback-value',n=-1 where id=1;
+--real_sleep 0.2
+select content='slow-old' and n=0 and result='mock:slow-old' as ignored_check_violation_keeps_row
+from ai_column_edges.docs where id=1;
+--exec python3 mysql_test/test_suite/ai_column/include/ai_column_mock.py assert 19125 no-rollback-value
+insert into ai_column_edges.docs(id,n,content) values(1,0,'duplicate-update')
+on duplicate key update content=values(content);
+--real_sleep 1
+select content='duplicate-update' and result='mock:duplicate-update' as duplicate_update_regenerates
+from ai_column_edges.docs where id=1;
+create table ai_column_edges.heap_docs(content varchar(200),
+result varchar(400) AI COLUMN(AI_COMPLETE('edges_model',content)));
+insert into ai_column_edges.heap_docs(content) values('heap-value');
+--real_sleep 1
+select count(*)=1 and max(result='mock:heap-value')=1 as heap_row_generates from ai_column_edges.heap_docs;
+update ai_column_edges.heap_docs set content='heap-updated';
+--real_sleep 1
+select result='mock:heap-updated' as heap_dependency_update_generates from ai_column_edges.heap_docs;
+start transaction;
+update ai_column_edges.heap_docs set content='rollback-value';
+rollback;
+select result='mock:heap-updated' as heap_rollback_restores_result from ai_column_edges.heap_docs;
+create table ai_column_edges.composite_docs(k varchar(100), id int, content varchar(200),
+result varchar(400) AI COLUMN(AI_COMPLETE('edges_model',content)), primary key(k,id));
+insert into ai_column_edges.composite_docs(k,id,content) values('a''b',2,'composite-value');
+--real_sleep 1
+select result='mock:composite-value' as quoted_composite_key_generates from ai_column_edges.composite_docs;
+insert into ai_column_edges.docs(id,n,content) values(9,0,'slow-old-delete');
+--real_sleep 0.2
+delete from ai_column_edges.docs where id=9;
+--real_sleep 2
+select count(*)=0 as deleted_row_stays_deleted from ai_column_edges.docs where id=9;
+select count(*)=0 as all_edge_tasks_drained from oceanbase.__all_ai_column_task task
+join oceanbase.__all_table t on t.table_id=task.table_id
+join oceanbase.__all_database d on d.database_id=t.database_id where d.database_name='ai_column_edges';
+# Preserve native NULL/JSON prompt semantics and the definition's SQL mode.
+set @old_mode=@@sql_mode;
+set session sql_mode='PIPES_AS_CONCAT,NO_BACKSLASH_ESCAPES,STRICT_ALL_TABLES';
+create table ai_column_edges.prompt_docs(id int primary key, content varchar(100),
+ templated varchar(400) AI COLUMN(AI_COMPLETE('edges_model',AI_PROMPT('Value:{0}',content),JSON_OBJECT('temperature',0))) WITH(max_retries=0),
+ concatenated varchar(400) AI COLUMN(AI_COMPLETE('edges_model',content || ',literal\slash')) WITH(max_retries=0),
+ too_short varchar(2) AI COLUMN(AI_COMPLETE('edges_model',content)) WITH(max_retries=0));
+create table ai_column_edges.escaped_keys(k varchar(100) primary key, content varchar(100),
+ result varchar(400) AI COLUMN(AI_COMPLETE('edges_model',content)));
+insert into ai_column_edges.escaped_keys(k,content) values('a\b''c','escaped-key');
+create table ai_column_edges.checked_results(id int primary key, content varchar(100),
+ result bigint AI COLUMN(AI_COMPLETE('edges_model',content)), check(result>10));
+insert into ai_column_edges.checked_results(id,content) values(1,'check-result');
+set session sql_mode=@old_mode;
+insert into ai_column_edges.prompt_docs(id,content) values(1,'input'),(2,NULL);
+--real_sleep 2
+select templated='mock:Value:input' as prompt_object_preserved,
+ concatenated=concat('mock:input,literal',char(92),'slash') as definition_mode_preserved,
+ too_short is null as invalid_string_result_rejected
+from ai_column_edges.prompt_docs where id=1;
+select templated is null and concatenated is null and too_short is null as null_inputs_remain_failed
+from ai_column_edges.prompt_docs where id=2;
+select result='mock:escaped-key' as escaped_primary_key_generates from ai_column_edges.escaped_keys;
+select result is null as rejected_publication_is_terminal from ai_column_edges.checked_results;
+select count(*)=0 as invalid_results_reach_terminal_state from oceanbase.__all_ai_column_task task
+join oceanbase.__all_table t on t.table_id=task.table_id
+join oceanbase.__all_database d on d.database_id=t.database_id where d.database_name='ai_column_edges';
+
+# Cached and prepared statements still check current state at execution time.
+set session ai_column_strict_read=off;
+select templated='mock:Value:input' as cached_read_ready_row from ai_column_edges.prompt_docs where id=1;
+prepare strict_plan from 'select templated from ai_column_edges.prompt_docs where id=1';
+set session ai_column_strict_read=on;
+--replace_regex /table_id=[0-9]+, column_id=[0-9]+/table_id=<table_id>, column_id=<column_id>/
+--error 11120
+select templated='mock:Value:input' as cached_read_ready_row from ai_column_edges.prompt_docs where id=1;
+--replace_regex /table_id=[0-9]+, column_id=[0-9]+/table_id=<table_id>, column_id=<column_id>/
+--error 11120
+execute strict_plan;
+deallocate prepare strict_plan;
+set session ai_column_strict_read=off;
+start transaction;
+insert into ai_column_edges.escaped_keys(k,content) values('uncommitted','rollback-value');
+set session ai_column_strict_read=on;
+--replace_regex /table_id=[0-9]+, column_id=[0-9]+/table_id=<table_id>, column_id=<column_id>/
+--error 11120
+select result from ai_column_edges.escaped_keys;
+rollback;
+select count(*)=1 as strict_read_after_rollback from ai_column_edges.escaped_keys where result is not null;
+set session ai_column_strict_read=off;
+--exec python3 mysql_test/test_suite/ai_column/include/ai_column_mock.py assert 19125 no-rollback-value
+drop database ai_column_edges;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('edges_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('edges_model');
+--exec python3 mysql_test/test_suite/ai_column/include/ai_column_mock.py stop 19125

@@ -57,6 +57,7 @@
 %destructor {destroy_tree($$);}<node>
 %destructor {oceanbase::common::ob_free($$);}<str_value_>
 
+%token <non_reserved_keyword> RETRY
 %token <node> NAME_OB
 %token <node> STRING_VALUE
 %token <node> NATIONAL_LITERAL
@@ -4932,7 +4933,7 @@ ai_column_option_list ',' ai_column_option
 ;
 
 ai_column_option:
-NAME_OB '=' expr
+relation_name COMP_EQ expr
 {
   malloc_non_terminal_node($$, result->malloc_pool_, T_AI_COLUMN_OPTION, 2, $1, $3);
 }
@@ -14802,6 +14803,34 @@ alter_with_opt_hint TABLE relation_factor alter_table_actions
   malloc_non_terminal_node($$, result->malloc_pool_, T_ALTER_TABLE, 4, $3, table_actions, NULL, $1);
   $$->value_ = 0;
 }
+| alter_with_opt_hint TABLE relation_factor RETRY AI COLUMN column_name opt_where
+{
+  (void)$4;
+  ParseNode *table = NULL, *tables = NULL, *column = NULL, *null_value = NULL;
+  ParseNode *assign = NULL, *assigns = NULL, *retry = NULL;
+  malloc_non_terminal_node(table, result->malloc_pool_, T_ORG, 4, $3, NULL, NULL, NULL);
+  merge_nodes(tables, result, T_TABLE_REFERENCES, table);
+  malloc_non_terminal_node(column, result->malloc_pool_, T_COLUMN_REF, 3, NULL, NULL, $7);
+  malloc_terminal_node(null_value, result->malloc_pool_, T_NULL);
+  malloc_non_terminal_node(assign, result->malloc_pool_, T_ASSIGN_ITEM, 2, column, null_value);
+  merge_nodes(assigns, result, T_ASSIGN_LIST, assign);
+  malloc_non_terminal_node(retry, result->malloc_pool_, T_AI_COLUMN_RETRY, 1, $7);
+  retry->value_ = 0;
+  malloc_non_terminal_node($$, result->malloc_pool_, T_UPDATE, 12,
+      NULL, tables, assigns, $8, NULL, NULL, NULL, $1, NULL, NULL, NULL, retry);
+}
+| alter_with_opt_hint TABLE relation_factor RETRY AI COLUMN column_name opt_where ',' alter_table_action_list
+{
+  (void)$3; (void)$4; (void)$10;
+  // Parse enough to return the required unsupported-operation error rather
+  // than executing either the retry or any mixed schema action.
+  ParseNode *retry = NULL;
+  malloc_non_terminal_node(retry, result->malloc_pool_, T_AI_COLUMN_RETRY, 1, $7);
+  retry->value_ = 1;
+  malloc_non_terminal_node($$, result->malloc_pool_, T_UPDATE, 12,
+      NULL, NULL, NULL, $8, NULL, NULL, NULL, $1, NULL, NULL, NULL, retry);
+}
+
 ;
 
 
@@ -17633,7 +17662,8 @@ unreserved_keyword_normal { $$=$1;}
 ;
 
 unreserved_keyword_normal:
-ACCOUNT
+RETRY
+| ACCOUNT
 |       ACTION
 |       ACTIVE
 |       ADDDATE

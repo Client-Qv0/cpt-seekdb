@@ -1,0 +1,41 @@
+create database ai_column_transport_local;
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('transport_complete','{"type":"completion","model_name":"mock"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('transport_embed','{"type":"dense_embedding","model_name":"mock"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('transport_bad_complete','{"type":"completion","model_name":"mock"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL('transport_bad_embed','{"type":"dense_embedding","model_name":"mock"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('transport_complete_ep',
+'{"ai_model_name":"transport_complete","url":"http://127.0.0.1:19128/v1/chat/completions","access_key":"local-test","provider":"openai","request_model_name":"mock"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('transport_embed_ep',
+'{"ai_model_name":"transport_embed","url":"http://127.0.0.1:19128/v1/embeddings","access_key":"local-test","provider":"openai","request_model_name":"mock"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('transport_bad_complete_ep',
+'{"ai_model_name":"transport_bad_complete","url":"http://127.0.0.1:19128/always-503/chat/completions","access_key":"local-test","provider":"openai","request_model_name":"mock"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT('transport_bad_embed_ep',
+'{"ai_model_name":"transport_bad_embed","url":"http://127.0.0.1:19128/always-503/embeddings","access_key":"local-test","provider":"openai","request_model_name":"mock"}');
+create table ai_column_transport_local.docs(id int primary key, content varchar(100),
+result varchar(400) AI COLUMN(AI_COMPLETE('transport_complete',content)) WITH(max_retries=1),
+embedding vector(4) AI COLUMN(AI_EMBED('transport_embed',content,4)) WITH(max_retries=1));
+create table ai_column_transport_local.failed_docs(id int primary key, content varchar(100),
+result varchar(400) AI COLUMN(AI_COMPLETE('transport_bad_complete',content)) WITH(max_retries=0),
+embedding vector(4) AI COLUMN(AI_EMBED('transport_bad_embed',content,4)) WITH(max_retries=0));
+insert into ai_column_transport_local.docs(id,content) values(1,'retry-429'),(2,'retry-503');
+insert into ai_column_transport_local.failed_docs(id,content) values(1,'never-ready');
+select 0=0 as transport_tasks_cleaned;
+transport_tasks_cleaned
+1
+select count(*)=2 as both_transient_failures_recovered from ai_column_transport_local.docs
+where result=concat('mock:',content) and embedding is not null;
+both_transient_failures_recovered
+1
+select result is null and embedding is null as zero_retry_budget_is_terminal from ai_column_transport_local.failed_docs;
+zero_retry_budget_is_terminal
+1
+mock_bounded_transport_retries=ok
+drop database ai_column_transport_local;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('transport_complete_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('transport_embed_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('transport_bad_complete_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('transport_bad_embed_ep');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('transport_complete');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('transport_embed');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('transport_bad_complete');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('transport_bad_embed');

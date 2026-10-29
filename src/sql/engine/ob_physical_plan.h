@@ -57,6 +57,14 @@ typedef common::ObFixedArray<common::ObFixedArray<int64_t, common::ObIAllocator>
 typedef common::ObFixedArray<ObTableLocation, common::ObIAllocator> TableLocationFixedArray;
 typedef common::ObFixedArray<ObPlanPwjConstraint, common::ObIAllocator> PlanPwjConstraintArray;
 
+struct AiColumnReadCheck
+{
+  OB_UNIS_VERSION(1);
+public:
+  AiColumnReadCheck() : table_id_(0), column_id_(0), state_column_id_(0) {}
+  uint64_t table_id_, column_id_, state_column_id_;
+};
+
 class ObPhysicalPlan : public ObPlanCacheObject
 {
 public:
@@ -81,6 +89,8 @@ public:
   //user var
   bool is_contains_assignment() const {return is_contains_assignment_;}
   void set_contains_assignment(bool v) {is_contains_assignment_ = v;}
+  common::ObIArray<AiColumnReadCheck> &get_ai_column_reads() { return ai_column_reads_; }
+  const common::ObIArray<AiColumnReadCheck> &get_ai_column_reads() const { return ai_column_reads_; }
   int set_vars(const common::ObIArray<ObVarInfo> &vars);
   const common::ObIArray<ObVarInfo> &get_vars() const { return vars_; }
   /**
@@ -412,6 +422,7 @@ private:
   common::ObFixedArray<share::AutoincParam, common::ObIAllocator> autoinc_params_; //auto-increment param
   share::ObTabletAutoincParam tablet_autoinc_param_;
   // for privilege check
+  common::ObSEArray<AiColumnReadCheck, 4> ai_column_reads_;
   share::schema::ObStmtNeedPrivs stmt_need_privs_;
   // Involved system variables and user variables
   common::ObFixedArray<ObVarInfo, common::ObIAllocator> vars_;

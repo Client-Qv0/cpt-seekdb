@@ -2278,6 +2278,7 @@ typedef enum ObItemType
   T_FILE_SCAN_EXPRESSION = 4921, // file scan table function, e.g. read_csv('path')
   T_AI_COLUMN = 4922, // AI COLUMN (<ai function call>) [WITH (...)] column clause
   T_AI_COLUMN_OPTION = 4923, // one "name = value" option of the AI COLUMN WITH list
+  T_AI_COLUMN_RETRY = 4924, // parser-lowered transactional AI column retry
   T_MAX //Attention: add a new type before T_MAX
 } ObItemType;
 

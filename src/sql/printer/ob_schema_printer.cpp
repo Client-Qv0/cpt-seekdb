@@ -16,6 +16,7 @@
 
 #define USING_LOG_PREFIX SHARE_SCHEMA
 #include "sql/printer/ob_schema_printer.h"
+#include "share/ai_column/ob_ai_column_util.h"
 #include "share/ob_autoincrement_service.h"
 #include "sql/resolver/expr/ob_raw_expr_util.h"
 
@@ -204,6 +205,29 @@ int ObSchemaPrinter::print_table_definition_columns(const ObTableSchema &table_s
             }
           }
         }
+        bool is_ai_column = false;
+        if (OB_SUCC(ret)) {
+          ObString spec_name;
+          const ObColumnSchemaV2 *spec_column = NULL;
+          // Long ordinary column names need not fit the AI companion prefix.
+          if (col->get_column_name_str().length() + strlen(AI_COLUMN_SPEC_PREFIX)
+              <= OB_MAX_COLUMN_NAME_LENGTH) {
+            if (OB_FAIL(build_ai_hidden_column_name(allocator, AI_COLUMN_SPEC_PREFIX,
+                                                    col->get_column_name_str(), spec_name))) {
+            } else if (NULL != (spec_column = table_schema.get_column_schema(spec_name))
+                       && spec_column->is_hidden()) {
+              ObAiColumnSpec spec;
+              if (OB_FAIL(deserialize_ai_column_spec(spec_column->get_comment_str(), allocator, spec))) {
+              } else {
+                is_ai_column = true;
+                const ObString expression = ai_column_expression(spec);
+                ret = databuff_printf(buf, buf_len, pos,
+                    " AI COLUMN (%.*s) WITH (sync_mode='async', max_retries=%ld)",
+                    expression.length(), expression.ptr(), spec.max_retries_);
+              }
+            }
+          }
+        }
         if (OB_SUCC(ret) && col->is_invisible_column()) {
           if (OB_FAIL(databuff_printf(buf, buf_len, pos, " INVISIBLE"))) {
           }
@@ -231,7 +255,7 @@ int ObSchemaPrinter::print_table_definition_columns(const ObTableSchema &table_s
             SHARE_SCHEMA_LOG(WARN, "fail to print geometry srid", K(ret), K(srid));
           }
         }
-        if (OB_SUCC(ret) && !col->is_generated_column()) {
+        if (OB_SUCC(ret) && !col->is_generated_column() && !is_ai_column) {
           //if column is not permit null and default value does not specify , don't  display DEFAULT NULL
           if (OB_SUCC(ret)) {
             if (!(ObNullType == col->get_cur_default_value().get_type() && !col->is_nullable())

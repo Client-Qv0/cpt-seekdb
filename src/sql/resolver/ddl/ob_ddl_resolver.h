@@ -544,7 +544,8 @@ protected:
                                      const common::ObString &column_name);
   static int check_ai_column_dependency(const ParseNode *expr_node,
                                        const share::schema::ObTableSchema &table_schema,
-                                       bool &has_ai_dependency);
+                                       bool &has_ai_dependency,
+                                       common::ObSqlString *dependencies = NULL);
   static int get_ai_function_info(const ParseNode *expr_node,
                                   common::ObString &func_name,
                                   const ParseNode *&params_node);
