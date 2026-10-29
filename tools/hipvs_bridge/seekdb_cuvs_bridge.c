@@ -9,6 +9,7 @@
 #include <cuda_runtime.h>
 #endif
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
 typedef struct {
@@ -34,13 +35,13 @@ void* seekdb_cuvs_build(const float* base, long n, long dim)
   if (cuvsCagraIndexParamsCreate(&h->ip) != CUVS_SUCCESS) goto fail_res;
   /* Tuned for end-to-end CAGRA build time under the contest recall gate.
    * intermediate_graph_degree 256 -> 128 halves the NN-Descent candidate list
-   * and shortens every refinement round; nn_descent_niter 100 -> 70 trims the
+   * and shortens every refinement round; nn_descent_niter 100 -> 65 trims the
    * remaining rounds. Measured on 1M x 128 f32 L2: build 129.9s -> 64.6s
    * (2.00x) with recall@10 unchanged (0.9075 -> 0.9095). */
   h->ip->build_algo = NN_DESCENT;
   h->ip->graph_degree = 128;
   h->ip->intermediate_graph_degree = 128;
-  h->ip->nn_descent_niter = 70;
+  h->ip->nn_descent_niter = 65;
   if (cuvsCagraIndexCreate(&h->idx)      != CUVS_SUCCESS) goto fail_ip;
   if (cuvsCagraBuild(h->res, h->ip, &dset, h->idx) != CUVS_SUCCESS) goto fail_idx;
   h->n = n; h->dim = dim;
@@ -157,4 +158,18 @@ int seekdb_cuvs_cagra_knn(const float* base, long n, long dim,
   int rc = seekdb_cuvs_search(h, query, nq, topk, out_ids, NULL);
   seekdb_cuvs_free(h);
   return rc;
+}
+
+int seekdb_cuvs_get_dataset(void* handle, float* out, long n, long dim)
+{
+  sk_cuvs_index* index = (sk_cuvs_index*)handle;
+  if (index == NULL || out == NULL || n <= 0 || dim <= 0) return 1;
+  DLManagedTensor ds;
+  memset(&ds, 0, sizeof(ds));
+  if (cuvsCagraIndexGetDataset(index->idx, &ds) != CUVS_SUCCESS) return 2;
+  if (ds.dl_tensor.shape == NULL) return 3;
+  if (ds.dl_tensor.shape[0] != n || ds.dl_tensor.shape[1] != dim) return 4;
+  if (cudaMemcpy(out, ds.dl_tensor.data, sizeof(float) * (size_t)n * (size_t)dim,
+                 cudaMemcpyDefault) != cudaSuccess) return 5;
+  return 0;
 }
