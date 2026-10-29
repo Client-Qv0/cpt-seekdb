@@ -1694,6 +1694,11 @@ int ObStaticEngineCG::generate_spec(ObLogValuesTableAccess &op,
     ret = OB_ERR_UNEXPECTED;
   } else {
     spec.access_type_ = table_def->access_type_;
+    if (ObValuesTableDef::ACCESS_FILE == table_def->access_type_) {
+      // A local file has no database schema version. Re-resolve its schema
+      // and path permissions for every execution rather than caching them.
+      phy_plan_->get_phy_plan_hint().plan_cache_policy_ = OB_USE_PLAN_CACHE_NONE;
+    }
     spec.start_param_idx_ = table_def->start_param_idx_;
     spec.end_param_idx_ = table_def->end_param_idx_;
     ObIAllocator &allocator = phy_plan_->get_allocator();
@@ -5487,6 +5492,22 @@ int ObStaticEngineCG::generate_spec(ObLogSelectInto &op, ObSelectIntoSpec &spec,
       spec.parallel_ = op.get_parallel();
       spec.is_overwrite_ = op.get_is_overwrite();
       spec.plan_->need_drive_dml_query_ = true;
+      const auto *statement = static_cast<const ObSelectStmt *>(op.get_stmt());
+      const ObSelectIntoItem *into = statement->get_select_into();
+      if (into != nullptr && into->is_copy_) {
+        spec.is_copy_ = true;
+        spec.copy_header_ = into->copy_header_;
+        phy_plan_->get_phy_plan_hint().plan_cache_policy_ = OB_USE_PLAN_CACHE_NONE;
+        if (OB_FAIL(ob_write_string(alloc, into->copy_null_, spec.copy_null_))) {
+        } else if (OB_FAIL(spec.copy_names_.init(statement->get_select_item_size()))) {
+        }
+        for (int64_t i = 0; OB_SUCC(ret) && i < statement->get_select_item_size(); ++i) {
+          const SelectItem &item = statement->get_select_item(i);
+          ObString name;
+          if (OB_FAIL(ob_write_string(alloc, item.alias_name_.empty() ? item.expr_name_ : item.alias_name_, name))) {
+          } else { ret = spec.copy_names_.push_back(name); }
+        }
+      }
     }
   }
   return ret;

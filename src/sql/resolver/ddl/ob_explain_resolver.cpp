@@ -17,6 +17,8 @@
 #define USING_LOG_PREFIX SQL_RESV
 #include "sql/resolver/ddl/ob_explain_resolver.h"
 #include "sql/resolver/ob_resolver.h"
+#include "sql/parser/ob_parser.h"
+#include "sql/resolver/dml/ob_select_resolver.h"
 
 using namespace oceanbase;
 using namespace sql;
@@ -67,6 +69,7 @@ int ObExplainResolver::resolve(const ParseNode &parse_tree)
         ParseNode *format = parse_tree.children_[EXPLAIN_FORMAT];
         if (NULL != format) {
           switch (format->type_) {
+          case T_SHOW_COLUMNS: break; // DESCRIBE SELECT metadata request
           case T_OUTLINE:
           {
             explain_stmt->set_explain_format(EXPLAIN_OUTLINE);
@@ -141,7 +144,71 @@ int ObExplainResolver::resolve(const ParseNode &parse_tree)
       ObString statement_id(statement_id_node->str_len_, statement_id_node->str_value_);
       explain_stmt->set_statement_id(statement_id);
     }
+    if (OB_SUCC(ret) && parse_tree.children_[EXPLAIN_FORMAT] != nullptr
+        && parse_tree.children_[EXPLAIN_FORMAT]->type_ == T_SHOW_COLUMNS
+        && explain_stmt->is_select_explain()) {
+      auto *query = static_cast<ObSelectStmt *>(explain_stmt->get_explain_query_stmt());
+      bool has_file = false;
+      for (int64_t i = 0; !has_file && i < query->get_table_size(); ++i) {
+        const TableItem *table = query->get_table_item(i);
+        has_file = table != nullptr && table->values_table_def_ != nullptr
+                   && table->values_table_def_->access_type_ == ObValuesTableDef::ACCESS_FILE;
+      }
+      if (has_file) { ret = resolve_file_description(*query); }
+    }
   }
 
+  return ret;
+}
+
+// DESCRIBE file SELECT exposes resolved metadata as a native constant SELECT.
+// No file rows or AI expressions are evaluated to obtain the description.
+int ObExplainResolver::resolve_file_description(ObSelectStmt &query)
+{
+  int ret = OB_SUCCESS;
+  ObSqlString text;
+  for (int64_t i = 0; OB_SUCC(ret) && i < query.get_select_item_size(); ++i) {
+    const SelectItem &item = query.get_select_item(i);
+    const ObString &name = item.alias_name_.empty() ? item.expr_name_ : item.alias_name_;
+    const ObObjType type = item.expr_->get_result_type().get_type();
+    const char *type_name = "VARCHAR";
+    if (type == ObTinyIntType) { type_name = "BOOLEAN"; }
+    else if (ob_is_integer_type(type)) { type_name = "BIGINT"; }
+    else if (type == ObDoubleType || type == ObFloatType || ob_is_number_tc(type)) { type_name = "DOUBLE"; }
+    else if (type == ObDateType) { type_name = "DATE"; }
+    else if (type == ObDateTimeType || type == ObTimestampType) { type_name = "DATETIME"; }
+    bool nullable = true;
+    if (item.expr_->is_column_ref_expr()) {
+      const auto *column = static_cast<const ObColumnRefRawExpr *>(item.expr_);
+      const TableItem *table = query.get_table_item_by_id(column->get_table_id());
+      const int64_t index = column->get_column_id() - OB_APP_MIN_COLUMN_ID;
+      if (table != nullptr && table->values_table_def_ != nullptr && index >= 0
+          && index < table->values_table_def_->column_nnvs_.count()) {
+        nullable = table->values_table_def_->column_nnvs_.at(index) > 0;
+      }
+    }
+    if (i > 0) { ret = text.append(" UNION ALL "); }
+    if (OB_SUCC(ret)) { ret = text.append("SELECT CONVERT(X'"); }
+    for (int64_t j = 0; OB_SUCC(ret) && j < name.length(); ++j) {
+      ret = text.append_fmt("%02x", static_cast<unsigned char>(name.ptr()[j]));
+    }
+    if (OB_SUCC(ret)) {
+      ret = text.append_fmt("' USING utf8mb4) AS column_name, '%s' AS column_type, "
+            "'%s' AS `null`, NULL AS `key`, NULL AS `default`, NULL AS extra",
+            type_name, nullable ? "YES" : "NO");
+    }
+  }
+  if (OB_SUCC(ret)) {
+    ParseResult result;
+    ObParser parser(*allocator_, session_info_->get_sql_mode());
+    if (OB_FAIL(parser.parse(text.string(), result))) {
+    } else if (OB_ISNULL(result.result_tree_) || result.result_tree_->num_child_ != 1) {
+      ret = OB_ERR_UNEXPECTED;
+    } else {
+      ObSelectResolver resolver(params_);
+      if (OB_FAIL(resolver.resolve(*result.result_tree_->children_[0]))) {
+      } else { set_basic_stmt(resolver.get_basic_stmt()); }
+    }
+  }
   return ret;
 }

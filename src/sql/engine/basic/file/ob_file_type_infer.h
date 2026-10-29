@@ -18,6 +18,7 @@
 
 #include "lib/ob_define.h"
 #include "lib/string/ob_string.h"
+#include "lib/container/ob_array.h"
 
 namespace oceanbase
 {
@@ -43,11 +44,29 @@ struct ObFileColumnSchema
   ObString name_;
   ObFileColumnType type_;
   bool nullable_;
+  int64_t max_length_ = 0;
+  int64_t null_count_ = 0;
   ObFileColumnSchema()
     : name_(),
       type_(OB_FILE_COL_NULL),
       nullable_(false)
   {}
+};
+
+class IFileRowReader
+{
+public:
+  virtual ~IFileRowReader() = default;
+  virtual int infer_schema(ObIAllocator &allocator, ObArray<ObFileColumnSchema> &columns) = 0;
+  virtual int begin_scan() = 0;
+  virtual int next_batch(int64_t max_rows, ObArray<ObString> &cells,
+                        ObArray<uint8_t> &nulls, int64_t &rows) = 0;
+  virtual int rescan() = 0;
+  virtual void close() = 0;
+  virtual int64_t column_count() const = 0;
+  virtual int64_t inferred_rows() const = 0;
+  virtual ObString column_name(int64_t index) const = 0;
+  virtual int signature(ObIAllocator &allocator, ObString &value) const = 0;
 };
 
 // Deterministic, single pass type inference on raw CSV fields.

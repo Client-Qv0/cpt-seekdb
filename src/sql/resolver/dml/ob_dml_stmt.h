@@ -109,6 +109,7 @@ struct ObValuesTableDef {
     FOLD_ACCESS_EXPR, // expr, one expr->ObSqlArray
     ACCESS_PARAM,     // by a continuous space of param_store
     ACCESS_OBJ,       // ObObj one by one, used for non-parametric
+    ACCESS_FILE,      // execution-time streaming scan; objects contain path/options only
   };
   int deep_copy(const ObValuesTableDef &other,
                 ObIRawExprCopier &expr_copier,

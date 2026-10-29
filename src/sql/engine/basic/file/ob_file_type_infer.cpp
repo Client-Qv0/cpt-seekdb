@@ -17,6 +17,8 @@
 #define USING_LOG_PREFIX SQL_ENG
 
 #include "sql/engine/basic/file/ob_file_type_infer.h"
+#include "lib/charset/ob_charset.h"
+#include <cmath>
 
 namespace oceanbase
 {
@@ -225,6 +227,12 @@ ObFileColumnType ObFileTypeInfer::detect_number(const char *ptr, const int64_t l
     } else {
       type = OB_FILE_COL_DOUBLE;
     }
+  }
+  if (valid && type == OB_FILE_COL_DOUBLE) {
+    int error = 0;
+    char *end = nullptr;
+    const double number = ObCharset::strntod(ptr, len, &end, &error);
+    valid = error == 0 && end == ptr + len && std::isfinite(number);
   }
   return valid ? type : OB_FILE_COL_VARCHAR;
 }

@@ -17,10 +17,12 @@
 #define USING_LOG_PREFIX SQL_ENG
 
 #include "sql/engine/basic/file/ob_file_csv_reader.h"
+#include "share/ob_errno.h"
 
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <filesystem>
 
 #include "lib/utility/ob_print_utils.h"
 
@@ -50,6 +52,7 @@ ObFileCsvReader::ObFileCsvReader()
     scanning_(false),
     header_loaded_(false),
     column_count_(0),
+    inferred_rows_(0),
     data_start_offset_(0),
     data_offset_(0),
     meta_(),
@@ -87,6 +90,7 @@ void ObFileCsvReader::close()
   scanning_ = false;
   header_loaded_ = false;
   column_count_ = 0;
+  inferred_rows_ = 0;
   data_start_offset_ = 0;
   data_offset_ = 0;
   meta_.size_ = 0;
@@ -134,12 +138,85 @@ int ObFileCsvReader::stat_file(FileMeta &meta) const
   else {
     meta.size_ = static_cast<int64_t>(file_stat.st_size);
     meta.mtime_ = static_cast<int64_t>(file_stat.st_mtime);
+    meta.inode_ = file_stat.st_ino;
+    meta.device_ = file_stat.st_dev;
+#ifndef _WIN32
+#ifdef __APPLE__
+    meta.mtime_ns_ = file_stat.st_mtimespec.tv_nsec;
+#else
+    meta.mtime_ns_ = file_stat.st_mtim.tv_nsec;
+#endif
+    struct stat opened_stat;
+    if (!S_ISREG(file_stat.st_mode) || (fp_ != nullptr
+        && (0 != fstat(fileno(fp_), &opened_stat)
+            || opened_stat.st_ino != file_stat.st_ino
+            || opened_stat.st_dev != file_stat.st_dev))) {
+      ret = OB_INVALID_DATA;
+    }
+#endif
     meta.valid_ = true;
   }
   return ret;
 }
 
-int ObFileCsvReader::open(const ObString &path, const ObCsvOptions &options)
+int ObFileCsvReader::signature(ObIAllocator &allocator, ObString &value) const
+{
+  int ret = OB_SUCCESS;
+  char bytes[256];
+  if (!meta_.valid_) {
+    ret = OB_NOT_INIT;
+  } else {
+    const int length = snprintf(bytes, sizeof(bytes), "%lld:%lld:%lld:%llu:%llu",
+        static_cast<long long>(meta_.size_), static_cast<long long>(meta_.mtime_),
+        static_cast<long long>(meta_.mtime_ns_), static_cast<unsigned long long>(meta_.inode_),
+        static_cast<unsigned long long>(meta_.device_));
+    if (length < 0 || length >= sizeof(bytes)) {
+      ret = OB_SIZE_OVERFLOW;
+    } else {
+      ret = ob_write_string(allocator, ObString(length, bytes), value);
+    }
+  }
+  return ret;
+}
+
+int ObFileCsvReader::check_secure_path(const ObString &path, const ObString &root)
+{
+  int ret = OB_SUCCESS;
+  if (path.empty() || root.empty() || 0 == root.case_compare("NULL")
+      || MEMCHR(path.ptr(), '\0', path.length()) != nullptr
+      || MEMCHR(root.ptr(), '\0', root.length()) != nullptr) {
+    ret = OB_ERR_NO_PRIVILEGE;
+  } else {
+    std::error_code error;
+    const std::filesystem::path real_root = std::filesystem::canonical(
+        std::string(root.ptr(), root.length()), error);
+    if (error || !std::filesystem::is_directory(real_root, error)) {
+      ret = OB_ERR_NO_PRIVILEGE;
+    } else {
+      const std::filesystem::path real_path = std::filesystem::canonical(
+          std::string(path.ptr(), path.length()), error);
+      if (error || !std::filesystem::is_regular_file(real_path, error)) {
+        ret = OB_INVALID_ARGUMENT;
+      } else {
+        const auto relative = real_path.lexically_relative(real_root);
+        if (relative.empty() || relative.is_absolute() || *relative.begin() == "..") {
+          ret = OB_ERR_NO_PRIVILEGE;
+        }
+      }
+    }
+  }
+  return ret;
+}
+
+int ObFileCsvReader::check_unchanged() const
+{
+  FileMeta current;
+  int ret = stat_file(current);
+  if (OB_SUCC(ret) && !(current == meta_)) { ret = OB_INVALID_DATA; }
+  return ret;
+}
+
+int ObFileCsvReader::open(const ObString &path, const ObCsvOptions &options, bool metadata_only)
 {
   int ret = OB_SUCCESS;
   close();
@@ -147,7 +224,8 @@ int ObFileCsvReader::open(const ObString &path, const ObCsvOptions &options)
   if (OB_ISNULL(path.ptr()) || path.empty()) {
     ret = OB_INVALID_ARGUMENT;
     LOG_WARN("invalid csv file path", K(ret), K(path));
-  } else if (path.length() >= MAX_PATH_LENGTH) {
+  } else if (path.length() >= MAX_PATH_LENGTH
+             || MEMCHR(path.ptr(), '\0', path.length()) != nullptr) {
     ret = OB_INVALID_ARGUMENT;
     LOG_WARN("csv file path is too long", K(ret), K(path), K(MAX_PATH_LENGTH));
   } else {
@@ -172,7 +250,10 @@ int ObFileCsvReader::open(const ObString &path, const ObCsvOptions &options)
       // detect an UTF-8 BOM once, the scan always starts after it.
       bool has_char = false;
       char c = 0;
-      if (OB_FAIL(peek(0, has_char, c))) {
+      if (metadata_only) {
+        // Parquet uses the same descriptor identity/signature guard without
+        // interpreting binary contents as CSV.
+      } else if (OB_FAIL(peek(0, has_char, c))) {
         LOG_WARN("fail to read csv file", K(ret), K(path));
       } else {
         bool has_bom = false;
@@ -279,7 +360,8 @@ int ObFileCsvReader::peek(const int64_t ahead, bool &has_char, char &c)
 
 int ObFileCsvReader::append_field_char(const char c)
 {
-  return rec_buf_.append(&c, 1);
+  // Bound memory even for a single row with thousands of wide fields.
+  return rec_buf_.length() >= 32 * 1024 * 1024 ? OB_SIZE_OVERFLOW : rec_buf_.append(&c, 1);
 }
 
 // One field.  A field starts in "unquoted" mode unless its very first char is
@@ -407,6 +489,8 @@ int ObFileCsvReader::read_record(bool &eof, bool &blank)
       bool quoted = false;
       if (OB_FAIL(parse_field(field_start, quoted, record_end))) {
         LOG_WARN("fail to parse csv field", K(ret), K(record_no_));
+      } else if (rec_off_.count() >= 4096) {
+        ret = OB_SIZE_OVERFLOW;
       } else if (OB_FAIL(rec_off_.push_back(field_start))) {
         LOG_WARN("fail to push csv field offset", K(ret));
       } else if (OB_FAIL(rec_len_.push_back(static_cast<int64_t>(rec_buf_.length())
@@ -496,8 +580,8 @@ int ObFileCsvReader::append_column_name(const int64_t field_off, const int64_t f
       bool duplicated = false;
       for (int64_t i = 0; !duplicated && i < name_off_.count(); ++i) {
         const int64_t cur_len = name_len_.at(i);
-        if (static_cast<int64_t>(candidate.length()) == cur_len
-            && 0 == MEMCMP(name_buf_.ptr() + name_off_.at(i), candidate.ptr(), cur_len)) {
+        if (0 == ObString(cur_len, name_buf_.ptr() + name_off_.at(i)).case_compare(
+                        ObString(candidate.length(), candidate.ptr()))) {
           duplicated = true;
         }
       }
@@ -624,7 +708,9 @@ int ObFileCsvReader::next_batch(const int64_t max_rows, ObArray<ObString> &cells
   row_count = 0;
   cells.reuse();
   nulls.reuse();
-  if (!opened_ || OB_ISNULL(fp_)) {
+  if (max_rows <= 0) {
+    ret = OB_INVALID_ARGUMENT;
+  } else if (!opened_ || OB_ISNULL(fp_)) {
     ret = OB_NOT_INIT;
     LOG_WARN("csv reader is not opened", K(ret));
   } else if (OB_FAIL(load_header())) {
@@ -635,7 +721,7 @@ int ObFileCsvReader::next_batch(const int64_t max_rows, ObArray<ObString> &cells
     FileMeta cur_meta;
     if (OB_FAIL(stat_file(cur_meta))) {
       LOG_WARN("fail to stat csv file", K(ret), K_(path));
-    } else if (cur_meta.size_ != meta_.size_ || cur_meta.mtime_ != meta_.mtime_) {
+    } else if (!(cur_meta == meta_)) {
       ret = OB_INVALID_DATA;
       LOG_WARN("csv file changed during scanning", K(ret), K_(path),
                "expected_size", meta_.size_, "current_size", cur_meta.size_,
@@ -645,7 +731,8 @@ int ObFileCsvReader::next_batch(const int64_t max_rows, ObArray<ObString> &cells
       const int64_t line_base = options_.header_ ? 1 : 0;
       batch_arena_.reset();
       bool eof = false;
-      while (OB_SUCC(ret) && !eof && row_count < max_rows) {
+      int64_t batch_bytes = 0;
+      while (OB_SUCC(ret) && !eof && row_count < max_rows && batch_bytes < 8 * 1024 * 1024) {
         bool blank = false;
         if (OB_FAIL(read_record(eof, blank))) {
           LOG_WARN("fail to read csv record", K(ret), K(record_no_));
@@ -661,6 +748,13 @@ int ObFileCsvReader::next_batch(const int64_t max_rows, ObArray<ObString> &cells
           LOG_WARN("fail to emit csv row", K(ret), "line_no", record_no_ + line_base);
         } else {
           ++row_count;
+          batch_bytes += rec_buf_.length();
+        }
+      }
+      if (OB_SUCC(ret)) {
+        if (OB_FAIL(stat_file(cur_meta))) {
+        } else if (!(cur_meta == meta_)) {
+          ret = OB_INVALID_DATA;
         }
       }
     }
@@ -677,6 +771,7 @@ int ObFileCsvReader::next_batch(const int64_t max_rows, ObArray<ObString> &cells
 int ObFileCsvReader::infer_schema(ObIAllocator &allocator, ObArray<ObFileColumnSchema> &columns)
 {
   int ret = OB_SUCCESS;
+  inferred_rows_ = 0;
   columns.reuse();
   if (!opened_ || OB_ISNULL(fp_)) {
     ret = OB_NOT_INIT;
@@ -691,11 +786,15 @@ int ObFileCsvReader::infer_schema(ObIAllocator &allocator, ObArray<ObFileColumnS
   } else {
     ObArray<ObFileColumnType> types;
     ObArray<uint8_t> nullable;
+    ObArray<int64_t> lengths;
+    ObArray<int64_t> null_counts;
     for (int64_t i = 0; OB_SUCC(ret) && i < column_count_; ++i) {
       if (OB_FAIL(types.push_back(OB_FILE_COL_NULL))) {
         LOG_WARN("fail to init column type", K(ret), K(i));
       } else if (OB_FAIL(nullable.push_back(0))) {
         LOG_WARN("fail to init column nullable flag", K(ret), K(i));
+      } else if (OB_FAIL(lengths.push_back(0))) {
+      } else if (OB_FAIL(null_counts.push_back(0))) {
       }
     }
     bool eof = false;
@@ -713,13 +812,16 @@ int ObFileCsvReader::infer_schema(ObIAllocator &allocator, ObArray<ObFileColumnS
         LOG_WARN("csv column count mismatch", K(ret), "line_no", record_no_ + line_base,
                  "expected", column_count_, "actual", rec_off_.count(), K_(path));
       } else {
+        ++inferred_rows_;
         for (int64_t i = 0; OB_SUCC(ret) && i < column_count_; ++i) {
           const int64_t field_off = rec_off_.at(i);
           const int64_t field_len = rec_len_.at(i);
+          lengths.at(i) = MAX(lengths.at(i), field_len);
           const bool quoted = (1 == rec_quoted_.at(i));
           ObFileColumnType cur_type = OB_FILE_COL_NULL;
           if (is_null_field(field_off, field_len, quoted)) {
             nullable.at(i) = 1;
+            ++null_counts.at(i);
           } else {
             cur_type = ObFileTypeInfer::detect(rec_buf_.ptr() + field_off, field_len);
             if (quoted && OB_FILE_COL_NULL == cur_type) {
@@ -734,12 +836,21 @@ int ObFileCsvReader::infer_schema(ObIAllocator &allocator, ObArray<ObFileColumnS
     for (int64_t i = 0; OB_SUCC(ret) && i < column_count_; ++i) {
       ObFileColumnSchema column;
       column.type_ = types.at(i);
+      column.max_length_ = lengths.at(i);
+      column.null_count_ = null_counts.at(i);
       column.nullable_ = (0 != nullable.at(i)) || (OB_FILE_COL_NULL == column.type_);
       if (OB_FAIL(ob_write_string(allocator, get_column_name(i), column.name_))) {
         LOG_WARN("fail to copy column name", K(ret), K(i));
       } else if (OB_FAIL(columns.push_back(column))) {
         LOG_WARN("fail to push column schema", K(ret), K(i));
       }
+    }
+  }
+  if (OB_SUCC(ret)) {
+    FileMeta current;
+    if (OB_FAIL(stat_file(current))) {
+    } else if (!(current == meta_)) {
+      ret = OB_INVALID_DATA;
     }
   }
   return ret;

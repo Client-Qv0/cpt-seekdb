@@ -66,6 +66,7 @@ struct ResolverJoinInfo {
 // defined in sql/engine/basic/file/ob_file_type_infer.h, forward declared here to
 // keep this widely included header free of the file reader headers.
 enum ObFileColumnType : uint8_t;
+struct ObCsvOptions;
 
 struct ObDmlJtColDef
 {
@@ -214,15 +215,13 @@ public:
   int resolve_unnest_item(const ParseNode &table_node, TableItem *&table_item);
   int resolve_file_scan_table_item(const ParseNode &table_node, TableItem *&table_item);
   int resolve_file_scan_const_arg(const ParseNode &arg_node, ObObjParam &val);
-  int resolve_file_scan_path(const ParseNode &path_node, ObString &path);
-  int resolve_file_scan_option(const ParseNode &option_node, bool &header);
-  // M1b: read the whole csv file through ObFileCsvReader and materialize it into
-  // an ObValuesTableDef (ACCESS_OBJ), so that the existing values table access
-  // operator can be reused without any new physical operator.
+  int resolve_file_scan_path(const ParseNode &path_node, ObString &path, bool discovery = false);
+  int resolve_file_scan_option(const ParseNode &option_node, ObCsvOptions &options, bool json_lines);
   int resolve_file_scan_values_table(const ObString &path,
-                                     const bool header,
+                                     const ObCsvOptions &options,
                                      ObValuesTableDef &table_def,
-                                     ObIArray<ObString> &column_names);
+                                     ObIArray<ObString> &column_names,
+                                    int64_t file_format);
   int resolve_file_scan_column_type(const ObFileColumnType column_type,
                                     const int64_t max_length,
                                     ObRawExprResType &res_type);
@@ -233,7 +232,7 @@ public:
   int gen_file_scan_column_items(const ObIArray<ObString> &column_names,
                                  const ObIArray<ObRawExprResType> &res_types,
                                  TableItem &table_item);
-  int check_file_scan_path(ObString &path);
+  int check_file_scan_path(ObString &path, bool discovery = false);
   // M1c: file SQL is gated by the enable_file_sql system variable (default OFF)
   // and the path must stay inside the secure_file_priv directory whitelist.
   int check_file_scan_enabled();

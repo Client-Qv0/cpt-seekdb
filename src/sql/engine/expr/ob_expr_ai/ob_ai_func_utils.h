@@ -245,6 +245,9 @@ public:
   static int get_json_object_form_str(ObIAllocator &allocator, ObString &str, ObJsonObject *&obj_node);
   static int print_json_to_str(ObIAllocator &allocator, ObIJsonBase *base_node, ObString &str);
   static int compact_json_object(ObIAllocator &allocator, ObJsonObject *obj_node, ObJsonObject *compact_obj);
+  static int validate_embedding_result(ObIJsonBase *result, int64_t input_count, int64_t dimension);
+  static int normalize_rerank_result(ObIAllocator &allocator, ObIJsonBase *result,
+                                     int64_t input_count, ObJsonArray *&normalized);
 private:
   DISALLOW_COPY_AND_ASSIGN(ObAIFuncJsonUtils);
 };

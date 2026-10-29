@@ -43,6 +43,9 @@
 #include "sql/resolver/ddl/ob_ddl_resolver.h"
 #include "sql/hybrid_search/ob_hybrid_search_executor.h"
 #include "sql/engine/basic/file/ob_file_csv_reader.h"
+#include "sql/engine/basic/file/file_json_reader.h"
+#include "sql/engine/basic/file/file_glob_reader.h"
+#include "sql/engine/basic/file/file_parquet_reader.h"
 #include "sql/engine/basic/file/ob_file_type_infer.h"
 #include "common/timezone/ob_time_convert.h"
 #include "lib/charset/ob_charset.h"
@@ -11106,14 +11109,8 @@ int ObDMLResolver::check_file_scan_enabled()
   return ret;
 }
 
-// M1b: FROM read_csv('path' [, option = value]) [AS] alias
-//
-// The whole file is read at resolve time and materialized as an ObValuesTableDef
-// in ACCESS_OBJ mode, then exposed as a TableItem::VALUES_TABLE.  No physical
-// operator, optimizer rule or code generator change is needed: the existing
-// ObValuesTableAccessOp and the values table path generation reuse the data.
-// The trade off is that the file is fully materialized in the plan lifetime
-// allocator, the streaming ObFileCsvReader is only used on the read side.
+// File readers infer column metadata during resolution. Actual rows are read
+// by the executor; neither the resolver nor the plan owns file contents.
 int ObDMLResolver::resolve_file_scan_table_item(const ParseNode &table_node, TableItem *&table_item)
 {
   int ret = OB_SUCCESS;
@@ -11125,7 +11122,10 @@ int ObDMLResolver::resolve_file_scan_table_item(const ParseNode &table_node, Tab
   ObString func_name;
   ObString path;
   ObString alias_name;
-  bool header = true;
+  ObCsvOptions options;
+  bool json_lines = false;
+  bool discovery = false;
+  bool parquet = false;
   ObSEArray<ObString, 8> column_names;
 
   if (OB_UNLIKELY(T_FILE_SCAN_EXPRESSION != table_node.type_ || 3 != table_node.num_child_)) {
@@ -11143,21 +11143,25 @@ int ObDMLResolver::resolve_file_scan_table_item(const ParseNode &table_node, Tab
   } else {
     alias_node = table_node.children_[2];
     func_name.assign_ptr(name_node->str_value_, name_node->str_len_);
-    // read_json/read_parquet/glob will be recognized together with the reader.
-    if (0 != func_name.case_compare("read_csv")) {
+    json_lines = 0 == func_name.case_compare("read_json") || 0 == func_name.case_compare("read_ndjson");
+    discovery = 0 == func_name.case_compare("glob");
+    parquet = 0 == func_name.case_compare("read_parquet");
+    if (0 != func_name.case_compare("read_csv") && !json_lines && !discovery && !parquet) {
       ret = OB_NOT_SUPPORTED;
       LOG_USER_ERROR(OB_NOT_SUPPORTED, "file scan table function other than read_csv is");
       LOG_WARN("file scan table function is not supported", K(func_name));
     } else if (OB_FAIL(check_file_scan_enabled())) {
       LOG_WARN("read_csv is disabled by enable_file_sql", K(ret));
-    } else if (OB_FAIL(resolve_file_scan_path(*params_node->children_[0], path))) {
+    } else if ((discovery || parquet) && params_node->num_child_ != 1) {
+      ret = OB_INVALID_ARGUMENT;
+    } else if (OB_FAIL(resolve_file_scan_path(*params_node->children_[0], path, discovery))) {
       LOG_WARN("failed to resolve read_csv file path", K(ret));
     } else {
       for (int64_t i = 1; OB_SUCC(ret) && i < params_node->num_child_; ++i) {
         if (OB_ISNULL(params_node->children_[i])) {
           ret = OB_ERR_UNEXPECTED;
           LOG_WARN("invalid read_csv option node", K(i));
-        } else if (OB_FAIL(resolve_file_scan_option(*params_node->children_[i], header))) {
+        } else if (OB_FAIL(resolve_file_scan_option(*params_node->children_[i], options, json_lines))) {
           LOG_WARN("failed to resolve read_csv option", K(ret), K(i));
         }
       }
@@ -11185,8 +11189,9 @@ int ObDMLResolver::resolve_file_scan_table_item(const ParseNode &table_node, Tab
       item->type_ = TableItem::VALUES_TABLE;
       item->is_view_table_ = false;
       item->values_table_def_ = table_def;
-      if (OB_FAIL(resolve_file_scan_values_table(path, header, *table_def, column_names))) {
-        LOG_WARN("failed to materialize the csv file into a values table", K(ret), K(path));
+      if (OB_FAIL(resolve_file_scan_values_table(path, options, *table_def, column_names,
+                                                parquet ? 3 : (discovery ? 2 : (json_lines ? 1 : 0))))) {
+        LOG_WARN("failed to resolve streaming csv file", K(ret), K(path));
       } else if (OB_FAIL(get_stmt()->add_table_item(session_info_, item))) {
         LOG_WARN("failed to add read_csv table item", K(ret));
       } else if (OB_FAIL(gen_file_scan_column_items(column_names, table_def->column_types_, *item))) {
@@ -11199,113 +11204,99 @@ int ObDMLResolver::resolve_file_scan_table_item(const ParseNode &table_node, Tab
   return ret;
 }
 
-// Read the whole csv file and materialize every row into table_def.access_objs_,
-// the cells are flattened by row: row0col0, row0col1, ..., row0colN, row1col0...
-// column_names receives the (already deduplicated) header names of the file.
+// Infer the schema in bounded memory and retain only execution metadata.
 int ObDMLResolver::resolve_file_scan_values_table(const ObString &path,
-                                                  const bool header,
-                                                  ObValuesTableDef &table_def,
-                                                  ObIArray<ObString> &column_names)
+                                                 const ObCsvOptions &options,
+                                                 ObValuesTableDef &table_def,
+                                                 ObIArray<ObString> &column_names,
+                                                 int64_t file_format)
 {
   int ret = OB_SUCCESS;
-  static const int64_t FILE_SCAN_BATCH_ROWS = 256;
-  ObFileCsvReader reader;
-  ObCsvOptions options;
-  ObArray<ObFileColumnSchema> columns;
-  ObArray<ObString> cells;
-  ObArray<uint8_t> nulls;
-  ObArray<int64_t> max_lengths;
-  int64_t row_count = 0;
-  int64_t total_row_count = 0;
-  int64_t column_count = 0;
-
-  column_names.reuse();
-  table_def.access_objs_.reuse();
-  table_def.column_types_.reuse();
-  table_def.column_cnt_ = 0;
-  table_def.row_cnt_ = 0;
-  table_def.access_type_ = ObValuesTableDef::ACCESS_OBJ;
-  table_def.is_const_ = true;
-
-  options.header_ = header;
-  if (OB_ISNULL(allocator_) || OB_ISNULL(session_info_)) {
-    ret = OB_NOT_INIT;
-    LOG_WARN("resolver is not inited for read_csv", K(ret));
-  } else if (OB_FAIL(reader.open(path, options))) {
-    LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: cannot open the csv file");
-    LOG_WARN("failed to open csv file", K(ret), K(path));
-  } else if (OB_FAIL(reader.infer_schema(*allocator_, columns))) {
-    LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: cannot infer the column types of the csv file");
-    LOG_WARN("failed to infer csv schema", K(ret), K(path));
-  } else if (OB_UNLIKELY((column_count = columns.count()) <= 0)) {
-    ret = OB_INVALID_DATA;
-    LOG_WARN("csv file has no column", K(ret), K(path), K(column_count));
-  } else if (OB_FAIL(reader.begin_scan())) {
-    LOG_WARN("failed to start csv scan", K(ret), K(path));
-  } else if (OB_FAIL(max_lengths.prepare_allocate(column_count))) {
-    LOG_WARN("failed to reserve csv column length", K(ret), K(column_count));
+  ObArenaAllocator reader_allocator("FileInfer");
+  ObFileCsvReader *csv_reader = nullptr;
+  FileJsonReader *json_reader = nullptr;
+  FileGlobReader *glob_reader = nullptr;
+  FileParquetReader *parquet_reader = nullptr;
+  IFileRowReader *reader_ptr = nullptr;
+  if (file_format == 3) {
+    reader_ptr = parquet_reader = OB_NEWx(FileParquetReader, &reader_allocator);
+  } else if (file_format == 2) {
+    reader_ptr = glob_reader = OB_NEWx(FileGlobReader, &reader_allocator);
+  } else if (file_format == 1) {
+    reader_ptr = json_reader = OB_NEWx(FileJsonReader, &reader_allocator);
   } else {
-    for (int64_t i = 0; i < column_count; ++i) {
-      max_lengths.at(i) = 0;
+    reader_ptr = csv_reader = OB_NEWx(ObFileCsvReader, &reader_allocator);
+  }
+  ObArray<ObFileColumnSchema> columns;
+  table_def.access_type_ = ObValuesTableDef::ACCESS_FILE;
+  table_def.is_const_ = false;
+  column_names.reuse();
+  if (OB_ISNULL(reader_ptr)) {
+    ret = OB_ALLOCATE_MEMORY_FAILED;
+  } else if (OB_ISNULL(allocator_) || OB_ISNULL(session_info_)) {
+    ret = OB_NOT_INIT;
+  } else {
+    ObString root;
+    if (glob_reader != nullptr) {
+      if (OB_FAIL(session_info_->get_secure_file_priv(root))) {
+      } else { ret = glob_reader->open(path, root); }
+    } else if (parquet_reader != nullptr) { ret = parquet_reader->open(path); }
+    else { ret = json_reader != nullptr ? json_reader->open(path) : csv_reader->open(path, options); }
+  }
+  if (OB_FAIL(ret)) {
+    LOG_WARN("failed to open file for inference", K(ret), K(path));
+  } else if (OB_FAIL(reader_ptr->infer_schema(*allocator_, columns))) {
+    LOG_WARN("failed to infer file schema", K(ret), K(path));
+  } else if (columns.empty()) {
+    ret = OB_INVALID_DATA;
+  } else {
+    table_def.column_cnt_ = columns.count();
+    table_def.row_cnt_ = reader_ptr->inferred_rows();
+    ObObjParam file_path;
+    ObObjParam has_header;
+    ObObjParam format;
+    ObObjParam signature;
+    ObString signature_text;
+    file_path.set_varchar(path);
+    has_header.set_bool(options.header_);
+    format.set_int(file_format);
+    if (OB_FAIL(table_def.access_objs_.push_back(file_path))) {
+    } else if (OB_FAIL(table_def.access_objs_.push_back(has_header))) {
+    } else if (OB_FAIL(table_def.access_objs_.push_back(format))) {
+    } else if (OB_FAIL(reader_ptr->signature(*allocator_, signature_text))) {
+    } else {
+      signature.set_varchar(signature_text);
+      ret = table_def.access_objs_.push_back(signature);
     }
-    while (OB_SUCC(ret)) {
-      if (OB_FAIL(reader.next_batch(FILE_SCAN_BATCH_ROWS, cells, nulls, row_count))) {
-        LOG_WARN("failed to read csv batch", K(ret), K(path), K(total_row_count));
-      } else if (row_count <= 0) {
-        break;
-      } else if (OB_UNLIKELY(cells.count() != row_count * column_count
-                             || nulls.count() != cells.count())) {
-        ret = OB_ERR_UNEXPECTED;
-        LOG_WARN("unexpected csv batch size", K(ret), K(row_count), K(column_count),
-                 K(cells.count()), K(nulls.count()));
-      } else {
-        for (int64_t i = 0; OB_SUCC(ret) && i < row_count; ++i) {
-          for (int64_t j = 0; OB_SUCC(ret) && j < column_count; ++j) {
-            const int64_t idx = i * column_count + j;
-            const ObString &cell = cells.at(idx);
-            const bool is_null = (0 != nulls.at(idx));
-            ObObjParam obj_param;
-            if (OB_FAIL(resolve_file_scan_cell(cell, is_null, columns.at(j).type_,
-                                               obj_param))) {
-              LOG_WARN("failed to convert csv cell", K(ret), K(i), K(j), K(columns.at(j).type_));
-            } else if (OB_FAIL(table_def.access_objs_.push_back(obj_param))) {
-              LOG_WARN("failed to push csv cell", K(ret), K(i), K(j));
-            } else if (!is_null && cell.length() > max_lengths.at(j)) {
-              // the varchar column length is the longest cell, it is used as the
-              // column accuracy and must not be 0 (see resolve_file_scan_column_type).
-              max_lengths.at(j) = cell.length();
-            }
-          }
-        }
-        if (OB_SUCC(ret)) {
-          total_row_count += row_count;
-        }
+    const char controls[] = {options.delimiter_, options.quote_, options.escape_};
+    for (int64_t i = 0; OB_SUCC(ret) && i < 3; ++i) {
+      ObObjParam control;
+      control.set_int(static_cast<unsigned char>(controls[i]));
+      ret = table_def.access_objs_.push_back(control);
+    }
+    if (OB_SUCC(ret)) {
+      ObObjParam nullstr;
+      nullstr.set_varchar(options.null_str_);
+      ret = table_def.access_objs_.push_back(nullstr);
+    }
+    for (int64_t i = 0; OB_SUCC(ret) && i < columns.count(); ++i) {
+      ObRawExprResType type;
+      const ObFileColumnSchema &column = columns.at(i);
+      ObObjParam name;
+      name.set_varchar(column.name_);
+      if (OB_FAIL(resolve_file_scan_column_type(column.type_, column.max_length_, type))) {
+      } else if (OB_FAIL(table_def.column_types_.push_back(type))) {
+      } else if (OB_FAIL(column_names.push_back(column.name_))) {
+      } else if (OB_FAIL(table_def.access_objs_.push_back(name))) {
+      } else if (OB_FAIL(table_def.column_nnvs_.push_back(column.null_count_))) {
+      } else if (OB_FAIL(table_def.column_ndvs_.push_back(
+                     MAX(1, table_def.row_cnt_ - column.null_count_)))) {
       }
     }
   }
-  reader.close();
-
-  if (OB_SUCC(ret)) {
-    table_def.column_cnt_ = column_count;
-    table_def.row_cnt_ = total_row_count;
-    for (int64_t i = 0; OB_SUCC(ret) && i < column_count; ++i) {
-      ObRawExprResType res_type;
-      if (OB_FAIL(resolve_file_scan_column_type(columns.at(i).type_, max_lengths.at(i), res_type))) {
-        LOG_WARN("failed to build csv column type", K(ret), K(i));
-      } else if (OB_FAIL(table_def.column_types_.push_back(res_type))) {
-        LOG_WARN("failed to push csv column type", K(ret), K(i));
-      } else if (OB_FAIL(column_names.push_back(columns.at(i).name_))) {
-        LOG_WARN("failed to push csv column name", K(ret), K(i));
-      }
-    }
+  if (reader_ptr != nullptr) {
+    reader_ptr->~IFileRowReader();
   }
-  // the statistics of a values table are required by the optimizer, the
-  // estimator computes the ndv / null count from access_objs_ directly.
-  if (OB_SUCC(ret) && OB_FAIL(estimate_values_table_stats(table_def))) {
-    LOG_WARN("failed to estimate read_csv values table statistics", K(ret));
-  }
-  LOG_TRACE("materialized csv file into values table", K(path), K(header),
-            K(table_def.column_cnt_), K(table_def.row_cnt_));
   return ret;
 }
 
@@ -11341,9 +11332,8 @@ int ObDMLResolver::resolve_file_scan_column_type(const ObFileColumnType column_t
     }
     case OB_FILE_COL_DATETIME: {
       res_type.set_type(ObDateTimeType);
-      // the reader accepts 'YYYY-MM-DD HH:MM:SS' only, i.e. scale 0.
       ObAccuracy accuracy = ObAccuracy::DDL_DEFAULT_ACCURACY2[0][ObDateTimeType];
-      accuracy.set_scale(0);
+      accuracy.set_scale(max_length > 20 ? MIN(6, max_length - 20) : 0);
       res_type.set_accuracy(accuracy);
       break;
     }
@@ -11595,10 +11585,11 @@ int ObDMLResolver::check_file_scan_secure_path(const ObString &path)
                    "read_csv: secure_file_priv is empty, file access is disabled");
     LOG_WARN("read_csv: secure_file_priv is empty", K(path));
   } else {
+    ret = ObFileCsvReader::check_secure_path(path, secure_file_priv);
     normalized_path = normalize_file_scan_secure_path(path.ptr(), path.length());
     const std::string normalized_priv =
         normalize_file_scan_secure_path(secure_file_priv.ptr(), secure_file_priv.length());
-    if ("/" != normalized_priv
+    if (OB_SUCC(ret) && "/" != normalized_priv
         && !is_file_scan_path_under_dir(normalized_priv, normalized_path)) {
       ret = OB_INVALID_ARGUMENT;
       LOG_USER_ERROR(OB_INVALID_ARGUMENT,
@@ -11614,7 +11605,7 @@ int ObDMLResolver::check_file_scan_secure_path(const ObString &path)
 // secure_file_priv whitelist.  Windows separators are normalized to '/' because
 // the reader (fopen) accepts them, the whitelist comparison is separator
 // agnostic and the error messages stay consistent.
-int ObDMLResolver::check_file_scan_path(ObString &path)
+int ObDMLResolver::check_file_scan_path(ObString &path, bool discovery)
 {
   int ret = OB_SUCCESS;
   if (OB_ISNULL(path.ptr()) || OB_UNLIKELY(path.empty())) {
@@ -11701,7 +11692,7 @@ int ObDMLResolver::check_file_scan_path(ObString &path)
         LOG_USER_ERROR(OB_INVALID_ARGUMENT,
                        "read_csv: the file path must not contain '.'-only components");
         LOG_WARN("read_csv file path contains an invalid component", K(path));
-      } else if (OB_FAIL(check_file_scan_secure_path(path))) {
+      } else if (!discovery && OB_FAIL(check_file_scan_secure_path(path))) {
         LOG_WARN("read_csv file path is not allowed by the secure path whitelist",
                  K(ret), K(path));
       }
@@ -11753,7 +11744,7 @@ int ObDMLResolver::resolve_file_scan_const_arg(const ParseNode &arg_node, ObObjP
   return ret;
 }
 
-int ObDMLResolver::resolve_file_scan_path(const ParseNode &path_node, ObString &path)
+int ObDMLResolver::resolve_file_scan_path(const ParseNode &path_node, ObString &path, bool discovery)
 {
   int ret = OB_SUCCESS;
   ObObjParam val;
@@ -11771,13 +11762,13 @@ int ObDMLResolver::resolve_file_scan_path(const ParseNode &path_node, ObString &
     LOG_WARN("allocator is null when resolving read_csv file path");
   } else if (OB_FAIL(ob_write_string(*allocator_, val.get_string(), path))) {
     LOG_WARN("failed to copy read_csv file path", K(ret));
-  } else if (OB_FAIL(check_file_scan_path(path))) {
+  } else if (OB_FAIL(check_file_scan_path(path, discovery))) {
     LOG_WARN("read_csv file path is not allowed", K(ret), K(path));
   }
   return ret;
 }
 
-int ObDMLResolver::resolve_file_scan_option(const ParseNode &option_node, bool &header)
+int ObDMLResolver::resolve_file_scan_option(const ParseNode &option_node, ObCsvOptions &options, bool json_lines)
 {
   int ret = OB_SUCCESS;
   const ParseNode *name_node = NULL;
@@ -11803,12 +11794,26 @@ int ObDMLResolver::resolve_file_scan_option(const ParseNode &option_node, bool &
   } else {
     option_name.assign_ptr(name_node->str_value_, name_node->str_len_);
     if (0 == option_name.case_compare("header")) {
-      if (OB_UNLIKELY(!value.is_boolean() && !value.is_integer_type())) {
+      if (json_lines || OB_UNLIKELY(!value.is_boolean() && !value.is_integer_type())) {
         ret = OB_INVALID_ARGUMENT;
         LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: header must be a boolean literal");
       } else {
-        header = value.is_boolean() ? value.get_bool() : (0 != value.get_int());
+        options.header_ = value.is_boolean() ? value.get_bool() : (0 != value.get_int());
       }
+    } else if (!json_lines && (option_name.case_compare("delimiter") == 0
+               || option_name.case_compare("delim") == 0 || option_name.case_compare("quote") == 0
+               || option_name.case_compare("escape") == 0)) {
+      if (!value.is_string_type() || value.get_string().length() != 1) { ret = OB_INVALID_ARGUMENT; }
+      else {
+        const char character = value.get_string().ptr()[0];
+        if (character == '\0' || character == '\n' || character == '\r') { ret = OB_INVALID_ARGUMENT; }
+        else if (option_name.case_compare("quote") == 0) { options.quote_ = character; }
+        else if (option_name.case_compare("escape") == 0) { options.escape_ = character; }
+        else { options.delimiter_ = character; }
+      }
+    } else if (!json_lines && option_name.case_compare("nullstr") == 0) {
+      if (!value.is_string_type()) { ret = OB_INVALID_ARGUMENT; }
+      else { options.null_str_ = value.get_string(); }
     } else if (0 == option_name.case_compare("sample_size")) {
       if (OB_UNLIKELY(!value.is_integer_type())) {
         ret = OB_INVALID_ARGUMENT;
@@ -11823,8 +11828,8 @@ int ObDMLResolver::resolve_file_scan_option(const ParseNode &option_node, bool &
       if (OB_UNLIKELY(!ob_is_string_type(value.get_type()))) {
         ret = OB_INVALID_ARGUMENT;
         LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: format must be a string literal");
-      } else if (0 != value.get_string().case_compare("csv")) {
-        // read_json/read_parquet will be added together with their readers.
+      } else if (json_lines ? 0 != value.get_string().case_compare("newline_delimited")
+                           : 0 != value.get_string().case_compare("csv")) {
         ret = OB_NOT_SUPPORTED;
         LOG_USER_ERROR(OB_NOT_SUPPORTED, "read_csv: format other than csv is");
       }

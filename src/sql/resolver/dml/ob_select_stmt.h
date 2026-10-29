@@ -155,6 +155,9 @@ struct ObSelectIntoItem
     cs_type_ = other.cs_type_;
     buffer_size_ = other.buffer_size_;
     external_properties_ = other.external_properties_;
+      is_copy_ = other.is_copy_;
+      copy_header_ = other.copy_header_;
+      copy_null_ = other.copy_null_;
     return user_vars_.assign(other.user_vars_);
   }
   int deep_copy(ObIAllocator &allocator,
@@ -186,6 +189,9 @@ struct ObSelectIntoItem
   common::ObCollationType cs_type_;
   int64_t buffer_size_;
   common::ObString external_properties_;
+    bool is_copy_ = false;
+    bool copy_header_ = false;
+    common::ObString copy_null_;
 
   static const char* const DEFAULT_FIELD_TERM_STR;
   static const char* const DEFAULT_LINE_TERM_STR;

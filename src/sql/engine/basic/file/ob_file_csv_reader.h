@@ -47,14 +47,16 @@ struct ObCsvOptions
 //
 // Lifetime of the returned ObString cells is until the next call of
 // next_batch()/close(), they point into the per-batch arena of the reader.
-class ObFileCsvReader
+class ObFileCsvReader : public IFileRowReader
 {
 public:
   ObFileCsvReader();
   ~ObFileCsvReader();
 
   // open the file and remember its size / mtime for change detection.
-  int open(const ObString &path, const ObCsvOptions &options);
+  int open(const ObString &path, const ObCsvOptions &options, bool metadata_only = false);
+  int check_unchanged() const;
+  static int check_secure_path(const ObString &path, const ObString &root);
   // full streaming scan: read the header (c1..cN when header_ is false), then
   // infer the type of every column from all the data rows.
   int infer_schema(ObIAllocator &allocator, ObArray<ObFileColumnSchema> &columns);
@@ -69,6 +71,9 @@ public:
   void close();
 
   int64_t column_count() const { return column_count_; }
+  int64_t inferred_rows() const { return inferred_rows_; }
+  ObString column_name(int64_t index) const override { return get_column_name(index); }
+  int signature(ObIAllocator &allocator, ObString &value) const override;
   int column_index(const ObString &name, int64_t &index) const;
 
 private:
@@ -76,8 +81,16 @@ private:
   {
     int64_t size_;
     int64_t mtime_;
+    int64_t mtime_ns_ = 0;
+    uint64_t inode_ = 0;
+    uint64_t device_ = 0;
     bool valid_;
     FileMeta() : size_(0), mtime_(0), valid_(false) {}
+    bool operator==(const FileMeta &other) const
+    {
+      return valid_ && other.valid_ && size_ == other.size_ && mtime_ == other.mtime_
+             && mtime_ns_ == other.mtime_ns_ && inode_ == other.inode_ && device_ == other.device_;
+    }
   };
 
 private:
@@ -102,8 +115,8 @@ private:
   int emit_row(ObArray<ObString> &cells, ObArray<uint8_t> &nulls);
 
 private:
-  static const int64_t READ_BUFFER_SIZE = 64 * 1024;
-  static const int64_t MAX_PATH_LENGTH = 1024;
+  static constexpr int64_t READ_BUFFER_SIZE = 64 * 1024;
+  static constexpr int64_t MAX_PATH_LENGTH = 1024;
 
   FILE *fp_;
   ObCsvOptions options_;
@@ -113,6 +126,7 @@ private:
   bool scanning_;
   bool header_loaded_;
   int64_t column_count_;
+  int64_t inferred_rows_;
   int64_t data_start_offset_;  // start of the first record (BOM already skipped)
   int64_t data_offset_;        // start of the first data row
   FileMeta meta_;

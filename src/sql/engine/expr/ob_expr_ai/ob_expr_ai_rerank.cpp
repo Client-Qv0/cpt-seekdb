@@ -218,8 +218,24 @@ int ObExprAIRerank::eval_ai_rerank_with_doc_key(const ObExpr &expr, ObEvalCtx &c
   if (OB_FAIL(get_doc_array_from_documents_array_with_key(allocator, document_array, doc_key, doc_array))) {
   } else {
     ObAIFuncModel model(allocator, info, endpoint_info);
-    if (OB_FAIL(model.call_rerank(query, doc_array, result_array))) {
-    } else if (OB_FAIL(sort_document_array_by_model_result(allocator, document_array, result_array, sorted_document_array))) {
+    ObString score_key(SCORE_KEY);
+    if (OB_FAIL(ObAIFuncJsonUtils::get_json_array(allocator, result_array))) {
+    }
+    for (int64_t begin = 0; OB_SUCC(ret) && begin < doc_array->element_count(); begin += 20) {
+      const int64_t end = MIN(begin + 20, doc_array->element_count());
+      ObJsonArray *batch_docs = nullptr;
+      ObJsonArray *batch_result = nullptr;
+      ObJsonArray *merged = nullptr;
+      if (OB_FAIL(construct_batch_document_array(allocator, doc_array, begin, end, batch_docs))) {
+      } else if (OB_FAIL(model.call_rerank(query, batch_docs, batch_result))) {
+      } else if (OB_FAIL(batch_result_add_base(allocator, batch_result, begin))) {
+      } else if (OB_FAIL(compact_json_array_by_key(allocator, result_array, batch_result, score_key, merged))) {
+      } else {
+        result_array = merged;
+      }
+    }
+    if (OB_SUCC(ret)
+        && OB_FAIL(sort_document_array_by_model_result(allocator, document_array, result_array, sorted_document_array))) {
     } 
   }
   if (OB_SUCC(ret)) {
@@ -288,7 +304,7 @@ int ObExprAIRerank::sort_document_array_by_model_result(ObIAllocator &allocator,
         ret = OB_ERR_UNEXPECTED;
       } else {
         ObJsonInt *index_value = static_cast<ObJsonInt *>(model_result_obj->get_value(INDEX_KEY));
-        ObJsonDouble *score_value = static_cast<ObJsonDouble *>(model_result_obj->get_value(SCORE_KEY));
+        ObJsonNode *score_value = model_result_obj->get_value(SCORE_KEY);
         if (OB_ISNULL(index_value) || OB_ISNULL(score_value)) {
           ret = OB_ERR_UNEXPECTED;
         } else {
@@ -318,7 +334,7 @@ int ObExprAIRerank::construct_batch_document_array(ObIAllocator &allocator, ObJs
   ObJsonArray *result_array = nullptr;
   if (OB_FAIL(ObAIFuncJsonUtils::get_json_array(allocator, result_array))) {
   } else {
-    for (int64_t i = start_idx; i < end_idx; i++) {
+    for (int64_t i = start_idx; OB_SUCC(ret) && i < end_idx; i++) {
       if (OB_FAIL(result_array->append(document_array->get_value(i)))) {
       }
     }
@@ -347,10 +363,8 @@ int ObExprAIRerank::inner_eval_ai_rerank(ObIAllocator &allocator,
   if (OB_FAIL(ObAIFuncUtils::get_rerank_body(allocator, info, endpoint_info, query, document_array, config_json, body))) {
   } else if (OB_FAIL(ai_client.send_post(allocator, endpoint_info.get_url(), header_array, body, http_response))) {
   } else if (OB_FAIL(ObAIFuncUtils::parse_rerank_output(allocator, endpoint_info, http_response, response))) {
-  } else if (response->json_type() != ObJsonNodeType::J_ARRAY) {
-    ret = OB_ERR_UNEXPECTED;
-  } else if (OB_ISNULL(res = static_cast<ObJsonArray *>(response))) {
-    ret = OB_ERR_UNEXPECTED;
+  } else if (OB_FAIL(ObAIFuncJsonUtils::normalize_rerank_result(
+                 allocator, response, document_array->element_count(), res))) {
   } else {
     result_array = res;
   }
@@ -387,21 +401,26 @@ int ObExprAIRerank::compact_json_array_by_key(ObIAllocator &allocator, ObJsonArr
   } else {
     int64_t count1 = array1->element_count();
     int64_t count2 = array2->element_count();
-    int64_t min_count = count1 < count2 ? count1 : count2;
     int64_t i = 0;
     int64_t j = 0;
-    while (i < min_count && j < min_count) {
+    while (OB_SUCC(ret) && i < count1 && j < count2) {
       ObJsonObject *obj1 = static_cast<ObJsonObject *>(array1->get_value(i));
       ObJsonObject *obj2 = static_cast<ObJsonObject *>(array2->get_value(j));
       if (OB_ISNULL(obj1) || OB_ISNULL(obj2)) {
         ret = OB_ERR_UNEXPECTED;
       } else {
-        ObJsonDouble *double1 = static_cast<ObJsonDouble *>(obj1->get_value(score_key));
-        ObJsonDouble *double2 = static_cast<ObJsonDouble *>(obj2->get_value(score_key));
+        ObJsonNode *double1 = obj1->get_value(score_key);
+        ObJsonNode *double2 = obj2->get_value(score_key);
+        double score1 = 0;
+        double score2 = 0;
         if (OB_ISNULL(double1) || OB_ISNULL(double2)) {
           ret = OB_ERR_UNEXPECTED;
+        } else if (OB_FAIL(double1->to_double(score1))) {
+        } else if (OB_FAIL(double2->to_double(score2))) {
         } else {
-          if (double1->value() > double2->value()) {
+          // Both inputs are normalized by score then original index. Earlier
+          // batches contain earlier original indexes, so retain them on ties.
+          if (score1 >= score2) {
             if (OB_FAIL(result_array->append(obj1))) {
             }
             i++;
@@ -414,14 +433,14 @@ int ObExprAIRerank::compact_json_array_by_key(ObIAllocator &allocator, ObJsonArr
       }
     }
     if (OB_SUCC(ret)) {
-      while (i < count1) {
+      while (OB_SUCC(ret) && i < count1) {
         if (OB_FAIL(result_array->append(array1->get_value(i)))) {
         }
         i++;
       }
     }
     if (OB_SUCC(ret)) {
-      while (j < count2) {
+      while (OB_SUCC(ret) && j < count2) {
         if (OB_FAIL(result_array->append(array2->get_value(j)))) {
         }
         j++;

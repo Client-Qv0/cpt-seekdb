@@ -3107,6 +3107,8 @@ int ObSelectResolver::resolve_into_clause(const ParseNode *node)
       if (T_INTO_OUTFILE == node->type_) { // into outfile
         if (is_in_set_query()) {
           ret = OB_INAPPROPRIATE_INTO;
+        } else if (node->value_ == 1 && node->num_child_ == 2) {
+          ret = resolve_copy_options(*node, *into_item);
         } else if (node->num_child_ == 3 && NULL != node->children_[1]
             && T_EXTERNAL_FILE_FORMAT == node->children_[1]->type_) { // Handle with `FORMAT`
           if (OB_FAIL(resolve_into_outfile_with_format(node, *into_item))) {
@@ -3137,6 +3139,64 @@ int ObSelectResolver::resolve_into_clause(const ParseNode *node)
   return ret;
 }
 
+
+int ObSelectResolver::resolve_copy_options(const ParseNode &node, ObSelectIntoItem &item)
+{
+  int ret = check_file_scan_enabled();
+  item.is_copy_ = true;
+  item.field_str_.set_varchar(",");
+  item.closed_cht_.set_char_value("\"", 1);
+  item.escaped_cht_.set_char_value("\"", 1);
+  if (OB_SUCC(ret)) { ret = resolve_into_const_node(node.children_[0], item.outfile_name_); }
+  const ParseNode *options = node.children_[1];
+  ObSEArray<ObString, 8> seen;
+  for (int64_t i = 0; OB_SUCC(ret) && options != nullptr && i < options->num_child_; ++i) {
+    const ParseNode *option = options->children_[i];
+    if (option == nullptr || option->num_child_ != 2 || option->children_[0] == nullptr) {
+      ret = OB_INVALID_ARGUMENT;
+    } else {
+      const ParseNode *name_node = option->children_[0];
+      const ParseNode *value_node = option->children_[1];
+      const ObString name(name_node->str_len_, name_node->str_value_);
+      ObObj value;
+      for (int64_t j = 0; OB_SUCC(ret) && j < seen.count(); ++j) {
+        if (name.case_compare(seen.at(j)) == 0) { ret = OB_INVALID_ARGUMENT; }
+      }
+      if (OB_SUCC(ret)) { ret = seen.push_back(name); }
+      if (OB_SUCC(ret) && value_node != nullptr) {
+        if (value_node->type_ == T_COLUMN_REF && value_node->children_[2] != nullptr) {
+          const auto *literal = value_node->children_[2];
+          value.set_varchar(ObString(literal->str_len_, literal->str_value_));
+        } else {
+          ObObjParam constant;
+          if (OB_FAIL(resolve_file_scan_const_arg(*value_node, constant))) {
+          } else { value = constant; }
+        }
+      }
+      if (OB_FAIL(ret)) {
+      } else if (name.case_compare("header") == 0) {
+        if (value_node == nullptr) { item.copy_header_ = true; }
+        else if (value.is_integer_type()) { item.copy_header_ = value.get_int() != 0; }
+        else { ret = OB_INVALID_ARGUMENT; }
+      } else if (name.case_compare("format") == 0) {
+        if (!value.is_string_type() || value.get_string().case_compare("csv") != 0) { ret = OB_NOT_SUPPORTED; }
+      } else if (name.case_compare("nullstr") == 0) {
+        if (!value.is_string_type()) { ret = OB_INVALID_ARGUMENT; }
+        else { item.copy_null_ = value.get_string(); }
+      } else if (name.case_compare("delimiter") == 0 || name.case_compare("quote") == 0
+                 || name.case_compare("escape") == 0) {
+        if (!value.is_string_type() || value.get_string().length() != 1
+            || value.get_string().ptr()[0] == '\0' || value.get_string().ptr()[0] == '\n'
+            || value.get_string().ptr()[0] == '\r') { ret = OB_INVALID_ARGUMENT; }
+        else if (name.case_compare("delimiter") == 0) { item.field_str_ = value; }
+        else if (name.case_compare("quote") == 0) { item.closed_cht_.set_char_value(value.get_string().ptr(), 1); }
+        else { item.escaped_cht_.set_char_value(value.get_string().ptr(), 1); }
+      } else { ret = OB_INVALID_ARGUMENT; }
+    }
+  }
+  if (OB_SUCC(ret) && item.field_str_.get_string() == item.closed_cht_.get_string()) { ret = OB_INVALID_ARGUMENT; }
+  return ret;
+}
 
 int ObSelectResolver::resolve_column_ref_in_all_namespace(
   const ObQualifiedName &q_name,
