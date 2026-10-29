@@ -75,9 +75,14 @@ int seekdb_cuvs_search(void* handle, const float* query, long nq, long topk,
     if (cuvsCagraSearchParamsCreate(&sp) != CUVS_SUCCESS) { rc=14; goto done; }
     {
       size_t required_itopk = (size_t)topk * 4;
-      if (required_itopk < 512) required_itopk = 512;
+      /* The shipped C API defaults to SINGLE_CTA, which caps itopk at 512.
+       * Let hipVS choose a compatible implementation for larger lists,
+       * both for SQL single queries and for explicit batches.
+       * More search candidates improve recall without rebuilding the graph. */
+      if (required_itopk < 1024) required_itopk = 1024;
       if (sp->itopk_size < required_itopk) sp->itopk_size = required_itopk;
       sp->search_width = 4;
+      sp->algo = AUTO;
     }
     cuvsFilter f; f.type=NO_FILTER; f.addr=(uintptr_t)0;
     if (cuvsCagraSearch(h->res, sp, h->idx, &qt, &nt, &dt, f) != CUVS_SUCCESS) { rc=15; goto done; }
@@ -85,11 +90,16 @@ int seekdb_cuvs_search(void* handle, const float* query, long nq, long topk,
     if (out_dist) cudaMemcpy(out_dist, dd, sizeof(float)*nq*topk, cudaMemcpyDefault);
   }
 done:
+  /* Destroy/free calls can clear the last cuVS error; log it beforehand. */
+  if (rc) {
+    const char *message = cuvsGetLastErrorText();
+    fprintf(stderr, "[seekdb_cuvs] search rc=%d: %s\n", rc,
+            message ? message : "no cuVS error text");
+  }
   if (sp) cuvsCagraSearchParamsDestroy(sp);
   if (dd) cuvsRMMFree(h->res, dd, sizeof(float)*nq*topk);
   if (nd) cuvsRMMFree(h->res, nd, sizeof(unsigned)*nq*topk);
   if (qd) cuvsRMMFree(h->res, qd, sizeof(float)*nq*h->dim);
-  if (rc) fprintf(stderr, "[seekdb_cuvs] search rc=%d: %s\n", rc, cuvsGetLastErrorText());
   return rc;
 }
 

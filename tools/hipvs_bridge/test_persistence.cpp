@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <set>
 #include <vector>
 
 int main(int argc, char **argv)
@@ -27,11 +28,40 @@ int main(int argc, char **argv)
     index = seekdb_cuvs_deserialize(argv[2], count, dimension);
     if (!index) return 4;
   }
-  unsigned int ids[10];
-  float distances[10];
-  int result = seekdb_cuvs_search(index, vectors.data(), 1, 10, ids, distances);
+  // Exercise both SQL-like single queries and batches before/after reload.
+  // Top-200 requires itopk_size >= 800 and exposes the old implicit
+  // SINGLE_CTA default's 512-candidate limit on the supported hipVS runtime.
+  for (const long nq : {1L, 3L}) {
+    std::vector<float> queries(nq * dimension);
+    for (long q = 0; q < nq; ++q) {
+      std::memcpy(queries.data() + q * dimension,
+                  vectors.data() + q * (count / 3) * dimension,
+                  dimension * sizeof(float));
+    }
+    for (const long topk : {10L, 200L}) {
+      std::vector<unsigned int> ids(nq * topk);
+      std::vector<float> distances(nq * topk);
+      const int result = seekdb_cuvs_search(index, queries.data(), nq, topk,
+                                           ids.data(), distances.data());
+      if (result != 0) { seekdb_cuvs_free(index); return 5; }
+      for (long q = 0; q < nq; ++q) {
+        std::set<unsigned int> seen;
+        for (long k = 0; k < topk; ++k) {
+          const long pos = q * topk + k;
+          if (ids[pos] >= count || !seen.insert(ids[pos]).second ||
+              !std::isfinite(distances[pos]) || distances[pos] < -0.0001f) {
+            seekdb_cuvs_free(index); return 8;
+          }
+        }
+        if (ids[q * topk] != q * (count / 3) ||
+            std::fabs(distances[q * topk]) > 0.0001f) {
+          seekdb_cuvs_free(index); return 9;
+        }
+      }
+      std::printf("%s: n=%ld nq=%ld topk=%ld unique_ids=1 exact_self=1\n",
+                  argv[1], count, nq, topk);
+    }
+  }
   seekdb_cuvs_free(index);
-  if (result != 0 || ids[0] != 0 || std::fabs(distances[0]) > 0.0001f) return 5;
-  std::printf("%s: n=%ld top1=%u distance=%g\n", argv[1], count, ids[0], distances[0]);
   return 0;
 }

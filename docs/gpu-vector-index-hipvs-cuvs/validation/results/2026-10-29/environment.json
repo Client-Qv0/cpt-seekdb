@@ -1,0 +1,61 @@
+{
+  "source_base_commit": "e6d5f688c46bd0c987d28075c8bc7969f44255cc",
+  "source_archive_sha256": "9b8faca2e6b9140f2fe9ab2f539b07a01a6d2a19293611b59de60979942c08fe",
+  "kernel": "6.8.0-79-generic",
+  "cpu_model": "AMD EPYC 9334 32-Core Processor",
+  "cpu_quota": "1600000 100000",
+  "memory_limit_bytes": 59055800320,
+  "rocm": "7.2.4",
+  "gpu": {
+    "card0": {
+      "VRAM Total Memory (B)": "51522830336",
+      "VRAM Total Used Memory (B)": "622231552",
+      "Card Series": "AMD Radeon Graphics",
+      "Card Model": "0x744b",
+      "Card Vendor": "Advanced Micro Devices, Inc. [AMD/ATI]",
+      "Card SKU": "D7070910",
+      "Subsystem ID": "0x0e0c",
+      "Device Rev": "0x00",
+      "Node ID": "3",
+      "GUID": "49884",
+      "GFX Version": "gfx1100"
+    }
+  },
+  "server_cpu_count": 16,
+  "build": "./build.sh release -DOB_BUILD_CUVS=ON -DOB_BUILD_CUVS_TRACE=ON -DCUVS_BRIDGE_LIB=/workspace/amd-validation/bridge/libseekdb_cuvs_bridge.so --make -j12",
+  "timing_trace_enabled": false,
+  "baseline_bridge_sha256": "fd82e1bec6bf3bcf24ad628d4d35948c080176a80e51ec4f8dd4abb40904d207",
+  "requested_startup_memory_argument": "_memory_budget=20G",
+  "server_parameters_read_back": {
+    "memory_budget": [
+      "0M"
+    ],
+    "memory_limit": [
+      "0M"
+    ],
+    "cpu_count": [
+      "16"
+    ],
+    "ob_vector_memory_limit_percentage": [
+      "50"
+    ]
+  },
+  "vector_memory_read_back": [
+    {
+      "VECTOR_MEM_HOLD": "593546813",
+      "VECTOR_MEM_USED": "593546813",
+      "VECTOR_MEM_LIMIT": "23622320128"
+    }
+  ],
+  "memory_note": "The underscore-prefixed startup argument did not set memory_budget; actual read-back was 0M (automatic), unchanged for CPU and GPU runs.",
+  "candidate_bridge_source_sha256": "6bb782b8fe694adae56f06d4f8adf0863ed986e7a190246c631410e7abc97d33",
+  "candidate_bridge_sha256": "e75ffa869689539384254e8471be1afd3b909428747a0d2ee5389675a99acf2c",
+  "observer_sha256": "549c032143d646b4cd7ed9e5445bc78e72e6665cc84d89e3ae7cda1c79214f92",
+  "build_exit_code": 0,
+  "bridge_regression_exit_codes": {
+    "baseline_write": 5,
+    "candidate_write": 0,
+    "candidate_read": 0
+  },
+  "benchmark_repetitions": 2
+}
