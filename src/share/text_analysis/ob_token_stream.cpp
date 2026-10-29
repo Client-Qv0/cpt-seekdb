@@ -295,7 +295,19 @@ int ObBasicEnglishNormalizer::get_next(ObDatum &next_token, int64_t &token_freq)
     } else {
       ObString norm_alnum_token(norm_token_len, norm_token_ptr);
       ObString norm_lower_token;
-      if (OB_FAIL(ObCharset::tolower(cs_, norm_alnum_token, norm_lower_token, norm_allocator_))) {
+      const int64_t buf_len = static_cast<int64_t>(norm_token_len) * cs_->casedn_multiply;
+      if (buf_len > 0 && buf_len <= sizeof(small_token_buf_)) {
+        size_t len = 0;
+        if (1 == cs_->casedn_multiply) {
+          MEMCPY(small_token_buf_, norm_token_ptr, norm_token_len);
+          len = cs_->cset->casedn(cs_, small_token_buf_, norm_token_len,
+                                small_token_buf_, norm_token_len);
+        } else {
+          len = cs_->cset->casedn(cs_, const_cast<char *>(norm_token_ptr), norm_token_len,
+                                small_token_buf_, buf_len);
+        }
+        next_token.set_string(small_token_buf_, len);
+      } else if (OB_FAIL(ObCharset::tolower(cs_, norm_alnum_token, norm_lower_token, norm_allocator_))) {
       } else {
         next_token.set_string(norm_lower_token);
       }

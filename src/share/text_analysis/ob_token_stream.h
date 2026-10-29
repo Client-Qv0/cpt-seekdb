@@ -132,6 +132,8 @@ public:
   virtual int get_next(ObDatum &next_token, int64_t &token_freq) override;
 private:
   ObArenaAllocator norm_allocator_;
+  // get_next() already invalidates the preceding token's storage.
+  char small_token_buf_[256];
 };
 
 // group (deduplicate) and count
