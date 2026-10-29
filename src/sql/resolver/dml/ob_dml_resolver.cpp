@@ -11154,6 +11154,8 @@ int ObDMLResolver::resolve_file_scan_table_item(const ParseNode &table_node, Tab
       LOG_WARN("read_csv is disabled by enable_file_sql", K(ret));
     } else if ((discovery || parquet) && params_node->num_child_ != 1) {
       ret = OB_INVALID_ARGUMENT;
+      LOG_USER_ERROR(OB_INVALID_ARGUMENT,
+                     "read_parquet/glob: only the file path argument is supported");
     } else if (OB_FAIL(resolve_file_scan_path(*params_node->children_[0], path, discovery))) {
       LOG_WARN("failed to resolve read_csv file path", K(ret));
     } else {
@@ -11733,6 +11735,10 @@ int ObDMLResolver::resolve_file_scan_const_arg(const ParseNode &arg_node, ObObjP
     } else if (OB_UNLIKELY(!sub_val.is_integer_type())) {
       ret = OB_INVALID_ARGUMENT;
       LOG_WARN("read_csv: negative constant is not an integer", K(sub_val));
+    } else if (OB_UNLIKELY(INT64_MIN == sub_val.get_int())) {
+      // -INT64_MIN overflows; reject instead of invoking undefined behaviour.
+      ret = OB_INVALID_ARGUMENT;
+      LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: integer constant is out of range");
     } else {
       val = sub_val;
       val.set_int(-sub_val.get_int());
@@ -11777,8 +11783,12 @@ int ObDMLResolver::resolve_file_scan_option(const ParseNode &option_node, ObCsvO
   ObObjParam value;
 
   if (OB_UNLIKELY(T_OP_EQ != option_node.type_ || 2 != option_node.num_child_)) {
-    ret = OB_INVALID_ARGUMENT;
-    LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: options must be written as name = value");
+    // Only "name = value" is accepted after the file path.  A positional
+    // argument is not a runtime type error but invalid syntax for the table
+    // function, so report the parser error (MySQL 1064) just like a real
+    // syntax error instead of a bare invalid-argument error.
+    ret = OB_ERR_PARSE_SQL;
+    LOG_USER_ERROR(OB_ERR_PARSE_SQL, ob_errpkt_strerror(OB_ERR_PARSER_SYNTAX), 0, "", 0);
     LOG_WARN("read_csv: invalid option node", K(option_node.type_), K(option_node.num_child_));
   } else if (OB_ISNULL(name_node = option_node.children_[0])
              || OB_ISNULL(value_node = option_node.children_[1])
@@ -11793,27 +11803,55 @@ int ObDMLResolver::resolve_file_scan_option(const ParseNode &option_node, ObCsvO
     LOG_WARN("read_csv: invalid option value", K(ret));
   } else {
     option_name.assign_ptr(name_node->str_value_, name_node->str_len_);
-    if (0 == option_name.case_compare("header")) {
+    const char *names[] = {"header", "delimiter", "quote", "escape", "nullstr", "sample_size", "format"};
+    uint32_t bit = 0;
+    for (uint32_t i = 0; i < 7; ++i) {
+      if (option_name.case_compare(names[i]) == 0
+          || (i == 1 && option_name.case_compare("delim") == 0)) { bit = 1U << i; }
+    }
+    if (bit != 0 && (options.named_options_ & bit) != 0) {
+      ret = OB_INVALID_ARGUMENT;
+      LOG_USER_ERROR(OB_INVALID_ARGUMENT, "duplicate file reader option");
+    } else if (0 == option_name.case_compare("header")) {
       if (json_lines || OB_UNLIKELY(!value.is_boolean() && !value.is_integer_type())) {
         ret = OB_INVALID_ARGUMENT;
         LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: header must be a boolean literal");
+      } else if (value.is_integer_type() && value.get_int() != 0 && value.get_int() != 1) {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: header accepts only true/false (or 0/1)");
       } else {
         options.header_ = value.is_boolean() ? value.get_bool() : (0 != value.get_int());
       }
     } else if (!json_lines && (option_name.case_compare("delimiter") == 0
                || option_name.case_compare("delim") == 0 || option_name.case_compare("quote") == 0
                || option_name.case_compare("escape") == 0)) {
-      if (!value.is_string_type() || value.get_string().length() != 1) { ret = OB_INVALID_ARGUMENT; }
-      else {
+      if (!value.is_string_type() || value.get_string().length() != 1) {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT,
+                       "read_csv: delimiter/quote/escape must be a one-character string");
+      } else {
         const char character = value.get_string().ptr()[0];
-        if (character == '\0' || character == '\n' || character == '\r') { ret = OB_INVALID_ARGUMENT; }
-        else if (option_name.case_compare("quote") == 0) { options.quote_ = character; }
+        if (character == '\0' || character == '\n' || character == '\r') {
+          ret = OB_INVALID_ARGUMENT;
+          LOG_USER_ERROR(OB_INVALID_ARGUMENT,
+                         "read_csv: delimiter/quote/escape must not be NUL, CR or LF");
+        } else if (option_name.case_compare("quote") == 0) { options.quote_ = character; }
         else if (option_name.case_compare("escape") == 0) { options.escape_ = character; }
         else { options.delimiter_ = character; }
       }
     } else if (!json_lines && option_name.case_compare("nullstr") == 0) {
-      if (!value.is_string_type()) { ret = OB_INVALID_ARGUMENT; }
-      else { options.null_str_ = value.get_string(); }
+      if (!value.is_string_type()) {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: nullstr must be a string literal");
+      } else if (value.get_string().length() > OB_MAX_VARCHAR_LENGTH) {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: nullstr is too long");
+      } else if (MEMCHR(value.get_string().ptr(), '\0', value.get_string().length()) != nullptr) {
+        ret = OB_INVALID_ARGUMENT;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT, "read_csv: nullstr must not contain NUL");
+      } else {
+        options.null_str_ = value.get_string();
+      }
     } else if (0 == option_name.case_compare("sample_size")) {
       if (OB_UNLIKELY(!value.is_integer_type())) {
         ret = OB_INVALID_ARGUMENT;
@@ -11836,8 +11874,9 @@ int ObDMLResolver::resolve_file_scan_option(const ParseNode &option_node, ObCsvO
     } else {
       ret = OB_INVALID_ARGUMENT;
       LOG_USER_ERROR(OB_INVALID_ARGUMENT,
-                     "read_csv: unknown option name, only header/sample_size/format are supported");
+                     "read_csv: unknown option, expected header/delimiter/quote/escape/nullstr/sample_size/format");
     }
+    if (OB_SUCC(ret)) { options.named_options_ |= bit; }
     if (OB_FAIL(ret)) {
       LOG_WARN("read_csv: invalid option", K(ret), K(option_name), K(value));
     }

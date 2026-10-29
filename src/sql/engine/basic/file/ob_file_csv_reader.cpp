@@ -386,8 +386,13 @@ int ObFileCsvReader::parse_field(const int64_t field_start, bool &quoted, bool &
       LOG_WARN("csv field is too long", K(ret), K(record_no_), K(options_.max_field_len_));
     } else if (!has_char) {
       // end of file also ends the current field / record.
-      record_end = true;
-      done = true;
+      if (in_quotes) {
+        ret = OB_INVALID_DATA;
+        LOG_USER_ERROR(OB_INVALID_ARGUMENT, "CSV: unterminated quoted field");
+      } else {
+        record_end = true;
+        done = true;
+      }
     } else if (at_field_start && c == options_.quote_) {
       quoted = true;
       in_quotes = true;
@@ -427,6 +432,21 @@ int ObFileCsvReader::parse_field(const int64_t field_start, bool &quoted, bool &
             ++pos_;
             in_quotes = false;
           }
+        } else if ('\r' == c) {
+          // Inside a quoted field a CRLF pair is part of the value.  Normalize
+          // it to a single LF so that the same logical value is produced for
+          // LF and CRLF files instead of leaking the '\r' into the data.
+          bool has_next = false;
+          char next_c = 0;
+          if (OB_FAIL(peek(1, has_next, next_c))) {
+            LOG_WARN("fail to peek csv char", K(ret), K(record_no_));
+          } else if (has_next && '\n' == next_c) {
+            ++pos_;
+          } else if (OB_FAIL(append_field_char(c))) {
+            LOG_WARN("fail to append csv field", K(ret), K(record_no_));
+          } else {
+            ++pos_;
+          }
         } else {
           if (OB_FAIL(append_field_char(c))) {
             LOG_WARN("fail to append csv field", K(ret), K(record_no_));
@@ -456,7 +476,10 @@ int ObFileCsvReader::parse_field(const int64_t field_start, bool &quoted, bool &
           done = true;
         }
       } else {
-        if (OB_FAIL(append_field_char(c))) {
+        if (quoted) {
+          ret = OB_INVALID_DATA;
+          LOG_USER_ERROR(OB_INVALID_ARGUMENT, "CSV: unexpected byte after closing quote");
+        } else if (OB_FAIL(append_field_char(c))) {
           LOG_WARN("fail to append csv field", K(ret), K(record_no_));
         } else {
           ++pos_;

@@ -132,7 +132,10 @@ int ObLogValuesTableAccess::allocate_expr_post(ObAllocExprContext &ctx)
   for (int64_t i = 0; OB_SUCC(ret) && i < column_exprs_.count(); ++i) {
     ObColumnRefRawExpr *value_col = column_exprs_.at(i);
     if (OB_FAIL(mark_expr_produced(value_col, branch_id_, id_, ctx))) {
-    } else if (!is_plan_root() && OB_FAIL(output_exprs_.push_back(value_col))) {
+    } else if (!is_plan_root()
+               && (table_def_ == nullptr || table_def_->access_type_ != ObValuesTableDef::ACCESS_FILE
+                   || value_col->is_explicited_reference())
+               && OB_FAIL(output_exprs_.push_back(value_col))) {
     } else { /*do nothing*/ }
   }
   if (OB_FAIL(ret)) {

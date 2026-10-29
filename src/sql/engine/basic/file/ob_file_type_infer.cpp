@@ -240,9 +240,12 @@ ObFileColumnType ObFileTypeInfer::detect_number(const char *ptr, const int64_t l
 ObFileColumnType ObFileTypeInfer::detect(const char *ptr, const int64_t len)
 {
   ObFileColumnType type = OB_FILE_COL_VARCHAR;
+  // Only a truly empty unquoted field is NULL.  A field made of blanks is a
+  // real string: the scan side (ObFileCsvReader::is_null_field) does not trim
+  // it either, so treating it as NULL here would make the inferred type and
+  // the actual values disagree (a blank field in a numeric column used to be
+  // silently converted to 0).
   if (OB_ISNULL(ptr) || len <= 0) {
-    type = OB_FILE_COL_NULL;
-  } else if (is_blank(ptr, len)) {
     type = OB_FILE_COL_NULL;
   } else if (is_boolean(ptr, len)) {
     type = OB_FILE_COL_BOOLEAN;

@@ -39,6 +39,7 @@ struct ObCsvOptions
   char escape_ = '"';               // "" is used to escape a quote inside a quoted field
   ObString null_str_;               // empty means: only an empty field is NULL
   int64_t max_field_len_ = 16 * 1024 * 1024;
+  uint32_t named_options_ = 0;      // resolver tracks duplicate named options
 };
 
 // Streaming CSV reader: a 64KB sliding buffer is used, the whole file is never
