@@ -125,6 +125,9 @@ public:
   ObTextRetrievalDaaTTokenIter();
   virtual ~ObTextRetrievalDaaTTokenIter() {}
   int init(const ObTextRetrievalScanIterParam &iter_param);
+  // The returned batch remains valid until the next call or reuse/reset.
+  // A consumer must finish the batch before requesting another one.
+  int get_next_doc_ids(const ObDocIdExt *&ids, int64_t &count);
   void reuse();
   void reset();
   virtual int get_next_row() override;
