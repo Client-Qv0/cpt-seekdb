@@ -51,7 +51,14 @@ private:
   ObObjMeta meta_;
 };
 
-typedef common::hash::ObHashMap<ObFTWord, int64_t> ObFTWordMap;
+// A word map and its private node allocator are only used by one thread at a time.
+typedef common::hash::HashMapTypes<ObFTWord, int64_t>::AllocType ObFTWordMapNode;
+typedef common::hash::SimpleAllocer<ObFTWordMapNode,
+    common::hash::NodeNumTraits<ObFTWordMapNode>::NODE_NUM,
+    common::hash::NoPthreadDefendMode> ObFTWordMapAllocator;
+typedef common::hash::ObHashMap<ObFTWord, int64_t, common::hash::NoPthreadDefendMode,
+    common::hash::hash_func<ObFTWord>, common::hash::equal_to<ObFTWord>,
+    ObFTWordMapAllocator> ObFTWordMap;
 
 class ObAddWordFlag final
 {
