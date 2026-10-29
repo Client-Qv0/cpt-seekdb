@@ -11987,19 +11987,35 @@ int ObLogPlan::construct_startup_filter_for_limit(ObRawExpr *limit_expr, ObLogic
   return ret;
 }
 
-static int check_match_score_usage(const ObRawExpr *expr, const ObRawExpr *match_expr, bool &need_score)
+// True for the operators whose arguments are used as truth values only, so a
+// match that appears as one of them need not know its score.
+static bool is_boolean_operator(const ObRawExpr *expr)
+{
+  const ObItemType type = expr->get_expr_type();
+  return T_OP_AND == type || T_OP_OR == type || T_OP_NOT == type || T_OP_XOR == type;
+}
+
+// `truth_context` says that only the truth value of `expr` is consumed: a bare
+// match there answers "did this document match", which the retrieval can answer
+// without a score. Anywhere else its value is consumed.
+static int check_match_score_usage(const ObRawExpr *expr,
+                                   const ObRawExpr *match_expr,
+                                   const bool truth_context,
+                                   bool &need_score)
 {
   int ret = OB_SUCCESS;
   if (OB_ISNULL(expr)) {
     ret = OB_ERR_UNEXPECTED;
   } else if (expr == match_expr) {
-    need_score = true;
+    need_score = !truth_context;
   } else if (T_OP_BOOL == expr->get_expr_type() && 1 == expr->get_param_count()
              && expr->get_param_expr(0) == match_expr) {
     // Only the truth value is consumed; do not inspect its score argument.
   } else {
+    const bool child_truth = is_boolean_operator(expr);
     for (int64_t i = 0; OB_SUCC(ret) && !need_score && i < expr->get_param_count(); ++i) {
-      if (OB_FAIL(SMART_CALL(check_match_score_usage(expr->get_param_expr(i), match_expr, need_score)))) {
+      if (OB_FAIL(SMART_CALL(check_match_score_usage(expr->get_param_expr(i), match_expr,
+                                                     child_truth, need_score)))) {
       }
     }
   }
@@ -12064,11 +12080,27 @@ int ObLogPlan::prepare_text_retrieval_scan(const ObIArray<ObRawExpr *> &scan_mat
     // whenever a projection, ordering, or other expression consumes the score.
     if (!match_against->is_es_match() && NATURAL_LANGUAGE_MODE == match_against->get_mode_flag()) {
       ObSEArray<ObRawExpr *, 16> exprs;
+      ObSEArray<ObRawExpr *, 8> predicates;
       bool need_score = false;
       if (OB_FAIL(get_stmt()->get_relation_exprs(exprs))) {
+      } else if (OB_FAIL(predicates.assign(get_stmt()->get_condition_exprs()))) {
+      } else if (get_stmt()->is_select_stmt()
+                 && OB_FAIL(append(predicates,
+                     static_cast<const ObSelectStmt *>(get_stmt())->get_having_exprs()))) {
       }
+      // Every use outside a predicate is a value use.
       for (int64_t i = 0; OB_SUCC(ret) && !need_score && i < exprs.count(); ++i) {
-        if (OB_FAIL(check_match_score_usage(exprs.at(i), match_against, need_score))) {
+        bool is_predicate = false;
+        for (int64_t j = 0; !is_predicate && j < predicates.count(); ++j) {
+          is_predicate = exprs.at(i) == predicates.at(j);
+        }
+        if (!is_predicate && OB_FAIL(check_match_score_usage(exprs.at(i), match_against,
+                                                             false, need_score))) {
+        }
+      }
+      // A predicate only asks whether the document matched.
+      for (int64_t i = 0; OB_SUCC(ret) && !need_score && i < predicates.count(); ++i) {
+        if (OB_FAIL(check_match_score_usage(predicates.at(i), match_against, true, need_score))) {
         }
       }
       if (OB_SUCC(ret) && !need_score) {
