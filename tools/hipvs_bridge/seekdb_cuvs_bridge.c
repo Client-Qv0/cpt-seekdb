@@ -33,13 +33,13 @@ void* seekdb_cuvs_build(const float* base, long n, long dim)
   dset.dl_tensor.shape = ds; dset.dl_tensor.strides = 0; dset.dl_tensor.byte_offset = 0;
 
   if (cuvsCagraIndexParamsCreate(&h->ip) != CUVS_SUCCESS) goto fail_res;
-  /* Bound NN-Descent refinement work while retaining the 128-edge graph and
-   * the existing FP32 CAGRA search budget. Quality must be checked against the
-   * frozen baseline at both Top-10 and Top-100, not inferred from build time. */
+  /* Pair a smaller graph with a wider GPU search below. This reduces build
+   * work and graph storage while retaining FP32 vectors. Validate both recall
+   * and SQL throughput against the frozen baseline whenever these change. */
   h->ip->build_algo = NN_DESCENT;
-  h->ip->graph_degree = 128;
-  h->ip->intermediate_graph_degree = 128;
-  h->ip->nn_descent_niter = 12;
+  h->ip->graph_degree = 64;
+  h->ip->intermediate_graph_degree = 64;
+  h->ip->nn_descent_niter = 6;
   if (cuvsCagraIndexCreate(&h->idx)      != CUVS_SUCCESS) goto fail_ip;
   if (cuvsCagraBuild(h->res, h->ip, &dset, h->idx) != CUVS_SUCCESS) goto fail_idx;
   h->n = n; h->dim = dim;
@@ -77,9 +77,9 @@ int seekdb_cuvs_search(void* handle, const float* query, long nq, long topk,
        * Let hipVS choose a compatible implementation for larger lists,
        * both for SQL single queries and for explicit batches.
        * More search candidates improve recall without rebuilding the graph. */
-      if (required_itopk < 1024) required_itopk = 1024;
+      if (required_itopk < 4096) required_itopk = 4096;
       if (sp->itopk_size < required_itopk) sp->itopk_size = required_itopk;
-      sp->search_width = 4;
+      sp->search_width = 16;
       sp->algo = AUTO;
     }
     cuvsFilter f; f.type=NO_FILTER; f.addr=(uintptr_t)0;

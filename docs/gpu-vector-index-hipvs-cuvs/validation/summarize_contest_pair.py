@@ -14,6 +14,8 @@ parser.add_argument('--sift-candidate', type=Path, required=True)
 parser.add_argument('--other-baseline', type=Path, required=True)
 parser.add_argument('--other-candidate', type=Path, required=True)
 parser.add_argument('--output', type=Path, required=True)
+parser.add_argument('--source-parent-commit', required=True)
+parser.add_argument('--nn-descent-iterations', type=int, required=True)
 args = parser.parse_args()
 datasets = []
 for dim, weight, base_path, candidate_path in (
@@ -53,8 +55,8 @@ query = math.prod(d['query_speedup'] ** d['weight'] for d in datasets)
 passed = build >= 3 and query >= 1.5 and all(all(d['observed_checks'].values()) for d in datasets)
 report = {'official_score': None, 'hidden_dataset_tested': False,
     'baseline_commit': '634888d9b037153fa143d2c913ba4b25503e1d62',
-    'source_parent_commit': 'f4d10eee8817fbe60c693c0f75005f330e65875a',
-    'nn_descent_iterations': 12, 'datasets': datasets,
+    'source_parent_commit': args.source_parent_commit,
+    'nn_descent_iterations': args.nn_descent_iterations, 'datasets': datasets,
     'weighted_build_speedup': build, 'weighted_query_speedup': query,
     'development_thresholds_met': passed,
     'limits': 'Independent development data and sampled VRAM; official hidden data, profiler and final score remain organizer-validated.'}

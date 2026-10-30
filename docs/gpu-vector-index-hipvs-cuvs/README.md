@@ -4,6 +4,12 @@ Status: **Offline DDL builds and persists GPU CAGRA graphs** behind seekdb's
 HNSW/HGRAPH SQL interface. Validation targets AMD `gfx1100` with ROCm 7.2.4.
 This is a CAGRA backend, not an export to the original VSAG HNSW graph format.
 
+The current tuning uses a persistent large-stack query worker and a 64-edge
+NN-Descent graph (6 iterations) with CAGRA `AUTO` search, at least 4096
+candidates, and search width 16. See
+[the paired validation report](validation/WORKER_WIDE_SEARCH_2026-10-30.md)
+for measured recall, SQL throughput, build time, and validation limits.
+
 ## Scope
 
 The backend adds optional hipVS/cuVS acceleration behind seekdb's existing
@@ -159,11 +165,12 @@ Run from this documentation directory. The database name must be unused and
 begin with `amd_bench_`. Only tables created by the run are dropped. Use a
 different data directory for different dimensions or row counts. CPU settings
 are `m=16, ef_construction=200`; GPU construction uses NN-Descent with graph
-degree 128, intermediate degree 128, and 65 iterations. These are different
+degree 64, intermediate degree 64, and 6 iterations in the current revision.
+The archived October 29 report used degree 128 and 65 iterations. These are different
 algorithms, so compare build time **together with measured recall**, not by
 assuming identical SQL parameters mean identical work.
 
-The bridge explicitly selects CAGRA `AUTO` search with at least 1024 candidates.
+The bridge explicitly selects CAGRA `AUTO` search with at least 4096 candidates.
 The shipped hipVS C API otherwise defaults to `SINGLE_CTA`, which rejects more
 than 512 candidates. The extended bridge persistence test exercises single and
 batched Top-10/Top-200 queries before and after reload.

@@ -1,5 +1,11 @@
 # NN-Descent refinement validation, 2026-10-30
 
+Historical report for `8a4a16ec3fa6620aaf5ed4833717305d133a8d65`.
+The subsequent organizer result supplied by the participant was **18.666/20**:
+build 2.737x, query 1.451x, gates passed. The development ratios below did not
+predict full marks on the organizer's data. See the newer worker/wide-search
+report for the next revision; do not treat these results as a score guarantee.
+
 This revision reduces NN-Descent iterations from 65 to 12 on top of
 `f4d10eee8817fbe60c693c0f75005f330e65875a`. It retains FP32 inputs, the
 128-edge graph, intermediate degree 128, and the supplied hipVS CAGRA search.
@@ -98,6 +104,8 @@ scoring rule. To reproduce the aggregate from the committed records:
 ```sh
 r=results/2026-10-30
 python summarize_contest_pair.py \
+  --source-parent-commit f4d10eee8817fbe60c693c0f75005f330e65875a \
+  --nn-descent-iterations 12 \
   --sift-baseline "$r/baseline-public-sift.json" \
   --sift-candidate "$r/candidate-public-sift-final.json" \
   --other-baseline "$r/baseline-synthetic-256.json" \
