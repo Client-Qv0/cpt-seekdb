@@ -1,0 +1,38 @@
+{
+  "label": "baseline",
+  "official_score": false,
+  "data": "public_SIFT_train_prefix_250000_test_prefix_4096_f32_L2",
+  "nq": 4096,
+  "runs": [
+    {
+      "dim": 128,
+      "rows": 250000,
+      "ddl_s": 47.75058434344828,
+      "first_query_s": 0.04238219931721687,
+      "ready_s": 47.7929665427655,
+      "queries": {
+        "10": {
+          "count": 4096,
+          "qps": 136.82923526742448,
+          "recall": 0.999951171875,
+          "p95_ms": 8.362329564988613,
+          "result_integrity": true
+        },
+        "100": {
+          "count": 4096,
+          "qps": 125.52740805544926,
+          "recall": 0.99996826171875,
+          "p95_ms": 9.427954442799091,
+          "result_integrity": true
+        }
+      }
+    }
+  ],
+  "complete": true,
+  "version": "5.7.25-OceanBase seekdb-v1.4.0.0",
+  "sampled_visible_gpu_vram_peak_bytes": 734212096,
+  "server_memory_status": [
+    "VmHWM:\t 2755044 kB",
+    "VmRSS:\t 2376652 kB"
+  ]
+}

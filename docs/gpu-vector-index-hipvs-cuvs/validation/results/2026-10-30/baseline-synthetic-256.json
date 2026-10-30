@@ -1,0 +1,38 @@
+{
+  "label": "baseline",
+  "official_score": false,
+  "data": "independent_normal_unit_f32",
+  "nq": 4096,
+  "runs": [
+    {
+      "dim": 256,
+      "rows": 250000,
+      "ddl_s": 52.505088068544865,
+      "first_query_s": 0.04611921310424805,
+      "ready_s": 52.55120728164911,
+      "queries": {
+        "10": {
+          "count": 4096,
+          "qps": 106.89563470538084,
+          "recall": 0.8993896484375001,
+          "p95_ms": 13.089779764413834,
+          "result_integrity": true
+        },
+        "100": {
+          "count": 4096,
+          "qps": 104.16607145877609,
+          "recall": 0.8325146484375,
+          "p95_ms": 13.945050537586212,
+          "result_integrity": true
+        }
+      }
+    }
+  ],
+  "complete": true,
+  "version": "5.7.25-OceanBase seekdb-v1.4.0.0",
+  "sampled_visible_gpu_vram_peak_bytes": 862408704,
+  "server_memory_status": [
+    "VmHWM:\t 3240680 kB",
+    "VmRSS:\t 3061816 kB"
+  ]
+}

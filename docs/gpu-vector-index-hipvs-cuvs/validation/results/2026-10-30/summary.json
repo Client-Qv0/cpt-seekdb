@@ -1,0 +1,55 @@
+{
+  "official_score": null,
+  "hidden_dataset_tested": false,
+  "baseline_commit": "634888d9b037153fa143d2c913ba4b25503e1d62",
+  "source_parent_commit": "f4d10eee8817fbe60c693c0f75005f330e65875a",
+  "nn_descent_iterations": 12,
+  "datasets": [
+    {
+      "data": "public_SIFT_train_prefix_250000_test_prefix_4096_f32_L2",
+      "dimension": 128,
+      "weight": 0.4,
+      "build_speedup": 4.421615380555339,
+      "query_speedup": 1.4729686434707758,
+      "baseline_ready_s": 47.7929665427655,
+      "candidate_ready_s": 10.808938007801771,
+      "candidate_recall_10": 0.99990234375,
+      "candidate_recall_100": 0.9999633789062501,
+      "sampled_vram_ratio": 0.9955481419908396,
+      "observed_checks": {
+        "recall_at_10": true,
+        "complete_ids_at_10": true,
+        "recall_at_100": true,
+        "complete_ids_at_100": true,
+        "query_no_regression": true,
+        "sampled_relative_vram": true,
+        "sampled_physical_vram": true
+      }
+    },
+    {
+      "data": "independent_normal_unit_f32",
+      "dimension": 256,
+      "weight": 0.6,
+      "build_speedup": 3.90881875119609,
+      "query_speedup": 1.914152100650812,
+      "baseline_ready_s": 52.55120728164911,
+      "candidate_ready_s": 13.44426810927689,
+      "candidate_recall_10": 0.9771240234375,
+      "candidate_recall_100": 0.9523754882812501,
+      "sampled_vram_ratio": 1.0065875401925442,
+      "observed_checks": {
+        "recall_at_10": true,
+        "complete_ids_at_10": true,
+        "recall_at_100": true,
+        "complete_ids_at_100": true,
+        "query_no_regression": true,
+        "sampled_relative_vram": true,
+        "sampled_physical_vram": true
+      }
+    }
+  ],
+  "weighted_build_speedup": 4.10638537697482,
+  "weighted_query_speedup": 1.7237062933968068,
+  "development_thresholds_met": true,
+  "limits": "Independent development data and sampled VRAM; official hidden data, profiler and final score remain organizer-validated."
+}
