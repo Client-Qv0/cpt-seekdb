@@ -1,0 +1,10 @@
+# Execution notes and limits
+
+- The first directory command with two sudo invocations timed out; a single privileged shell successfully created/chowned the requested directory. No credentials were saved in evidence.
+- HTTPS clone transfers were slow; their partial repositories and a partial archive remain outside the checkout under /home/li/minivectordb-v2-work. A shallow SSH fetch completed and provided the exact handoff SHA and all evidence files. The initial raw-file pre-read was confirmed against checked-out bytes. No partial source download is counted as a test.
+- The ordinary li account had no default GitHub SSH identity. The user pointed out an existing deploy key; its root-owned public fingerprint matched their screenshot, and explicit SSH identity selection authenticated the repository. No private key content was read or copied.
+- The first privileged paired-driver launch used the MCP workdir option, causing sudo to try to execute the shell builtin cd and fail before any workload. It was relaunched with cd inside the privileged shell. The successful invocation is reproduced in run_paired.sh. No historical logs were overwritten.
+- after_paired.sh includes the original live PID as a session launcher; for future reproduction run run_paired.sh with a NEW output directory, then run_remaining.sh only after successful completion, adapting output paths to new empty evidence directories.
+- Initial output interpretation undercounted ordinary optimization passes as 7. Per-line logs contain 8 successful tests plus an additional skipped large-output class; final documentation uses 8. Full Release --large runs 11 tests without skips.
+- No production defect was established, so the conditional source-fix step of the plan resulted in an explicit no-change decision. Production manifests/binaries remain V2; instrumented main and its executables are diagnostic only.
+- New database files and full downloaded official documents remain on the server and are excluded from Git. Their sizes/hashes are retained in evidence-manifest.json. They are neither physical I/O measurements nor substitutes for query-result validation.

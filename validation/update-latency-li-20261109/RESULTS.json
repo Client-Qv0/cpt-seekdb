@@ -1,0 +1,2914 @@
+{
+  "all_planned_runs_passed": true,
+  "identities_unchanged": true,
+  "workloads": {
+    "vector128": {
+      "variants": {
+        "baseline": {
+          "runs": 3,
+          "runs_passed": 3,
+          "timings": {
+            "fixed_warmup_seconds_not_in_warm_query_time": {
+              "count": 3,
+              "values": [
+                0.02602708386257291,
+                0.02977112913504243,
+                0.029139608144760132
+              ],
+              "median": 0.029139608144760132,
+              "minimum": 0.02602708386257291,
+              "maximum": 0.02977112913504243,
+              "mean": 0.02831260704745849,
+              "population_stddev": 0.00163654450225242,
+              "coefficient_of_variation": 0.05780267777916715
+            },
+            "process_first_query_seconds": {
+              "count": 3,
+              "values": [
+                0.02238346077501774,
+                0.02282868605107069,
+                0.02202881732955575
+              ],
+              "median": 0.02238346077501774,
+              "minimum": 0.02202881732955575,
+              "maximum": 0.02282868605107069,
+              "mean": 0.02241365471854806,
+              "population_stddev": 0.0003272422635540021,
+              "coefficient_of_variation": 0.014600129593465986
+            },
+            "restart_startup_to_first_response_seconds": {
+              "count": 3,
+              "values": [
+                0.2627004259265959,
+                0.2685088678263128,
+                0.27302678721025586
+              ],
+              "median": 0.2685088678263128,
+              "minimum": 0.2627004259265959,
+              "maximum": 0.27302678721025586,
+              "mean": 0.2680786936543882,
+              "population_stddev": 0.004226678893553107,
+              "coefficient_of_variation": 0.01576656031830048
+            },
+            "warm_queries_seconds": {
+              "count": 3,
+              "values": [
+                2.852520724758506,
+                3.0305778798647225,
+                3.0575417769141495
+              ],
+              "median": 3.0305778798647225,
+              "minimum": 2.852520724758506,
+              "maximum": 3.0575417769141495,
+              "mean": 2.9802134605124593,
+              "population_stddev": 0.09096094036918544,
+              "coefficient_of_variation": 0.030521619197553838
+            },
+            "write_batches_seconds": {
+              "count": 3,
+              "values": [
+                0.9288948550820351,
+                0.9385032220743597,
+                1.0106943529099226
+              ],
+              "median": 0.9385032220743597,
+              "minimum": 0.9288948550820351,
+              "maximum": 1.0106943529099226,
+              "mean": 0.9593641433554391,
+              "population_stddev": 0.03650728684107863,
+              "coefficient_of_variation": 0.03805362863926934
+            }
+          },
+          "resources": {
+            "main": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    14114816,
+                    14118912,
+                    14114816
+                  ],
+                  "median": 14114816,
+                  "minimum": 14114816,
+                  "maximum": 14118912,
+                  "mean": 14116181.333333334,
+                  "population_stddev": 1930.8729171600658,
+                  "coefficient_of_variation": 0.00013678436622237112
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    14376960,
+                    14376960,
+                    14372864
+                  ],
+                  "median": 14376960,
+                  "minimum": 14372864,
+                  "maximum": 14376960,
+                  "mean": 14375594.666666666,
+                  "population_stddev": 1930.8729171600658,
+                  "coefficient_of_variation": 0.0001343160378357959
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    7954432,
+                    7954432,
+                    7954432
+                  ],
+                  "median": 7954432,
+                  "minimum": 7954432,
+                  "maximum": 7954432,
+                  "mean": 7954432,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": 0.0
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    5640192,
+                    5636096,
+                    5636096
+                  ],
+                  "median": 5636096,
+                  "minimum": 5636096,
+                  "maximum": 5640192,
+                  "mean": 5637461.333333333,
+                  "population_stddev": 1930.8729171600658,
+                  "coefficient_of_variation": 0.00034250752297725724
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            },
+            "restart": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    1265664,
+                    1396736,
+                    1261568
+                  ],
+                  "median": 1265664,
+                  "minimum": 1261568,
+                  "maximum": 1396736,
+                  "mean": 1307989.3333333333,
+                  "population_stddev": 62775.64515709009,
+                  "coefficient_of_variation": 0.04799400389383152
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    4706304,
+                    4292608,
+                    4481024
+                  ],
+                  "median": 4481024,
+                  "minimum": 4292608,
+                  "maximum": 4706304,
+                  "mean": 4493312,
+                  "population_stddev": 169114.0469466291,
+                  "coefficient_of_variation": 0.03763683602354546
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    929792,
+                    921600,
+                    921600
+                  ],
+                  "median": 921600,
+                  "minimum": 921600,
+                  "maximum": 929792,
+                  "mean": 924330.6666666666,
+                  "population_stddev": 3861.7458343201315,
+                  "coefficient_of_variation": 0.004177883492978125
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "median": 0,
+                  "minimum": 0,
+                  "maximum": 0,
+                  "mean": 0,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": null
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            }
+          }
+        },
+        "candidate": {
+          "runs": 3,
+          "runs_passed": 3,
+          "timings": {
+            "fixed_warmup_seconds_not_in_warm_query_time": {
+              "count": 3,
+              "values": [
+                0.026555515825748444,
+                0.028932617977261543,
+                0.030489030294120312
+              ],
+              "median": 0.028932617977261543,
+              "minimum": 0.026555515825748444,
+              "maximum": 0.030489030294120312,
+              "mean": 0.028659054699043434,
+              "population_stddev": 0.00161745925628536,
+              "coefficient_of_variation": 0.05643798350192432
+            },
+            "process_first_query_seconds": {
+              "count": 3,
+              "values": [
+                0.021903629880398512,
+                0.021512534003704786,
+                0.02963732974603772
+              ],
+              "median": 0.021903629880398512,
+              "minimum": 0.021512534003704786,
+              "maximum": 0.02963732974603772,
+              "mean": 0.02435116454338034,
+              "population_stddev": 0.0037412917473809344,
+              "coefficient_of_variation": 0.15363913051123354
+            },
+            "restart_startup_to_first_response_seconds": {
+              "count": 3,
+              "values": [
+                0.2819603090174496,
+                0.27775822719559073,
+                0.3612473290413618
+              ],
+              "median": 0.2819603090174496,
+              "minimum": 0.27775822719559073,
+              "maximum": 0.3612473290413618,
+              "mean": 0.3069886217514674,
+              "population_stddev": 0.03840503318131822,
+              "coefficient_of_variation": 0.12510246458714117
+            },
+            "warm_queries_seconds": {
+              "count": 3,
+              "values": [
+                2.8421539361588657,
+                2.969908506143838,
+                2.890570634044707
+              ],
+              "median": 2.890570634044707,
+              "minimum": 2.8421539361588657,
+              "maximum": 2.969908506143838,
+              "mean": 2.9008776921158037,
+              "population_stddev": 0.05266234659015255,
+              "coefficient_of_variation": 0.018153935525541714
+            },
+            "write_batches_seconds": {
+              "count": 3,
+              "values": [
+                0.9192699808627367,
+                0.9163632798008621,
+                1.0142818740569055
+              ],
+              "median": 0.9192699808627367,
+              "minimum": 0.9163632798008621,
+              "maximum": 1.0142818740569055,
+              "mean": 0.9499717115735015,
+              "population_stddev": 0.04548963234809408,
+              "coefficient_of_variation": 0.04788524941731852
+            }
+          },
+          "resources": {
+            "main": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    13787136,
+                    14057472,
+                    13787136
+                  ],
+                  "median": 13787136,
+                  "minimum": 13787136,
+                  "maximum": 14057472,
+                  "mean": 13877248,
+                  "population_stddev": 127437.61253256434,
+                  "coefficient_of_variation": 0.009183204950474642
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    14045184,
+                    14315520,
+                    14041088
+                  ],
+                  "median": 14045184,
+                  "minimum": 14041088,
+                  "maximum": 14315520,
+                  "mean": 14133930.666666666,
+                  "population_stddev": 128413.93691063633,
+                  "coefficient_of_variation": 0.009085507771273182
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    7626752,
+                    7630848,
+                    7626752
+                  ],
+                  "median": 7626752,
+                  "minimum": 7626752,
+                  "maximum": 7630848,
+                  "mean": 7628117.333333333,
+                  "population_stddev": 1930.8729171600658,
+                  "coefficient_of_variation": 0.0002531257494850716
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    5636096,
+                    5636096,
+                    5636096
+                  ],
+                  "median": 5636096,
+                  "minimum": 5636096,
+                  "maximum": 5636096,
+                  "mean": 5636096,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": 0.0
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            },
+            "restart": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    962560,
+                    946176,
+                    946176
+                  ],
+                  "median": 946176,
+                  "minimum": 946176,
+                  "maximum": 962560,
+                  "mean": 951637.3333333334,
+                  "population_stddev": 7723.491668640263,
+                  "coefficient_of_variation": 0.008116003227392223
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    4349952,
+                    4427776,
+                    4276224
+                  ],
+                  "median": 4349952,
+                  "minimum": 4276224,
+                  "maximum": 4427776,
+                  "mean": 4351317.333333333,
+                  "population_stddev": 61878.37682278214,
+                  "coefficient_of_variation": 0.01422060771085618
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    618496,
+                    610304,
+                    610304
+                  ],
+                  "median": 610304,
+                  "minimum": 610304,
+                  "maximum": 618496,
+                  "mean": 613034.6666666666,
+                  "population_stddev": 3861.7458343201315,
+                  "coefficient_of_variation": 0.0062993922600137866
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    4096,
+                    0,
+                    0
+                  ],
+                  "median": 0,
+                  "minimum": 0,
+                  "maximum": 4096,
+                  "mean": 1365.3333333333333,
+                  "population_stddev": 1930.8729171600658,
+                  "coefficient_of_variation": 1.4142135623730951
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            }
+          }
+        }
+      },
+      "paired_B_over_V2": {
+        "fixed_warmup_seconds_not_in_warm_query_time": {
+          "count": 3,
+          "values": [
+            0.9801008586448483,
+            1.0289815169315089,
+            0.9557407324423692
+          ],
+          "median": 0.9801008586448483,
+          "minimum": 0.9557407324423692,
+          "maximum": 1.0289815169315089,
+          "mean": 0.9882743693395755,
+          "population_stddev": 0.03045387589950594,
+          "coefficient_of_variation": 0.030815203595593657
+        },
+        "process_first_query_seconds": {
+          "count": 3,
+          "values": [
+            1.0219064555618986,
+            1.0611807073559647,
+            0.7432794222124829
+          ],
+          "median": 1.0219064555618986,
+          "minimum": 0.7432794222124829,
+          "maximum": 1.0611807073559647,
+          "mean": 0.9421221950434487,
+          "population_stddev": 0.14151431716455698,
+          "coefficient_of_variation": 0.15020802811893275
+        },
+        "restart_startup_to_first_response_seconds": {
+          "count": 3,
+          "values": [
+            0.9316929281359889,
+            0.9666999625441706,
+            0.7557890820529639
+          ],
+          "median": 0.9316929281359889,
+          "minimum": 0.7557890820529639,
+          "maximum": 0.9666999625441706,
+          "mean": 0.8847273242443745,
+          "population_stddev": 0.09228642312233523,
+          "coefficient_of_variation": 0.10431058315188238
+        },
+        "warm_queries_seconds": {
+          "count": 3,
+          "values": [
+            1.0036475113004086,
+            1.0204280278652955,
+            1.0577640763740148
+          ],
+          "median": 1.0204280278652955,
+          "minimum": 1.0036475113004086,
+          "maximum": 1.0577640763740148,
+          "mean": 1.027279871846573,
+          "population_stddev": 0.022618008729023715,
+          "coefficient_of_variation": 0.022017377492627225
+        },
+        "write_batches_seconds": {
+          "count": 3,
+          "values": [
+            1.010470127840208,
+            1.024160660691586,
+            0.996462993928272
+          ],
+          "median": 1.010470127840208,
+          "minimum": 0.996462993928272,
+          "maximum": 1.024160660691586,
+          "mean": 1.0103645941533554,
+          "population_stddev": 0.0113077713410496,
+          "coefficient_of_variation": 0.011191773154447334
+        }
+      },
+      "negative_median_timing_benefit": [
+        "fixed_warmup_seconds_not_in_warm_query_time",
+        "restart_startup_to_first_response_seconds"
+      ]
+    },
+    "cardinality-scalar-1000000": {
+      "variants": {
+        "baseline": {
+          "runs": 3,
+          "runs_passed": 3,
+          "timings": {
+            "create_seconds": {
+              "count": 3,
+              "values": [
+                0.002728816121816635,
+                0.002497596200555563,
+                0.0022243307903409004
+              ],
+              "median": 0.002497596200555563,
+              "minimum": 0.0022243307903409004,
+              "maximum": 0.002728816121816635,
+              "mean": 0.002483581037571033,
+              "population_stddev": 0.00020619356765534287,
+              "coefficient_of_variation": 0.08302268560441346
+            },
+            "delete_restore_seconds": {
+              "count": 3,
+              "values": [
+                1.50603023217991,
+                1.5852392259985209,
+                1.4515027469024062
+              ],
+              "median": 1.50603023217991,
+              "minimum": 1.4515027469024062,
+              "maximum": 1.5852392259985209,
+              "mean": 1.5142574016936123,
+              "population_stddev": 0.05490674639126339,
+              "coefficient_of_variation": 0.03625985009540205
+            },
+            "pk_lookup_remaining_seconds": {
+              "count": 3,
+              "values": [
+                0.013927641790360212,
+                0.012644314207136631,
+                0.008977290708571672
+              ],
+              "median": 0.012644314207136631,
+              "minimum": 0.008977290708571672,
+              "maximum": 0.013927641790360212,
+              "mean": 0.011849748902022839,
+              "population_stddev": 0.0020976168185680264,
+              "coefficient_of_variation": 0.17701782847144953
+            },
+            "process_first_pk_query_seconds": {
+              "count": 3,
+              "values": [
+                0.000649516936391592,
+                0.0007567070424556732,
+                0.0007611452601850033
+              ],
+              "median": 0.0007567070424556732,
+              "minimum": 0.000649516936391592,
+              "maximum": 0.0007611452601850033,
+              "mean": 0.0007224564130107561,
+              "population_stddev": 5.160781517859112e-05,
+              "coefficient_of_variation": 0.07143381143717907
+            },
+            "restart_remaining_checks_seconds": {
+              "count": 3,
+              "values": [
+                0.9967939271591604,
+                0.9553772248327732,
+                1.0533598139882088
+              ],
+              "median": 0.9967939271591604,
+              "minimum": 0.9553772248327732,
+              "maximum": 1.0533598139882088,
+              "mean": 1.001843655326714,
+              "population_stddev": 0.04016027689417624,
+              "coefficient_of_variation": 0.040086371441938676
+            },
+            "restart_startup_to_first_response_seconds": {
+              "count": 3,
+              "values": [
+                3.034593486227095,
+                3.193336484953761,
+                3.0928574628196657
+              ],
+              "median": 3.0928574628196657,
+              "minimum": 3.034593486227095,
+              "maximum": 3.193336484953761,
+              "mean": 3.106929144666841,
+              "population_stddev": 0.06556596720702824,
+              "coefficient_of_variation": 0.021103142091146384
+            },
+            "restore_update_seconds": {
+              "count": 3,
+              "values": [
+                0.001820497214794159,
+                0.0026349956169724464,
+                0.0020905970595777035
+              ],
+              "median": 0.0020905970595777035,
+              "minimum": 0.001820497214794159,
+              "maximum": 0.0026349956169724464,
+              "mean": 0.0021820299637814364,
+              "population_stddev": 0.0003387446371197558,
+              "coefficient_of_variation": 0.15524288975973305
+            },
+            "scan_after_invalidation_seconds": {
+              "count": 3,
+              "values": [
+                0.9204990868456662,
+                0.9869541088119149,
+                0.9548288150690496
+              ],
+              "median": 0.9548288150690496,
+              "minimum": 0.9204990868456662,
+              "maximum": 0.9869541088119149,
+              "mean": 0.9540940035755435,
+              "population_stddev": 0.027135124188425258,
+              "coefficient_of_variation": 0.028440723960882482
+            },
+            "scan_first_after_pk_seconds": {
+              "count": 3,
+              "values": [
+                0.9704635068774223,
+                0.9547003451734781,
+                0.9880310771986842
+              ],
+              "median": 0.9704635068774223,
+              "minimum": 0.9547003451734781,
+              "maximum": 0.9880310771986842,
+              "mean": 0.9710649764165282,
+              "population_stddev": 0.013613859323960488,
+              "coefficient_of_variation": 0.014019514300885428
+            },
+            "scan_warm_three_seconds": {
+              "count": 3,
+              "values": [
+                2.8298777588643134,
+                2.953089519869536,
+                2.9537448678165674
+              ],
+              "median": 2.953089519869536,
+              "minimum": 2.8298777588643134,
+              "maximum": 2.9537448678165674,
+              "mean": 2.912237382183472,
+              "population_stddev": 0.0582376627002849,
+              "coefficient_of_variation": 0.019997567182047767
+            },
+            "transaction_pending_seconds": {
+              "count": 3,
+              "values": [
+                0.77822255063802,
+                0.8973333481699228,
+                0.7868748214095831
+              ],
+              "median": 0.7868748214095831,
+              "minimum": 0.77822255063802,
+              "maximum": 0.8973333481699228,
+              "mean": 0.8208102400725087,
+              "population_stddev": 0.05422517866601893,
+              "coefficient_of_variation": 0.06606298998076436
+            },
+            "transaction_rollback_commit_restore_seconds": {
+              "count": 3,
+              "values": [
+                0.008042976725846529,
+                0.008050313219428062,
+                0.010598959866911173
+              ],
+              "median": 0.008050313219428062,
+              "minimum": 0.008042976725846529,
+              "maximum": 0.010598959866911173,
+              "mean": 0.008897416604061922,
+              "population_stddev": 0.0012031765075679948,
+              "coefficient_of_variation": 0.13522762405198727
+            },
+            "update_cache_invalidation_seconds": {
+              "count": 3,
+              "values": [
+                0.005135878920555115,
+                0.004032605793327093,
+                0.006327686831355095
+              ],
+              "median": 0.005135878920555115,
+              "minimum": 0.004032605793327093,
+              "maximum": 0.006327686831355095,
+              "mean": 0.005165390515079101,
+              "population_stddev": 0.0009371952636946169,
+              "coefficient_of_variation": 0.18143744620250943
+            },
+            "write_batches_seconds": {
+              "count": 3,
+              "values": [
+                8.329797978047282,
+                8.806559277232736,
+                8.22620233008638
+              ],
+              "median": 8.329797978047282,
+              "minimum": 8.22620233008638,
+              "maximum": 8.806559277232736,
+              "mean": 8.454186528455466,
+              "population_stddev": 0.2527290118285416,
+              "coefficient_of_variation": 0.02989394792484119
+            }
+          },
+          "resources": {
+            "main": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    128839680,
+                    128745472,
+                    128913408
+                  ],
+                  "median": 128839680,
+                  "minimum": 128745472,
+                  "maximum": 128913408,
+                  "mean": 128832853.33333333,
+                  "population_stddev": 68729.31231691144,
+                  "coefficient_of_variation": 0.0005334765980777117
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    128839680,
+                    128745472,
+                    128913408
+                  ],
+                  "median": 128839680,
+                  "minimum": 128745472,
+                  "maximum": 128913408,
+                  "mean": 128832853.33333333,
+                  "population_stddev": 68729.31231691144,
+                  "coefficient_of_variation": 0.0005334765980777117
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    72232960,
+                    72232960,
+                    72232960
+                  ],
+                  "median": 72232960,
+                  "minimum": 72232960,
+                  "maximum": 72232960,
+                  "mean": 72232960,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": 0.0
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    54370304,
+                    54382592,
+                    54378496
+                  ],
+                  "median": 54378496,
+                  "minimum": 54370304,
+                  "maximum": 54382592,
+                  "mean": 54377130.666666664,
+                  "population_stddev": 5108.609552075354,
+                  "coefficient_of_variation": 9.394775872583779e-05
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            },
+            "restart": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    70782976,
+                    70791168,
+                    72732672
+                  ],
+                  "median": 70791168,
+                  "minimum": 70782976,
+                  "maximum": 72732672,
+                  "mean": 71435605.33333333,
+                  "population_stddev": 917170.7331241854,
+                  "coefficient_of_variation": 0.012839125935091846
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    72728576,
+                    72732672,
+                    72732672
+                  ],
+                  "median": 72732672,
+                  "minimum": 72728576,
+                  "maximum": 72732672,
+                  "mean": 72731306.66666667,
+                  "population_stddev": 1930.8729171600658,
+                  "coefficient_of_variation": 2.6548030080215785e-05
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    70098944,
+                    70103040,
+                    72036352
+                  ],
+                  "median": 70103040,
+                  "minimum": 70098944,
+                  "maximum": 72036352,
+                  "mean": 70746112,
+                  "population_stddev": 912338.9857956672,
+                  "coefficient_of_variation": 0.012895959367995617
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "median": 0,
+                  "minimum": 0,
+                  "maximum": 0,
+                  "mean": 0,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": null
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            }
+          }
+        },
+        "candidate": {
+          "runs": 3,
+          "runs_passed": 3,
+          "timings": {
+            "create_seconds": {
+              "count": 3,
+              "values": [
+                0.0023682699538767338,
+                0.002243099268525839,
+                0.0024196100421249866
+              ],
+              "median": 0.0023682699538767338,
+              "minimum": 0.002243099268525839,
+              "maximum": 0.0024196100421249866,
+              "mean": 0.0023436597548425198,
+              "population_stddev": 7.413168338175936e-05,
+              "coefficient_of_variation": 0.03163073617174459
+            },
+            "delete_restore_seconds": {
+              "count": 3,
+              "values": [
+                1.510043109767139,
+                1.4791629407554865,
+                1.5245689484290779
+              ],
+              "median": 1.510043109767139,
+              "minimum": 1.4791629407554865,
+              "maximum": 1.5245689484290779,
+              "mean": 1.5045916663172345,
+              "population_stddev": 0.018933481102343365,
+              "coefficient_of_variation": 0.01258380032682658
+            },
+            "pk_lookup_remaining_seconds": {
+              "count": 3,
+              "values": [
+                0.01343995425850153,
+                0.008309470023959875,
+                0.012101999949663877
+              ],
+              "median": 0.012101999949663877,
+              "minimum": 0.008309470023959875,
+              "maximum": 0.01343995425850153,
+              "mean": 0.011283808077375094,
+              "population_stddev": 0.0021729466284486736,
+              "coefficient_of_variation": 0.19257210097410282
+            },
+            "process_first_pk_query_seconds": {
+              "count": 3,
+              "values": [
+                0.0007401658222079277,
+                0.0007772338576614857,
+                0.0008692699484527111
+              ],
+              "median": 0.0007772338576614857,
+              "minimum": 0.0007401658222079277,
+              "maximum": 0.0008692699484527111,
+              "mean": 0.0007955565427740415,
+              "population_stddev": 5.427558963694851e-05,
+              "coefficient_of_variation": 0.06822342186728036
+            },
+            "restart_remaining_checks_seconds": {
+              "count": 3,
+              "values": [
+                0.9168377909809351,
+                0.995998621918261,
+                1.026942343916744
+              ],
+              "median": 0.995998621918261,
+              "minimum": 0.9168377909809351,
+              "maximum": 1.026942343916744,
+              "mean": 0.97992625227198,
+              "population_stddev": 0.04636445437209851,
+              "coefficient_of_variation": 0.04731422825401557
+            },
+            "restart_startup_to_first_response_seconds": {
+              "count": 3,
+              "values": [
+                3.3522622636519372,
+                3.0147338048554957,
+                3.0863627530634403
+              ],
+              "median": 3.0863627530634403,
+              "minimum": 3.0147338048554957,
+              "maximum": 3.3522622636519372,
+              "mean": 3.151119607190291,
+              "population_stddev": 0.14520434507199376,
+              "coefficient_of_variation": 0.0460802391444182
+            },
+            "restore_update_seconds": {
+              "count": 3,
+              "values": [
+                0.0033080680295825005,
+                0.004737840034067631,
+                0.004531748592853546
+              ],
+              "median": 0.004531748592853546,
+              "minimum": 0.0033080680295825005,
+              "maximum": 0.004737840034067631,
+              "mean": 0.004192552218834559,
+              "population_stddev": 0.0006310587037210185,
+              "coefficient_of_variation": 0.15051898480502157
+            },
+            "scan_after_invalidation_seconds": {
+              "count": 3,
+              "values": [
+                0.9730304218828678,
+                1.0042392858304083,
+                1.0704755950719118
+              ],
+              "median": 1.0042392858304083,
+              "minimum": 0.9730304218828678,
+              "maximum": 1.0704755950719118,
+              "mean": 1.015915100928396,
+              "population_stddev": 0.040629496166475675,
+              "coefficient_of_variation": 0.03999300347966708
+            },
+            "scan_first_after_pk_seconds": {
+              "count": 3,
+              "values": [
+                1.001563685014844,
+                0.9742459594272077,
+                1.0422855401411653
+              ],
+              "median": 1.001563685014844,
+              "minimum": 0.9742459594272077,
+              "maximum": 1.0422855401411653,
+              "mean": 1.0060317281944056,
+              "population_stddev": 0.027956140569632842,
+              "coefficient_of_variation": 0.027788527723482094
+            },
+            "scan_warm_three_seconds": {
+              "count": 3,
+              "values": [
+                3.1145362555980682,
+                2.969592409208417,
+                3.215999612119049
+              ],
+              "median": 3.1145362555980682,
+              "minimum": 2.969592409208417,
+              "maximum": 3.215999612119049,
+              "mean": 3.100042758975178,
+              "population_stddev": 0.10111601750737823,
+              "coefficient_of_variation": 0.032617620261730026
+            },
+            "transaction_pending_seconds": {
+              "count": 3,
+              "values": [
+                0.7900995039381087,
+                0.7809893959201872,
+                1.0925869778729975
+              ],
+              "median": 0.7900995039381087,
+              "minimum": 0.7809893959201872,
+              "maximum": 1.0925869778729975,
+              "mean": 0.8878919592437645,
+              "population_stddev": 0.14478901087615062,
+              "coefficient_of_variation": 0.16307052831007765
+            },
+            "transaction_rollback_commit_restore_seconds": {
+              "count": 3,
+              "values": [
+                0.009846398141235113,
+                0.00981180602684617,
+                0.009870425797998905
+              ],
+              "median": 0.009846398141235113,
+              "minimum": 0.00981180602684617,
+              "maximum": 0.009870425797998905,
+              "mean": 0.009842876655360063,
+              "population_stddev": 2.4060618440041287e-05,
+              "coefficient_of_variation": 0.002444470177012609
+            },
+            "update_cache_invalidation_seconds": {
+              "count": 3,
+              "values": [
+                0.002639360725879669,
+                0.009916657116264105,
+                0.004041882231831551
+              ],
+              "median": 0.004041882231831551,
+              "minimum": 0.002639360725879669,
+              "maximum": 0.009916657116264105,
+              "mean": 0.005532633357991775,
+              "population_stddev": 0.0031524080614123724,
+              "coefficient_of_variation": 0.5697843788724557
+            },
+            "write_batches_seconds": {
+              "count": 3,
+              "values": [
+                8.277293115388602,
+                8.25160051183775,
+                8.078778401948512
+              ],
+              "median": 8.25160051183775,
+              "minimum": 8.078778401948512,
+              "maximum": 8.277293115388602,
+              "mean": 8.202557343058288,
+              "population_stddev": 0.08815118515368334,
+              "coefficient_of_variation": 0.010746792916758391
+            }
+          },
+          "resources": {
+            "main": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    96632832,
+                    96792576,
+                    96903168
+                  ],
+                  "median": 96792576,
+                  "minimum": 96632832,
+                  "maximum": 96903168,
+                  "mean": 96776192,
+                  "population_stddev": 110970.61117250819,
+                  "coefficient_of_variation": 0.0011466726358948715
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    96632832,
+                    96792576,
+                    96903168
+                  ],
+                  "median": 96792576,
+                  "minimum": 96632832,
+                  "maximum": 96903168,
+                  "mean": 96776192,
+                  "population_stddev": 110970.61117250819,
+                  "coefficient_of_variation": 0.0011466726358948715
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    40271872,
+                    40271872,
+                    40267776
+                  ],
+                  "median": 40271872,
+                  "minimum": 40267776,
+                  "maximum": 40271872,
+                  "mean": 40270506.666666664,
+                  "population_stddev": 1930.8729171600658,
+                  "coefficient_of_variation": 4.794756949900306e-05
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    54382592,
+                    54374400,
+                    54398976
+                  ],
+                  "median": 54382592,
+                  "minimum": 54374400,
+                  "maximum": 54398976,
+                  "mean": 54385322.666666664,
+                  "population_stddev": 10217.219104150709,
+                  "coefficient_of_variation": 0.0001878672149611599
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            },
+            "restart": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    38776832,
+                    40456192,
+                    38780928
+                  ],
+                  "median": 38780928,
+                  "minimum": 38776832,
+                  "maximum": 40456192,
+                  "mean": 39337984,
+                  "population_stddev": 790694.2277737119,
+                  "coefficient_of_variation": 0.020100019049621654
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    40722432,
+                    40718336,
+                    40726528
+                  ],
+                  "median": 40722432,
+                  "minimum": 40718336,
+                  "maximum": 40726528,
+                  "mean": 40722432,
+                  "population_stddev": 3344.369995479966,
+                  "coefficient_of_variation": 8.212598882797485e-05
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    38154240,
+                    40022016,
+                    38158336
+                  ],
+                  "median": 38158336,
+                  "minimum": 38154240,
+                  "maximum": 40022016,
+                  "mean": 38778197.333333336,
+                  "population_stddev": 879514.203396903,
+                  "coefficient_of_variation": 0.022680636643232555
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "median": 0,
+                  "minimum": 0,
+                  "maximum": 0,
+                  "mean": 0,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": null
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            }
+          }
+        }
+      },
+      "paired_B_over_V2": {
+        "create_seconds": {
+          "count": 3,
+          "values": [
+            1.1522403167551512,
+            1.113457721466326,
+            0.9192930892233423
+          ],
+          "median": 1.113457721466326,
+          "minimum": 0.9192930892233423,
+          "maximum": 1.1522403167551512,
+          "mean": 1.0616637091482732,
+          "population_stddev": 0.10190867639768146,
+          "coefficient_of_variation": 0.09598960152781183
+        },
+        "delete_restore_seconds": {
+          "count": 3,
+          "values": [
+            0.997342541043184,
+            1.0717137255945959,
+            0.9520741901493144
+          ],
+          "median": 0.997342541043184,
+          "minimum": 0.9520741901493144,
+          "maximum": 1.0717137255945959,
+          "mean": 1.007043485595698,
+          "population_stddev": 0.04932197518550196,
+          "coefficient_of_variation": 0.04897700634677802
+        },
+        "pk_lookup_remaining_seconds": {
+          "count": 3,
+          "values": [
+            1.0362863981884605,
+            1.5216751694966688,
+            0.7418022430929698
+          ],
+          "median": 1.0362863981884605,
+          "minimum": 0.7418022430929698,
+          "maximum": 1.5216751694966688,
+          "mean": 1.0999212702593664,
+          "population_stddev": 0.32154573862513736,
+          "coefficient_of_variation": 0.29233523100186565
+        },
+        "process_first_pk_query_seconds": {
+          "count": 3,
+          "values": [
+            0.8775289494644207,
+            0.9735899111915005,
+            0.8756143721979941
+          ],
+          "median": 0.8775289494644207,
+          "minimum": 0.8756143721979941,
+          "maximum": 0.9735899111915005,
+          "mean": 0.9089110776179717,
+          "population_stddev": 0.04574152042256175,
+          "coefficient_of_variation": 0.05032562760973144
+        },
+        "restart_remaining_checks_seconds": {
+          "count": 3,
+          "values": [
+            1.087208595636835,
+            0.9592154083433847,
+            1.0257243945854924
+          ],
+          "median": 1.0257243945854924,
+          "minimum": 0.9592154083433847,
+          "maximum": 1.087208595636835,
+          "mean": 1.0240494661885706,
+          "population_stddev": 0.052266420304915774,
+          "coefficient_of_variation": 0.051038960548895326
+        },
+        "restart_startup_to_first_response_seconds": {
+          "count": 3,
+          "values": [
+            0.9052374926421254,
+            1.0592432671205032,
+            1.0021043248237036
+          ],
+          "median": 1.0021043248237036,
+          "minimum": 0.9052374926421254,
+          "maximum": 1.0592432671205032,
+          "mean": 0.9888616948621107,
+          "population_stddev": 0.06356608151834856,
+          "coefficient_of_variation": 0.06428207488329535
+        },
+        "restore_update_seconds": {
+          "count": 3,
+          "values": [
+            0.5503203678141763,
+            0.5561596841652322,
+            0.4613223829041449
+          ],
+          "median": 0.5503203678141763,
+          "minimum": 0.4613223829041449,
+          "maximum": 0.5561596841652322,
+          "mean": 0.5226008116278511,
+          "population_stddev": 0.04339591973136557,
+          "coefficient_of_variation": 0.08303837033125047
+        },
+        "scan_after_invalidation_seconds": {
+          "count": 3,
+          "values": [
+            0.9460126488794147,
+            0.98278779045753,
+            0.8919669158874254
+          ],
+          "median": 0.9460126488794147,
+          "minimum": 0.8919669158874254,
+          "maximum": 0.98278779045753,
+          "mean": 0.94025578507479,
+          "population_stddev": 0.037300258489438694,
+          "coefficient_of_variation": 0.03967033128806727
+        },
+        "scan_first_after_pk_seconds": {
+          "count": 3,
+          "values": [
+            0.9689483768204309,
+            0.9799377004701963,
+            0.9479466414403744
+          ],
+          "median": 0.9689483768204309,
+          "minimum": 0.9479466414403744,
+          "maximum": 0.9799377004701963,
+          "mean": 0.9656109062436672,
+          "population_stddev": 0.013271799597905826,
+          "coefficient_of_variation": 0.013744459090188395
+        },
+        "scan_warm_three_seconds": {
+          "count": 3,
+          "values": [
+            0.9086032483256185,
+            0.9944427089429152,
+            0.9184531169362674
+          ],
+          "median": 0.9184531169362674,
+          "minimum": 0.9086032483256185,
+          "maximum": 0.9944427089429152,
+          "mean": 0.9404996914016004,
+          "population_stddev": 0.03835485048863844,
+          "coefficient_of_variation": 0.04078135361371494
+        },
+        "transaction_pending_seconds": {
+          "count": 3,
+          "values": [
+            0.9849677752727471,
+            1.1489699512663105,
+            0.7201942155135675
+          ],
+          "median": 0.9849677752727471,
+          "minimum": 0.7201942155135675,
+          "maximum": 1.1489699512663105,
+          "mean": 0.9513773140175418,
+          "population_stddev": 0.17665106322555701,
+          "coefficient_of_variation": 0.1856792889874394
+        },
+        "transaction_rollback_commit_restore_seconds": {
+          "count": 3,
+          "values": [
+            0.816844556809444,
+            0.8204721126163245,
+            1.0738097913729283
+          ],
+          "median": 0.8204721126163245,
+          "minimum": 0.816844556809444,
+          "maximum": 1.0738097913729283,
+          "mean": 0.9037088202662322,
+          "population_stddev": 0.1202886668778174,
+          "coefficient_of_variation": 0.1331055580960031
+        },
+        "update_cache_invalidation_seconds": {
+          "count": 3,
+          "values": [
+            1.9458798754548354,
+            0.406649715327285,
+            1.565529737982432
+          ],
+          "median": 1.565529737982432,
+          "minimum": 0.406649715327285,
+          "maximum": 1.9458798754548354,
+          "mean": 1.3060197762548509,
+          "population_stddev": 0.6546329437878192,
+          "coefficient_of_variation": 0.5012427496810562
+        },
+        "write_batches_seconds": {
+          "count": 3,
+          "values": [
+            1.0063432407100656,
+            1.067254681634047,
+            1.018248294581556
+          ],
+          "median": 1.018248294581556,
+          "minimum": 1.0063432407100656,
+          "maximum": 1.067254681634047,
+          "mean": 1.0306154056418895,
+          "population_stddev": 0.026359817726265125,
+          "coefficient_of_variation": 0.02557677440290897
+        }
+      },
+      "negative_median_timing_benefit": [
+        "delete_restore_seconds",
+        "process_first_pk_query_seconds",
+        "restore_update_seconds",
+        "scan_after_invalidation_seconds",
+        "scan_first_after_pk_seconds",
+        "scan_warm_three_seconds",
+        "transaction_pending_seconds",
+        "transaction_rollback_commit_restore_seconds"
+      ]
+    },
+    "cardinality-vector4-1000000": {
+      "variants": {
+        "baseline": {
+          "runs": 3,
+          "runs_passed": 3,
+          "timings": {
+            "create_seconds": {
+              "count": 3,
+              "values": [
+                0.02055631810799241,
+                0.0032484629191458225,
+                0.0031481520272791386
+              ],
+              "median": 0.0032484629191458225,
+              "minimum": 0.0031481520272791386,
+              "maximum": 0.02055631810799241,
+              "mean": 0.008984311018139124,
+              "population_stddev": 0.008182747160315123,
+              "coefficient_of_variation": 0.9107818222003154
+            },
+            "delete_restore_seconds": {
+              "count": 3,
+              "values": [
+                1.6198587361723185,
+                1.7015309818089008,
+                1.7632151399739087
+              ],
+              "median": 1.7015309818089008,
+              "minimum": 1.6198587361723185,
+              "maximum": 1.7632151399739087,
+              "mean": 1.6948682859850426,
+              "population_stddev": 0.058714326840287115,
+              "coefficient_of_variation": 0.03464241282098382
+            },
+            "pk_lookup_remaining_seconds": {
+              "count": 3,
+              "values": [
+                0.009415056090801954,
+                0.01111658290028572,
+                0.00948705105111003
+              ],
+              "median": 0.00948705105111003,
+              "minimum": 0.009415056090801954,
+              "maximum": 0.01111658290028572,
+              "mean": 0.0100062300140659,
+              "population_stddev": 0.0007856880074304103,
+              "coefficient_of_variation": 0.07851988274564521
+            },
+            "process_first_pk_query_seconds": {
+              "count": 3,
+              "values": [
+                0.0006329119205474854,
+                0.0007599988020956516,
+                0.0007569892331957817
+              ],
+              "median": 0.0007569892331957817,
+              "minimum": 0.0006329119205474854,
+              "maximum": 0.0007599988020956516,
+              "mean": 0.0007166333186129729,
+              "population_stddev": 5.9212716802899875e-05,
+              "coefficient_of_variation": 0.08262624031702114
+            },
+            "restart_remaining_checks_seconds": {
+              "count": 3,
+              "values": [
+                0.9818378360942006,
+                1.0886561661027372,
+                1.1016159867867827
+              ],
+              "median": 1.0886561661027372,
+              "minimum": 0.9818378360942006,
+              "maximum": 1.1016159867867827,
+              "mean": 1.0573699963279068,
+              "population_stddev": 0.05367072237398685,
+              "coefficient_of_variation": 0.05075869616158725
+            },
+            "restart_startup_to_first_response_seconds": {
+              "count": 3,
+              "values": [
+                3.1816979120485485,
+                3.215132846031338,
+                3.166391875129193
+              ],
+              "median": 3.1816979120485485,
+              "minimum": 3.166391875129193,
+              "maximum": 3.215132846031338,
+              "mean": 3.18774087773636,
+              "population_stddev": 0.02035204554582468,
+              "coefficient_of_variation": 0.006384472994014755
+            },
+            "restore_update_seconds": {
+              "count": 3,
+              "values": [
+                0.002206325065344572,
+                0.0022835107520222664,
+                0.010848880745470524
+              ],
+              "median": 0.0022835107520222664,
+              "minimum": 0.002206325065344572,
+              "maximum": 0.010848880745470524,
+              "mean": 0.005112905520945787,
+              "population_stddev": 0.004056069381378001,
+              "coefficient_of_variation": 0.7933002799996405
+            },
+            "scan_after_invalidation_seconds": {
+              "count": 3,
+              "values": [
+                1.0043216398917139,
+                1.0578178889118135,
+                1.2112241126596928
+              ],
+              "median": 1.0578178889118135,
+              "minimum": 1.0043216398917139,
+              "maximum": 1.2112241126596928,
+              "mean": 1.0911212138210733,
+              "population_stddev": 0.08768881303368506,
+              "coefficient_of_variation": 0.08036578514187392
+            },
+            "scan_first_after_pk_seconds": {
+              "count": 3,
+              "values": [
+                1.2318629990331829,
+                1.2478300221264362,
+                1.351868546102196
+              ],
+              "median": 1.2478300221264362,
+              "minimum": 1.2318629990331829,
+              "maximum": 1.351868546102196,
+              "mean": 1.2771871890872717,
+              "population_stddev": 0.05320849099412647,
+              "coefficient_of_variation": 0.04166068329588504
+            },
+            "scan_warm_three_seconds": {
+              "count": 3,
+              "values": [
+                3.2369583332911134,
+                3.5095617421902716,
+                3.315077541861683
+              ],
+              "median": 3.315077541861683,
+              "minimum": 3.2369583332911134,
+              "maximum": 3.5095617421902716,
+              "mean": 3.3538658724476895,
+              "population_stddev": 0.11461982253838818,
+              "coefficient_of_variation": 0.03417543422949628
+            },
+            "transaction_pending_seconds": {
+              "count": 3,
+              "values": [
+                0.8446864411234856,
+                0.9121496686711907,
+                1.0258437539450824
+              ],
+              "median": 0.9121496686711907,
+              "minimum": 0.8446864411234856,
+              "maximum": 1.0258437539450824,
+              "mean": 0.9275599545799196,
+              "population_stddev": 0.07475560483347074,
+              "coefficient_of_variation": 0.08059382519087581
+            },
+            "transaction_rollback_commit_restore_seconds": {
+              "count": 3,
+              "values": [
+                0.008366337977349758,
+                0.012907520867884159,
+                0.009347681887447834
+              ],
+              "median": 0.009347681887447834,
+              "minimum": 0.008366337977349758,
+              "maximum": 0.012907520867884159,
+              "mean": 0.010207180244227251,
+              "population_stddev": 0.0019510063352537637,
+              "coefficient_of_variation": 0.19114057835484685
+            },
+            "update_cache_invalidation_seconds": {
+              "count": 3,
+              "values": [
+                0.003646849188953638,
+                0.004511395934969187,
+                0.0033533121459186077
+              ],
+              "median": 0.003646849188953638,
+              "minimum": 0.0033533121459186077,
+              "maximum": 0.004511395934969187,
+              "mean": 0.003837185756613811,
+              "population_stddev": 0.0004915692710472778,
+              "coefficient_of_variation": 0.12810671732532214
+            },
+            "vector_topk_first_seconds": {
+              "count": 3,
+              "values": [
+                1.0328092547133565,
+                1.0422138888388872,
+                1.0268782791681588
+              ],
+              "median": 1.0328092547133565,
+              "minimum": 1.0268782791681588,
+              "maximum": 1.0422138888388872,
+              "mean": 1.0339671409068008,
+              "population_stddev": 0.006314045524118522,
+              "coefficient_of_variation": 0.006106621065908375
+            },
+            "vector_topk_warm_three_seconds": {
+              "count": 3,
+              "values": [
+                2.7979277106933296,
+                2.9354586889967322,
+                2.8275858657434583
+              ],
+              "median": 2.8275858657434583,
+              "minimum": 2.7979277106933296,
+              "maximum": 2.9354586889967322,
+              "mean": 2.853657421811173,
+              "population_stddev": 0.0590958939640579,
+              "coefficient_of_variation": 0.02070882563280866
+            },
+            "write_batches_seconds": {
+              "count": 3,
+              "values": [
+                8.940088165923953,
+                8.892655107192695,
+                9.19967466685921
+              ],
+              "median": 8.940088165923953,
+              "minimum": 8.892655107192695,
+              "maximum": 9.19967466685921,
+              "mean": 9.010805979991952,
+              "population_stddev": 0.13494692641769013,
+              "coefficient_of_variation": 0.014976121638545219
+            }
+          },
+          "resources": {
+            "main": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    134217728,
+                    134217728,
+                    134217728
+                  ],
+                  "median": 134217728,
+                  "minimum": 134217728,
+                  "maximum": 134217728,
+                  "mean": 134217728,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": 0.0
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    134217728,
+                    134217728,
+                    134217728
+                  ],
+                  "median": 134217728,
+                  "minimum": 134217728,
+                  "maximum": 134217728,
+                  "mean": 134217728,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": 0.0
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    73256960,
+                    73265152,
+                    73256960
+                  ],
+                  "median": 73256960,
+                  "minimum": 73256960,
+                  "maximum": 73265152,
+                  "mean": 73259690.66666667,
+                  "population_stddev": 3861.7458343201315,
+                  "coefficient_of_variation": 5.2713105927394184e-05
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    65916928,
+                    66437120,
+                    67584000
+                  ],
+                  "median": 66437120,
+                  "minimum": 65916928,
+                  "maximum": 67584000,
+                  "mean": 66646016,
+                  "population_stddev": 696424.4000167331,
+                  "coefficient_of_variation": 0.01044960286923577
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 806,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 963,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 677,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            },
+            "restart": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    83607552,
+                    83419136,
+                    83062784
+                  ],
+                  "median": 83419136,
+                  "minimum": 83062784,
+                  "maximum": 83607552,
+                  "mean": 83363157.33333333,
+                  "population_stddev": 225895.6275175674,
+                  "coefficient_of_variation": 0.002709777733277402
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    84979712,
+                    84725760,
+                    84434944
+                  ],
+                  "median": 84725760,
+                  "minimum": 84434944,
+                  "maximum": 84979712,
+                  "mean": 84713472,
+                  "population_stddev": 222570.27304351915,
+                  "coefficient_of_variation": 0.0026273303146342433
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    71094272,
+                    71139328,
+                    71086080
+                  ],
+                  "median": 71094272,
+                  "minimum": 71086080,
+                  "maximum": 71139328,
+                  "mean": 71106560,
+                  "population_stddev": 23410.58996835976,
+                  "coefficient_of_variation": 0.0003292324923095669
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    11894784,
+                    11649024,
+                    11452416
+                  ],
+                  "median": 11649024,
+                  "minimum": 11452416,
+                  "maximum": 11894784,
+                  "mean": 11665408,
+                  "population_stddev": 180967.1949055961,
+                  "coefficient_of_variation": 0.015513147496049524
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            }
+          }
+        },
+        "candidate": {
+          "runs": 3,
+          "runs_passed": 3,
+          "timings": {
+            "create_seconds": {
+              "count": 3,
+              "values": [
+                0.0022483570501208305,
+                0.00212100800126791,
+                0.002538117114454508
+              ],
+              "median": 0.0022483570501208305,
+              "minimum": 0.00212100800126791,
+              "maximum": 0.002538117114454508,
+              "mean": 0.0023024940552810826,
+              "population_stddev": 0.0001745338831891359,
+              "coefficient_of_variation": 0.0758020993751618
+            },
+            "delete_restore_seconds": {
+              "count": 3,
+              "values": [
+                1.6188705661334097,
+                1.6086624953895807,
+                1.6856364905834198
+              ],
+              "median": 1.6188705661334097,
+              "minimum": 1.6086624953895807,
+              "maximum": 1.6856364905834198,
+              "mean": 1.63772318403547,
+              "population_stddev": 0.034135171356887456,
+              "coefficient_of_variation": 0.02084306535416803
+            },
+            "pk_lookup_remaining_seconds": {
+              "count": 3,
+              "values": [
+                0.012475868687033653,
+                0.010208833031356335,
+                0.008939835708588362
+              ],
+              "median": 0.010208833031356335,
+              "minimum": 0.008939835708588362,
+              "maximum": 0.012475868687033653,
+              "mean": 0.01054151247565945,
+              "population_stddev": 0.0014626207108382639,
+              "coefficient_of_variation": 0.13874865814706214
+            },
+            "process_first_pk_query_seconds": {
+              "count": 3,
+              "values": [
+                0.0007136822678148746,
+                0.0007703523151576519,
+                0.0008046180009841919
+              ],
+              "median": 0.0007703523151576519,
+              "minimum": 0.0007136822678148746,
+              "maximum": 0.0008046180009841919,
+              "mean": 0.0007628841946522394,
+              "population_stddev": 3.749805781346404e-05,
+              "coefficient_of_variation": 0.04915301441073572
+            },
+            "restart_remaining_checks_seconds": {
+              "count": 3,
+              "values": [
+                1.006341683678329,
+                1.0485614258795977,
+                1.0489959749393165
+              ],
+              "median": 1.0485614258795977,
+              "minimum": 1.006341683678329,
+              "maximum": 1.0489959749393165,
+              "mean": 1.0346330281657476,
+              "population_stddev": 0.020005788127450755,
+              "coefficient_of_variation": 0.019336119747615323
+            },
+            "restart_startup_to_first_response_seconds": {
+              "count": 3,
+              "values": [
+                3.157549438998103,
+                3.020116161555052,
+                3.112553148996085
+              ],
+              "median": 3.112553148996085,
+              "minimum": 3.020116161555052,
+              "maximum": 3.157549438998103,
+              "mean": 3.09673958318308,
+              "population_stddev": 0.0572103025976753,
+              "coefficient_of_variation": 0.01847436668822824
+            },
+            "restore_update_seconds": {
+              "count": 3,
+              "values": [
+                0.003325396217405796,
+                0.002570571843534708,
+                0.0018242448568344116
+              ],
+              "median": 0.002570571843534708,
+              "minimum": 0.0018242448568344116,
+              "maximum": 0.003325396217405796,
+              "mean": 0.002573404305924972,
+              "population_stddev": 0.0006128457494719335,
+              "coefficient_of_variation": 0.23814592524809475
+            },
+            "scan_after_invalidation_seconds": {
+              "count": 3,
+              "values": [
+                1.0492229461669922,
+                0.9825507439672947,
+                0.985932142008096
+              ],
+              "median": 0.985932142008096,
+              "minimum": 0.9825507439672947,
+              "maximum": 1.0492229461669922,
+              "mean": 1.005901944047461,
+              "population_stddev": 0.03066366342168861,
+              "coefficient_of_variation": 0.03048375003462745
+            },
+            "scan_first_after_pk_seconds": {
+              "count": 3,
+              "values": [
+                1.018063897266984,
+                1.3647718941792846,
+                1.0963279949501157
+              ],
+              "median": 1.0963279949501157,
+              "minimum": 1.018063897266984,
+              "maximum": 1.3647718941792846,
+              "mean": 1.159721262132128,
+              "population_stddev": 0.1484714080751857,
+              "coefficient_of_variation": 0.12802335606249343
+            },
+            "scan_warm_three_seconds": {
+              "count": 3,
+              "values": [
+                3.1628187531605363,
+                2.9774359986186028,
+                3.1177709330804646
+              ],
+              "median": 3.1177709330804646,
+              "minimum": 2.9774359986186028,
+              "maximum": 3.1628187531605363,
+              "mean": 3.086008561619868,
+              "population_stddev": 0.07894440069225679,
+              "coefficient_of_variation": 0.025581393931978693
+            },
+            "transaction_pending_seconds": {
+              "count": 3,
+              "values": [
+                0.8550500278361142,
+                0.8468272779136896,
+                0.8972015981562436
+              ],
+              "median": 0.8550500278361142,
+              "minimum": 0.8468272779136896,
+              "maximum": 0.8972015981562436,
+              "mean": 0.8663596346353492,
+              "population_stddev": 0.022065409421986277,
+              "coefficient_of_variation": 0.025469110678585122
+            },
+            "transaction_rollback_commit_restore_seconds": {
+              "count": 3,
+              "values": [
+                0.008882260881364346,
+                0.008008764125406742,
+                0.007836968172341585
+              ],
+              "median": 0.008008764125406742,
+              "minimum": 0.007836968172341585,
+              "maximum": 0.008882260881364346,
+              "mean": 0.008242664393037558,
+              "population_stddev": 0.00045766888560935305,
+              "coefficient_of_variation": 0.055524386749985645
+            },
+            "update_cache_invalidation_seconds": {
+              "count": 3,
+              "values": [
+                0.002928623929619789,
+                0.015632279217243195,
+                0.0030956119298934937
+              ],
+              "median": 0.0030956119298934937,
+              "minimum": 0.002928623929619789,
+              "maximum": 0.015632279217243195,
+              "mean": 0.007218838358918826,
+              "population_stddev": 0.005949591669767502,
+              "coefficient_of_variation": 0.8241757709419856
+            },
+            "vector_topk_first_seconds": {
+              "count": 3,
+              "values": [
+                0.9328474388457835,
+                0.8774140137247741,
+                0.9040006529539824
+              ],
+              "median": 0.9040006529539824,
+              "minimum": 0.8774140137247741,
+              "maximum": 0.9328474388457835,
+              "mean": 0.9047540351748466,
+              "population_stddev": 0.02263687027454213,
+              "coefficient_of_variation": 0.02501991634684169
+            },
+            "vector_topk_warm_three_seconds": {
+              "count": 3,
+              "values": [
+                2.80734597472474,
+                2.9612831813283265,
+                2.8869515149854124
+              ],
+              "median": 2.8869515149854124,
+              "minimum": 2.80734597472474,
+              "maximum": 2.9612831813283265,
+              "mean": 2.885193557012826,
+              "population_stddev": 0.0628568941135543,
+              "coefficient_of_variation": 0.021786023319223316
+            },
+            "write_batches_seconds": {
+              "count": 3,
+              "values": [
+                9.815981942694634,
+                9.791571446694434,
+                9.646788575220853
+              ],
+              "median": 9.791571446694434,
+              "minimum": 9.646788575220853,
+              "maximum": 9.815981942694634,
+              "mean": 9.75144732153664,
+              "population_stddev": 0.07467287755733082,
+              "coefficient_of_variation": 0.007657619950672493
+            }
+          },
+          "resources": {
+            "main": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    114667520,
+                    114638848,
+                    114675712
+                  ],
+                  "median": 114667520,
+                  "minimum": 114638848,
+                  "maximum": 114675712,
+                  "mean": 114660693.33333333,
+                  "population_stddev": 15804.875984609587,
+                  "coefficient_of_variation": 0.00013784040131924535
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    114667520,
+                    114638848,
+                    114675712
+                  ],
+                  "median": 114667520,
+                  "minimum": 114638848,
+                  "maximum": 114675712,
+                  "mean": 114660693.33333333,
+                  "population_stddev": 15804.875984609587,
+                  "coefficient_of_variation": 0.00013784040131924535
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    41279488,
+                    41279488,
+                    41283584
+                  ],
+                  "median": 41279488,
+                  "minimum": 41279488,
+                  "maximum": 41283584,
+                  "mean": 41280853.333333336,
+                  "population_stddev": 1930.8729171600658,
+                  "coefficient_of_variation": 4.677405531248867e-05
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    70803456,
+                    70787072,
+                    70774784
+                  ],
+                  "median": 70787072,
+                  "minimum": 70774784,
+                  "maximum": 70803456,
+                  "mean": 70788437.33333333,
+                  "population_stddev": 11745.041431268866,
+                  "coefficient_of_variation": 0.0001659175124316282
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            },
+            "restart": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    39575552,
+                    39624704,
+                    39620608
+                  ],
+                  "median": 39620608,
+                  "minimum": 39575552,
+                  "maximum": 39624704,
+                  "mean": 39606954.666666664,
+                  "population_stddev": 22267.912779503058,
+                  "coefficient_of_variation": 0.0005622222906787581
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    40947712,
+                    40988672,
+                    40984576
+                  ],
+                  "median": 40984576,
+                  "minimum": 40947712,
+                  "maximum": 40988672,
+                  "mean": 40973653.333333336,
+                  "population_stddev": 18419.353686332815,
+                  "coefficient_of_variation": 0.0004495414049727438
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    39149568,
+                    39149568,
+                    39145472
+                  ],
+                  "median": 39149568,
+                  "minimum": 39145472,
+                  "maximum": 39149568,
+                  "mean": 39148202.666666664,
+                  "population_stddev": 1930.8729171600658,
+                  "coefficient_of_variation": 4.932213449492886e-05
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "median": 0,
+                  "minimum": 0,
+                  "maximum": 0,
+                  "mean": 0,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": null
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            }
+          }
+        }
+      },
+      "paired_B_over_V2": {
+        "create_seconds": {
+          "count": 3,
+          "values": [
+            9.142817466152753,
+            1.5315656127671067,
+            1.24034939497098
+          ],
+          "median": 1.5315656127671067,
+          "minimum": 1.24034939497098,
+          "maximum": 9.142817466152753,
+          "mean": 3.9715774912969466,
+          "population_stddev": 3.658551068345398,
+          "coefficient_of_variation": 0.9211833525500902
+        },
+        "delete_restore_seconds": {
+          "count": 3,
+          "values": [
+            1.0006104070699542,
+            1.0577302490021872,
+            1.046023356651254
+          ],
+          "median": 1.046023356651254,
+          "minimum": 1.0006104070699542,
+          "maximum": 1.0577302490021872,
+          "mean": 1.0347880042411317,
+          "population_stddev": 0.024635258518710526,
+          "coefficient_of_variation": 0.023807058467765044
+        },
+        "pk_lookup_remaining_seconds": {
+          "count": 3,
+          "values": [
+            0.754661364830423,
+            1.0889180835989032,
+            1.0612108947366858
+          ],
+          "median": 1.0612108947366858,
+          "minimum": 0.754661364830423,
+          "maximum": 1.0889180835989032,
+          "mean": 0.968263447722004,
+          "population_stddev": 0.15146244735990508,
+          "coefficient_of_variation": 0.1564268977789515
+        },
+        "process_first_pk_query_seconds": {
+          "count": 3,
+          "values": [
+            0.886825901511202,
+            0.9865600286280941,
+            0.9408057392077338
+          ],
+          "median": 0.9408057392077338,
+          "minimum": 0.886825901511202,
+          "maximum": 0.9865600286280941,
+          "mean": 0.9380638897823433,
+          "population_stddev": 0.04076242004302275,
+          "coefficient_of_variation": 0.0434537780283609
+        },
+        "restart_remaining_checks_seconds": {
+          "count": 3,
+          "values": [
+            0.9756505688062497,
+            1.0382378554403768,
+            1.0501622628728486
+          ],
+          "median": 1.0382378554403768,
+          "minimum": 0.9756505688062497,
+          "maximum": 1.0501622628728486,
+          "mean": 1.021350229039825,
+          "population_stddev": 0.03267916851504508,
+          "coefficient_of_variation": 0.03199604561284221
+        },
+        "restart_startup_to_first_response_seconds": {
+          "count": 3,
+          "values": [
+            1.007647852715208,
+            1.0645725773593664,
+            1.0172972873251893
+          ],
+          "median": 1.0172972873251893,
+          "minimum": 1.007647852715208,
+          "maximum": 1.0645725773593664,
+          "mean": 1.0298392391332545,
+          "population_stddev": 0.024874102802180796,
+          "coefficient_of_variation": 0.024153384195299873
+        },
+        "restore_update_seconds": {
+          "count": 3,
+          "values": [
+            0.6634773485926942,
+            0.8883279250745572,
+            5.947052943482842
+          ],
+          "median": 0.8883279250745572,
+          "minimum": 0.6634773485926942,
+          "maximum": 5.947052943482842,
+          "mean": 2.499619405716698,
+          "population_stddev": 2.4394313467721873,
+          "coefficient_of_variation": 0.9759211107071505
+        },
+        "scan_after_invalidation_seconds": {
+          "count": 3,
+          "values": [
+            0.9572051808061278,
+            1.0766038246947012,
+            1.2285065686090055
+          ],
+          "median": 1.0766038246947012,
+          "minimum": 0.9572051808061278,
+          "maximum": 1.2285065686090055,
+          "mean": 1.0874385247032783,
+          "population_stddev": 0.11102298200267292,
+          "coefficient_of_variation": 0.10209586977155052
+        },
+        "scan_first_after_pk_seconds": {
+          "count": 3,
+          "values": [
+            1.2100055824984537,
+            0.9143139798294482,
+            1.2330876820888879
+          ],
+          "median": 1.2100055824984537,
+          "minimum": 0.9143139798294482,
+          "maximum": 1.2330876820888879,
+          "mean": 1.11913574813893,
+          "population_stddev": 0.1451370924573107,
+          "coefficient_of_variation": 0.12968676293172376
+        },
+        "scan_warm_three_seconds": {
+          "count": 3,
+          "values": [
+            1.0234409828437026,
+            1.178719456545347,
+            1.0632845109586908
+          ],
+          "median": 1.0632845109586908,
+          "minimum": 1.0234409828437026,
+          "maximum": 1.178719456545347,
+          "mean": 1.0884816501159134,
+          "population_stddev": 0.06584842678484884,
+          "coefficient_of_variation": 0.06049567007200956
+        },
+        "transaction_pending_seconds": {
+          "count": 3,
+          "values": [
+            0.9878795551426904,
+            1.0771377971177718,
+            1.1433815499807396
+          ],
+          "median": 1.0771377971177718,
+          "minimum": 0.9878795551426904,
+          "maximum": 1.1433815499807396,
+          "mean": 1.0694663007470673,
+          "population_stddev": 0.06371476276906562,
+          "coefficient_of_variation": 0.059576222948360485
+        },
+        "transaction_rollback_commit_restore_seconds": {
+          "count": 3,
+          "values": [
+            0.9419153624391924,
+            1.6116744938131915,
+            1.1927676215960523
+          ],
+          "median": 1.1927676215960523,
+          "minimum": 0.9419153624391924,
+          "maximum": 1.6116744938131915,
+          "mean": 1.2487858259494788,
+          "population_stddev": 0.2762822867152967,
+          "coefficient_of_variation": 0.22124072917406257
+        },
+        "update_cache_invalidation_seconds": {
+          "count": 3,
+          "values": [
+            1.2452432530069142,
+            0.2885948921634466,
+            1.0832469385250045
+          ],
+          "median": 1.0832469385250045,
+          "minimum": 0.2885948921634466,
+          "maximum": 1.2452432530069142,
+          "mean": 0.8723616945651218,
+          "population_stddev": 0.4180498065750362,
+          "coefficient_of_variation": 0.4792161430052667
+        },
+        "vector_topk_first_seconds": {
+          "count": 3,
+          "values": [
+            1.107157732020207,
+            1.1878245304226556,
+            1.1359264794916375
+          ],
+          "median": 1.1359264794916375,
+          "minimum": 1.107157732020207,
+          "maximum": 1.1878245304226556,
+          "mean": 1.1436362473115,
+          "population_stddev": 0.03338026843313734,
+          "coefficient_of_variation": 0.029187837051867532
+        },
+        "vector_topk_warm_three_seconds": {
+          "count": 3,
+          "values": [
+            0.9966451359696292,
+            0.9912792898381267,
+            0.9794365617386359
+          ],
+          "median": 0.9912792898381267,
+          "minimum": 0.9794365617386359,
+          "maximum": 0.9966451359696292,
+          "mean": 0.9891203291821307,
+          "population_stddev": 0.00718932496142747,
+          "coefficient_of_variation": 0.0072684027911670505
+        },
+        "write_batches_seconds": {
+          "count": 3,
+          "values": [
+            0.9107686034994645,
+            0.9081948853260723,
+            0.9536515281873058
+          ],
+          "median": 0.9107686034994645,
+          "minimum": 0.9081948853260723,
+          "maximum": 0.9536515281873058,
+          "mean": 0.9242050056709475,
+          "population_stddev": 0.0208483296299537,
+          "coefficient_of_variation": 0.022558122388461187
+        }
+      },
+      "negative_median_timing_benefit": [
+        "process_first_pk_query_seconds",
+        "restore_update_seconds",
+        "vector_topk_warm_three_seconds",
+        "write_batches_seconds"
+      ]
+    }
+  },
+  "diagnostics": {
+    "diagnostic-instrumented-baseline": {
+      "passed": true,
+      "binary_sha256": "f2201df30d8e14513526a5ae6ee621d5af55ba44411347539e71f94753cf18d6",
+      "original_sql_sha256": "ccab04ce25f8badb1665ab350144b73b7616a2c2142aab548d2f716e3b023aac",
+      "diagnostic_strace": false,
+      "commands": [
+        {
+          "sql": "UPDATE items SET x=999 WHERE id=0;",
+          "timing": {
+            "send_ns": 32510,
+            "wait_read_ns": 2390956,
+            "parse_consume_ns": 44408,
+            "total_ns": 2467874,
+            "response_bytes": 48
+          }
+        },
+        {
+          "sql": "SELECT x FROM items WHERE id=0;",
+          "timing": {
+            "send_ns": 25721,
+            "wait_read_ns": 462527,
+            "parse_consume_ns": 28998,
+            "total_ns": 517246,
+            "response_bytes": 56
+          }
+        }
+      ],
+      "instrumented_timings": [
+        {
+          "statement": "UPDATE",
+          "engine_ns": 1743714,
+          "serialize_ns": 10790,
+          "flush_ns": 14662
+        },
+        {
+          "statement": "SELECT",
+          "engine_ns": 43421,
+          "serialize_ns": 6640,
+          "flush_ns": 7351
+        }
+      ],
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-11-09T10:59:07.897619178Z",
+        "FinishedAt": "2026-11-09T10:59:27.094772907Z"
+      }
+    },
+    "diagnostic-instrumented-v2": {
+      "passed": true,
+      "binary_sha256": "ba7a2926ba2f1781e3e59a833438cfa117b81f942616f4a262be41a2ee08ee57",
+      "original_sql_sha256": "ccab04ce25f8badb1665ab350144b73b7616a2c2142aab548d2f716e3b023aac",
+      "diagnostic_strace": false,
+      "commands": [
+        {
+          "sql": "UPDATE items SET x=999 WHERE id=0;",
+          "timing": {
+            "send_ns": 31681,
+            "wait_read_ns": 2073783,
+            "parse_consume_ns": 65240,
+            "total_ns": 2170704,
+            "response_bytes": 48
+          }
+        },
+        {
+          "sql": "SELECT x FROM items WHERE id=0;",
+          "timing": {
+            "send_ns": 28830,
+            "wait_read_ns": 499462,
+            "parse_consume_ns": 35354,
+            "total_ns": 563646,
+            "response_bytes": 56
+          }
+        }
+      ],
+      "instrumented_timings": [
+        {
+          "statement": "UPDATE",
+          "engine_ns": 1503011,
+          "serialize_ns": 9990,
+          "flush_ns": 13627
+        },
+        {
+          "statement": "SELECT",
+          "engine_ns": 40564,
+          "serialize_ns": 8717,
+          "flush_ns": 8133
+        }
+      ],
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-11-09T10:59:29.95371909Z",
+        "FinishedAt": "2026-11-09T10:59:47.823416952Z"
+      }
+    },
+    "diagnostic-split-baseline": {
+      "passed": true,
+      "binary_sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f",
+      "original_sql_sha256": "ccab04ce25f8badb1665ab350144b73b7616a2c2142aab548d2f716e3b023aac",
+      "diagnostic_strace": false,
+      "commands": [
+        {
+          "sql": "UPDATE items SET x=999 WHERE id=0;",
+          "timing": {
+            "send_ns": 67819,
+            "wait_read_ns": 2222826,
+            "parse_consume_ns": 48246,
+            "total_ns": 2338891,
+            "response_bytes": 48
+          }
+        },
+        {
+          "sql": "SELECT x FROM items WHERE id=0;",
+          "timing": {
+            "send_ns": 27092,
+            "wait_read_ns": 303304,
+            "parse_consume_ns": 63900,
+            "total_ns": 394296,
+            "response_bytes": 56
+          }
+        }
+      ],
+      "instrumented_timings": [],
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-11-09T10:57:42.485429646Z",
+        "FinishedAt": "2026-11-09T10:58:00.590715702Z"
+      }
+    },
+    "diagnostic-split-v2": {
+      "passed": true,
+      "binary_sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c",
+      "original_sql_sha256": "ccab04ce25f8badb1665ab350144b73b7616a2c2142aab548d2f716e3b023aac",
+      "diagnostic_strace": false,
+      "commands": [
+        {
+          "sql": "UPDATE items SET x=999 WHERE id=0;",
+          "timing": {
+            "send_ns": 37653,
+            "wait_read_ns": 3404130,
+            "parse_consume_ns": 58394,
+            "total_ns": 3500177,
+            "response_bytes": 48
+          }
+        },
+        {
+          "sql": "SELECT x FROM items WHERE id=0;",
+          "timing": {
+            "send_ns": 27829,
+            "wait_read_ns": 496851,
+            "parse_consume_ns": 51434,
+            "total_ns": 576114,
+            "response_bytes": 56
+          }
+        }
+      ],
+      "instrumented_timings": [],
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-11-09T10:58:03.440297623Z",
+        "FinishedAt": "2026-11-09T10:58:20.658077046Z"
+      }
+    },
+    "diagnostic-trace-baseline": {
+      "passed": true,
+      "binary_sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f",
+      "original_sql_sha256": "ccab04ce25f8badb1665ab350144b73b7616a2c2142aab548d2f716e3b023aac",
+      "diagnostic_strace": true,
+      "commands": [
+        {
+          "sql": "UPDATE items SET x=999 WHERE id=0;",
+          "timing": {
+            "send_ns": 113250,
+            "wait_read_ns": 4938915,
+            "parse_consume_ns": 76367,
+            "total_ns": 5128532,
+            "response_bytes": 48
+          }
+        },
+        {
+          "sql": "SELECT x FROM items WHERE id=0;",
+          "timing": {
+            "send_ns": 51134,
+            "wait_read_ns": 1056370,
+            "parse_consume_ns": 63600,
+            "total_ns": 1171104,
+            "response_bytes": 56
+          }
+        }
+      ],
+      "instrumented_timings": [],
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-11-09T10:58:23.361556519Z",
+        "FinishedAt": "2026-11-09T10:58:40.802291015Z"
+      },
+      "trace_lines": [
+        "1794221920.568466 read(0, \"UPDATE items SET x=999 WHERE id=0;\\n\", 4096) = 35 <0.141342>",
+        "1794221920.712624 pread64(5, \"MVS1\\3\\0\\0\\0\\2\\0\\0\\0id\\0\\0\\0\\0\\0\\0\\0\\0\\1\\0\\0\\0\\1\\0\\0\\0x\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\1\\0\\0\\0v\\2\\0\\0\\0\\4\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\", 64, 53) = 64 <0.000103>",
+        "1794221920.712859 pread64(5, \"\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\", 32, 186) = 32 <0.000021>",
+        "1794221920.712927 pwrite64(5, \"MVB1\\2\\0\\0\\0\\5\\0\\0\\0 \\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0H\\207^z\\0\\0\\0\\0\", 32, 69032149) = 32 <0.000055>",
+        "1794221920.713014 pwrite64(5, \"items\", 5, 69032181) = 5 <0.000017>",
+        "1794221920.713057 pwrite64(5, \"\\0\\0\\0\\0\\0\\0\\0\\0\\347\\3\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\", 32, 69032186) = 32 <0.000019>",
+        "1794221920.713112 pwrite64(5, \"MVB1\\4\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\256\\216\\345\\235\\0\\0\\0\\0\", 32, 69032218) = 32 <0.000021>",
+        "1794221920.713166 fdatasync(5)          = 0 <0.001691>",
+        "1794221920.715005 write(1, \"{\\\"ok\\\":true,\\\"columns\\\":[],\\\"rows\\\":[],\\\"affected\\\":1}\\n\", 48) = 48 <0.000154>",
+        "1794221920.715537 read(0, \"SELECT x FROM items WHERE id=0;\\n\", 4096) = 32 <0.000562>",
+        "1794221920.716314 pread64(5, \"MVS1\\3\\0\\0\\0\\2\\0\\0\\0id\\0\\0\\0\\0\\0\\0\\0\\0\\1\\0\\0\\0\\1\\0\\0\\0x\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\1\\0\\0\\0v\\2\\0\\0\\0\\4\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\", 64, 53) = 64 <0.000141>",
+        "1794221920.716543 pread64(5, \"\\0\\0\\0\\0\\0\\0\\0\\0\\347\\3\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\", 32, 69032186) = 32 <0.000016>",
+        "1794221920.716632 write(1, \"{\\\"ok\\\":true,\\\"columns\\\":[\\\"x\\\"],\\\"rows\\\":[[999]],\\\"affected\\\":0}\\n\", 56) = 56 <0.000061>",
+        "1794221920.717264 read(0,  <detached ...>"
+      ],
+      "sync_seconds": [
+        0.001691
+      ]
+    },
+    "diagnostic-trace-v2": {
+      "passed": true,
+      "binary_sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c",
+      "original_sql_sha256": "ccab04ce25f8badb1665ab350144b73b7616a2c2142aab548d2f716e3b023aac",
+      "diagnostic_strace": true,
+      "commands": [
+        {
+          "sql": "UPDATE items SET x=999 WHERE id=0;",
+          "timing": {
+            "send_ns": 54936,
+            "wait_read_ns": 3501605,
+            "parse_consume_ns": 72858,
+            "total_ns": 3629399,
+            "response_bytes": 48
+          }
+        },
+        {
+          "sql": "SELECT x FROM items WHERE id=0;",
+          "timing": {
+            "send_ns": 160601,
+            "wait_read_ns": 784025,
+            "parse_consume_ns": 50343,
+            "total_ns": 994969,
+            "response_bytes": 56
+          }
+        }
+      ],
+      "instrumented_timings": [],
+      "state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-11-09T10:58:43.683354288Z",
+        "FinishedAt": "2026-11-09T10:59:02.481258661Z"
+      },
+      "trace_lines": [
+        "1794221942.295120 read(0, \"UPDATE items SET x=999 WHERE id=0;\\n\", 4096) = 35 <0.135932>",
+        "1794221942.431396 pread64(5, \"MVS1\\3\\0\\0\\0\\2\\0\\0\\0id\\0\\0\\0\\0\\0\\0\\0\\0\\1\\0\\0\\0\\1\\0\\0\\0x\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\1\\0\\0\\0v\\2\\0\\0\\0\\4\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\", 64, 53) = 64 <0.000043>",
+        "1794221942.431535 pread64(5, \"\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\", 32, 186) = 32 <0.000030>",
+        "1794221942.431623 pwrite64(5, \"MVB1\\2\\0\\0\\0\\5\\0\\0\\0 \\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0H\\207^z\\0\\0\\0\\0\", 32, 69032149) = 32 <0.000054>",
+        "1794221942.431735 pwrite64(5, \"items\", 5, 69032181) = 5 <0.000032>",
+        "1794221942.431845 pwrite64(5, \"\\0\\0\\0\\0\\0\\0\\0\\0\\347\\3\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\", 32, 69032186) = 32 <0.000033>",
+        "1794221942.431933 pwrite64(5, \"MVB1\\4\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\256\\216\\345\\235\\0\\0\\0\\0\", 32, 69032218) = 32 <0.000025>",
+        "1794221942.432006 fdatasync(5)          = 0 <0.001515>",
+        "1794221942.433663 write(1, \"{\\\"ok\\\":true,\\\"columns\\\":[],\\\"rows\\\":[],\\\"affected\\\":1}\\n\", 48) = 48 <0.000096>",
+        "1794221942.433907 read(0, \"SELECT x FROM items WHERE id=0;\\n\", 4096) = 32 <0.000787>",
+        "1794221942.434813 pread64(5, \"MVS1\\3\\0\\0\\0\\2\\0\\0\\0id\\0\\0\\0\\0\\0\\0\\0\\0\\1\\0\\0\\0\\1\\0\\0\\0x\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\1\\0\\0\\0v\\2\\0\\0\\0\\4\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\", 64, 53) = 64 <0.000049>",
+        "1794221942.434934 pread64(5, \"\\0\\0\\0\\0\\0\\0\\0\\0\\347\\3\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\\0\", 32, 69032186) = 32 <0.000020>",
+        "1794221942.435013 write(1, \"{\\\"ok\\\":true,\\\"columns\\\":[\\\"x\\\"],\\\"rows\\\":[[999]],\\\"affected\\\":0}\\n\", 56) = 56 <0.000042>",
+        "1794221942.435113 read(0,  <detached ...>"
+      ],
+      "sync_seconds": [
+        0.001515
+      ]
+    }
+  },
+  "sql_history_matches": {
+    "cardinality-vector4-1000000.sql.gz": {
+      "identical": true,
+      "uncompressed_sha256": "ccab04ce25f8badb1665ab350144b73b7616a2c2142aab548d2f716e3b023aac"
+    },
+    "workload.sql.gz": {
+      "identical": true,
+      "uncompressed_sha256": "1ef9f505060732d3186226dcbf578f7c4e3be672409fee58df55320cfbd29d80"
+    },
+    "cardinality-scalar-1000000.sql.gz": {
+      "identical": true,
+      "uncompressed_sha256": "0f1df022e0da77d23728fc9eec3f97dcf08c8fde56afdca7161623fae6e0c2be"
+    }
+  }
+}

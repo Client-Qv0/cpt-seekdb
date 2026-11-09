@@ -1,0 +1,18 @@
+# MiniVectorDB V2 UPDATE investigation plan
+
+Goal: reproduce the B/V2 single-row UPDATE regression on this server, locate the latency by measured boundaries, preserve durability and compact-index memory savings, and push an isolated personal branch. No official assessment submission.
+
+All source changes and experiments run through SSH MCP on this server. New evidence will live in validation/update-latency-li-20261109, leaving historical evidence unchanged.
+
+- [x] Complete clone; assert HEAD e5093aec5ce443d863a92a684eae7ed8f90a736e, clean status, and read HANDOFF.md from checked-out bytes. Run python3 tools/handoff/verify.py (13+49+320 entries). Finish reading required reports without output truncation.
+- [x] Create perf/update-latency-li-20261109 if absent; check branch does not overwrite any existing branch. Archive current environment/toolchain, official document snapshots, source hashes and command logs in the new validation directory.
+- [x] Build Release with cmake -S . -B build-handoff -DCMAKE_BUILD_TYPE=Release and cmake --build build-handoff --parallel 2. Run CTest, acceptance.py, optimization_acceptance.py. Record skipped cases explicitly and hash executables.
+- [x] Inspect baseline source/test ZIP member names for traversal before extraction into build-update-baseline/source. Verify baseline 12 production files against its manifest; build separately with identical flags.
+- [x] Restore original paired vector4 and scalar SQL histories, including 1000-row commits, 33 primary-key probes, first plus three warm scans, and vector first plus three warm filtered TopK, followed by UPDATE and primary-key SELECT. Compare generated SQL bytes/hash against saved SQL gzip. Alternate B/V2 order across at least three independent database pairs at identical resource limits.
+- [x] Preserve per-SQL send/write, response read, and JSON parse timings. Run a separate strace diagnostic on the same full history to locate pread/pwrite/fdatasync/output intervals. Diagnostic timing must not replace uninstrumented results. If needed, add compile-time diagnostic boundaries in a separate source copy, never changing default production behavior merely to improve scores.
+- [x] Only after reproducible evidence identifies a source defect, write a failing targeted regression/benchmark and implement the smallest fix. Do not remove sync, weaken atomicity, change query results, or add ANN. If no root cause reproduces, preserve the negative result and report unresolved causes honestly.
+- [x] Validate final candidate with Release, ASan/UBSan, relevant recovery/transaction/cache/reference checks and real 128 MiB cgroup resource tests. Check million-row anonymous memory vs B/V2 and record memory.peak and raw io.stat separately. Preserve failures and skips.
+- [x] Generate independent new source/script/binary/evidence manifests and a report of improvements, regressions, uncertainty and scope. Re-verify historical evidence. Append only real user/agent/tool facts to agent/conversation.json, excluding credentials.
+- [x] Review git diff --check and actual changes; explicitly stage only this task's files. Commit with Conventional Commits; push personal branch without force; verify origin SHA and provide full commit SHA.
+
+Known initial environment: Ubuntu Linux x86_64 6.8.0-48-generic, 4 CPUs, 7.8 GiB RAM, no swap, approximately 31 GiB available disk, GCC 13.3.0, CMake 3.28.3, Python 3.12.3, NumPy 1.26.4. Docker 29.9.0/cgroup v2 requires sudo; existing daemon will not be stopped. perf and strace are present. GitHub SSH authentication currently fails and no HTTPS credential helper is configured; user has been asked to configure their own push identity.

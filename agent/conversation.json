@@ -1,5 +1,69 @@
 {
   "schema_version": 1,
+  "handoff_update_investigation_20261109": {
+    "recorded_at_utc": "2026-11-09T11:03:52Z",
+    "source": "real user request excerpts, agent decisions, and server tool results",
+    "prior_material_sha256": "bd536b3e4ffa8f7eac5889d8500aeb47c922e3f7d086eacb176584d0d050fc8b",
+    "material_scope": "Summary of this handoff investigation, not a full chat export or proof of student technical understanding. Credentials omitted.",
+    "user_excerpts": [
+      {
+        "source": "user",
+        "content": "通过mcp+ssh，所有东西都在服务器上弄，完成接手的任务"
+      },
+      {
+        "source": "user",
+        "content": "如果设备不够的话，我还可以开一台8c16g或16c32g的云电脑（可用总时间20小时，没有公网IP所以我frp到了当前服务器的frps上）"
+      },
+      {
+        "source": "user",
+        "content": "我之前配有deploy key在上面，之前是可以正常推送的诶"
+      }
+    ],
+    "agent_decisions": [
+      {
+        "source": "agent",
+        "content": "先核对交接提交及13+49+320项哈希；在独立目录构建B和V2，保持历史证据不变。现有4核8GiB机器足以执行本轮，无需消耗额外云电脑额度。"
+      },
+      {
+        "source": "agent",
+        "content": "用户指出已有deploy key后，检查公钥指纹发现它属于root用户；用既有身份成功认证团队仓库，没有复制私钥或把凭据写入学习材料。"
+      },
+      {
+        "source": "agent",
+        "content": "按原批量写入、点查、扫描和向量查询顺序复现；不以加载最终WAL替代历史。单独运行客户端分解、strace和main插桩；插桩耗时不当作默认构建成绩。"
+      },
+      {
+        "source": "agent",
+        "content": "18轮结果中存在V2单次15.632ms慢例，但未复现历史三轮稳定约2倍退化。诊断未捕获慢例，根因仍未确定；保留生产代码，未做预设原因的修复。"
+      }
+    ],
+    "tool_results": [
+      {
+        "source": "tool_result_summary",
+        "content": "本机构建B/V2 Release哈希分别为747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f和78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c，均与历史对象一致；历史13+49+320项校验前后全部通过。"
+      },
+      {
+        "source": "tool_result_summary",
+        "content": "18/18完整配对通过；6066组128D结果独立核验。vector4百万行UPDATE+SELECT：B三轮3.647/4.511/3.353ms；V2三轮2.929/15.632/3.096ms。vector4写入配对中位约慢9.8%；两类百万行匿名内存仍少约32MB。"
+      },
+      {
+        "source": "tool_result_summary",
+        "content": "六次新数据库诊断通过；单次插桩UPDATE引擎耗时B/V2约1.744/1.503ms，序列化10.790/9.990微秒；另两次strace记录fdatasync约1.691/1.515ms。这些来自不同运行，不能拼接为同一次分解，也不能解释15.632ms慢例。"
+      },
+      {
+        "source": "tool_result_summary",
+        "content": "本机Release CTest5/5、完整黑盒19/19、扩展11/11；ASan/UBSan CTest5/5、黑盒18通过+1压力跳过、扩展8通过+大输出类跳过。真实128MiB cgroup资源回归4/4、0跳过、0容器OOM；WAL/checkpoint双向全量小数据兼容验证通过。"
+      }
+    ],
+    "report": "validation/update-latency-li-20261109/REPORT.md",
+    "unresolved": [
+      "历史稳定单行UPDATE退化及本机孤立慢例的根因未确定；未声称修复。",
+      "正式协议/完整官方题包未验证，物理I/O未校准，未重建生产Dockerfile或执行本机2m容量阶梯。"
+    ],
+    "production_source_changed": false,
+    "official_assessment_submitted": false,
+    "student_understanding_inferred": false
+  },
   "date": "2026-11-09",
   "synthetic": false,
   "material_scope": "真实对话摘录与本轮本地验证。不是完整聊天导出；未记录的学生理解、解释或反馈不得从Agent工作推断。尚未完成官方评测适配。",

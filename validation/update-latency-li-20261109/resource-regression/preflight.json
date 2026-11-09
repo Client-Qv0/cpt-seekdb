@@ -1,0 +1,73 @@
+{
+  "actual_binary": "/opt/minivectordb-v2/build-handoff/minivectordb",
+  "binary_sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c",
+  "source_binding": {
+    "source_root": "/opt/minivectordb-v2",
+    "manifest_path": "/opt/minivectordb-v2/validation/cardinality-20261109/candidate-v2-production-manifest.json",
+    "manifest_sha256": "7ef726aa64fd13c3f24ae5947a314bcf06ba9c8c31541779de38fe664dcfdd86",
+    "production_tree_sha256": "df56a37dcbae572b6283dfd4ee67cccc1e7e15f2117b59760cf7628936ae18f3",
+    "verified_files": [
+      {
+        "path": ".dockerignore",
+        "sha256": "b602eaa29e663fe28b895e2c349dd96eb06ce61272047a550959ff83bb0fb6d8"
+      },
+      {
+        "path": "CMakeLists.txt",
+        "sha256": "778bece9d37c8f4e83e6ea9e75f34406aee12936fcc0394d77bf96e143982d9b"
+      },
+      {
+        "path": "Dockerfile",
+        "sha256": "ae444e91aa7a6f2530184fdac3c95c9b9776686199b90043dee89b64d1ff2135"
+      },
+      {
+        "path": "src/compact_rows.hpp",
+        "sha256": "d38624d37078886fe74231b8512163e6dc286a694ff674befbc8466327bb8d53"
+      },
+      {
+        "path": "src/engine.cpp",
+        "sha256": "3b498b877cecb88f876524f0c76b45e415f254d8b48d13fc11c22de97968b8c6"
+      },
+      {
+        "path": "src/engine.hpp",
+        "sha256": "4a7f3908ceb85773254ddff50420abc92099c11cac570f0e7aefeb19902232a5"
+      },
+      {
+        "path": "src/main.cpp",
+        "sha256": "8bcc74f6b6bf9685f9dd4084167732ac81e77e7a68fb47171aa80d8d992c0700"
+      },
+      {
+        "path": "src/spill.cpp",
+        "sha256": "fca305b940394ebb88232a14d7b4dc4f4248228b703402f7089b1e4010c054df"
+      },
+      {
+        "path": "src/spill.hpp",
+        "sha256": "70451b7dd2c76a323c8ef86d2c697f8012001b916be6c0ca3e69ecb605e38d44"
+      },
+      {
+        "path": "src/sql.cpp",
+        "sha256": "7e30d939628b8375b027e82d3aeca26566ac85232ef1fee980c89a0fa5e3bd51"
+      },
+      {
+        "path": "src/sql.hpp",
+        "sha256": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593"
+      },
+      {
+        "path": "src/storage.cpp",
+        "sha256": "6f0513e41683887817deb6afc9aad29dfcce3d51998d1b27c218c574e996716f"
+      },
+      {
+        "path": "src/storage.hpp",
+        "sha256": "80acf1b26e5486ec178a92909f3ba41e0faf49e6779359fa614a2008b026b40b"
+      }
+    ]
+  },
+  "runtime_image_id": "sha256:72c80cacf28467a00e72762db977fc770559cc4d9ffab6e22667a4ab25cda926",
+  "runtime_image_embedded_binary_sha256_not_executed": null,
+  "driver_sha256": "02ac1b1037f8fac16ca7b20f464f5a1a7c95791618b9194e08146e5d44aee761",
+  "original_driver_sha256": "9e7730048dc7efceb23769cf99f9e5e198960f598f20871e1f5b9fa1a1852d95",
+  "frozen_test_hashes": {
+    "tests/acceptance.py": "25b65948d76e2e6362662a855dba01f87550cf2167ddd0083bfc96eb66903d4b",
+    "tests/optimization_acceptance.py": "6e28faf282657ce1dd895b65dd2811a618abf7000972cbc3833561d6da3395dd"
+  },
+  "adaptation": "Original four test assertions unchanged. Only executable mount/entrypoint, source and output metadata adapted. Database data under /var/tmp ext4; no image rebuild."
+}

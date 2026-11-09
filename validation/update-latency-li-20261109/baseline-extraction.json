@@ -1,0 +1,44 @@
+{
+  "archives": {
+    "baseline-source-snapshot.zip": [
+      ".dockerignore",
+      "CMakeLists.txt",
+      "Dockerfile",
+      "src/engine.cpp",
+      "src/engine.hpp",
+      "src/main.cpp",
+      "src/spill.cpp",
+      "src/spill.hpp",
+      "src/sql.cpp",
+      "src/sql.hpp",
+      "src/storage.cpp",
+      "src/storage.hpp"
+    ],
+    "baseline-tests-snapshot.zip": [
+      "tests/acceptance.py",
+      "tests/benchmark_local.py",
+      "tests/compare_local.py",
+      "tests/optimization_acceptance.py",
+      "tests/README.txt",
+      "tests/test_engine_extra.cpp",
+      "tests/test_parser.cpp",
+      "tests/test_spill.cpp",
+      "tests/test_storage.cpp"
+    ]
+  },
+  "verified_production_files": [
+    ".dockerignore",
+    "CMakeLists.txt",
+    "Dockerfile",
+    "src/engine.cpp",
+    "src/engine.hpp",
+    "src/main.cpp",
+    "src/spill.cpp",
+    "src/spill.hpp",
+    "src/sql.cpp",
+    "src/sql.hpp",
+    "src/storage.cpp",
+    "src/storage.hpp"
+  ],
+  "destination": "/opt/minivectordb-v2/build-update-baseline/source"
+}

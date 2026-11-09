@@ -1,0 +1,41 @@
+{
+  "tool_sha256": "72650296402cb82fce51c735b731918012b1722f1ef5b2358f8880f97d1d909c",
+  "binaries": {
+    "baseline": {
+      "path": "/opt/minivectordb-v2/build-update-baseline/release/minivectordb",
+      "sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f"
+    },
+    "candidate": {
+      "path": "/opt/minivectordb-v2/build-handoff/minivectordb",
+      "sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c"
+    },
+    "baseline_helper": {
+      "path": "/opt/minivectordb-v2/build-update-baseline/checkpoint-helper",
+      "sha256": "f06e7870eaff8443b4ebb5b4f0e9d9db73293813015e2ff6fbeb331867607629"
+    },
+    "candidate_helper": {
+      "path": "/opt/minivectordb-v2/build-handoff/checkpoint-helper",
+      "sha256": "800489dc2f837a22cfe22d438c2a52333740f5cbee4776da21a198dedd55196b"
+    }
+  },
+  "official_assessment": false,
+  "directions": {
+    "baseline_to_candidate_checkpoint_to_baseline": {
+      "passed": true,
+      "all_rows_before_mutation_verified": 1000,
+      "all_rows_after_mutation_and_checkpoint_verified": 999,
+      "uncommitted_sigkill_rollback": true,
+      "failed_multivalue_statement_rollback_inside_commit": true,
+      "checkpoint_helper_stdout": "{\"ok\":true,\"phase\":\"recovered\"}\n{\"ok\":true,\"phase\":\"checkpoint_complete\"}\n"
+    },
+    "candidate_to_baseline_checkpoint_to_candidate": {
+      "passed": true,
+      "all_rows_before_mutation_verified": 1000,
+      "all_rows_after_mutation_and_checkpoint_verified": 999,
+      "uncommitted_sigkill_rollback": true,
+      "failed_multivalue_statement_rollback_inside_commit": true,
+      "checkpoint_helper_stdout": "{\"ok\":true,\"phase\":\"recovered\"}\n{\"ok\":true,\"phase\":\"checkpoint_complete\"}\n"
+    }
+  },
+  "passed": true
+}
