@@ -14,6 +14,7 @@ import math
 import os
 from pathlib import Path
 import random
+import struct
 import subprocess
 import tempfile
 import unittest
@@ -302,6 +303,91 @@ class CacheAndIndexAcceptance(unittest.TestCase):
                 self.assertEqual([r[0] for r in first], [i for _, i in expected], f"reference result step {step}")
                 for row, (distance, _) in zip(first, expected):
                     self.assertAlmostEqual(row[1], distance, places=6)
+
+    def test_vector_reference_multiple_dimensions_filters_and_ties(self):
+        # Compute from the SQL inputs after FP32 quantization, independently of
+        # the database. Repeated queries exercise a warmed cache as well.
+        def f32(value):
+            return struct.unpack("f", struct.pack("f", value))[0]
+
+        for seed, dimension in ((9143, 1), (27183, 3), (3179, 17)):
+            rng = random.Random(seed)
+            table = f"vectors_{dimension}"
+            self.db.ok(f"CREATE TABLE {table} (id BIGINT PRIMARY KEY, grp BIGINT, v VECTOR({dimension}));")
+            model = {}
+            tuples = []
+            for key in range(48):
+                # The first two rows deliberately tie and are inserted in the
+                # opposite order to verify the primary-key tie breaker.
+                vector = [0.0] * dimension if key < 2 else [round(rng.uniform(-3, 3), 6) for _ in range(dimension)]
+                group = key % 5
+                model[key] = (group, [f32(x) for x in vector])
+                literal = ",".join(map(str, vector))
+                tuples.append(f"({key},{group},'[{literal}]')")
+            self.db.ok(f"INSERT INTO {table} VALUES " + ",".join(reversed(tuples)) + ";")
+            queries = [[0.0] * dimension] + [[round(rng.uniform(-2, 2), 6) for _ in range(dimension)] for _ in range(4)]
+            for vector in queries:
+                query = [f32(x) for x in vector]
+                literal = ",".join(map(str, vector))
+                for condition, predicate in (("", lambda group: True), (" WHERE grp=2", lambda group: group == 2),
+                                             (" WHERE grp>=3", lambda group: group >= 3), (" WHERE grp=99", lambda group: group == 99)):
+                    expected = []
+                    for key, (group, stored) in model.items():
+                        if predicate(group):
+                            distance = math.sqrt(sum((float(a) - float(b)) ** 2 for a, b in zip(stored, query)))
+                            expected.append((distance, key))
+                    expected.sort()
+                    expected = expected[:13]
+                    sql = f"SELECT id,L2_DISTANCE(v,'[{literal}]') AS d FROM {table}{condition} ORDER BY d LIMIT 13;"
+                    for _ in range(2):
+                        actual = self.db.rows(sql)
+                        self.assertEqual([row[0] for row in actual], [key for _, key in expected])
+                        for row, (distance, _) in zip(actual, expected):
+                            self.assertAlmostEqual(row[1], distance, places=10)
+
+    def test_vector_string_filter_cache_transaction_lifecycle(self):
+        self.db.ok("CREATE TABLE col_lifecycle (id BIGINT PRIMARY KEY, grp VARCHAR(10), v VECTOR(2));")
+        self.db.ok("INSERT INTO col_lifecycle VALUES (3,'a','[0,1]'),(1,'','[0,-1]'),(2,'a','[0,1]');")
+        def query(condition=""):
+            sql = f"SELECT id,grp,L2_DISTANCE(v,'[0,0]') AS d FROM col_lifecycle {condition} ORDER BY d LIMIT 10;"
+            first = self.db.rows(sql)
+            self.assertEqual(first, self.db.rows(sql))
+            return first
+        self.assertEqual(query(), [[1, "", 1], [2, "a", 1], [3, "a", 1]])
+        self.assertEqual(query("WHERE grp='a'"), [[2, "a", 1], [3, "a", 1]])
+        self.assertEqual(query("WHERE grp=''"), [[1, "", 1]])
+        self.assertEqual(query("WHERE grp>='a'"), [[2, "a", 1], [3, "a", 1]])
+        self.db.ok("BEGIN;")
+        self.db.ok("UPDATE col_lifecycle SET grp='b',v='[0,0]' WHERE id=3;")
+        self.assertEqual(query("WHERE grp='b'"), [[3, "b", 0]])
+        self.fails("INSERT INTO col_lifecycle VALUES (4,'b','[0,0]'),(2,'b','[0,0]');")
+        self.assertEqual(query("WHERE grp='b'"), [[3, "b", 0]])
+        self.db.ok("ROLLBACK;")
+        self.assertEqual(query("WHERE grp='b'"), [])
+        self.db.ok("BEGIN;")
+        self.db.ok("DELETE FROM col_lifecycle WHERE id=1;")
+        self.db.ok("COMMIT;")
+        self.assertEqual(query(), [[2, "a", 1], [3, "a", 1]])
+        directory = self.db.directory
+        self.db.close()
+        self.db = core.Database(directory)
+        self.assertEqual(query(), [[2, "a", 1], [3, "a", 1]])
+
+    def test_vector_scan_beyond_cache_budget_remains_correct(self):
+        dimension, count = 1024, 3100
+        zero = "[" + ",".join(["0"] * dimension) + "]"
+        self.db.ok(f"CREATE TABLE large_vectors (id BIGINT PRIMARY KEY, grp BIGINT, v VECTOR({dimension}));")
+        for start in range(0, count, 100):
+            values = ",".join(f"({key},{key % 2},'{zero}')" for key in range(start, min(start + 100, count)))
+            self.db.ok("INSERT INTO large_vectors VALUES " + values + ";", timeout=60)
+        sql = f"SELECT id,L2_DISTANCE(v,'{zero}') AS d FROM large_vectors WHERE grp=1 ORDER BY d LIMIT 5;"
+        for _ in range(2):
+            self.assertEqual(self.db.rows(sql), [[key, 0] for key in (1, 3, 5, 7, 9)])
+        self.db.ok("BEGIN;")
+        self.db.ok("DELETE FROM large_vectors WHERE id=1;")
+        self.assertEqual(self.db.rows(sql), [[key, 0] for key in (3, 5, 7, 9, 11)])
+        self.db.ok("ROLLBACK;")
+        self.assertEqual(self.db.rows(sql), [[key, 0] for key in (1, 3, 5, 7, 9)])
 
 
 class OutputFailureAcceptance(unittest.TestCase):

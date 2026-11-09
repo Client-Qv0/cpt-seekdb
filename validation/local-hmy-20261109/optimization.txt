@@ -1,0 +1,16 @@
+Command: python3 tests/optimization_acceptance.py --binary /mnt/e/MiniVectorDB/build-release/minivectordb -v
+test_alias_projection_multi_key_sort_and_vector_ties (__main__.CacheAndIndexAcceptance.test_alias_projection_multi_key_sort_and_vector_ties) ... ok
+test_different_queries_filters_orders_and_tables_do_not_share_answers (__main__.CacheAndIndexAcceptance.test_different_queries_filters_orders_and_tables_do_not_share_answers) ... ok
+test_failed_statement_does_not_leave_cache_ghosts (__main__.CacheAndIndexAcceptance.test_failed_statement_does_not_leave_cache_ghosts) ... ok
+test_hot_cache_insert_update_delete_commit_and_rollback (__main__.CacheAndIndexAcceptance.test_hot_cache_insert_update_delete_commit_and_rollback) ... ok
+test_primary_key_fast_path_respects_all_predicates_and_transaction_overlay (__main__.CacheAndIndexAcceptance.test_primary_key_fast_path_respects_all_predicates_and_transaction_overlay) ... ok
+test_randomized_hot_read_reference_model (__main__.CacheAndIndexAcceptance.test_randomized_hot_read_reference_model) ... ok
+setUpClass (__main__.LargeResponseAcceptance) ... skipped 'Enable --large in Linux for bounded-memory output tests'
+test_stdout_failure_stops_before_next_statement (__main__.OutputFailureAcceptance.test_stdout_failure_stops_before_next_statement) ... ok
+test_incremental_reader_checks_all_rows_and_suffix (__main__.StreamingReaderChecks.test_incremental_reader_checks_all_rows_and_suffix) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 2.890s
+
+OK (skipped=1)
+exit=0

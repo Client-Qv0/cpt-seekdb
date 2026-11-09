@@ -1,0 +1,41 @@
+{
+  "command": [
+    "docker",
+    "run",
+    "--name",
+    "mvdb-io-check-4117cf9ce2f04436bf28027dfdd669ef",
+    "-i",
+    "--network",
+    "none",
+    "--cpus",
+    "2",
+    "--memory",
+    "128m",
+    "--memory-swap",
+    "128m",
+    "--mount",
+    "type=bind,src=/var/tmp/mvdb-io-check-188382e00fcb46a09f32609eafc160d8,dst=/data",
+    "busybox:latest",
+    "sh",
+    "-c",
+    "echo READY; read x; dd if=/dev/zero of=/data/calibration bs=1M count=16 conv=fsync 2>/dev/null && echo DONE; read x"
+  ],
+  "directory": "/var/tmp/mvdb-io-check-188382e00fcb46a09f32609eafc160d8",
+  "device": "8:48",
+  "pid": 422082,
+  "cgroup": "/sys/fs/cgroup/system.slice/docker-6dc96429a1676cc7c03418f4dac7919a45738cbad1a82ed34f3c54288b6b7020.scope",
+  "image_id": "sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e",
+  "before": "8:48 rbytes=229376 wbytes=0 rios=3 wios=0 dbytes=0 dios=0\n",
+  "memory_max": "134217728\n",
+  "memory_swap_max": "0\n",
+  "reply": "DONE",
+  "after": "8:48 rbytes=421888 wbytes=16777216 rios=5 wios=15 dbytes=0 dios=0\n",
+  "device_delta": {
+    "rbytes": 192512,
+    "wbytes": 16777216
+  },
+  "calibration_write_bytes": 16777216,
+  "observed_writeback": true,
+  "exit_code": 0,
+  "cleanup_returncode": 0
+}

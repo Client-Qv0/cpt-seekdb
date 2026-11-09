@@ -1,0 +1,209 @@
+{
+  "runs": [
+    {
+      "round": 1,
+      "passed": true,
+      "timings": {
+        "initial_container_launch_seconds": 0.7108540720000747,
+        "write_batches_seconds": 0.5283314650005195,
+        "process_first_query_seconds": 0.009078211000087322,
+        "fixed_warmup_seconds_not_in_warm_query_time": 0.011799989999417448,
+        "warm_queries_seconds": 1.1486728780000703,
+        "restart_startup_to_first_response_seconds": 0.7106631920014479
+      },
+      "correctness": {
+        "expected_result_sets": 1011,
+        "checked_result_sets": 1011,
+        "result_sets_passed": 1011,
+        "result_sets_failed": 0,
+        "warm_query_recall": {
+          "unfiltered": {
+            "queries": 500,
+            "minimum_recall_at_10": 1.0,
+            "mean_recall_at_10": 1.0
+          },
+          "filtered": {
+            "queries": 500,
+            "minimum_recall_at_10": 1.0,
+            "mean_recall_at_10": 1.0
+          }
+        },
+        "write_batches_acknowledged": 100,
+        "all_write_batch_counts_correct": true,
+        "restart_probe_correct": true
+      },
+      "readback_rows": 10000,
+      "main_resources": {
+        "samples_retained": 25,
+        "maxima": {
+          "memory_current_bytes": 13914112,
+          "memory_peak_bytes": 13914112,
+          "anon_bytes": 7630848,
+          "file_bytes": 5636096
+        },
+        "memory_events_maximum_counters": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "first_live_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "last_live_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "first_live_io_stat": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0",
+        "last_live_io_stat": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0",
+        "docker_final_state": {
+          "Status": "exited",
+          "Running": false,
+          "OOMKilled": false,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-09T13:17:22.769772707Z",
+          "FinishedAt": "2026-11-09T13:17:24.889196278Z"
+        },
+        "expected_exit_code": 0,
+        "healthy": true,
+        "limitations": "Raw io.stat is retained without physical attribution or a final writeback sync. Independent anon/file sampled maxima need not occur at the same instant. memory.peak reaching the cap alone is not an OOM verdict."
+      },
+      "failure": null
+    },
+    {
+      "round": 2,
+      "passed": true,
+      "timings": {
+        "initial_container_launch_seconds": 0.7138925239996752,
+        "write_batches_seconds": 0.5043022059999203,
+        "process_first_query_seconds": 0.010443260000101873,
+        "fixed_warmup_seconds_not_in_warm_query_time": 0.012369238998871879,
+        "warm_queries_seconds": 1.1859501660001115,
+        "restart_startup_to_first_response_seconds": 0.6425813020014175
+      },
+      "correctness": {
+        "expected_result_sets": 1011,
+        "checked_result_sets": 1011,
+        "result_sets_passed": 1011,
+        "result_sets_failed": 0,
+        "warm_query_recall": {
+          "unfiltered": {
+            "queries": 500,
+            "minimum_recall_at_10": 1.0,
+            "mean_recall_at_10": 1.0
+          },
+          "filtered": {
+            "queries": 500,
+            "minimum_recall_at_10": 1.0,
+            "mean_recall_at_10": 1.0
+          }
+        },
+        "write_batches_acknowledged": 100,
+        "all_write_batch_counts_correct": true,
+        "restart_probe_correct": true
+      },
+      "readback_rows": 10000,
+      "main_resources": {
+        "samples_retained": 26,
+        "maxima": {
+          "memory_current_bytes": 13914112,
+          "memory_peak_bytes": 13914112,
+          "anon_bytes": 7634944,
+          "file_bytes": 5636096
+        },
+        "memory_events_maximum_counters": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "first_live_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "last_live_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "first_live_io_stat": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0",
+        "last_live_io_stat": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0",
+        "docker_final_state": {
+          "Status": "exited",
+          "Running": false,
+          "OOMKilled": false,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-09T13:17:33.203922123Z",
+          "FinishedAt": "2026-11-09T13:17:35.323136324Z"
+        },
+        "expected_exit_code": 0,
+        "healthy": true,
+        "limitations": "Raw io.stat is retained without physical attribution or a final writeback sync. Independent anon/file sampled maxima need not occur at the same instant. memory.peak reaching the cap alone is not an OOM verdict."
+      },
+      "failure": null
+    },
+    {
+      "round": 3,
+      "passed": true,
+      "timings": {
+        "initial_container_launch_seconds": 0.6284861240001192,
+        "write_batches_seconds": 0.49987314399913885,
+        "process_first_query_seconds": 0.011030425999706495,
+        "fixed_warmup_seconds_not_in_warm_query_time": 0.013327107000804972,
+        "warm_queries_seconds": 1.193205069999749,
+        "restart_startup_to_first_response_seconds": 0.632993228999112
+      },
+      "correctness": {
+        "expected_result_sets": 1011,
+        "checked_result_sets": 1011,
+        "result_sets_passed": 1011,
+        "result_sets_failed": 0,
+        "warm_query_recall": {
+          "unfiltered": {
+            "queries": 500,
+            "minimum_recall_at_10": 1.0,
+            "mean_recall_at_10": 1.0
+          },
+          "filtered": {
+            "queries": 500,
+            "minimum_recall_at_10": 1.0,
+            "mean_recall_at_10": 1.0
+          }
+        },
+        "write_batches_acknowledged": 100,
+        "all_write_batch_counts_correct": true,
+        "restart_probe_correct": true
+      },
+      "readback_rows": 10000,
+      "main_resources": {
+        "samples_retained": 26,
+        "maxima": {
+          "memory_current_bytes": 14041088,
+          "memory_peak_bytes": 14041088,
+          "anon_bytes": 7630848,
+          "file_bytes": 5636096
+        },
+        "memory_events_maximum_counters": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        },
+        "first_live_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "last_live_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "first_live_io_stat": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0",
+        "last_live_io_stat": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0",
+        "docker_final_state": {
+          "Status": "exited",
+          "Running": false,
+          "OOMKilled": false,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-11-09T13:17:43.436606581Z",
+          "FinishedAt": "2026-11-09T13:17:45.499622336Z"
+        },
+        "expected_exit_code": 0,
+        "healthy": true,
+        "limitations": "Raw io.stat is retained without physical attribution or a final writeback sync. Independent anon/file sampled maxima need not occur at the same instant. memory.peak reaching the cap alone is not an OOM verdict."
+      },
+      "failure": null
+    }
+  ],
+  "all_passed": true
+}

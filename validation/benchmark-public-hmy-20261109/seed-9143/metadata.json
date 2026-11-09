@@ -1,0 +1,112 @@
+{
+  "scope": "local development protocol; published workload shape only; not official benchmark",
+  "seed": 9143,
+  "rounds": 1,
+  "rows": 10000,
+  "dimension": 128,
+  "queries": 1000,
+  "batch_size": 100,
+  "top_k": 10,
+  "filtered_queries": 500,
+  "data_filesystem": "ext4",
+  "data_root": "/var/tmp/mvdb-public-benchmark-z_pjf9i8",
+  "image_id": "sha256:c9e00f3c21148f7c56f4e44db542b4cd7916f683c1a1fc09108eff839453e79a",
+  "image_binary": "/app/minivectordb",
+  "image_binary_sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c",
+  "source_and_binary": {
+    "binary_path": "/mnt/e/MiniVectorDB/production-image-minivectordb",
+    "binary_sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c",
+    "binary_bytes": 375696,
+    "source": {
+      "source_directory": "/mnt/e/MiniVectorDB/work",
+      "manifest_path": "/mnt/e/MiniVectorDB/work/validation/cardinality-20261109/candidate-v2-production-manifest.json",
+      "manifest_sha256": "7ef726aa64fd13c3f24ae5947a314bcf06ba9c8c31541779de38fe664dcfdd86",
+      "manifest_tree_sha256": "df56a37dcbae572b6283dfd4ee67cccc1e7e15f2117b59760cf7628936ae18f3",
+      "files": [
+        {
+          "path": ".dockerignore",
+          "sha256": "b602eaa29e663fe28b895e2c349dd96eb06ce61272047a550959ff83bb0fb6d8",
+          "bytes": 54
+        },
+        {
+          "path": "CMakeLists.txt",
+          "sha256": "778bece9d37c8f4e83e6ea9e75f34406aee12936fcc0394d77bf96e143982d9b",
+          "bytes": 762
+        },
+        {
+          "path": "Dockerfile",
+          "sha256": "ae444e91aa7a6f2530184fdac3c95c9b9776686199b90043dee89b64d1ff2135",
+          "bytes": 661
+        },
+        {
+          "path": "src/compact_rows.hpp",
+          "sha256": "d38624d37078886fe74231b8512163e6dc286a694ff674befbc8466327bb8d53",
+          "bytes": 14226
+        },
+        {
+          "path": "src/engine.cpp",
+          "sha256": "3b498b877cecb88f876524f0c76b45e415f254d8b48d13fc11c22de97968b8c6",
+          "bytes": 27089
+        },
+        {
+          "path": "src/engine.hpp",
+          "sha256": "4a7f3908ceb85773254ddff50420abc92099c11cac570f0e7aefeb19902232a5",
+          "bytes": 874
+        },
+        {
+          "path": "src/main.cpp",
+          "sha256": "8bcc74f6b6bf9685f9dd4084167732ac81e77e7a68fb47171aa80d8d992c0700",
+          "bytes": 1695
+        },
+        {
+          "path": "src/spill.cpp",
+          "sha256": "fca305b940394ebb88232a14d7b4dc4f4248228b703402f7089b1e4010c054df",
+          "bytes": 12934
+        },
+        {
+          "path": "src/spill.hpp",
+          "sha256": "70451b7dd2c76a323c8ef86d2c697f8012001b916be6c0ca3e69ecb605e38d44",
+          "bytes": 950
+        },
+        {
+          "path": "src/sql.cpp",
+          "sha256": "7e30d939628b8375b027e82d3aeca26566ac85232ef1fee980c89a0fa5e3bd51",
+          "bytes": 11685
+        },
+        {
+          "path": "src/sql.hpp",
+          "sha256": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593",
+          "bytes": 1395
+        },
+        {
+          "path": "src/storage.cpp",
+          "sha256": "6f0513e41683887817deb6afc9aad29dfcce3d51998d1b27c218c574e996716f",
+          "bytes": 22747
+        },
+        {
+          "path": "src/storage.hpp",
+          "sha256": "80acf1b26e5486ec178a92909f3ba41e0faf49e6779359fa614a2008b026b40b",
+          "bytes": 1412
+        }
+      ],
+      "all_manifest_files_verified": true
+    }
+  },
+  "docker_socket": "unix:///var/run/docker.sock",
+  "cpuset": "0,1",
+  "workload_sha256": "654773b11b068ea23dae7f6887aaf3b5353cec8ce2478e756c165da2b0565e03",
+  "oracle": {
+    "numpy_version": "1.26.4",
+    "storage_and_query_quantization": "IEEE-754 binary32, then promoted to binary64",
+    "distance": "sqrt(sum((stored - query)^2, dtype=float64)); exhaustive eligible-record scan",
+    "tie_break": "primary key ascending",
+    "absolute_tolerance": 1e-10,
+    "relative_tolerance": 1e-12,
+    "location": "Driver process outside database cgroup; computed before all measured runs"
+  },
+  "limitations": [
+    "Official generator/seed, driver/protocol, baseline and limits not supplied.",
+    "Shared WSL ext4 device; cgroup I/O is raw, not a calibrated exclusive data-device score.",
+    "Cgroup first sample is after container launch; no global cache drops or filesystem-wide sync."
+  ]
+}

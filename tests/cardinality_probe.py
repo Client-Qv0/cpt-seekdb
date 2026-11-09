@@ -95,7 +95,8 @@ class ContainerDatabase:
     A caller must time a real query to measure completed recovery. close() retains
     last live counters and Docker OOMKilled even if the cgroup disappears.
     """
-    def __init__(self, binary, data_dir, image=IMAGE, socket=SOCKET, label="probe", cpuset=None):
+    def __init__(self, binary, data_dir, image=IMAGE, socket=SOCKET, label="probe", cpuset=None,
+                 image_binary=None):
         started = time.monotonic()
         self.binary = Path(binary).resolve()
         self.directory = Path(data_dir).resolve()
@@ -119,9 +120,10 @@ class ContainerDatabase:
                        "requested_cpuset": cpuset}
         args = ["docker", "run", "--name", self.name, "-i", "--network", "none",
                 "--cpus", "2", "--memory", "128m", "--memory-swap", "128m",
-                "--mount", f"type=bind,src={self.directory},dst=/data",
-                "--mount", f"type=bind,src={self.binary},dst=/probe/minivectordb,readonly",
-                "--entrypoint", "/probe/minivectordb", image,
+                "--mount", f"type=bind,src={self.directory},dst=/data"]
+        if image_binary is None:
+            args += ["--mount", f"type=bind,src={self.binary},dst=/probe/minivectordb,readonly"]
+        args += ["--entrypoint", image_binary or "/probe/minivectordb", image,
                 "--data-dir", "/data", "--dev-protocol"]
         if cpuset is not None:
             args[2:2] = ["--cpuset-cpus", str(cpuset)]

@@ -1,0 +1,24 @@
+Command: ctest --test-dir /mnt/e/MiniVectorDB/build-release --output-on-failure
+Internal ctest changing into directory: /mnt/e/MiniVectorDB/build-release
+Test project /mnt/e/MiniVectorDB/build-release
+    Start 1: parser
+1/5 Test #1: parser ...........................   Passed    0.02 sec
+    Start 2: storage
+2/5 Test #2: storage ..........................   Passed    1.98 sec
+    Start 3: engine_extra
+3/5 Test #3: engine_extra .....................   Passed    0.13 sec
+    Start 4: spill
+4/5 Test #4: spill ............................***Failed    1.14 sec
+truncate sort temporary file: No such file or directory (test directory "/mnt/e/MiniVectorDB/tmp/mvdb-spill-369087-9226883428237")
+
+    Start 5: compact_rows
+5/5 Test #5: compact_rows .....................   Passed    0.37 sec
+
+80% tests passed, 1 tests failed out of 5
+
+Total Test time (real) =   3.71 sec
+
+The following tests FAILED:
+	  4 - spill (Failed)
+Errors while running CTest
+exit=8
