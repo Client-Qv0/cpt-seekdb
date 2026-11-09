@@ -1,0 +1,40 @@
+{
+  "audit_id": "audit-20261109-42affed2e283",
+  "source_tree_sha256": "42affed2e283c8710151931f6f419eee64210eda42245be6d357dc20ae520bb2",
+  "image_id": "sha256:27ea1213ba52ad529ba46eee11bd694b0a0a10cf36c2f9a6415f5f985376b6ef",
+  "binary_sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f",
+  "measurement_type": "diagnostic only; separate from the 18-case container acceptance suite",
+  "workload": "1000 rows, four-dimensional vectors, ten 100-row INSERT statements in one acknowledged COMMIT, one filtered exact Top10",
+  "host_pid": 10176,
+  "cgroup_path": "/sys/fs/cgroup/system.slice/docker-0c933c5ee688282903dec17434d320e3b8faa6bdd073f685e36dcb149947dbda.scope",
+  "network_mode": "none",
+  "nano_cpus": 2000000000,
+  "memory_limit": 2147483648,
+  "memory_swap_total_limit": 2147483648,
+  "data_mount_device": "/dev/sdd   8:48  ext4",
+  "before": {
+    "memory.peak": "5488640",
+    "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+    "memory.max": "2147483648",
+    "memory.swap.max": "0",
+    "cpu.max": "200000 100000",
+    "io.stat": "8:48 rbytes=4096 wbytes=4096 rios=1 wios=1 dbytes=0 dios=0"
+  },
+  "after": {
+    "memory.peak": "5488640",
+    "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+    "memory.max": "2147483648",
+    "memory.swap.max": "0",
+    "cpu.max": "200000 100000",
+    "io.stat": "8:48 rbytes=8192 wbytes=81920 rios=2 wios=4 dbytes=0 dios=0"
+  },
+  "cgroup_counters_verified": true,
+  "io_writeback_attribution_verified": false,
+  "dedicated_device": false,
+  "official_resource_score_verified": false,
+  "limitations": [
+    "Counters were read from the actual container cgroup while the database remained alive.",
+    "The /data filesystem and image filesystem share the WSL device; dedicated-device/writeback-accounting calibration was not performed.",
+    "No official baseline, cold-cache protocol or full benchmark was run; these counters cannot establish ranking or official B/M compliance."
+  ]
+}

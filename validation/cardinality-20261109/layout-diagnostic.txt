@@ -1,0 +1,8 @@
+Scope: development-only sizeof and three allocation-size diagnostics on WSL Ubuntu-24.04 / GNU C++ 13.3.0. This is not a production database or cgroup memory/performance result.
+Original execution: g++ -std=c++17 -x c++ -o /tmp/round2-layout-only - && /tmp/round2-layout-only (source supplied on stdin).
+The archived .cpp contains that source plus two explanatory comments; raw original stdout follows.
+
+Ref=16 Entry=24 MapNode=56 OffsetOnlyNode=48 Page128=3080
+requested=48 usable=56
+requested=56 usable=56
+requested=3080 usable=3080

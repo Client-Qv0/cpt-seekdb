@@ -1,0 +1,51 @@
+{
+  "compiler": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "scope": "Unchanged diagnostic helper source with frozen V2 storage; same -O3 -DNDEBUG, baseline helper reused with SHA verified. Not production executable end-to-end.",
+  "variants": [
+    {
+      "version": "baseline",
+      "binary_path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/recovery-helper-baseline",
+      "binary_sha256": "8efc901c7412b991e2f9faa0bfd50c3f2ad8d6187a6e7210582f0c6b8b73175c",
+      "helper_source_sha256": "f70812bb093c7437f44a005a599a84a7ee2d5d9bf3c48f5ad82573ecb7c9ad97",
+      "implementation_sha256": {
+        "storage.cpp": "f122b840ee85d6dfcc408192b50d57aa70084e0cf5fbf8fe5cfabbcf09bcacf4",
+        "storage.hpp": "80acf1b26e5486ec178a92909f3ba41e0faf49e6779359fa614a2008b026b40b",
+        "sql.hpp": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593"
+      },
+      "command": [
+        "g++",
+        "-std=c++17",
+        "-O3",
+        "-DNDEBUG",
+        "-I/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/baseline/source/src",
+        "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/recovery-timing-helper.cpp",
+        "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/baseline/source/src/storage.cpp",
+        "-o",
+        "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/recovery-helper-baseline"
+      ]
+    },
+    {
+      "version": "candidate-v2",
+      "binary_path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/recovery-helper-candidate-v2",
+      "binary_sha256": "f9221d5edc2a0c44818ec29f1459c5443c82f9e46d46531da8fc3843dcb6c011",
+      "helper_source_sha256": "f70812bb093c7437f44a005a599a84a7ee2d5d9bf3c48f5ad82573ecb7c9ad97",
+      "implementation_sha256": {
+        "storage.cpp": "6f0513e41683887817deb6afc9aad29dfcce3d51998d1b27c218c574e996716f",
+        "storage.hpp": "80acf1b26e5486ec178a92909f3ba41e0faf49e6779359fa614a2008b026b40b",
+        "sql.hpp": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593",
+        "compact_rows.hpp": "d38624d37078886fe74231b8512163e6dc286a694ff674befbc8466327bb8d53"
+      },
+      "command": [
+        "g++",
+        "-std=c++17",
+        "-O3",
+        "-DNDEBUG",
+        "-I/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate-v2/source/src",
+        "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/recovery-timing-helper.cpp",
+        "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate-v2/source/src/storage.cpp",
+        "-o",
+        "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/recovery-helper-candidate-v2"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "audit_id": "audit-20261109-42affed2e283",
+  "recorded_at": "2026-11-09T05:33:41.442043+00:00",
+  "record_type": "post-run evidence binding; not retroactive timestamps for historical tests",
+  "git_base_commit": "c842a368c3394748d0499386c18f6b465242e141",
+  "working_tree_uncommitted": true,
+  "official_assessment_submitted": false,
+  "production_optimization_during_audit": false,
+  "production_tree_sha256": "42affed2e283c8710151931f6f419eee64210eda42245be6d357dc20ae520bb2",
+  "production_files_verified_current_and_snapshot": 12,
+  "source_manifest_sha256": "b4ae0c4766498cdb17858a429800553eaa325d4eabdb3ae1afe67fc3f71f32e6",
+  "binary_inventory": [
+    {
+      "configuration": "release",
+      "path": "build-audit/audit-20261109-42affed2e283/release/minivectordb",
+      "bytes": 367368,
+      "sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f"
+    },
+    {
+      "configuration": "release",
+      "path": "build-audit/audit-20261109-42affed2e283/release/test_parser",
+      "bytes": 111600,
+      "sha256": "ca0d43ce2445498b76d91bcf416e9d534d98276095cd773277fd8ea53202b4e8"
+    },
+    {
+      "configuration": "release",
+      "path": "build-audit/audit-20261109-42affed2e283/release/test_storage",
+      "bytes": 142560,
+      "sha256": "8caec50d918daf750d21b01a355ca55e795d2b2ca14d6d89927028acde98c3cc"
+    },
+    {
+      "configuration": "release",
+      "path": "build-audit/audit-20261109-42affed2e283/release/test_engine_extra",
+      "bytes": 372568,
+      "sha256": "612c82779150406ec5b316ca55d7d36e789bd9ccabdfd1dbaf9ee2a92103b197"
+    },
+    {
+      "configuration": "release",
+      "path": "build-audit/audit-20261109-42affed2e283/release/test_spill",
+      "bytes": 165752,
+      "sha256": "dbeaf6a6638bff988ff9fe82d0ccf77afed599684dcda265a458cb033fdf6304"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-audit/audit-20261109-42affed2e283/sanitize/minivectordb",
+      "bytes": 10294296,
+      "sha256": "dfcf87896fe94841abe6f7a936f6beae218de3c85c47b9fef159e95314480f78"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-audit/audit-20261109-42affed2e283/sanitize/test_parser",
+      "bytes": 2304224,
+      "sha256": "7de29b8f532370d11c2890e71efa0618ec5b96a104aff4ac8b3e380f9fa08963"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-audit/audit-20261109-42affed2e283/sanitize/test_storage",
+      "bytes": 2818352,
+      "sha256": "123ebeae6726cdb787c3b60012c2347381a5b199e60b44d94702ba782898f842"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-audit/audit-20261109-42affed2e283/sanitize/test_engine_extra",
+      "bytes": 10654240,
+      "sha256": "c7c06f0825fd6e1347978aaca346ff550d57e66bead2b712df427f6b3167d262"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-audit/audit-20261109-42affed2e283/sanitize/test_spill",
+      "bytes": 2461208,
+      "sha256": "ee4aaeec094c36781794e05895d6defab5c923a7104d874c65f439e1d733a787"
+    }
+  ],
+  "native_build": {
+    "release": "cmake -S \"$SOURCE\" -B \"$BUILD/release\" -DCMAKE_BUILD_TYPE=Release; cmake --build \"$BUILD/release\" --parallel 4",
+    "sanitize": "cmake -S \"$SOURCE\" -B \"$BUILD/sanitize\" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=\"-fsanitize=address,undefined -fno-omit-frame-pointer\" -DCMAKE_EXE_LINKER_FLAGS=\"-fsanitize=address,undefined\"; cmake --build \"$BUILD/sanitize\" --parallel 4",
+    "recorded_flags": [
+      "release-flags.make",
+      "sanitize-flags.make",
+      "release-link.txt",
+      "sanitize-link.txt"
+    ],
+    "SOURCE": "C:/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-audit/audit-20261109-42affed2e283/source",
+    "BUILD": "C:/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-audit/audit-20261109-42affed2e283"
+  },
+  "native_runs": [
+    {
+      "report": "ctest-release.txt",
+      "sha256": "f8ecafe457716715a6158c0f9208f2c5388a05687a71151c8cda631caa5171db",
+      "command": "ctest --test-dir \"$BUILD/release\" --output-on-failure",
+      "exit_code": 0,
+      "result": "4/4 suites"
+    },
+    {
+      "report": "acceptance-release.txt",
+      "sha256": "48ce90742688e05e9d19f28359c67c1e4237e4e37ca49f49cd98b57bb50e54f7",
+      "command": "python3 \"$SOURCE/tests/acceptance.py\" --binary \"$BUILD/release/minivectordb\" --stress -v",
+      "exit_code": 0,
+      "result": "19 passed"
+    },
+    {
+      "report": "optimization-release.txt",
+      "sha256": "2ee6cfd173f3ee58010506181feaf2635d6f12d13a90b0278439a650838970b6",
+      "command": "python3 \"$SOURCE/tests/optimization_acceptance.py\" --binary \"$BUILD/release/minivectordb\" --large -v",
+      "exit_code": 0,
+      "result": "11 passed"
+    },
+    {
+      "report": "ctest-sanitize.txt",
+      "sha256": "e0b94eed43534e451ab3c4a2d1b3c705393d20053e004ece172cdd441501e8c8",
+      "command": "ctest --test-dir \"$BUILD/sanitize\" --output-on-failure",
+      "exit_code": 0,
+      "result": "4/4 suites"
+    },
+    {
+      "report": "acceptance-sanitize.txt",
+      "sha256": "2bc7faeac425908beec8100a0f931d897fe20cb131db9c3bd64c812b373e8362",
+      "command": "python3 \"$SOURCE/tests/acceptance.py\" --binary \"$BUILD/sanitize/minivectordb\" -v",
+      "exit_code": 0,
+      "result": "18 passed, 1 stress skipped"
+    },
+    {
+      "report": "optimization-sanitize.txt",
+      "sha256": "177a15d9440bea1f0ef951846a7e975696ca89304efa25fcefd969ea403d069d",
+      "command": "python3 \"$SOURCE/tests/optimization_acceptance.py\" --binary \"$BUILD/sanitize/minivectordb\" -v",
+      "exit_code": 0,
+      "result": "8 passed, large class (3 cases) skipped"
+    }
+  ],
+  "docker_image": {
+    "recorded_at_utc": "2026-11-09T04:25:13.214643+00:00",
+    "build_completed": true,
+    "real_docker_build": true,
+    "dockerfile_sha256": "ae444e91aa7a6f2530184fdac3c95c9b9776686199b90043dee89b64d1ff2135",
+    "image_id": "sha256:27ea1213ba52ad529ba46eee11bd694b0a0a10cf36c2f9a6415f5f985376b6ef",
+    "image_repo_digests": [],
+    "local_image_digest_note": "Locally built image has content-addressed image ID; no registry manifest digest exists until exported/pushed.",
+    "base_image_id": "sha256:d9b8c34d61a9b9a3c44cab883d7d2f2619d674966ab520186f799cf32e3e0377",
+    "base_repo_digests": [
+      "ubuntu@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852"
+    ],
+    "container_binary_sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f",
+    "source_manifest_file": "docker-source-manifest.json",
+    "source_files_changed_after_build": [],
+    "builder_packages": "cmake\t3.28.3-1build7\ng++\t4:13.2.0-7ubuntu1\ng++-13\t13.3.0-6ubuntu2~24.04.1\nlibc6:amd64\t2.39-0ubuntu8.9\nlibstdc++6:amd64\t14.2.0-4ubuntu2~24.04.1\nmake\t4.3-4.1build2",
+    "runtime_packages": "libc6:amd64\t2.39-0ubuntu8.9\nlibgcc-s1:amd64\t14.2.0-4ubuntu2~24.04.1\nlibstdc++6:amd64\t14.2.0-4ubuntu2~24.04.1",
+    "docker_version": "29.1.3",
+    "runtime_network": "none",
+    "official_driver_used": false,
+    "audit_id": "audit-20261109-42affed2e283",
+    "audit_source_tree_sha256": "42affed2e283c8710151931f6f419eee64210eda42245be6d357dc20ae520bb2",
+    "audit_source_manifest_sha256": "b4ae0c4766498cdb17858a429800553eaa325d4eabdb3ae1afe67fc3f71f32e6",
+    "all_12_build_inputs_match_frozen_audit": true,
+    "actual_builder_copy_hashes_match": true,
+    "source_reuse_note": "Build started before audit naming; every build input hash and actual builder COPY source matches frozen audit exactly. No image relabeling or source substitution.",
+    "native_audit_binary_sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f",
+    "native_and_container_binaries_identical": true
+  },
+  "independent_oracle": {
+    "script": "oracle-v2.py",
+    "script_sha256": "027611ff2b8369ede8a16213ceb84c96b385c8ab7c1ec1d8ae7bade3c8b5bee1",
+    "result": "performance-correctness.json",
+    "result_sha256": "fa4fcbc428f86f74c7a0ca77455750da2004f22bd206d1338164ad2132b088bd",
+    "numpy_version": "2.3.3",
+    "runtime": "Python 3.12.3 Linux",
+    "performance_claim": false
+  },
+  "archives": [
+    {
+      "path": "source-snapshot.zip",
+      "sha256": "6605034727a59bc7d919406592a3b0f23277e485d3376a9fcbad3dcaaea419da",
+      "note": "ZIP timestamps normalized; content hashes in manifests"
+    },
+    {
+      "path": "tests-snapshot.zip",
+      "sha256": "be4ec0bfa498882fb9880fd9ff29e075e0807b4d4cc44993bb803e2618438570",
+      "note": "ZIP timestamps normalized; content hashes in manifests"
+    }
+  ],
+  "resource_report": {
+    "path": "docker-resource-regression-results.json",
+    "sha256": "f72bae22d869e618518e1bbe44fc542c62ccb431a4f7d03517e8b9d1bf2fbd4f",
+    "official_scoring": false
+  },
+  "legacy_evidence_note": "Old reports preserved, no retroactive current-version attribution; see AUDIT.md"
+}

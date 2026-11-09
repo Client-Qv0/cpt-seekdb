@@ -1,0 +1,67 @@
+[
+  {
+    "label": "candidate",
+    "argv": [
+      "python3",
+      "-u",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/baseline-driver.py",
+      "--binary",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate/release/minivectordb",
+      "--output",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/candidate-results.json",
+      "--source-manifest",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/candidate-production-manifest.json",
+      "--checkpoint-helper",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/checkpoint-helper-candidate",
+      "--manage-daemon"
+    ],
+    "driver_sha256": "d65b15be4d3bef65f1e5cf770d818dfcce0c60cc7b6037a07bb3b89d565e592a",
+    "binary_sha256": "6d9c0863f80d8ef74e7c0e3bd8ee63c95fe287db9c3b40341d45859a2afd3093"
+  },
+  {
+    "label": "transaction-baseline",
+    "argv": [
+      "python3",
+      "-u",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/probe-v2.py",
+      "--binary",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/baseline/release/minivectordb",
+      "--output",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/transaction-baseline-results.json",
+      "--source-manifest",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/audit-20261109-42affed2e283/production-manifest.json",
+      "--checkpoint-helper",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/checkpoint-helper-baseline",
+      "--manage-daemon",
+      "--sizes",
+      "1000000",
+      "--transaction-sizes",
+      "25000,100000,250000"
+    ],
+    "driver_sha256": "d17b60f2b86c582cd870edf5118d40c255069b2b37840caaf07cb08d8a850525",
+    "binary_sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f"
+  },
+  {
+    "label": "transaction-candidate",
+    "argv": [
+      "python3",
+      "-u",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/probe-v2.py",
+      "--binary",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate/release/minivectordb",
+      "--output",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/transaction-candidate-results.json",
+      "--source-manifest",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/candidate-production-manifest.json",
+      "--checkpoint-helper",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/checkpoint-helper-candidate",
+      "--manage-daemon",
+      "--sizes",
+      "1000000",
+      "--transaction-sizes",
+      "25000,100000,250000"
+    ],
+    "driver_sha256": "d17b60f2b86c582cd870edf5118d40c255069b2b37840caaf07cb08d8a850525",
+    "binary_sha256": "6d9c0863f80d8ef74e7c0e3bd8ee63c95fe287db9c3b40341d45859a2afd3093"
+  }
+]

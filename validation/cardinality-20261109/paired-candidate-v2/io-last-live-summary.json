@@ -1,0 +1,686 @@
+{
+  "script_sha256": "7ad2a9b031c1dac0b908c0e444b9eb6c85d8041edb0726ad6a5d74c78e4cc9de",
+  "source_root": "/var/tmp/minivectordb-paired-candidate-v2",
+  "entry_count": 36,
+  "interpretation": "These are each database cgroup last-live io.stat raw cumulative device counters, not database file sizes, not finalized lifetime writeback accounting, and not official physical IO. No sync or dedicated-device attribution calibration is performed. Devices are retained separately without summing possibly stacked-device counters. Missing/empty counters are preserved rather than fabricated.",
+  "entries": [
+    {
+      "run": "cardinality-scalar-1000000-pair-1-1-baseline",
+      "variant": "baseline",
+      "pair_index": 0,
+      "role": "main",
+      "run_json_sha256": "3256131d7e7937e361eee7330d353ec462984f97a81cfb9e5ea3ef208619f9c2",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-c39f72f43dc6e5e806be40221e30b82b9141a1e29a293eec5ddcb23cfc71d9aa.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 104.419240694,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=57167872 rios=0 wios=2022 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 57167872,
+          "rios": 0,
+          "wios": 2022,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-scalar-1000000-pair-1-1-baseline",
+      "variant": "baseline",
+      "pair_index": 0,
+      "role": "restart",
+      "run_json_sha256": "3256131d7e7937e361eee7330d353ec462984f97a81cfb9e5ea3ef208619f9c2",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-277ff1a4428f2fa5523038b8537b42c5035d80375aa39243e7a2a3cd038f8c69.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 106.778575569,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "cardinality-scalar-1000000-pair-1-2-candidate",
+      "variant": "candidate",
+      "pair_index": 0,
+      "role": "main",
+      "run_json_sha256": "2f727d4d25a08eace36f65230f780aa909386047a7e6f3b8fe641d38414be396",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-13a187913e7e530bf6cce8b9e58248e79491518e34687a6ff81acfb826bce0d6.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 116.661782528,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=57167872 rios=0 wios=2022 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 57167872,
+          "rios": 0,
+          "wios": 2022,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-scalar-1000000-pair-1-2-candidate",
+      "variant": "candidate",
+      "pair_index": 0,
+      "role": "restart",
+      "run_json_sha256": "2f727d4d25a08eace36f65230f780aa909386047a7e6f3b8fe641d38414be396",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-f192f1990543ce59daab1115b2d56c9c0f1c58d519411179bd916af76c473467.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 118.785620073,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "cardinality-scalar-1000000-pair-2-1-candidate",
+      "variant": "candidate",
+      "pair_index": 1,
+      "role": "main",
+      "run_json_sha256": "3f5501163f21bd96d5886e7bc0a474f8e14d5dd043519019a15bf63fc76af201",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-d300d41191776a20a437d80cef0b329befb480f80cc1c28e954935ea02f0121a.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 128.860279473,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=57167872 rios=0 wios=2022 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 57167872,
+          "rios": 0,
+          "wios": 2022,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-scalar-1000000-pair-2-1-candidate",
+      "variant": "candidate",
+      "pair_index": 1,
+      "role": "restart",
+      "run_json_sha256": "3f5501163f21bd96d5886e7bc0a474f8e14d5dd043519019a15bf63fc76af201",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-676acea00c62152b90e18ee41d498d742a0c60e4594146db40eead12c0931545.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 131.108570584,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "cardinality-scalar-1000000-pair-2-2-baseline",
+      "variant": "baseline",
+      "pair_index": 1,
+      "role": "main",
+      "run_json_sha256": "52390110e47c118533ccf1aa738f2f88562aa204ffa15f8d9d694d1acaa4258e",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-9d5a36309a590b6ab02408257a7ba297942ad5f854d87fa8514855725a60e88b.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 140.665898329,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=57167872 rios=0 wios=2022 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 57167872,
+          "rios": 0,
+          "wios": 2022,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-scalar-1000000-pair-2-2-baseline",
+      "variant": "baseline",
+      "pair_index": 1,
+      "role": "restart",
+      "run_json_sha256": "52390110e47c118533ccf1aa738f2f88562aa204ffa15f8d9d694d1acaa4258e",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-4e5e6232fbdad38ba6d14f4775f3a204588ec3c28ec18cc5653ab6eac3bcbe5f.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 142.968424923,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "cardinality-scalar-1000000-pair-3-1-baseline",
+      "variant": "baseline",
+      "pair_index": 2,
+      "role": "main",
+      "run_json_sha256": "495efc9beafa1bb8bdacfeffb8de52f76087e4c2f133c57bda4d9493d9dd23d8",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-fa6ede94bc2d52a8ac68514cbb654df2d3984a09732dbafcd6609712f6a9e307.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 152.542097068,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=57167872 rios=0 wios=2022 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 57167872,
+          "rios": 0,
+          "wios": 2022,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-scalar-1000000-pair-3-1-baseline",
+      "variant": "baseline",
+      "pair_index": 2,
+      "role": "restart",
+      "run_json_sha256": "495efc9beafa1bb8bdacfeffb8de52f76087e4c2f133c57bda4d9493d9dd23d8",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-d3572aa4a445ce38bdfe94dedb10d2b0991efccf9f342acf017463b2738a2408.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 154.855746548,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "cardinality-scalar-1000000-pair-3-2-candidate",
+      "variant": "candidate",
+      "pair_index": 2,
+      "role": "main",
+      "run_json_sha256": "8e10c170af56098beab8ad13ad452d5a1317b91fcbc39fdcf3c8f40b242dce2b",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-20cd8f8e98b8c39303eb4765a460c49193629e765ab0e5e67675e5a11f451116.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 164.737474506,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=57167872 rios=0 wios=2022 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 57167872,
+          "rios": 0,
+          "wios": 2022,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-scalar-1000000-pair-3-2-candidate",
+      "variant": "candidate",
+      "pair_index": 2,
+      "role": "restart",
+      "run_json_sha256": "8e10c170af56098beab8ad13ad452d5a1317b91fcbc39fdcf3c8f40b242dce2b",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-bb6a02835546a740b5961615de7b1a74a90de797e2f556af9b781ed111eccfed.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 166.921551143,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "cardinality-vector4-1000000-pair-1-1-baseline",
+      "variant": "baseline",
+      "pair_index": 0,
+      "role": "main",
+      "run_json_sha256": "7b11947bf46169a400b0820ef21b9a4ba8b09ab991fcf2f0fbd0217f970b97f5",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-b42e6788c511a0690c7b353b9493711d3fe3112f327960842ff727a88fac23b9.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 178.414659508,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=829984768 wbytes=74899456 rios=329 wios=2026 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 829984768,
+          "wbytes": 74899456,
+          "rios": 329,
+          "wios": 2026,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-vector4-1000000-pair-1-1-baseline",
+      "variant": "baseline",
+      "pair_index": 0,
+      "role": "restart",
+      "run_json_sha256": "7b11947bf46169a400b0820ef21b9a4ba8b09ab991fcf2f0fbd0217f970b97f5",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-88b09eb989ec100b50b336ad16659ed35eb1d358bd4b3230feb19a6a7278a6b1.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 180.778446259,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=12574720 wbytes=0 rios=13 wios=0 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 12574720,
+          "wbytes": 0,
+          "rios": 13,
+          "wios": 0,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-vector4-1000000-pair-1-2-candidate",
+      "variant": "candidate",
+      "pair_index": 0,
+      "role": "main",
+      "run_json_sha256": "d4f3b06ac51f5e40be1fee3a6b32050bbeaa6cd538fe819731b66bd96e3906a8",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-ec5b39decf352894c30b09b2885c6f08e7ec6a69344c0f72002bbc388d7acc22.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 191.990271196,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=73170944 rios=0 wios=2023 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 73170944,
+          "rios": 0,
+          "wios": 2023,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-vector4-1000000-pair-1-2-candidate",
+      "variant": "candidate",
+      "pair_index": 0,
+      "role": "restart",
+      "run_json_sha256": "d4f3b06ac51f5e40be1fee3a6b32050bbeaa6cd538fe819731b66bd96e3906a8",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-bd0037b539b35f6b21c7a37237ecd0054398bc188f98635f8db8c6b6fa8278c1.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 194.225067094,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "cardinality-vector4-1000000-pair-2-1-candidate",
+      "variant": "candidate",
+      "pair_index": 1,
+      "role": "main",
+      "run_json_sha256": "752d88e66a3a96913a431bf00bb4b11fca4e6d87eef039353d24a3debc162ee2",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-75142134d2fdcf14e141c80046847747f756c958b4a69a96d5a86e6efc8eee4d.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 205.648891141,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=73170944 rios=0 wios=2023 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 73170944,
+          "rios": 0,
+          "wios": 2023,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-vector4-1000000-pair-2-1-candidate",
+      "variant": "candidate",
+      "pair_index": 1,
+      "role": "restart",
+      "run_json_sha256": "752d88e66a3a96913a431bf00bb4b11fca4e6d87eef039353d24a3debc162ee2",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-a7c3a6aebed9000b8e33f868448a1c853b72413e41fe7d263b479ad76c6182e7.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 207.849727366,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "cardinality-vector4-1000000-pair-2-2-baseline",
+      "variant": "baseline",
+      "pair_index": 1,
+      "role": "main",
+      "run_json_sha256": "29b9a7d47e88b2b666cad3de647ee4536b4ac390f7b2c0aed97bb3a6d4f8bdb8",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-c9156e8ead17e0b1583fbbd5f52b63adba86e4a5514492541b9f5a3b77592c43.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 219.313708825,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=829984768 wbytes=74899456 rios=340 wios=2026 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 829984768,
+          "wbytes": 74899456,
+          "rios": 340,
+          "wios": 2026,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-vector4-1000000-pair-2-2-baseline",
+      "variant": "baseline",
+      "pair_index": 1,
+      "role": "restart",
+      "run_json_sha256": "29b9a7d47e88b2b666cad3de647ee4536b4ac390f7b2c0aed97bb3a6d4f8bdb8",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-35b0a9c7ea4e338bfaea5c09f8af45c1a8ab93544c00ade8c25616a5bb989190.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 221.601471793,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=12574720 wbytes=0 rios=14 wios=0 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 12574720,
+          "wbytes": 0,
+          "rios": 14,
+          "wios": 0,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-vector4-1000000-pair-3-1-baseline",
+      "variant": "baseline",
+      "pair_index": 2,
+      "role": "main",
+      "run_json_sha256": "a4113d9f4240fa880a14ed2a20010a753ba5f9d567a1f54ec80b1267d35efdb7",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-a1b7b31d8f60a67574495b316127ec17221e34e02d88c89681a563f11b204fba.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 233.008338668,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=829980672 wbytes=74899456 rios=305 wios=2026 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 829980672,
+          "wbytes": 74899456,
+          "rios": 305,
+          "wios": 2026,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-vector4-1000000-pair-3-1-baseline",
+      "variant": "baseline",
+      "pair_index": 2,
+      "role": "restart",
+      "run_json_sha256": "a4113d9f4240fa880a14ed2a20010a753ba5f9d567a1f54ec80b1267d35efdb7",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-f6b62f397a3ace501d948e4cae0feb316e0202ba9bf9c8764df8649d6b20d966.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 235.360869142,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=12574720 wbytes=0 rios=11 wios=0 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 12574720,
+          "wbytes": 0,
+          "rios": 11,
+          "wios": 0,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-vector4-1000000-pair-3-2-candidate",
+      "variant": "candidate",
+      "pair_index": 2,
+      "role": "main",
+      "run_json_sha256": "1c58921718f2861d152c7d350fe9d21efd273d0860cf12d45a5f52168a70a11a",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-443de24aed35e4e1d349bb7849f367a325a727be16bccea79cda88a8a8dbd4d8.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 246.742380972,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=73170944 rios=0 wios=2023 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 73170944,
+          "rios": 0,
+          "wios": 2023,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "cardinality-vector4-1000000-pair-3-2-candidate",
+      "variant": "candidate",
+      "pair_index": 2,
+      "role": "restart",
+      "run_json_sha256": "1c58921718f2861d152c7d350fe9d21efd273d0860cf12d45a5f52168a70a11a",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-d87f49d9f67b057c34e6c890401439369f41820d22671d8c5c8011609d8a78ae.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 248.976042418,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "vector128-pair-1-1-baseline",
+      "variant": "baseline",
+      "pair_index": 0,
+      "role": "main",
+      "run_json_sha256": "e33de830a8d57b556d32e78395fc8b3adad1e85c86c3d7eaeaa42d9bec7165f7",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-7c45a704f2e76fbc6219f567f8fb970caa00455a33662dbfade7681557ab7b47.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 75.527927308,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 6049792,
+          "rios": 0,
+          "wios": 208,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "vector128-pair-1-1-baseline",
+      "variant": "baseline",
+      "pair_index": 0,
+      "role": "restart",
+      "run_json_sha256": "e33de830a8d57b556d32e78395fc8b3adad1e85c86c3d7eaeaa42d9bec7165f7",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-d8d08810dee00601f10d408c93c728d160ca52031533addb9129b9030bc03dbf.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 76.533639287,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "vector128-pair-1-2-candidate",
+      "variant": "candidate",
+      "pair_index": 0,
+      "role": "main",
+      "run_json_sha256": "6a9b929dc6538a32aae27e17fb46c045608c216511e5ce703dfadb2c93f78a4e",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-a46554f7b84c578a4c36c66f9a02cdef1f1e17e31456e51185af94d4d9caeda7.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 79.117393295,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 6049792,
+          "rios": 0,
+          "wios": 208,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "vector128-pair-1-2-candidate",
+      "variant": "candidate",
+      "pair_index": 0,
+      "role": "restart",
+      "run_json_sha256": "6a9b929dc6538a32aae27e17fb46c045608c216511e5ce703dfadb2c93f78a4e",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-b0807245a2311052aac1a7b1779d555aa9627398c4a69f0e7f677a457a02a2e7.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 80.166278309,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "vector128-pair-2-1-candidate",
+      "variant": "candidate",
+      "pair_index": 1,
+      "role": "main",
+      "run_json_sha256": "3335247e2bfcba900088775d0af5c0b0ae88c9bb164d52469d5241ea5fba9fba",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-f8a43778821f86f37fcae8b5257d4af9b860ac882d6a4be3a4a60c22a1629612.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 82.699281483,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 6049792,
+          "rios": 0,
+          "wios": 208,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "vector128-pair-2-1-candidate",
+      "variant": "candidate",
+      "pair_index": 1,
+      "role": "restart",
+      "run_json_sha256": "3335247e2bfcba900088775d0af5c0b0ae88c9bb164d52469d5241ea5fba9fba",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-bcac57a44414e8fdb6a628f480eeda13e7b2dec169bf00990048f934e295f41f.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 83.628069828,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "vector128-pair-2-2-baseline",
+      "variant": "baseline",
+      "pair_index": 1,
+      "role": "main",
+      "run_json_sha256": "8a5d1ce8752fc064552cc8481a5517fd9c574b50b7b45cfe4ad15ba112907387",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-4a36a69b97daae311cb55ca3f3b5413da284bc839ff1dd5b5389fe5d20455496.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 86.298577619,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 6049792,
+          "rios": 0,
+          "wios": 208,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "vector128-pair-2-2-baseline",
+      "variant": "baseline",
+      "pair_index": 1,
+      "role": "restart",
+      "run_json_sha256": "8a5d1ce8752fc064552cc8481a5517fd9c574b50b7b45cfe4ad15ba112907387",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-05a29e9056556afe47246b3dac464edce8315141e8eafeeb8da062b4f07951d4.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 87.382932258,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "vector128-pair-3-1-baseline",
+      "variant": "baseline",
+      "pair_index": 2,
+      "role": "main",
+      "run_json_sha256": "f5059f4f67f945767774a94af4be35910918a2c8b6a397c18bcdffca4dceb2f6",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-d70ab638b4ddb181d7bb2e0fa61644fcb427eafe2b700e07da1615a2404c9a1a.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 90.048891055,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 6049792,
+          "rios": 0,
+          "wios": 208,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "vector128-pair-3-1-baseline",
+      "variant": "baseline",
+      "pair_index": 2,
+      "role": "restart",
+      "run_json_sha256": "f5059f4f67f945767774a94af4be35910918a2c8b6a397c18bcdffca4dceb2f6",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-6f5bdf2e056df24e304bd1d0fcc116e17e49d9252014e5f89d710292ecda4719.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 91.09434289,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    },
+    {
+      "run": "vector128-pair-3-2-candidate",
+      "variant": "candidate",
+      "pair_index": 2,
+      "role": "main",
+      "run_json_sha256": "ee8e941eb291cb241edb0d3c9948c6a1e8d47a5adf75488a87258bf26bf27263",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-b6539a872cab64ce0601bb562a51ce53a61b750454db1ac1668c99e150d1023a.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 93.656169381,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0",
+      "device_counters": [
+        {
+          "device_major_minor": "8:48",
+          "rbytes": 0,
+          "wbytes": 6049792,
+          "rios": 0,
+          "wios": 208,
+          "dbytes": 0,
+          "dios": 0
+        }
+      ]
+    },
+    {
+      "run": "vector128-pair-3-2-candidate",
+      "variant": "candidate",
+      "pair_index": 2,
+      "role": "restart",
+      "run_json_sha256": "ee8e941eb291cb241edb0d3c9948c6a1e8d47a5adf75488a87258bf26bf27263",
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-68c39a4eaed81048830812b991597fa9faf5c3739dbeb266e0396cbf6a470538.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_monotonic": 94.687927904,
+      "last_live_stage": "before_cleanup",
+      "raw_io_stat": "",
+      "device_counters": []
+    }
+  ]
+}

@@ -1,0 +1,580 @@
+{
+  "audit_id": "audit-20261109-42affed2e283",
+  "source_tree_sha256": "42affed2e283c8710151931f6f419eee64210eda42245be6d357dc20ae520bb2",
+  "source_manifest_sha256": "b4ae0c4766498cdb17858a429800553eaa325d4eabdb3ae1afe67fc3f71f32e6",
+  "image_id": "sha256:27ea1213ba52ad529ba46eee11bd694b0a0a10cf36c2f9a6415f5f985376b6ef",
+  "binary_sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f",
+  "tests_run": 4,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "success": true,
+  "memory_max": 134217728,
+  "memory_swap_max": 0,
+  "cpu_max": "200000 100000",
+  "network": "none",
+  "driver_RLIMIT_AS_not_used": true,
+  "official_benchmark": false,
+  "containers": [
+    {
+      "name": "mvdb-resource-970d71fea8eb45b1935e829c8fe4f1e9",
+      "label": "storage/setup/restart",
+      "data_host_directory": "/tmp/mvdb-spill-586e5aba/data",
+      "snapshots": [
+        {
+          "phase": "container_started",
+          "values": {
+            "memory.peak": "5472256",
+            "memory.current": "2043904",
+            "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0",
+            "time_monotonic": 173.539784659
+          }
+        },
+        {
+          "phase": "before_Database_close",
+          "values": {
+            "memory.peak": "134217728",
+            "memory.current": "134062080",
+            "memory.events": "low 0\nhigh 0\nmax 345\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=16384 wbytes=193085440 rios=4 wios=251 dbytes=0 dios=0",
+            "time_monotonic": 177.473486625
+          }
+        },
+        {
+          "phase": "before_requested_SIGKILL",
+          "values": {
+            "memory.peak": "134217728",
+            "memory.current": "134062080",
+            "memory.events": "low 0\nhigh 0\nmax 345\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=16384 wbytes=193085440 rios=4 wios=251 dbytes=0 dios=0",
+            "time_monotonic": 177.473583624
+          }
+        }
+      ],
+      "peak_observed_bytes": 134217728,
+      "sample_errors": [
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-7ab7d36ee6e1ff47a438425c9196798723f4edb2795409c7ca38a6b7df1c054b.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-7ab7d36ee6e1ff47a438425c9196798723f4edb2795409c7ca38a6b7df1c054b.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-7ab7d36ee6e1ff47a438425c9196798723f4edb2795409c7ca38a6b7df1c054b.scope/memory.peak'"
+      ],
+      "id": "7ab7d36ee6e1ff47a438425c9196798723f4edb2795409c7ca38a6b7df1c054b",
+      "image_id": "sha256:27ea1213ba52ad529ba46eee11bd694b0a0a10cf36c2f9a6415f5f985376b6ef",
+      "host_pid": 958,
+      "host_config": {
+        "Memory": 134217728,
+        "MemorySwap": 134217728,
+        "NanoCpus": 2000000000,
+        "NetworkMode": "none"
+      },
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-7ab7d36ee6e1ff47a438425c9196798723f4edb2795409c7ca38a6b7df1c054b.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_cgroup_snapshot": {
+        "memory.peak": "134217728",
+        "memory.current": "134021120",
+        "memory.events": "low 0\nhigh 0\nmax 345\noom 0\noom_kill 0\noom_group_kill 0",
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "cpu.max": "200000 100000",
+        "io.stat": "8:48 rbytes=16384 wbytes=193085440 rios=4 wios=251 dbytes=0 dios=0",
+        "time_monotonic": 177.60022654
+      },
+      "requested_host_RLIMIT_AS_ignored": 134217728,
+      "limiting_mechanism": "actual container cgroup memory.max; no outer driver RLIMIT_AS used",
+      "docker_final_state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 137,
+        "Error": "",
+        "StartedAt": "2026-11-09T05:23:07.976486563Z",
+        "FinishedAt": "2026-11-09T05:23:12.200602636Z"
+      }
+    },
+    {
+      "name": "mvdb-resource-212281027ffc4135b8246a91e5a27eab",
+      "label": "__main__.ContainerLargeResponses.test_distance_topk_with_large_payload_exceeds_heap_budget",
+      "data_host_directory": "/tmp/mvdb-spill-586e5aba/data",
+      "snapshots": [
+        {
+          "phase": "container_started",
+          "values": {
+            "memory.peak": "11210752",
+            "memory.current": "11210752",
+            "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=6287360 wbytes=0 rios=6 wios=0 dbytes=0 dios=0",
+            "time_monotonic": 178.634247491
+          }
+        },
+        {
+          "phase": "after_full_response_before_EOF",
+          "values": {
+            "memory.peak": "134217728",
+            "memory.current": "89530368",
+            "memory.events": "low 0\nhigh 0\nmax 2816\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=736911360 wbytes=577437696 rios=521 wios=429 dbytes=0 dios=0",
+            "time_monotonic": 182.226268882
+          }
+        }
+      ],
+      "peak_observed_bytes": 134217728,
+      "sample_errors": [
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-e26fefbf79569d5978396caf09d4314697c3cd964d3b5764c4f8ce8e5fd9f61c.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-e26fefbf79569d5978396caf09d4314697c3cd964d3b5764c4f8ce8e5fd9f61c.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-e26fefbf79569d5978396caf09d4314697c3cd964d3b5764c4f8ce8e5fd9f61c.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-e26fefbf79569d5978396caf09d4314697c3cd964d3b5764c4f8ce8e5fd9f61c.scope/memory.peak'"
+      ],
+      "id": "e26fefbf79569d5978396caf09d4314697c3cd964d3b5764c4f8ce8e5fd9f61c",
+      "image_id": "sha256:27ea1213ba52ad529ba46eee11bd694b0a0a10cf36c2f9a6415f5f985376b6ef",
+      "host_pid": 1099,
+      "host_config": {
+        "Memory": 134217728,
+        "MemorySwap": 134217728,
+        "NanoCpus": 2000000000,
+        "NetworkMode": "none"
+      },
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-e26fefbf79569d5978396caf09d4314697c3cd964d3b5764c4f8ce8e5fd9f61c.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_cgroup_snapshot": {
+        "memory.peak": "134217728",
+        "memory.current": "79056896",
+        "memory.events": "low 0\nhigh 0\nmax 2816\noom 0\noom_kill 0\noom_group_kill 0",
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "cpu.max": "200000 100000",
+        "io.stat": "8:48 rbytes=736911360 wbytes=577437696 rios=521 wios=429 dbytes=0 dios=0",
+        "time_monotonic": 182.226548816
+      },
+      "output_bytes": 160116974,
+      "verified_result_rows": 8000,
+      "docker_final_state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-11-09T05:23:13.09719372Z",
+        "FinishedAt": "2026-11-09T05:23:16.807997654Z"
+      }
+    },
+    {
+      "name": "mvdb-resource-2330edf931c84a018c56ce3f19f3e77d",
+      "label": "__main__.ContainerLargeResponses.test_large_limit_multikey_order_spills_without_changing_order",
+      "data_host_directory": "/tmp/mvdb-spill-586e5aba/data",
+      "snapshots": [
+        {
+          "phase": "container_started",
+          "values": {
+            "memory.peak": "35221504",
+            "memory.current": "35196928",
+            "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=33550336 wbytes=0 rios=13 wios=0 dbytes=0 dios=0",
+            "time_monotonic": 184.777353793
+          }
+        },
+        {
+          "phase": "after_full_response_before_EOF",
+          "values": {
+            "memory.peak": "134217728",
+            "memory.current": "46874624",
+            "memory.events": "low 0\nhigh 0\nmax 3757\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=1015328768 wbytes=577482752 rios=1754 wios=479 dbytes=0 dios=0",
+            "time_monotonic": 188.359377719
+          }
+        }
+      ],
+      "peak_observed_bytes": 134217728,
+      "sample_errors": [
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-a3e455e2913e64ea35fc6ef0bd0b5499e74eb153f015a6fc07911a91cf550673.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-a3e455e2913e64ea35fc6ef0bd0b5499e74eb153f015a6fc07911a91cf550673.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-a3e455e2913e64ea35fc6ef0bd0b5499e74eb153f015a6fc07911a91cf550673.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-a3e455e2913e64ea35fc6ef0bd0b5499e74eb153f015a6fc07911a91cf550673.scope/memory.peak'"
+      ],
+      "id": "a3e455e2913e64ea35fc6ef0bd0b5499e74eb153f015a6fc07911a91cf550673",
+      "image_id": "sha256:27ea1213ba52ad529ba46eee11bd694b0a0a10cf36c2f9a6415f5f985376b6ef",
+      "host_pid": 1250,
+      "host_config": {
+        "Memory": 134217728,
+        "MemorySwap": 134217728,
+        "NanoCpus": 2000000000,
+        "NetworkMode": "none"
+      },
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-a3e455e2913e64ea35fc6ef0bd0b5499e74eb153f015a6fc07911a91cf550673.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_cgroup_snapshot": {
+        "memory.peak": "134217728",
+        "memory.current": "46874624",
+        "memory.events": "low 0\nhigh 0\nmax 3757\noom 0\noom_kill 0\noom_group_kill 0",
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "cpu.max": "200000 100000",
+        "io.stat": "8:48 rbytes=1015328768 wbytes=577482752 rios=1754 wios=479 dbytes=0 dios=0",
+        "time_monotonic": 188.359377719
+      },
+      "output_bytes": 192095235,
+      "verified_result_rows": 9600,
+      "docker_final_state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-11-09T05:23:19.191613176Z",
+        "FinishedAt": "2026-11-09T05:23:22.939982618Z"
+      }
+    },
+    {
+      "name": "mvdb-resource-d5a6971a51274e3f930ec6874ef6954c",
+      "label": "__main__.ContainerLargeResponses.test_no_limit_select_star_streams_beyond_memory_budget",
+      "data_host_directory": "/tmp/mvdb-spill-586e5aba/data",
+      "snapshots": [
+        {
+          "phase": "container_started",
+          "values": {
+            "memory.peak": "19156992",
+            "memory.current": "19156992",
+            "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=16773120 wbytes=0 rios=9 wios=0 dbytes=0 dios=0",
+            "time_monotonic": 189.705209022
+          }
+        },
+        {
+          "phase": "after_full_response_before_EOF",
+          "values": {
+            "memory.peak": "134217728",
+            "memory.current": "63123456",
+            "memory.events": "low 0\nhigh 0\nmax 3062\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=653742080 wbytes=577396736 rios=342 wios=404 dbytes=0 dios=0",
+            "time_monotonic": 191.051420171
+          }
+        }
+      ],
+      "peak_observed_bytes": 134217728,
+      "sample_errors": [
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-7095a3150b193eedf243703f625f1cb46b8887bfa91715df2e2361b7a34a1905.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-7095a3150b193eedf243703f625f1cb46b8887bfa91715df2e2361b7a34a1905.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-7095a3150b193eedf243703f625f1cb46b8887bfa91715df2e2361b7a34a1905.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-7095a3150b193eedf243703f625f1cb46b8887bfa91715df2e2361b7a34a1905.scope/memory.peak'"
+      ],
+      "id": "7095a3150b193eedf243703f625f1cb46b8887bfa91715df2e2361b7a34a1905",
+      "image_id": "sha256:27ea1213ba52ad529ba46eee11bd694b0a0a10cf36c2f9a6415f5f985376b6ef",
+      "host_pid": 1399,
+      "host_config": {
+        "Memory": 134217728,
+        "MemorySwap": 134217728,
+        "NanoCpus": 2000000000,
+        "NetworkMode": "none"
+      },
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-7095a3150b193eedf243703f625f1cb46b8887bfa91715df2e2361b7a34a1905.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_cgroup_snapshot": {
+        "memory.peak": "134217728",
+        "memory.current": "63123456",
+        "memory.events": "low 0\nhigh 0\nmax 3062\noom 0\noom_kill 0\noom_group_kill 0",
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "cpu.max": "200000 100000",
+        "io.stat": "8:48 rbytes=653742080 wbytes=577396736 rios=342 wios=404 dbytes=0 dios=0",
+        "time_monotonic": 191.051420171
+      },
+      "output_bytes": 192221839,
+      "verified_result_rows": 9600,
+      "docker_final_state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "Error": "",
+        "StartedAt": "2026-11-09T05:23:24.180376115Z",
+        "FinishedAt": "2026-11-09T05:23:25.632226385Z"
+      }
+    },
+    {
+      "name": "mvdb-resource-8b51128b4df9476daa38899500b67dfd",
+      "label": "storage/setup/restart",
+      "data_host_directory": "/tmp/mvdb-acceptance-0jzzxrjn/data",
+      "snapshots": [
+        {
+          "phase": "container_started",
+          "values": {
+            "memory.peak": "5419008",
+            "memory.current": "2301952",
+            "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0",
+            "time_monotonic": 192.450106357
+          }
+        },
+        {
+          "phase": "before_Database_close",
+          "values": {
+            "memory.peak": "5419008",
+            "memory.current": "2301952",
+            "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0",
+            "time_monotonic": 192.450369046
+          }
+        },
+        {
+          "phase": "before_requested_SIGKILL",
+          "values": {
+            "memory.peak": "5419008",
+            "memory.current": "2301952",
+            "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0",
+            "time_monotonic": 192.450453631
+          }
+        }
+      ],
+      "peak_observed_bytes": 5419008,
+      "sample_errors": [
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-90bc6677d81b7473dd451ea5ed9c660ec22640c66804d85f46d3fdedc3a603ec.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-90bc6677d81b7473dd451ea5ed9c660ec22640c66804d85f46d3fdedc3a603ec.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-90bc6677d81b7473dd451ea5ed9c660ec22640c66804d85f46d3fdedc3a603ec.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-90bc6677d81b7473dd451ea5ed9c660ec22640c66804d85f46d3fdedc3a603ec.scope/memory.peak'"
+      ],
+      "id": "90bc6677d81b7473dd451ea5ed9c660ec22640c66804d85f46d3fdedc3a603ec",
+      "image_id": "sha256:27ea1213ba52ad529ba46eee11bd694b0a0a10cf36c2f9a6415f5f985376b6ef",
+      "host_pid": 1534,
+      "host_config": {
+        "Memory": 134217728,
+        "MemorySwap": 134217728,
+        "NanoCpus": 2000000000,
+        "NetworkMode": "none"
+      },
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-90bc6677d81b7473dd451ea5ed9c660ec22640c66804d85f46d3fdedc3a603ec.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_cgroup_snapshot": {
+        "memory.peak": "5419008",
+        "memory.current": "2301952",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "cpu.max": "200000 100000",
+        "io.stat": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0",
+        "time_monotonic": 192.450453631
+      },
+      "requested_host_RLIMIT_AS_ignored": null,
+      "limiting_mechanism": "actual container cgroup memory.max; no outer driver RLIMIT_AS used",
+      "docker_final_state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 137,
+        "Error": "",
+        "StartedAt": "2026-11-09T05:23:26.929412496Z",
+        "FinishedAt": "2026-11-09T05:23:27.127809992Z"
+      }
+    },
+    {
+      "name": "mvdb-resource-ceec4348527e4934af4e08fb5c86f2c7",
+      "label": "storage/setup/restart",
+      "data_host_directory": "/tmp/mvdb-acceptance-0jzzxrjn/data",
+      "snapshots": [
+        {
+          "phase": "container_started",
+          "values": {
+            "memory.peak": "5398528",
+            "memory.current": "5398528",
+            "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "",
+            "time_monotonic": 193.467836499
+          }
+        },
+        {
+          "phase": "before_Database_close",
+          "values": {
+            "memory.peak": "134217728",
+            "memory.current": "134205440",
+            "memory.events": "low 0\nhigh 0\nmax 342\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=0 wbytes=174829568 rios=0 wios=235 dbytes=0 dios=0",
+            "time_monotonic": 196.689445244
+          }
+        },
+        {
+          "phase": "before_requested_SIGKILL",
+          "values": {
+            "memory.peak": "134217728",
+            "memory.current": "134205440",
+            "memory.events": "low 0\nhigh 0\nmax 342\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=0 wbytes=174829568 rios=0 wios=235 dbytes=0 dios=0",
+            "time_monotonic": 196.689537754
+          }
+        }
+      ],
+      "peak_observed_bytes": 134217728,
+      "sample_errors": [
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-d9a09422a89a9308fb6151b48d23715896af539eae6b4db66ce3d76a58fc8792.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-d9a09422a89a9308fb6151b48d23715896af539eae6b4db66ce3d76a58fc8792.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-d9a09422a89a9308fb6151b48d23715896af539eae6b4db66ce3d76a58fc8792.scope/memory.peak'"
+      ],
+      "id": "d9a09422a89a9308fb6151b48d23715896af539eae6b4db66ce3d76a58fc8792",
+      "image_id": "sha256:27ea1213ba52ad529ba46eee11bd694b0a0a10cf36c2f9a6415f5f985376b6ef",
+      "host_pid": 1688,
+      "host_config": {
+        "Memory": 134217728,
+        "MemorySwap": 134217728,
+        "NanoCpus": 2000000000,
+        "NetworkMode": "none"
+      },
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-d9a09422a89a9308fb6151b48d23715896af539eae6b4db66ce3d76a58fc8792.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_cgroup_snapshot": {
+        "memory.peak": "134217728",
+        "memory.current": "134201344",
+        "memory.events": "low 0\nhigh 0\nmax 342\noom 0\noom_kill 0\noom_group_kill 0",
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "cpu.max": "200000 100000",
+        "io.stat": "8:48 rbytes=0 wbytes=174829568 rios=0 wios=235 dbytes=0 dios=0",
+        "time_monotonic": 196.779164586
+      },
+      "requested_host_RLIMIT_AS_ignored": 134217728,
+      "limiting_mechanism": "actual container cgroup memory.max; no outer driver RLIMIT_AS used",
+      "docker_final_state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 137,
+        "Error": "",
+        "StartedAt": "2026-11-09T05:23:27.952348554Z",
+        "FinishedAt": "2026-11-09T05:23:31.365742156Z"
+      }
+    },
+    {
+      "name": "mvdb-resource-43440857449f4c59904fd42fb358ae3a",
+      "label": "storage/setup/restart",
+      "data_host_directory": "/tmp/mvdb-acceptance-0jzzxrjn/data",
+      "snapshots": [
+        {
+          "phase": "container_started",
+          "values": {
+            "memory.peak": "14811136",
+            "memory.current": "14811136",
+            "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=12578816 wbytes=0 rios=8 wios=0 dbytes=0 dios=0",
+            "time_monotonic": 197.706500073
+          }
+        },
+        {
+          "phase": "before_Database_close",
+          "values": {
+            "memory.peak": "86368256",
+            "memory.current": "79200256",
+            "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=71446528 wbytes=0 rios=23 wios=0 dbytes=0 dios=0",
+            "time_monotonic": 198.075088927
+          }
+        },
+        {
+          "phase": "before_requested_SIGKILL",
+          "values": {
+            "memory.peak": "86368256",
+            "memory.current": "79200256",
+            "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "memory.max": "134217728",
+            "memory.swap.max": "0",
+            "cpu.max": "200000 100000",
+            "io.stat": "8:48 rbytes=71446528 wbytes=0 rios=23 wios=0 dbytes=0 dios=0",
+            "time_monotonic": 198.075180917
+          }
+        }
+      ],
+      "peak_observed_bytes": 86368256,
+      "sample_errors": [
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-95c147cdcd836a961aae92b494b55b88959277965c16b0d4620560ea1f7ad791.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-95c147cdcd836a961aae92b494b55b88959277965c16b0d4620560ea1f7ad791.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-95c147cdcd836a961aae92b494b55b88959277965c16b0d4620560ea1f7ad791.scope/memory.peak'",
+        "[Errno 2] No such file or directory: '/sys/fs/cgroup/system.slice/docker-95c147cdcd836a961aae92b494b55b88959277965c16b0d4620560ea1f7ad791.scope/memory.peak'"
+      ],
+      "id": "95c147cdcd836a961aae92b494b55b88959277965c16b0d4620560ea1f7ad791",
+      "image_id": "sha256:27ea1213ba52ad529ba46eee11bd694b0a0a10cf36c2f9a6415f5f985376b6ef",
+      "host_pid": 1855,
+      "host_config": {
+        "Memory": 134217728,
+        "MemorySwap": 134217728,
+        "NanoCpus": 2000000000,
+        "NetworkMode": "none"
+      },
+      "cgroup_path": "/sys/fs/cgroup/system.slice/docker-95c147cdcd836a961aae92b494b55b88959277965c16b0d4620560ea1f7ad791.scope",
+      "data_device": "/dev/sdd   8:48  ext4",
+      "last_live_cgroup_snapshot": {
+        "memory.peak": "86368256",
+        "memory.current": "79200256",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "cpu.max": "200000 100000",
+        "io.stat": "8:48 rbytes=71446528 wbytes=0 rios=23 wios=0 dbytes=0 dios=0",
+        "time_monotonic": 198.107996496
+      },
+      "requested_host_RLIMIT_AS_ignored": 134217728,
+      "limiting_mechanism": "actual container cgroup memory.max; no outer driver RLIMIT_AS used",
+      "docker_final_state": {
+        "Status": "exited",
+        "Running": false,
+        "OOMKilled": false,
+        "ExitCode": 137,
+        "Error": "",
+        "StartedAt": "2026-11-09T05:23:32.188121807Z",
+        "FinishedAt": "2026-11-09T05:23:32.769378115Z"
+      }
+    }
+  ],
+  "limits": [
+    "These are four resource regression cases, not the official benchmark.",
+    "io.stat values are observations from the actual container cgroup on shared WSL /dev/sdd; dedicated-device and writeback-attribution calibration are unverified.",
+    "Driver output files and parsing live outside the container, consistent with separating test-driver overhead.",
+    "For any unexpected exit, exact final cgroup counters may be unavailable; last live sample and Docker OOMKilled state are preserved explicitly."
+  ]
+}

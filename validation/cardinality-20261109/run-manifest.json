@@ -1,0 +1,140 @@
+{
+  "recorded_at_utc": "2026-11-09T08:52:11.158223+00:00",
+  "round": "cardinality-20261109",
+  "chosen_variant": "candidate-v2",
+  "decision": "keep memory/capacity improvement with disclosed timing regressions; not universal speedup",
+  "official_assessment_submitted": false,
+  "git_commit_created": false,
+  "git_pushed": false,
+  "base_git_commit": "c842a368c3394748d0499386c18f6b465242e141",
+  "git_branch": "2026-competition-round2",
+  "git_commit_is_not_uncommitted_implementation": true,
+  "variants": [
+    {
+      "variant": "baseline",
+      "production_tree_sha256": "42affed2e283c8710151931f6f419eee64210eda42245be6d357dc20ae520bb2",
+      "production_manifest": "baseline-production-manifest.json",
+      "source_manifest_sha256": "b4ae0c4766498cdb17858a429800553eaa325d4eabdb3ae1afe67fc3f71f32e6",
+      "frozen_source_directory": "build-cardinality/baseline/source",
+      "release_binary": "build-cardinality/baseline/release/minivectordb",
+      "release_binary_sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f",
+      "file_count": 12,
+      "sources_verified": true,
+      "current_worktree_matches": false
+    },
+    {
+      "variant": "candidate-v1",
+      "production_tree_sha256": "0fa875ff0ff7911804f5682280e4af9e0608ee4b603a42498c13e949774ac392",
+      "production_manifest": "candidate-production-manifest.json",
+      "source_manifest_sha256": "184edb1f4a1cc2d56456b0acd6c9a4e2002cf455ccb6b7f0e100a4f6d7541234",
+      "frozen_source_directory": "build-cardinality/candidate/source",
+      "release_binary": "build-cardinality/candidate/release/minivectordb",
+      "release_binary_sha256": "6d9c0863f80d8ef74e7c0e3bd8ee63c95fe287db9c3b40341d45859a2afd3093",
+      "file_count": 13,
+      "sources_verified": true,
+      "current_worktree_matches": false
+    },
+    {
+      "variant": "candidate-v2",
+      "production_tree_sha256": "df56a37dcbae572b6283dfd4ee67cccc1e7e15f2117b59760cf7628936ae18f3",
+      "production_manifest": "candidate-v2-production-manifest.json",
+      "source_manifest_sha256": "7ef726aa64fd13c3f24ae5947a314bcf06ba9c8c31541779de38fe664dcfdd86",
+      "frozen_source_directory": "build-cardinality/candidate-v2/source",
+      "release_binary": "build-cardinality/candidate-v2/release/minivectordb",
+      "release_binary_sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c",
+      "file_count": 13,
+      "sources_verified": true,
+      "current_worktree_matches": true
+    }
+  ],
+  "old_audit": {
+    "manifest_sha256": "547374678b1aeaf667ed11c68db8ed7fdb945e4391c3bff18367109e770f6779",
+    "verified_files": 49,
+    "all_unchanged": true
+  },
+  "reports": [
+    {
+      "path": "REPORT.md",
+      "sha256": "4b8135d8df1e6158be6f041fe3e39d03b5bce1405ead7368459b3d87342c5716"
+    },
+    {
+      "path": "EXPERIMENT.md",
+      "sha256": "b6899a0f37d3b62c65d68a34ae59728de66dd4b5447548500ff675602d6245e2"
+    },
+    {
+      "path": "candidate-v2-build-binding.json",
+      "sha256": "f8a81015c0c1c81c3e6d9f00d2a181cbb305b28985fcc801f90e50f7faecd794"
+    },
+    {
+      "path": "paired-candidate-v1/summary.json",
+      "sha256": "c070626ef9a2cc7b88c635b149ddc936ad4672821191b55e2ce22011e814ac9d"
+    },
+    {
+      "path": "paired-candidate-v2/summary.json",
+      "sha256": "90f0f5884d5b73134e8c295da3ea3dee062aace32fbec004c13f699fd66a655e"
+    },
+    {
+      "path": "paired-candidate-v2/TABLES.md",
+      "sha256": "655e470e38a0bc20f3c765b6c03b7d817ae2faa47242e14fb1feffe242a19c3a"
+    },
+    {
+      "path": "paired-candidate-v2/io-last-live-summary.json",
+      "sha256": "d237765f027785419538d52449e8df0e31c08fcb2b9c17b110b0edda06a952fa"
+    },
+    {
+      "path": "resource-candidate-v2/docker-resource-regression-results.json",
+      "sha256": "160ac7177069366eb7a639c58f075e1f1c2b5e07af90a57e441e2e1d318ee022"
+    },
+    {
+      "path": "candidate-v2-diagnostic-summary.json",
+      "sha256": "11780c5c5036382b15002da0e67ccdbc2d4acf0567b29e9d1e0a01478667fea6"
+    },
+    {
+      "path": "candidate-v2-diagnostic-evidence-manifest.json",
+      "sha256": "1f14b9e818d10b19bab3f22e8bae534f6f1985a796832257f1cc3c9596056268"
+    },
+    {
+      "path": "update-latency-control-v2/ANALYSIS.md",
+      "sha256": "5da2b60a37691b744d9f7f7b6032707daf12a314d85dc8cd6e80dde38518d4a3"
+    },
+    {
+      "path": "update-latency-control-v2/evidence-manifest.json",
+      "sha256": "9e9ba6405c8ac62aaa8cbb2ae31cf2ce6a662d46bb5e97dc6ec1a9643d149b25"
+    },
+    {
+      "path": "conversation-before-round.json",
+      "sha256": "fa31e841267da0e5248e0e1d59fe9b2dac53874f13b6bc2e5600895eeec7e0a3"
+    },
+    {
+      "path": "conversation-after-round.json",
+      "sha256": "bd536b3e4ffa8f7eac5889d8500aeb47c922e3f7d086eacb176584d0d050fc8b"
+    }
+  ],
+  "local_validation": {
+    "paired_runs": "18/18;3 pairs each workload",
+    "release_ctest": "5/5",
+    "release_acceptance": "19/19",
+    "release_optimization": "11/11",
+    "sanitizer_ctest": "5/5",
+    "sanitizer_acceptance": "18 pass, stress skipped",
+    "sanitizer_optimization": "8 pass, 3 large cases skipped as class",
+    "cgroup_regression": "4/4",
+    "capacity_ladder": "12/12,2m cap both schemas",
+    "independent_128D_responses": "6066/6066",
+    "recovery_helper": "12/12",
+    "sampler_control": "12/12; cause remains unknown"
+  },
+  "resource_limits": {
+    "cgroup_memory_max_bytes": 134217728,
+    "cgroup_memory_swap_max": 0,
+    "cpu_max": "200000 100000",
+    "paired_cpuset": "0,1"
+  },
+  "limitations": [
+    "still O(N) index; arena high water retained",
+    "single update slowdown unresolved",
+    "raw io.stat not calibrated physical IO",
+    "process-first is not OS-cache-cold",
+    "official protocol and package pending"
+  ]
+}

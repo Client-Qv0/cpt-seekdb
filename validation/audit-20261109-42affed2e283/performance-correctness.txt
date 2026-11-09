@@ -1,0 +1,37 @@
+Independently checked 100/1000 queries
+Independently checked 200/1000 queries
+Independently checked 300/1000 queries
+Independently checked 400/1000 queries
+Independently checked 500/1000 queries
+Independently checked 600/1000 queries
+Independently checked 700/1000 queries
+Independently checked 800/1000 queries
+Independently checked 900/1000 queries
+Independently checked 1000/1000 queries
+{
+  "scope": "Independent local correctness audit of benchmark workload; not an official assessment or performance result",
+  "passed": true,
+  "actual_database_executed": true,
+  "binary_sha256_before": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f",
+  "workload_sql_sha256": "1ef9f505060732d3186226dcbf578f7c4e3be672409fee58df55320cfbd29d80",
+  "queries_response_ok": 1000,
+  "queries_passed_all_checks": 1000,
+  "queries_failed_checks": 0,
+  "queries_not_run": 0,
+  "filtered": {
+    "queries_checked": 500,
+    "expected_query_count": 500,
+    "queries_passed_all_checks": 500,
+    "minimum_recall_at_10": 1.0,
+    "mean_recall_at_10": 1.0
+  },
+  "unfiltered": {
+    "queries_checked": 500,
+    "expected_query_count": 500,
+    "queries_passed_all_checks": 500,
+    "minimum_recall_at_10": 1.0,
+    "mean_recall_at_10": 1.0
+  },
+  "maximum_absolute_distance_error": 7.105427357601002e-15,
+  "report": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/audit-20261109-42affed2e283/performance-correctness.json"
+}

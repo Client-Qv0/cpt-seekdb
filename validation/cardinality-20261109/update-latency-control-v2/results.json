@@ -1,0 +1,928 @@
+{
+  "scope": "Diagnostic comparison, not official benchmark and not a replacement for the original 18 runs",
+  "identities": {
+    "baseline": {
+      "path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/baseline/release/minivectordb",
+      "sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f"
+    },
+    "candidate": {
+      "path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate-v2/release/minivectordb",
+      "sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c"
+    }
+  },
+  "adapter_sha256": "d17b60f2b86c582cd870edf5118d40c255069b2b37840caaf07cb08d8a850525",
+  "driver_sha256": "30f16355fa05a25881f161f458df812fe9ac812b6d3d81a14898e22af69172d9",
+  "initial_wal_sha256": "6fd59dd3ccfb5221314cb6a0794df0c333e927da6d72ae3955b6b66244a77d93",
+  "initial_wal_bytes": 69043217,
+  "repetitions_per_run": 5,
+  "num_runs": 12,
+  "cpuset": "0,1",
+  "memory_max": 134217728,
+  "swap_max": 0,
+  "cpu_max": "200000 100000",
+  "python_switchinterval_seconds": 0.005,
+  "adapter_difference": "Subclass overrides _monitor: sampler=on delegates unmodified monitor; off returns without background reads. No production or adapter source edits. cpu.stat/cpu.pressure/io.pressure are read synchronously outside each measured SQL round trip.",
+  "fixture_policy": "Each run copies the same frozen 1m vector4 WAL into a fresh ext4 directory and fsyncs it outside timing. No drop_caches. Copying/recovery can change page-cache ownership and allocator history relative to original write-then-query runs; this control cannot retroactively replace them.",
+  "timing": "Separate SQL send-to-complete-JSON-response wall times include the common Python/Docker consumer. All truth and comparisons occur outside measured intervals. CPU/pressure/io phase captures are outside timers.",
+  "limitations": "A sampler effect, if observed, supports an observer-cost explanation for this control but does not prove Python GIL is the sole cause of earlier results. io.stat volumes are not I/O service latency or finalized physical-I/O attribution.",
+  "prepare_only": false,
+  "runs": [
+    {
+      "label": "pair-1-sampler-on-baseline",
+      "pair": 0,
+      "sampler": "on",
+      "variant": "baseline",
+      "passed": true,
+      "target_distributions": {
+        "update": {
+          "values": [
+            0.012180024000002732,
+            0.006236250000000609,
+            0.011927614000001086,
+            0.006737936000007494,
+            0.0056762019999894164
+          ],
+          "median": 0.006737936000007494,
+          "minimum": 0.0056762019999894164,
+          "maximum": 0.012180024000002732,
+          "coefficient_of_variation": 0.33681569295585134
+        },
+        "verify": {
+          "values": [
+            0.000422172000000387,
+            0.0003065659999919035,
+            0.00045689700000650646,
+            0.00043045900000038273,
+            0.0003002210000033756
+          ],
+          "median": 0.000422172000000387,
+          "minimum": 0.0003002210000033756,
+          "maximum": 0.00045689700000650646,
+          "coefficient_of_variation": 0.17284374095712673
+        },
+        "restore": {
+          "values": [
+            0.004772048999996059,
+            0.005085518000001343,
+            0.004431946000011067,
+            0.006830516999997371,
+            0.004608983000011335
+          ],
+          "median": 0.004772048999996059,
+          "minimum": 0.004431946000011067,
+          "maximum": 0.006830516999997371,
+          "coefficient_of_variation": 0.1689548747675118
+        },
+        "restore-verify": {
+          "values": [
+            0.00036515099999689937,
+            0.00033947300001102576,
+            0.0002870630000018082,
+            0.0003050959999910674,
+            0.0003296659999989515
+          ],
+          "median": 0.0003296659999989515,
+          "minimum": 0.0002870630000018082,
+          "maximum": 0.00036515099999689937,
+          "coefficient_of_variation": 0.0833812804096456
+        }
+      },
+      "first_pk_seconds": 1.0258692299999979,
+      "transaction_sql_seconds_sum_excluding_captures": 0.01840635699998927
+    },
+    {
+      "label": "pair-1-sampler-on-candidate",
+      "pair": 0,
+      "sampler": "on",
+      "variant": "candidate",
+      "passed": true,
+      "target_distributions": {
+        "update": {
+          "values": [
+            0.01203927800000315,
+            0.012588089999994168,
+            0.012304464999999709,
+            0.012162097000000927,
+            0.00590576499999429
+          ],
+          "median": 0.012162097000000927,
+          "minimum": 0.00590576499999429,
+          "maximum": 0.012588089999994168,
+          "coefficient_of_variation": 0.23215063087638815
+        },
+        "verify": {
+          "values": [
+            0.0003142170000103306,
+            0.0003917499999914753,
+            0.0004854660000006561,
+            0.00034859900000583366,
+            0.0003733829999958971
+          ],
+          "median": 0.0003733829999958971,
+          "minimum": 0.0003142170000103306,
+          "maximum": 0.0004854660000006561,
+          "coefficient_of_variation": 0.15048699450562739
+        },
+        "restore": {
+          "values": [
+            0.004550112000003992,
+            0.004363226999998915,
+            0.004483084000000304,
+            0.0047528080000063255,
+            0.004815578000005871
+          ],
+          "median": 0.004550112000003992,
+          "minimum": 0.004363226999998915,
+          "maximum": 0.004815578000005871,
+          "coefficient_of_variation": 0.03666522036216215
+        },
+        "restore-verify": {
+          "values": [
+            0.00034771400000011,
+            0.00033722499999555566,
+            0.0003139330000010432,
+            0.00031065699999999197,
+            0.0002793289999942772
+          ],
+          "median": 0.0003139330000010432,
+          "minimum": 0.0002793289999942772,
+          "maximum": 0.00034771400000011,
+          "coefficient_of_variation": 0.07471079439543679
+        }
+      },
+      "first_pk_seconds": 0.9431951880000042,
+      "transaction_sql_seconds_sum_excluding_captures": 0.01894319499999142
+    },
+    {
+      "label": "pair-1-sampler-off-baseline",
+      "pair": 0,
+      "sampler": "off",
+      "variant": "baseline",
+      "passed": true,
+      "target_distributions": {
+        "update": {
+          "values": [
+            0.013880605000011315,
+            0.007654755000004343,
+            0.012329660000006015,
+            0.012814792000000352,
+            0.012934211000001028
+          ],
+          "median": 0.012814792000000352,
+          "minimum": 0.007654755000004343,
+          "maximum": 0.013880605000011315,
+          "coefficient_of_variation": 0.1838838917443774
+        },
+        "verify": {
+          "values": [
+            0.0003263660000101254,
+            0.0004270550000029516,
+            0.00035677900000052887,
+            0.00046712099999979273,
+            0.0003750359999941111
+          ],
+          "median": 0.0003750359999941111,
+          "minimum": 0.0003263660000101254,
+          "maximum": 0.00046712099999979273,
+          "coefficient_of_variation": 0.12905266199597565
+        },
+        "restore": {
+          "values": [
+            0.004461543999994433,
+            0.004489455999987513,
+            0.00431269499999587,
+            0.006588991999990412,
+            0.004565458000001854
+          ],
+          "median": 0.004489455999987513,
+          "minimum": 0.00431269499999587,
+          "maximum": 0.006588991999990412,
+          "coefficient_of_variation": 0.17540645324454526
+        },
+        "restore-verify": {
+          "values": [
+            0.0002888930000040091,
+            0.000330341000008616,
+            0.00030537899999671936,
+            0.00034907200000589,
+            0.000295047000008708
+          ],
+          "median": 0.00030537899999671936,
+          "minimum": 0.0002888930000040091,
+          "maximum": 0.00034907200000589,
+          "coefficient_of_variation": 0.07212925705830926
+        }
+      },
+      "first_pk_seconds": 0.9987742309999987,
+      "transaction_sql_seconds_sum_excluding_captures": 0.01560626799999909
+    },
+    {
+      "label": "pair-1-sampler-off-candidate",
+      "pair": 0,
+      "sampler": "off",
+      "variant": "candidate",
+      "passed": true,
+      "target_distributions": {
+        "update": {
+          "values": [
+            0.005757580999997458,
+            0.01301769900000238,
+            0.005470082000002208,
+            0.006273501999999098,
+            0.012137758000008603
+          ],
+          "median": 0.006273501999999098,
+          "minimum": 0.005470082000002208,
+          "maximum": 0.01301769900000238,
+          "coefficient_of_variation": 0.3898051026470668
+        },
+        "verify": {
+          "values": [
+            0.0003374799999988909,
+            0.0003451580000017884,
+            0.0003714119999926879,
+            0.0004037739999915857,
+            0.0003309460000053832
+          ],
+          "median": 0.0003451580000017884,
+          "minimum": 0.0003309460000053832,
+          "maximum": 0.0004037739999915857,
+          "coefficient_of_variation": 0.0749279183747385
+        },
+        "restore": {
+          "values": [
+            0.0046531389999984185,
+            0.004289792999998099,
+            0.0047103049999890345,
+            0.004654493999993292,
+            0.004386674999992124
+          ],
+          "median": 0.0046531389999984185,
+          "minimum": 0.004289792999998099,
+          "maximum": 0.0047103049999890345,
+          "coefficient_of_variation": 0.037000271306132954
+        },
+        "restore-verify": {
+          "values": [
+            0.0003274570000115773,
+            0.0003092190000018036,
+            0.0003575730000022759,
+            0.0004184360000039078,
+            0.0003116989999938369
+          ],
+          "median": 0.0003274570000115773,
+          "minimum": 0.0003092190000018036,
+          "maximum": 0.0004184360000039078,
+          "coefficient_of_variation": 0.11776635551101695
+        }
+      },
+      "first_pk_seconds": 0.952211819999988,
+      "transaction_sql_seconds_sum_excluding_captures": 0.018922853999995937
+    },
+    {
+      "label": "pair-2-sampler-off-candidate",
+      "pair": 1,
+      "sampler": "off",
+      "variant": "candidate",
+      "passed": true,
+      "target_distributions": {
+        "update": {
+          "values": [
+            0.005383249000004753,
+            0.0062253799999894,
+            0.013236719000019548,
+            0.012704054000010956,
+            0.013392630999987887
+          ],
+          "median": 0.012704054000010956,
+          "minimum": 0.005383249000004753,
+          "maximum": 0.013392630999987887,
+          "coefficient_of_variation": 0.3530232826495996
+        },
+        "verify": {
+          "values": [
+            0.0003712209999946481,
+            0.0003673180000021148,
+            0.0005132219999950394,
+            0.00034072099998638805,
+            0.0003507520000027853
+          ],
+          "median": 0.0003673180000021148,
+          "minimum": 0.00034072099998638805,
+          "maximum": 0.0005132219999950394,
+          "coefficient_of_variation": 0.16277525404065432
+        },
+        "restore": {
+          "values": [
+            0.004411736000008659,
+            0.004940949999991062,
+            0.005260930999980928,
+            0.004676415999995243,
+            0.004240046000006714
+          ],
+          "median": 0.004676415999995243,
+          "minimum": 0.004240046000006714,
+          "maximum": 0.005260930999980928,
+          "coefficient_of_variation": 0.07765365796243848
+        },
+        "restore-verify": {
+          "values": [
+            0.0003682299999923089,
+            0.0002995830000145361,
+            0.00032964299998639035,
+            0.00042417400001681926,
+            0.0003695829999799116
+          ],
+          "median": 0.0003682299999923089,
+          "minimum": 0.0002995830000145361,
+          "maximum": 0.00042417400001681926,
+          "coefficient_of_variation": 0.11733324760197157
+        }
+      },
+      "first_pk_seconds": 0.9341336540000071,
+      "transaction_sql_seconds_sum_excluding_captures": 0.0225066709999453
+    },
+    {
+      "label": "pair-2-sampler-off-baseline",
+      "pair": 1,
+      "sampler": "off",
+      "variant": "baseline",
+      "passed": true,
+      "target_distributions": {
+        "update": {
+          "values": [
+            0.012647087999994255,
+            0.012161719999994602,
+            0.012473876999990807,
+            0.0046151839999879485,
+            0.013983884999987595
+          ],
+          "median": 0.012473876999990807,
+          "minimum": 0.0046151839999879485,
+          "maximum": 0.013983884999987595,
+          "coefficient_of_variation": 0.29876694785854774
+        },
+        "verify": {
+          "values": [
+            0.0003390480000007301,
+            0.0004146269999978358,
+            0.00042550000000574073,
+            0.0003578550000042924,
+            0.00039807100000643914
+          ],
+          "median": 0.00039807100000643914,
+          "minimum": 0.0003390480000007301,
+          "maximum": 0.00042550000000574073,
+          "coefficient_of_variation": 0.0858279193818278
+        },
+        "restore": {
+          "values": [
+            0.004782694999988735,
+            0.004467193000010639,
+            0.004572940000002745,
+            0.005525288999990607,
+            0.002747017999979562
+          ],
+          "median": 0.004572940000002745,
+          "minimum": 0.002747017999979562,
+          "maximum": 0.005525288999990607,
+          "coefficient_of_variation": 0.20685052117557878
+        },
+        "restore-verify": {
+          "values": [
+            0.00032785099998022815,
+            0.0003070749999949385,
+            0.0003058179999868571,
+            0.000291648999990457,
+            0.00031247699999426004
+          ],
+          "median": 0.0003070749999949385,
+          "minimum": 0.000291648999990457,
+          "maximum": 0.00032785099998022815,
+          "coefficient_of_variation": 0.037808692950722
+        }
+      },
+      "first_pk_seconds": 1.0027665369999852,
+      "transaction_sql_seconds_sum_excluding_captures": 0.13795842499996525
+    },
+    {
+      "label": "pair-2-sampler-on-candidate",
+      "pair": 1,
+      "sampler": "on",
+      "variant": "candidate",
+      "passed": true,
+      "target_distributions": {
+        "update": {
+          "values": [
+            0.012599850000015067,
+            0.011973093000023027,
+            0.0057652969999821835,
+            0.01211680599999454,
+            0.012737324999989141
+          ],
+          "median": 0.01211680599999454,
+          "minimum": 0.0057652969999821835,
+          "maximum": 0.012737324999989141,
+          "coefficient_of_variation": 0.24025461946093116
+        },
+        "verify": {
+          "values": [
+            0.0003472139999871615,
+            0.0003084859999944456,
+            0.00035233099998777107,
+            0.00036297599999102204,
+            0.00037595699998860255
+          ],
+          "median": 0.00035233099998777107,
+          "minimum": 0.0003084859999944456,
+          "maximum": 0.00037595699998860255,
+          "coefficient_of_variation": 0.0649756119926047
+        },
+        "restore": {
+          "values": [
+            0.005012731999983089,
+            0.004808333999989145,
+            0.0047575860000108605,
+            0.004632818999994015,
+            0.0045294129999717825
+          ],
+          "median": 0.0047575860000108605,
+          "minimum": 0.0045294129999717825,
+          "maximum": 0.005012731999983089,
+          "coefficient_of_variation": 0.03458858133406453
+        },
+        "restore-verify": {
+          "values": [
+            0.00030915900001105,
+            0.00028543299998773364,
+            0.00028065199998650314,
+            0.000274205000010852,
+            0.0003086549999977706
+          ],
+          "median": 0.00028543299998773364,
+          "minimum": 0.000274205000010852,
+          "maximum": 0.00030915900001105,
+          "coefficient_of_variation": 0.04992073751195637
+        }
+      },
+      "first_pk_seconds": 0.9342536039999914,
+      "transaction_sql_seconds_sum_excluding_captures": 0.04651529800003118
+    },
+    {
+      "label": "pair-2-sampler-on-baseline",
+      "pair": 1,
+      "sampler": "on",
+      "variant": "baseline",
+      "passed": true,
+      "target_distributions": {
+        "update": {
+          "values": [
+            0.005335799999983237,
+            0.013290145000013354,
+            0.024248238999973637,
+            0.014745326000024761,
+            0.01773456200001533
+          ],
+          "median": 0.014745326000024761,
+          "minimum": 0.005335799999983237,
+          "maximum": 0.024248238999973637,
+          "coefficient_of_variation": 0.40834896937843035
+        },
+        "verify": {
+          "values": [
+            0.0003300049999950261,
+            0.0004403049999837094,
+            0.0004261320000011892,
+            0.0004689540000129,
+            0.0003944739999894864
+          ],
+          "median": 0.0004261320000011892,
+          "minimum": 0.0003300049999950261,
+          "maximum": 0.0004689540000129,
+          "coefficient_of_variation": 0.11526650259758521
+        },
+        "restore": {
+          "values": [
+            0.0047783770000080494,
+            0.004338598999993337,
+            0.013527785000007952,
+            0.00562557599999991,
+            0.008788144999982705
+          ],
+          "median": 0.00562557599999991,
+          "minimum": 0.004338598999993337,
+          "maximum": 0.013527785000007952,
+          "coefficient_of_variation": 0.4629597093315041
+        },
+        "restore-verify": {
+          "values": [
+            0.0002880529999913506,
+            0.00030545399999937217,
+            0.0003554459999861592,
+            0.0003253959999938161,
+            0.0003418329999931302
+          ],
+          "median": 0.0003253959999938161,
+          "minimum": 0.0002880529999913506,
+          "maximum": 0.0003554459999861592,
+          "coefficient_of_variation": 0.07504454104105898
+        }
+      },
+      "first_pk_seconds": 1.0009096789999887,
+      "transaction_sql_seconds_sum_excluding_captures": 0.019404041999990795
+    },
+    {
+      "label": "pair-3-sampler-on-baseline",
+      "pair": 2,
+      "sampler": "on",
+      "variant": "baseline",
+      "passed": true,
+      "target_distributions": {
+        "update": {
+          "values": [
+            0.004998822000004566,
+            0.012039482000005819,
+            0.012270735999976523,
+            0.012709393000022828,
+            0.015042966999999408
+          ],
+          "median": 0.012270735999976523,
+          "minimum": 0.004998822000004566,
+          "maximum": 0.015042966999999408,
+          "coefficient_of_variation": 0.29618557746810487
+        },
+        "verify": {
+          "values": [
+            0.0003735509999955866,
+            0.00039220799999384326,
+            0.00036382800001888427,
+            0.0004208190000269951,
+            0.0003382300000112082
+          ],
+          "median": 0.0003735509999955866,
+          "minimum": 0.0003382300000112082,
+          "maximum": 0.0004208190000269951,
+          "coefficient_of_variation": 0.07334103134781245
+        },
+        "restore": {
+          "values": [
+            0.004669196000008924,
+            0.004171280999997862,
+            0.0046939280000231065,
+            0.004336616000017557,
+            0.004159742000013011
+          ],
+          "median": 0.004336616000017557,
+          "minimum": 0.004159742000013011,
+          "maximum": 0.0046939280000231065,
+          "coefficient_of_variation": 0.05300510531408649
+        },
+        "restore-verify": {
+          "values": [
+            0.0003469280000274466,
+            0.00026605700000459365,
+            0.00029123300001288044,
+            0.00027818300000603813,
+            0.00027077299998268245
+          ],
+          "median": 0.00027818300000603813,
+          "minimum": 0.00026605700000459365,
+          "maximum": 0.0003469280000274466,
+          "coefficient_of_variation": 0.10117062191960072
+        }
+      },
+      "first_pk_seconds": 1.0089878269999986,
+      "transaction_sql_seconds_sum_excluding_captures": 0.012738418000054708
+    },
+    {
+      "label": "pair-3-sampler-on-candidate",
+      "pair": 2,
+      "sampler": "on",
+      "variant": "candidate",
+      "passed": true,
+      "target_distributions": {
+        "update": {
+          "values": [
+            0.00718138600001339,
+            0.0131280610000033,
+            0.012605586000006497,
+            0.012852820000006204,
+            0.022671826000021156
+          ],
+          "median": 0.012852820000006204,
+          "minimum": 0.00718138600001339,
+          "maximum": 0.022671826000021156,
+          "coefficient_of_variation": 0.36561791732715787
+        },
+        "verify": {
+          "values": [
+            0.0007867159999932483,
+            0.00035852399997793327,
+            0.0005285050000054525,
+            0.0003709140000012212,
+            0.00048078700001497054
+          ],
+          "median": 0.00048078700001497054,
+          "minimum": 0.00035852399997793327,
+          "maximum": 0.0007867159999932483,
+          "coefficient_of_variation": 0.30663612140940366
+        },
+        "restore": {
+          "values": [
+            0.005000184000010677,
+            0.005850667999993675,
+            0.004207863999994288,
+            0.004481483999995817,
+            0.008021531999986564
+          ],
+          "median": 0.005000184000010677,
+          "minimum": 0.004207863999994288,
+          "maximum": 0.008021531999986564,
+          "coefficient_of_variation": 0.2492290141078758
+        },
+        "restore-verify": {
+          "values": [
+            0.0004145199999925353,
+            0.0003292779999810591,
+            0.00032563799999252296,
+            0.00029746800001362317,
+            0.0003848650000009002
+          ],
+          "median": 0.0003292779999810591,
+          "minimum": 0.00029746800001362317,
+          "maximum": 0.0004145199999925353,
+          "coefficient_of_variation": 0.12216950856081471
+        }
+      },
+      "first_pk_seconds": 0.9225894040000071,
+      "transaction_sql_seconds_sum_excluding_captures": 0.014103818000023693
+    },
+    {
+      "label": "pair-3-sampler-off-baseline",
+      "pair": 2,
+      "sampler": "off",
+      "variant": "baseline",
+      "passed": true,
+      "target_distributions": {
+        "update": {
+          "values": [
+            0.012737668999989182,
+            0.014090933000005634,
+            0.011951384000013832,
+            0.004174304000002849,
+            0.012788754999974117
+          ],
+          "median": 0.012737668999989182,
+          "minimum": 0.004174304000002849,
+          "maximum": 0.014090933000005634,
+          "coefficient_of_variation": 0.31879238920488934
+        },
+        "verify": {
+          "values": [
+            0.0003226549999908457,
+            0.00036010299999134077,
+            0.00032355799999095325,
+            0.0003797450000035951,
+            0.0004197259999898506
+          ],
+          "median": 0.00036010299999134077,
+          "minimum": 0.0003226549999908457,
+          "maximum": 0.0004197259999898506,
+          "coefficient_of_variation": 0.10115337646415808
+        },
+        "restore": {
+          "values": [
+            0.0045319300000130625,
+            0.004735385999993014,
+            0.004485802999994348,
+            0.004630092000013519,
+            0.004361060999997335
+          ],
+          "median": 0.0045319300000130625,
+          "minimum": 0.004361060999997335,
+          "maximum": 0.004735385999993014,
+          "coefficient_of_variation": 0.0279670006410483
+        },
+        "restore-verify": {
+          "values": [
+            0.00029708200000300167,
+            0.0003525569999851541,
+            0.00029799799997931586,
+            0.00034068799999431576,
+            0.000335710999991079
+          ],
+          "median": 0.000335710999991079,
+          "minimum": 0.00029708200000300167,
+          "maximum": 0.0003525569999851541,
+          "coefficient_of_variation": 0.0705908849755839
+        }
+      },
+      "first_pk_seconds": 0.9964417129999958,
+      "transaction_sql_seconds_sum_excluding_captures": 0.013291073999994296
+    },
+    {
+      "label": "pair-3-sampler-off-candidate",
+      "pair": 2,
+      "sampler": "off",
+      "variant": "candidate",
+      "passed": true,
+      "target_distributions": {
+        "update": {
+          "values": [
+            0.012464891000007583,
+            0.012060064000024795,
+            0.012760960999997906,
+            0.0055024559999878875,
+            0.01235763200000406
+          ],
+          "median": 0.01235763200000406,
+          "minimum": 0.0055024559999878875,
+          "maximum": 0.012760960999997906,
+          "coefficient_of_variation": 0.2513740045141879
+        },
+        "verify": {
+          "values": [
+            0.0003574699999830955,
+            0.00033179100000779727,
+            0.0005029820000004293,
+            0.00033484400000816095,
+            0.00035660700001471923
+          ],
+          "median": 0.00035660700001471923,
+          "minimum": 0.00033179100000779727,
+          "maximum": 0.0005029820000004293,
+          "coefficient_of_variation": 0.1699179556017114
+        },
+        "restore": {
+          "values": [
+            0.004670094000005065,
+            0.004510852000009891,
+            0.004359021999988499,
+            0.004531221999997115,
+            0.004583609000007982
+          ],
+          "median": 0.004531221999997115,
+          "minimum": 0.004359021999988499,
+          "maximum": 0.004670094000005065,
+          "coefficient_of_variation": 0.02252849831992592
+        },
+        "restore-verify": {
+          "values": [
+            0.00030797200000165503,
+            0.0002923440000017763,
+            0.00032880399999157817,
+            0.00033804299999928844,
+            0.0002908419999982925
+          ],
+          "median": 0.00030797200000165503,
+          "minimum": 0.0002908419999982925,
+          "maximum": 0.00033804299999928844,
+          "coefficient_of_variation": 0.06106082697789573
+        }
+      },
+      "first_pk_seconds": 0.8861916080000185,
+      "transaction_sql_seconds_sum_excluding_captures": 0.017440251999943257
+    }
+  ],
+  "binary_identities_unchanged": true,
+  "original_wal_unchanged": true,
+  "paired_ratios": {
+    "on": {
+      "update": {
+        "values": [
+          0.5540110393797205,
+          1.216931755780476,
+          0.9547115730221539
+        ],
+        "median": 0.9547115730221539,
+        "minimum": 0.5540110393797205,
+        "maximum": 1.216931755780476,
+        "coefficient_of_variation": 0.3000352108286843
+      },
+      "verify": {
+        "values": [
+          1.130667438006085,
+          1.2094649633894823,
+          0.7769573636224671
+        ],
+        "median": 1.130667438006085,
+        "minimum": 0.7769573636224671,
+        "maximum": 1.2094649633894823,
+        "coefficient_of_variation": 0.18101952257208795
+      },
+      "restore": {
+        "values": [
+          1.048776161991589,
+          1.1824433651829032,
+          0.8672912836824199
+        ],
+        "median": 1.048776161991589,
+        "minimum": 0.8672912836824199,
+        "maximum": 1.1824433651829032,
+        "coefficient_of_variation": 0.12504686132907944
+      },
+      "restore-verify": {
+        "values": [
+          1.050115789030959,
+          1.140008338236293,
+          0.8448271673845198
+        ],
+        "median": 1.050115789030959,
+        "minimum": 0.8448271673845198,
+        "maximum": 1.140008338236293,
+        "coefficient_of_variation": 0.12211587087091838
+      },
+      "first_pk": {
+        "values": [
+          1.087653163472239,
+          1.0713468748898698,
+          1.0936477512373324
+        ],
+        "median": 1.087653163472239,
+        "minimum": 1.0713468748898698,
+        "maximum": 1.0936477512373324,
+        "coefficient_of_variation": 0.008691197467815832
+      },
+      "transaction_sql_sum": {
+        "values": [
+          0.9716606411958283,
+          0.41715398662989944,
+          0.9031893349753455
+        ],
+        "median": 0.9031893349753455,
+        "minimum": 0.41715398662989944,
+        "maximum": 0.9716606411958283,
+        "coefficient_of_variation": 0.3230962352449736
+      }
+    },
+    "off": {
+      "update": {
+        "values": [
+          2.0426855686030216,
+          0.9818816103883099,
+          1.0307532219752942
+        ],
+        "median": 1.0307532219752942,
+        "minimum": 0.9818816103883099,
+        "maximum": 2.0426855686030216,
+        "coefficient_of_variation": 0.36171435341575753
+      },
+      "verify": {
+        "values": [
+          1.0865632550662823,
+          1.0837230955307044,
+          1.0098035091192188
+        ],
+        "median": 1.0837230955307044,
+        "minimum": 1.0098035091192188,
+        "maximum": 1.0865632550662823,
+        "coefficient_of_variation": 0.033522054070977726
+      },
+      "restore": {
+        "values": [
+          0.9648231011343178,
+          0.9778727983155043,
+          1.0001562492448943
+        ],
+        "median": 0.9778727983155043,
+        "minimum": 0.9648231011343178,
+        "maximum": 1.0001562492448943,
+        "coefficient_of_variation": 0.014871250263568838
+      },
+      "restore-verify": {
+        "values": [
+          0.9325774070669511,
+          0.8339217337027192,
+          1.0900698764474528
+        ],
+        "median": 0.9325774070669511,
+        "minimum": 0.8339217337027192,
+        "maximum": 1.0900698764474528,
+        "coefficient_of_variation": 0.11078422318038024
+      },
+      "first_pk": {
+        "values": [
+          1.0488992155127956,
+          1.0734722303452922,
+          1.124408879529781
+        ],
+        "median": 1.0734722303452922,
+        "minimum": 1.0488992155127956,
+        "maximum": 1.124408879529781,
+        "coefficient_of_variation": 0.029056557727553972
+      },
+      "transaction_sql_sum": {
+        "values": [
+          0.8247311954107156,
+          6.129668177061839,
+          0.7620918550969068
+        ],
+        "median": 0.8247311954107156,
+        "minimum": 0.7620918550969068,
+        "maximum": 6.129668177061839,
+        "coefficient_of_variation": 0.9780347365324934
+      }
+    }
+  },
+  "all_runs_passed": true
+}

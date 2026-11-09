@@ -1,0 +1,50 @@
+import importlib.util,json,os,pathlib,subprocess,tempfile,time,unittest,uuid
+ROOT=pathlib.Path('/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2')
+os.environ['DOCKER_HOST']='unix:///var/tmp/minivectordb-docker/docker.sock'
+spec=importlib.util.spec_from_file_location('acceptance',ROOT/'tests/acceptance.py')
+a=importlib.util.module_from_spec(spec);spec.loader.exec_module(a)
+IMAGE=os.environ.get('MVDB_DOCKER_IMAGE','minivectordb:local-validation')
+created=[]
+class ContainerProcess:
+    def __init__(self,proc,name):
+        self.proc=proc;self.name=name
+        self.stdin=proc.stdin;self.stdout=proc.stdout
+    def poll(self):return self.proc.poll()
+    def wait(self,timeout=None):return self.proc.wait(timeout=timeout)
+    def kill(self):
+        # Kill the actual database container, not merely the attached Docker CLI.
+        deadline=time.monotonic()+8
+        while time.monotonic()<deadline and self.proc.poll() is None:
+            found=subprocess.run(['docker','inspect','--format','{{.State.Status}}',self.name],capture_output=True,text=True)
+            if found.returncode==0:
+                subprocess.run(['docker','kill','--signal','KILL',self.name],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                subprocess.run(['docker','rm','--force',self.name],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                return
+            time.sleep(.02)
+        if self.proc.poll() is None:
+            self.proc.kill()
+            subprocess.run(['docker','rm','--force',self.name],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+class ContainerDatabase(a.Database):
+    def __init__(self,directory,memory_limit=None):
+        if memory_limit is not None:raise RuntimeError('Stress RLIMIT_AS test excluded from this container suite')
+        self.directory=pathlib.Path(directory);self.directory.mkdir(parents=True,exist_ok=True)
+        self.stderr=tempfile.TemporaryFile(mode='w+b')
+        name='mvdb-validation-'+uuid.uuid4().hex
+        created.append(name)
+        proc=subprocess.Popen(['docker','run','--rm','--name',name,'-i','--network','none','--cpus','2','--memory','2g','--memory-swap','2g','--mount',f'type=bind,src={self.directory.resolve()},dst=/data',IMAGE,'--data-dir','/data','--dev-protocol'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=self.stderr)
+        self.proc=ContainerProcess(proc,name)
+a.Database=ContainerDatabase
+a.STRESS=False
+suite=unittest.defaultTestLoader.loadTestsFromTestCase(a.Acceptance)
+try:
+    with (ROOT/'validation/audit-20261109-42affed2e283/docker-acceptance.txt').open('w') as log:
+        log.write('REAL DOCKER CONTAINERS, network=none, cpus=2, memory=2GiB, memory-swap=2GiB; /data bind mount\n')
+        log.write('Development protocol only. Kill operations target actual container via docker kill --signal KILL.\n')
+        result=unittest.TextTestRunner(stream=log,verbosity=2).run(suite)
+    summary={'real_docker_containers':True,'image':IMAGE,'tests_run':result.testsRun,'failures':len(result.failures),'errors':len(result.errors),'skipped':[(str(t),why) for t,why in result.skipped],'success':result.wasSuccessful(),'network':'none','cpus':2,'memory_bytes':2*1024**3,'swap_disabled':True,'kill_targets_actual_container':True,'container_instances':len(created),'official_driver':False,'audit_id':'audit-20261109-42affed2e283','source_tree_sha256':'42affed2e283c8710151931f6f419eee64210eda42245be6d357dc20ae520bb2','container_binary_sha256':'747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f'}
+    (ROOT/'validation/audit-20261109-42affed2e283/docker-acceptance.json').write_text(json.dumps(summary,indent=2)+'\n')
+    print(json.dumps(summary,indent=2),flush=True)
+finally:
+    for name in created:
+        subprocess.run(['docker','rm','--force',name],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+raise SystemExit(0 if result.wasSuccessful() else 1)

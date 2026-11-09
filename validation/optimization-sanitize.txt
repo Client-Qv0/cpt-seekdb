@@ -1,0 +1,51 @@
+Internal ctest changing into directory: /mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-sanitize
+Test project /mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-sanitize
+    Start 1: parser
+1/4 Test #1: parser ...........................   Passed    0.02 sec
+    Start 2: storage
+2/4 Test #2: storage ..........................   Passed    3.88 sec
+    Start 3: engine_extra
+3/4 Test #3: engine_extra .....................   Passed    0.06 sec
+    Start 4: spill
+4/4 Test #4: spill ............................   Passed    0.12 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   4.13 sec
+test_01_published_example_and_rollback (__main__.Acceptance.test_01_published_example_and_rollback) ... ok
+test_02_bigint_precision_and_bounds (__main__.Acceptance.test_02_bigint_precision_and_bounds) ... ok
+test_03_unicode_length_and_codepoint_order (__main__.Acceptance.test_03_unicode_length_and_codepoint_order) ... ok
+test_04_literals_comments_and_case (__main__.Acceptance.test_04_literals_comments_and_case) ... ok
+test_05_vectors_use_stored_float32_and_euclidean_distance (__main__.Acceptance.test_05_vectors_use_stored_float32_and_euclidean_distance) ... ok
+test_06_filter_before_topk_and_tie_by_primary_key (__main__.Acceptance.test_06_filter_before_topk_and_tie_by_primary_key) ... ok
+test_07_scalar_conditions_projection_and_sort (__main__.Acceptance.test_07_scalar_conditions_projection_and_sort) ... ok
+test_08_invalid_schema_does_not_leave_partial_table (__main__.Acceptance.test_08_invalid_schema_does_not_leave_partial_table) ... ok
+test_09_autocommit_statement_atomicity (__main__.Acceptance.test_09_autocommit_statement_atomicity) ... ok
+test_10_failed_statement_preserves_prior_transaction_work (__main__.Acceptance.test_10_failed_statement_preserves_prior_transaction_work) ... ok
+test_11_vector_updates_deletes_and_rollback (__main__.Acceptance.test_11_vector_updates_deletes_and_rollback) ... ok
+test_12_eof_rolls_back_uncommitted_rows (__main__.Acceptance.test_12_eof_rolls_back_uncommitted_rows) ... ok
+test_13_sigkill_rolls_back_uncommitted_and_keeps_acknowledged (__main__.Acceptance.test_13_sigkill_rolls_back_uncommitted_and_keeps_acknowledged) ... ok
+test_14_commit_with_lost_response_is_all_or_nothing (__main__.Acceptance.test_14_commit_with_lost_response_is_all_or_nothing) ... ok
+test_15_repeated_startup_termination_preserves_committed_state (__main__.Acceptance.test_15_repeated_startup_termination_preserves_committed_state) ... ok
+test_16_create_index_and_subsequent_exact_mutations (__main__.Acceptance.test_16_create_index_and_subsequent_exact_mutations) ... ok
+test_17_rejected_sql_never_silently_changes_data (__main__.Acceptance.test_17_rejected_sql_never_silently_changes_data) ... ok
+test_18_randomized_transaction_reference_model (__main__.Acceptance.test_18_randomized_transaction_reference_model) ... ok
+test_19_disk_data_larger_than_address_space (__main__.Acceptance.test_19_disk_data_larger_than_address_space) ... skipped 'Enable --stress for >memory data test'
+
+----------------------------------------------------------------------
+Ran 19 tests in 2.772s
+
+OK (skipped=1)
+test_alias_projection_multi_key_sort_and_vector_ties (__main__.CacheAndIndexAcceptance.test_alias_projection_multi_key_sort_and_vector_ties) ... ok
+test_different_queries_filters_orders_and_tables_do_not_share_answers (__main__.CacheAndIndexAcceptance.test_different_queries_filters_orders_and_tables_do_not_share_answers) ... ok
+test_failed_statement_does_not_leave_cache_ghosts (__main__.CacheAndIndexAcceptance.test_failed_statement_does_not_leave_cache_ghosts) ... ok
+test_hot_cache_insert_update_delete_commit_and_rollback (__main__.CacheAndIndexAcceptance.test_hot_cache_insert_update_delete_commit_and_rollback) ... ok
+test_primary_key_fast_path_respects_all_predicates_and_transaction_overlay (__main__.CacheAndIndexAcceptance.test_primary_key_fast_path_respects_all_predicates_and_transaction_overlay) ... ok
+test_randomized_hot_read_reference_model (__main__.CacheAndIndexAcceptance.test_randomized_hot_read_reference_model) ... ok
+setUpClass (__main__.LargeResponseAcceptance) ... skipped 'Enable --large in Linux for bounded-memory output tests'
+test_incremental_reader_checks_all_rows_and_suffix (__main__.StreamingReaderChecks.test_incremental_reader_checks_all_rows_and_suffix) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 1.236s
+
+OK (skipped=1)

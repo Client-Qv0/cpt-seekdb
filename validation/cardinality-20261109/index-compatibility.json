@@ -1,0 +1,41 @@
+{
+  "tool_sha256": "72650296402cb82fce51c735b731918012b1722f1ef5b2358f8880f97d1d909c",
+  "binaries": {
+    "baseline": {
+      "path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/baseline/release/minivectordb",
+      "sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f"
+    },
+    "candidate": {
+      "path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate/release/minivectordb",
+      "sha256": "6d9c0863f80d8ef74e7c0e3bd8ee63c95fe287db9c3b40341d45859a2afd3093"
+    },
+    "baseline_helper": {
+      "path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/checkpoint-helper-baseline",
+      "sha256": "f06e7870eaff8443b4ebb5b4f0e9d9db73293813015e2ff6fbeb331867607629"
+    },
+    "candidate_helper": {
+      "path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/checkpoint-helper-candidate",
+      "sha256": "b48538a30db09a82286aeb425e27682b913582be9561f37079ff1c0bf913922e"
+    }
+  },
+  "official_assessment": false,
+  "directions": {
+    "baseline_to_candidate_checkpoint_to_baseline": {
+      "passed": true,
+      "all_rows_before_mutation_verified": 1000,
+      "all_rows_after_mutation_and_checkpoint_verified": 999,
+      "uncommitted_sigkill_rollback": true,
+      "failed_multivalue_statement_rollback_inside_commit": true,
+      "checkpoint_helper_stdout": "{\"ok\":true,\"phase\":\"recovered\"}\n{\"ok\":true,\"phase\":\"checkpoint_complete\"}\n"
+    },
+    "candidate_to_baseline_checkpoint_to_candidate": {
+      "passed": true,
+      "all_rows_before_mutation_verified": 1000,
+      "all_rows_after_mutation_and_checkpoint_verified": 999,
+      "uncommitted_sigkill_rollback": true,
+      "failed_multivalue_statement_rollback_inside_commit": true,
+      "checkpoint_helper_stdout": "{\"ok\":true,\"phase\":\"recovered\"}\n{\"ok\":true,\"phase\":\"checkpoint_complete\"}\n"
+    }
+  },
+  "passed": true
+}

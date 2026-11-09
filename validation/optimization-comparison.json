@@ -1,0 +1,155 @@
+{
+  "scope": "local native comparison only, not official ranking",
+  "binaries": {
+    "baseline": {
+      "sha256": "24bfc8691c0e66b3805d2479931d8150d0361fed0f506b4dcd649ca965a75d16"
+    },
+    "candidate": {
+      "sha256": "bb774b68b2e926b51303bc4146db70e07b69657a494c043964db3b672f1df7c2"
+    }
+  },
+  "rounds": [
+    {
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "scope": "local development baseline, not official scoring",
+        "rows": 10000,
+        "dimension": 128,
+        "queries": 1000,
+        "write_seconds": 0.7107887269999935,
+        "query_seconds": 4.870516584000001,
+        "data_file_bytes": 5633351,
+        "peak_process_rss_kib": 13996,
+        "not_measured": [
+          "cgroup physical I/O",
+          "cgroup memory peak",
+          "official baseline ratio",
+          "official hidden cases"
+        ],
+        "recall_note": "exact backend; this timing run checks count, uniqueness and sorting only"
+      },
+      "candidate": {
+        "scope": "local development baseline, not official scoring",
+        "rows": 10000,
+        "dimension": 128,
+        "queries": 1000,
+        "write_seconds": 0.6349399989999824,
+        "query_seconds": 0.47438074800001573,
+        "data_file_bytes": 5633351,
+        "peak_process_rss_kib": 14004,
+        "not_measured": [
+          "cgroup physical I/O",
+          "cgroup memory peak",
+          "official baseline ratio",
+          "official hidden cases"
+        ],
+        "recall_note": "exact backend; this timing run checks count, uniqueness and sorting only"
+      }
+    },
+    {
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "scope": "local development baseline, not official scoring",
+        "rows": 10000,
+        "dimension": 128,
+        "queries": 1000,
+        "write_seconds": 0.6383552959999861,
+        "query_seconds": 0.5119655690000116,
+        "data_file_bytes": 5633351,
+        "peak_process_rss_kib": 14048,
+        "not_measured": [
+          "cgroup physical I/O",
+          "cgroup memory peak",
+          "official baseline ratio",
+          "official hidden cases"
+        ],
+        "recall_note": "exact backend; this timing run checks count, uniqueness and sorting only"
+      },
+      "baseline": {
+        "scope": "local development baseline, not official scoring",
+        "rows": 10000,
+        "dimension": 128,
+        "queries": 1000,
+        "write_seconds": 0.7119168280000281,
+        "query_seconds": 4.955568284000009,
+        "data_file_bytes": 5633351,
+        "peak_process_rss_kib": 14204,
+        "not_measured": [
+          "cgroup physical I/O",
+          "cgroup memory peak",
+          "official baseline ratio",
+          "official hidden cases"
+        ],
+        "recall_note": "exact backend; this timing run checks count, uniqueness and sorting only"
+      }
+    },
+    {
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "scope": "local development baseline, not official scoring",
+        "rows": 10000,
+        "dimension": 128,
+        "queries": 1000,
+        "write_seconds": 0.6909502139999972,
+        "query_seconds": 5.112696376000002,
+        "data_file_bytes": 5633351,
+        "peak_process_rss_kib": 14008,
+        "not_measured": [
+          "cgroup physical I/O",
+          "cgroup memory peak",
+          "official baseline ratio",
+          "official hidden cases"
+        ],
+        "recall_note": "exact backend; this timing run checks count, uniqueness and sorting only"
+      },
+      "candidate": {
+        "scope": "local development baseline, not official scoring",
+        "rows": 10000,
+        "dimension": 128,
+        "queries": 1000,
+        "write_seconds": 0.6843960919999859,
+        "query_seconds": 0.54586450299999,
+        "data_file_bytes": 5633351,
+        "peak_process_rss_kib": 14120,
+        "not_measured": [
+          "cgroup physical I/O",
+          "cgroup memory peak",
+          "official baseline ratio",
+          "official hidden cases"
+        ],
+        "recall_note": "exact backend; this timing run checks count, uniqueness and sorting only"
+      }
+    }
+  ],
+  "medians": {
+    "baseline": {
+      "write_seconds": 0.7107887269999935,
+      "query_seconds": 4.955568284000009,
+      "peak_process_rss_kib": 14008,
+      "data_file_bytes": 5633351
+    },
+    "candidate": {
+      "write_seconds": 0.6383552959999861,
+      "query_seconds": 0.5119655690000116,
+      "peak_process_rss_kib": 14048,
+      "data_file_bytes": 5633351
+    }
+  },
+  "query_speedup": 9.679495231836375,
+  "write_speedup": 1.1134688338201066,
+  "rss_ratio_candidate_to_baseline": 1.0028555111364934,
+  "limitations": [
+    "RSS excludes cgroup page-cache accounting",
+    "data-file size is not physical I/O",
+    "no official baseline or three-round E statistic"
+  ]
+}

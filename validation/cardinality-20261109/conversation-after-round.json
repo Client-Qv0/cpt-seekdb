@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-09",
+  "synthetic": false,
+  "material_scope": "真实对话摘录与本轮本地验证。不是完整聊天导出；未记录的学生理解、解释或反馈不得从Agent工作推断。尚未完成官方评测适配。",
+  "conversations": [
+    {
+      "id": "user-verify",
+      "source": "student",
+      "content": "请你记住绝对要核实之后再让我提交"
+    },
+    {
+      "id": "user-start",
+      "source": "student",
+      "content": "现在可以开始解题了么"
+    },
+    {
+      "id": "assistant-start",
+      "source": "agent",
+      "content": "可以，现在开始实现。先把文档已明确的 SQL、精确向量检索、持久化、事务和崩溃恢复做出来并测试；正式输入输出协议尚未提供的部分单独留出适配接口。达到本地验证标准后，我会汇报证据和剩余缺项，再判断是否具备提测条件。"
+    },
+    {
+      "id": "review-varchar",
+      "source": "agent_review",
+      "content": "独立审查发现 WHERE 字符串比较误用了 VARCHAR 存储长度限制。VARCHAR(1) 存储 'a' 后，WHERE s < 'zz' 应可比较，而不是报长度超限。Agent 增加 comparison 转换模式并通过独立回归测试；这不是学生自行发现问题的证据。"
+    }
+  ],
+  "experiments": [
+    {
+      "id": "release-blackbox",
+      "source": "tool_result_summary",
+      "command": "python3 tests/acceptance.py --binary ./build/minivectordb -v",
+      "output": "18项常规黑盒测试通过，1项压力测试单独运行；包括140步随机参考模型。",
+      "executed": true
+    },
+    {
+      "id": "stress",
+      "source": "tool_output",
+      "output": "test_19_disk_data_larger_than_address_space (__main__.Acceptance.test_19_disk_data_larger_than_address_space) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 3.880s\n\nOK\n",
+      "limitation": "192MB数据/128MiB RLIMIT_AS；不是cgroup memory.peak，未计页缓存。",
+      "executed": true
+    },
+    {
+      "id": "asan-ubsan",
+      "source": "tool_output_excerpt",
+      "command": "ctest --test-dir build-sanitize --output-on-failure; python3 tests/acceptance.py --binary ./build-sanitize/minivectordb -v",
+      "output": "100% tests passed, 0 tests failed out of 3\nRan 19 tests in 2.469s\nOK (skipped=1)",
+      "limitation": "ASan/UBSan构建；压力测试不与ASan虚拟地址空间预算混用。",
+      "executed": true
+    },
+    {
+      "id": "benchmark",
+      "source": "tool_output",
+      "command": "python3 tests/benchmark_local.py --binary ./build/minivectordb --rows 10000 --queries 1000",
+      "output": "{\n  \"scope\": \"local development baseline, not official scoring\",\n  \"rows\": 10000,\n  \"dimension\": 128,\n  \"queries\": 1000,\n  \"write_seconds\": 0.6898058729999832,\n  \"query_seconds\": 4.6605685600000015,\n  \"data_file_bytes\": 5633351,\n  \"not_measured\": [\n    \"cgroup physical I/O\",\n    \"cgroup memory peak\",\n    \"official baseline ratio\",\n    \"official hidden cases\"\n  ],\n  \"recall_note\": \"exact backend; this timing run checks count, uniqueness and sorting only\"\n}\n",
+      "executed": true
+    }
+  ],
+  "limitations": [
+    "没有官方测试驱动和资源配置，不能认定可提测或满分。",
+    "没有将Agent规划、解释和代码冒充学生理解；当前真实学生技术学习证据仍不足。",
+    "当前向量检索为精确扫描，CREATE VECTOR INDEX仅保存元数据，尚未实现加速索引。",
+    "无LIMIT结果集会物化，日志尚未压缩，仍需资源边界验证。",
+    "Docker不可用，未执行镜像构建与运行；依赖版本待正式环境冻结。"
+  ],
+  "historical_entries_notice": "原有 conversations、experiments、limitations 保留为先前版本记录，不代表本轮当前状态。当前结论见 optimization_round_20261109；它是工作过程摘要，不是完整对话导出或学生自行理解的证明。",
+  "optimization_round_20261109": {
+    "recorded_at_utc": "2026-11-09T08:31:56.321841+00:00",
+    "prior_material_sha256": "fa31e841267da0e5248e0e1d59fe9b2dac53874f13b6bc2e5600895eeec7e0a3",
+    "source": "real user request excerpts, agent decisions and measured tool evidence",
+    "user_excerpts": [
+      "本轮不提交正式评测，不覆盖旧审计证据。",
+      "如果候选没有稳定收益或出现正确性、资源回归，保留实验记录并回退该候选，不把负结果包装成提升。学习记录只保存真实发生的判断、实验和反馈。"
+    ],
+    "decisions": [
+      {
+        "source": "agent",
+        "summary": "先冻结审计基线和哈希，再做真实128MiB cgroup阶梯。观察到主键映射约64B/行，2m首扫OOM，选择32B节点紧凑树；明确仍是O(N)，暂不引入磁盘索引或ANN。"
+      },
+      {
+        "source": "agent",
+        "summary": "V1内存明显减少，但18轮配对暴露恢复退化。独立helper确认约11.7%内部恢复退化，保留负证据；复核重复遍历后只精修插入位置复用和合并迭代，V2重新冻结与验证。"
+      },
+      {
+        "source": "tool_result_summary",
+        "summary": "V2 Release5/5、19/19、11/11；ASan/UBSan5/5、18常规通过+1压力跳过、额外8通过+大输出类跳过；双向WAL/checkpoint兼容通过。18轮配对和4项真实cgroup资源回归通过，6066组128D输出独立核对通过。"
+      },
+      {
+        "source": "tool_result_summary",
+        "summary": "V2两类2m阶梯通过无OOM，1m三档事务和retention通过；主要匿名内存约少32MB。写入仍有约1%–2%配对退化，部分毫秒级操作负项已保留并继续做采样开关对照，未把全面提速当结论。"
+      },
+      {
+        "source": "tool_result_summary_and_agent_decision",
+        "summary": "额外12次sampler开关对照通过，但不能解释原更新约6→13ms负结果；未将其改写为GIL噪声。最终保留V2作为稳定内存与规模改善，披露约1%–2%写入退化和单行延迟代价，未宣称全面提速。下一轮优先复现相同写入历史并定位单行更新延迟；未提交正式评测。"
+      }
+    ],
+    "evidence_report": "validation/cardinality-20261109/REPORT.md",
+    "baseline_source_tree": "42affed2e283c8710151931f6f419eee64210eda42245be6d357dc20ae520bb2",
+    "candidate_v2_source_tree": "df56a37dcbae572b6283dfd4ee67cccc1e7e15f2117b59760cf7628936ae18f3",
+    "candidate_v2_binary_sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c",
+    "official_assessment_submitted": false,
+    "student_technical_feedback_inferred": false,
+    "completed_at_utc": "2026-11-09T08:48:04.548637+00:00"
+  }
+}

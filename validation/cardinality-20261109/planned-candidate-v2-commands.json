@@ -1,0 +1,85 @@
+[
+  {
+    "label": "candidate-v2-boundary",
+    "argv": [
+      "python3",
+      "-u",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/baseline-driver.py",
+      "--binary",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate-v2/release/minivectordb",
+      "--output",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/candidate-v2-boundary-results.json",
+      "--source-manifest",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/candidate-v2-production-manifest.json",
+      "--checkpoint-helper",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/checkpoint-helper-candidate-v2",
+      "--manage-daemon"
+    ],
+    "driver_sha256": "d65b15be4d3bef65f1e5cf770d818dfcce0c60cc7b6037a07bb3b89d565e592a",
+    "binary_sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c"
+  },
+  {
+    "label": "transaction-baseline-repeat-for-v2",
+    "argv": [
+      "python3",
+      "-u",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/probe-v2.py",
+      "--binary",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/baseline/release/minivectordb",
+      "--output",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/transaction-baseline-repeat-for-v2-results.json",
+      "--source-manifest",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/audit-20261109-42affed2e283/production-manifest.json",
+      "--checkpoint-helper",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/checkpoint-helper-baseline",
+      "--manage-daemon",
+      "--sizes",
+      "1000000",
+      "--transaction-sizes",
+      "25000,100000,250000"
+    ],
+    "driver_sha256": "d17b60f2b86c582cd870edf5118d40c255069b2b37840caaf07cb08d8a850525",
+    "binary_sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f"
+  },
+  {
+    "label": "transaction-candidate-v2",
+    "argv": [
+      "python3",
+      "-u",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/probe-v2.py",
+      "--binary",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate-v2/release/minivectordb",
+      "--output",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/transaction-candidate-v2-results.json",
+      "--source-manifest",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/candidate-v2-production-manifest.json",
+      "--checkpoint-helper",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/checkpoint-helper-candidate-v2",
+      "--manage-daemon",
+      "--sizes",
+      "1000000",
+      "--transaction-sizes",
+      "25000,100000,250000"
+    ],
+    "driver_sha256": "d17b60f2b86c582cd870edf5118d40c255069b2b37840caaf07cb08d8a850525",
+    "binary_sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c"
+  },
+  {
+    "label": "arena-retention-candidate-v2",
+    "argv": [
+      "python3",
+      "-u",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/arena-retention-candidate-v2.py"
+    ],
+    "driver_sha256": "f319189c7da55de1648432bba884784307bd45d83cfd61dc576dfcf9c0a5c6fc"
+  },
+  {
+    "label": "recovery-diagnostic-candidate-v2",
+    "argv": [
+      "python3",
+      "-u",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/recovery-diagnostic-candidate-v2.py"
+    ],
+    "driver_sha256": "45f16e6afa818fb0ed0ec32f7c56e12faf253c4a7296860907001cfcfba60ac5"
+  }
+]

@@ -1,0 +1,3668 @@
+{
+  "scope": "Resource/correctness diagnostics only; not 3-pair performance evidence or official grading.",
+  "baseline_binary_sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f",
+  "candidate_binary_sha256": "6d9c0863f80d8ef74e7c0e3bd8ee63c95fe287db9c3b40341d45859a2afd3093",
+  "runtime": "Same frozen Docker runtime image with each exact native executable mounted read-only as /probe/minivectordb; this does not claim a newly rebuilt candidate Docker image.",
+  "boundary": [
+    {
+      "version": "baseline",
+      "kind": "scalar",
+      "N": 50000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 0.301936478,
+          "after": {
+            "current": 7966720,
+            "peak": 8212480,
+            "anon": 3629056,
+            "file": 2908160,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "7548 kB",
+              "VmRSS": "7336 kB",
+              "RssAnon": "3604 kB",
+              "RssFile": "3732 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.017810370000000297,
+          "after": {
+            "current": 14249984,
+            "peak": 14249984,
+            "anon": 9912320,
+            "file": 3002368,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "13420 kB",
+              "VmRSS": "13420 kB",
+              "RssAnon": "9680 kB",
+              "RssFile": "3740 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.005232217999999733,
+          "after": {
+            "current": 12648448,
+            "peak": 14249984,
+            "anon": 9912320,
+            "file": 3002368,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "13260 kB",
+              "VmRSS": "11856 kB",
+              "RssAnon": "8116 kB",
+              "RssFile": "3740 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 0.5455610660000003,
+          "after": {
+            "current": 7864320,
+            "peak": 7864320,
+            "anon": 3485696,
+            "file": 2732032,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "7000 kB",
+              "VmRSS": "7000 kB",
+              "RssAnon": "3404 kB",
+              "RssFile": "3596 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.49654816000000057,
+          "after": {
+            "current": 5599232,
+            "peak": 6209536,
+            "anon": 3485696,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "7172 kB",
+              "VmRSS": "7172 kB",
+              "RssAnon": "3404 kB",
+              "RssFile": "3768 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.01753722599999996,
+          "after": {
+            "current": 11739136,
+            "peak": 11739136,
+            "anon": 9891840,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "13428 kB",
+              "VmRSS": "13428 kB",
+              "RssAnon": "9660 kB",
+              "RssFile": "3768 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "scalar",
+      "N": 100000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 0.5924725389999992,
+          "after": {
+            "current": 14295040,
+            "peak": 14798848,
+            "anon": 6889472,
+            "file": 5607424,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "10676 kB",
+              "VmRSS": "10460 kB",
+              "RssAnon": "6728 kB",
+              "RssFile": "3732 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.03370486400000061,
+          "after": {
+            "current": 20213760,
+            "peak": 22151168,
+            "anon": 12513280,
+            "file": 5648384,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "17736 kB",
+              "VmRSS": "15972 kB",
+              "RssAnon": "12220 kB",
+              "RssFile": "3752 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.00528499499999846,
+          "after": {
+            "current": 20213760,
+            "peak": 22151168,
+            "anon": 12513280,
+            "file": 5648384,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "17736 kB",
+              "VmRSS": "15972 kB",
+              "RssAnon": "12220 kB",
+              "RssFile": "3752 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 0.6476897909999995,
+          "after": {
+            "current": 13004800,
+            "peak": 13004800,
+            "anon": 6680576,
+            "file": 5378048,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "10120 kB",
+              "VmRSS": "10120 kB",
+              "RssAnon": "6524 kB",
+              "RssFile": "3596 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.5277603890000009,
+          "after": {
+            "current": 8470528,
+            "peak": 8470528,
+            "anon": 6680576,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "10276 kB",
+              "VmRSS": "10276 kB",
+              "RssAnon": "6524 kB",
+              "RssFile": "3752 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.032281824000000015,
+          "after": {
+            "current": 14270464,
+            "peak": 16187392,
+            "anon": 12492800,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "17572 kB",
+              "VmRSS": "15952 kB",
+              "RssAnon": "12200 kB",
+              "RssFile": "3752 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "scalar",
+      "N": 250000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 1.5424601119999988,
+          "after": {
+            "current": 31592448,
+            "peak": 32096256,
+            "anon": 16494592,
+            "file": 13561856,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19968 kB",
+              "VmRSS": "19836 kB",
+              "RssAnon": "16108 kB",
+              "RssFile": "3728 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.07720201899999957,
+          "after": {
+            "current": 37191680,
+            "peak": 39448576,
+            "anon": 22118400,
+            "file": 13602816,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "27008 kB",
+              "VmRSS": "25332 kB",
+              "RssAnon": "21600 kB",
+              "RssFile": "3732 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.006159097000001168,
+          "after": {
+            "current": 36610048,
+            "peak": 39448576,
+            "anon": 22118400,
+            "file": 13602816,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "27008 kB",
+              "VmRSS": "25332 kB",
+              "RssAnon": "21600 kB",
+              "RssFile": "3732 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 0.9265611430000007,
+          "after": {
+            "current": 31633408,
+            "peak": 31633408,
+            "anon": 16281600,
+            "file": 13328384,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19496 kB",
+              "VmRSS": "19496 kB",
+              "RssAnon": "15900 kB",
+              "RssFile": "3596 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.6870672990000024,
+          "after": {
+            "current": 18178048,
+            "peak": 18178048,
+            "anon": 16285696,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19652 kB",
+              "VmRSS": "19652 kB",
+              "RssAnon": "15904 kB",
+              "RssFile": "3748 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.07906995399999772,
+          "after": {
+            "current": 23851008,
+            "peak": 25767936,
+            "anon": 23937024,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "27084 kB",
+              "VmRSS": "25328 kB",
+              "RssAnon": "21580 kB",
+              "RssFile": "3748 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "scalar",
+      "N": 500000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 3.0878205459999997,
+          "after": {
+            "current": 62144512,
+            "peak": 62652416,
+            "anon": 32497664,
+            "file": 26820608,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "35584 kB",
+              "VmRSS": "35468 kB",
+              "RssAnon": "31736 kB",
+              "RssFile": "3732 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.1502532890000019,
+          "after": {
+            "current": 67801088,
+            "peak": 69738496,
+            "anon": 38121472,
+            "file": 26861568,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "42640 kB",
+              "VmRSS": "41004 kB",
+              "RssAnon": "37232 kB",
+              "RssFile": "3772 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.012532830999997913,
+          "after": {
+            "current": 67801088,
+            "peak": 69738496,
+            "anon": 38125568,
+            "file": 26861568,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "42640 kB",
+              "VmRSS": "41004 kB",
+              "RssAnon": "37232 kB",
+              "RssFile": "3772 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 1.3700940589999995,
+          "after": {
+            "current": 62152704,
+            "peak": 62152704,
+            "anon": 32276480,
+            "file": 26578944,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "35116 kB",
+              "VmRSS": "35116 kB",
+              "RssAnon": "31520 kB",
+              "RssFile": "3596 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.8059339630000011,
+          "after": {
+            "current": 35008512,
+            "peak": 35008512,
+            "anon": 32284672,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "35264 kB",
+              "VmRSS": "35264 kB",
+              "RssAnon": "31528 kB",
+              "RssFile": "3736 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.1447536910000018,
+          "after": {
+            "current": 41070592,
+            "peak": 42987520,
+            "anon": 38096896,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "42580 kB",
+              "VmRSS": "40940 kB",
+              "RssAnon": "37204 kB",
+              "RssFile": "3736 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "scalar",
+      "N": 1000000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 6.426567632000001,
+          "after": {
+            "current": 120897536,
+            "peak": 121405440,
+            "anon": 64532480,
+            "file": 53338112,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "66916 kB",
+              "VmRSS": "66744 kB",
+              "RssAnon": "63020 kB",
+              "RssFile": "3724 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.31263965199999433,
+          "after": {
+            "current": 126578688,
+            "peak": 128491520,
+            "anon": 70135808,
+            "file": 53379072,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "73948 kB",
+              "VmRSS": "72256 kB",
+              "RssAnon": "68492 kB",
+              "RssFile": "3764 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.0062439829999973995,
+          "after": {
+            "current": 126554112,
+            "peak": 128491520,
+            "anon": 70135808,
+            "file": 53379072,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "73948 kB",
+              "VmRSS": "72256 kB",
+              "RssAnon": "68492 kB",
+              "RssFile": "3764 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 2.4307108439999965,
+          "after": {
+            "current": 120635392,
+            "peak": 120635392,
+            "anon": 64282624,
+            "file": 53080064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "66372 kB",
+              "VmRSS": "66372 kB",
+              "RssAnon": "62776 kB",
+              "RssFile": "3596 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 1.1584220870000053,
+          "after": {
+            "current": 66535424,
+            "peak": 66535424,
+            "anon": 64282624,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "66536 kB",
+              "VmRSS": "66536 kB",
+              "RssAnon": "62776 kB",
+              "RssFile": "3760 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.2867691900000011,
+          "after": {
+            "current": 72335360,
+            "peak": 74252288,
+            "anon": 70094848,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "73904 kB",
+              "VmRSS": "72212 kB",
+              "RssAnon": "68452 kB",
+              "RssFile": "3760 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "scalar",
+      "N": 2000000,
+      "passed": false,
+      "phases": {
+        "write": {
+          "seconds": 12.737895873,
+          "after": {
+            "current": 133963776,
+            "peak": 134217728,
+            "anon": 128573440,
+            "file": 2211840,
+            "events": "low 0\nhigh 0\nmax 582\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=12611\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=12611",
+            "rss_auxiliary": {
+              "VmHWM": "129508 kB",
+              "VmRSS": "129248 kB",
+              "RssAnon": "125560 kB",
+              "RssFile": "3688 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.2422043039999977,
+          "after": null,
+          "passed": false
+        }
+      },
+      "oom_killed": true
+    },
+    {
+      "version": "baseline",
+      "kind": "vector4",
+      "N": 50000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 0.3134325959999984,
+          "after": {
+            "current": 9359360,
+            "peak": 9777152,
+            "anon": 3805184,
+            "file": 3756032,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "8088 kB",
+              "VmRSS": "7576 kB",
+              "RssAnon": "3716 kB",
+              "RssFile": "3860 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.0193115370000001,
+          "after": {
+            "current": 15863808,
+            "peak": 17215488,
+            "anon": 10317824,
+            "file": 3796992,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "15168 kB",
+              "VmRSS": "13976 kB",
+              "RssAnon": "10076 kB",
+              "RssFile": "3900 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.005990437000001236,
+          "after": {
+            "current": 15851520,
+            "peak": 17215488,
+            "anon": 10317824,
+            "file": 3796992,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "15168 kB",
+              "VmRSS": "14104 kB",
+              "RssAnon": "10076 kB",
+              "RssFile": "4028 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 0.5585965560000048,
+          "after": {
+            "current": 9089024,
+            "peak": 9355264,
+            "anon": 3481600,
+            "file": 3530752,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "6996 kB",
+              "VmRSS": "6996 kB",
+              "RssAnon": "3400 kB",
+              "RssFile": "3596 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.5194498030000005,
+          "after": {
+            "current": 5357568,
+            "peak": 5660672,
+            "anon": 3485696,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "7144 kB",
+              "VmRSS": "7144 kB",
+              "RssAnon": "3404 kB",
+              "RssFile": "3740 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.020108646999993596,
+          "after": {
+            "current": 11968512,
+            "peak": 13332480,
+            "anon": 10293248,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "14904 kB",
+              "VmRSS": "13792 kB",
+              "RssAnon": "10052 kB",
+              "RssFile": "3740 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "vector4",
+      "N": 100000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 0.6989926750000066,
+          "after": {
+            "current": 16027648,
+            "peak": 16625664,
+            "anon": 7016448,
+            "file": 7208960,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "11152 kB",
+              "VmRSS": "10704 kB",
+              "RssAnon": "6852 kB",
+              "RssFile": "3852 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.03417623499999678,
+          "after": {
+            "current": 22532096,
+            "peak": 23883776,
+            "anon": 13524992,
+            "file": 7249920,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "18228 kB",
+              "VmRSS": "17096 kB",
+              "RssAnon": "13208 kB",
+              "RssFile": "3888 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.004721744999997668,
+          "after": {
+            "current": 22519808,
+            "peak": 23883776,
+            "anon": 13524992,
+            "file": 7249920,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "18228 kB",
+              "VmRSS": "17224 kB",
+              "RssAnon": "13208 kB",
+              "RssFile": "4016 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 0.6779992279999973,
+          "after": {
+            "current": 15736832,
+            "peak": 15736832,
+            "anon": 6680576,
+            "file": 6979584,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "10120 kB",
+              "VmRSS": "10120 kB",
+              "RssAnon": "6524 kB",
+              "RssFile": "3596 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.5100146389999978,
+          "after": {
+            "current": 8568832,
+            "peak": 8568832,
+            "anon": 6684672,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "10272 kB",
+              "VmRSS": "10272 kB",
+              "RssAnon": "6528 kB",
+              "RssFile": "3744 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.03389803700000016,
+          "after": {
+            "current": 15355904,
+            "peak": 16699392,
+            "anon": 13492224,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "18032 kB",
+              "VmRSS": "16920 kB",
+              "RssAnon": "13176 kB",
+              "RssFile": "3744 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "vector4",
+      "N": 250000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 1.5020402789999991,
+          "after": {
+            "current": 36188160,
+            "peak": 36790272,
+            "anon": 16629760,
+            "file": 17563648,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "20588 kB",
+              "VmRSS": "20072 kB",
+              "RssAnon": "16240 kB",
+              "RssFile": "3832 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.07971101399999725,
+          "after": {
+            "current": 42688512,
+            "peak": 44044288,
+            "anon": 23130112,
+            "file": 17604608,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "27652 kB",
+              "VmRSS": "26436 kB",
+              "RssAnon": "22588 kB",
+              "RssFile": "3848 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.01257193100001075,
+          "after": {
+            "current": 42680320,
+            "peak": 44044288,
+            "anon": 23130112,
+            "file": 17604608,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "27652 kB",
+              "VmRSS": "26564 kB",
+              "RssAnon": "22588 kB",
+              "RssFile": "3976 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 0.9479794949999985,
+          "after": {
+            "current": 36212736,
+            "peak": 36257792,
+            "anon": 16281600,
+            "file": 17330176,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19496 kB",
+              "VmRSS": "19496 kB",
+              "RssAnon": "15900 kB",
+              "RssFile": "3596 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.6695791900000074,
+          "after": {
+            "current": 17928192,
+            "peak": 17928192,
+            "anon": 16281600,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19664 kB",
+              "VmRSS": "19664 kB",
+              "RssAnon": "15900 kB",
+              "RssFile": "3764 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.0811673380000002,
+          "after": {
+            "current": 24543232,
+            "peak": 25907200,
+            "anon": 23089152,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "27356 kB",
+              "VmRSS": "26312 kB",
+              "RssAnon": "22548 kB",
+              "RssFile": "3764 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "vector4",
+      "N": 500000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 3.4151817160000064,
+          "after": {
+            "current": 70152192,
+            "peak": 70754304,
+            "anon": 32583680,
+            "file": 34750464,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "36028 kB",
+              "VmRSS": "35740 kB",
+              "RssAnon": "31880 kB",
+              "RssFile": "3860 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.15941857700001094,
+          "after": {
+            "current": 76386304,
+            "peak": 77742080,
+            "anon": 39129088,
+            "file": 34861056,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "43080 kB",
+              "VmRSS": "42096 kB",
+              "RssAnon": "38212 kB",
+              "RssFile": "3884 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.0061811359999950355,
+          "after": {
+            "current": 76386304,
+            "peak": 77742080,
+            "anon": 39129088,
+            "file": 34861056,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "43080 kB",
+              "VmRSS": "42224 kB",
+              "RssAnon": "38212 kB",
+              "RssFile": "4012 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 1.433730600000004,
+          "after": {
+            "current": 69570560,
+            "peak": 69570560,
+            "anon": 32280576,
+            "file": 34578432,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "35120 kB",
+              "VmRSS": "35120 kB",
+              "RssAnon": "31524 kB",
+              "RssFile": "3596 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.8480107860000032,
+          "after": {
+            "current": 34140160,
+            "peak": 34140160,
+            "anon": 32284672,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "35300 kB",
+              "VmRSS": "35300 kB",
+              "RssAnon": "31528 kB",
+              "RssFile": "3772 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.15335739299999318,
+          "after": {
+            "current": 41017344,
+            "peak": 42381312,
+            "anon": 39092224,
+            "file": 344064,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "42992 kB",
+              "VmRSS": "41948 kB",
+              "RssAnon": "38176 kB",
+              "RssFile": "3772 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "vector4",
+      "N": 1000000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 7.045302712000009,
+          "after": {
+            "current": 133763072,
+            "peak": 134217728,
+            "anon": 64688128,
+            "file": 65421312,
+            "events": "low 0\nhigh 0\nmax 17\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=497\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=497",
+            "rss_auxiliary": {
+              "VmHWM": "67540 kB",
+              "VmRSS": "67028 kB",
+              "RssAnon": "63172 kB",
+              "RssFile": "3856 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.33097487199999875,
+          "after": {
+            "current": 133775360,
+            "peak": 134217728,
+            "anon": 71139328,
+            "file": 60891136,
+            "events": "low 0\nhigh 0\nmax 64\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=3797\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=3797",
+            "rss_auxiliary": {
+              "VmHWM": "74516 kB",
+              "VmRSS": "73304 kB",
+              "RssAnon": "69472 kB",
+              "RssFile": "3832 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.005132744999997385,
+          "after": {
+            "current": 134103040,
+            "peak": 134217728,
+            "anon": 71139328,
+            "file": 60891136,
+            "events": "low 0\nhigh 0\nmax 192\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=6326\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=6326",
+            "rss_auxiliary": {
+              "VmHWM": "74516 kB",
+              "VmRSS": "73432 kB",
+              "RssAnon": "69472 kB",
+              "RssFile": "3960 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 2.847901218000004,
+          "after": {
+            "current": 121503744,
+            "peak": 134217728,
+            "anon": 64278528,
+            "file": 54251520,
+            "events": "low 0\nhigh 0\nmax 79\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1365\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1365",
+            "rss_auxiliary": {
+              "VmHWM": "66368 kB",
+              "VmRSS": "66368 kB",
+              "RssAnon": "62772 kB",
+              "RssFile": "3596 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 1.1937853499999989,
+          "after": {
+            "current": 81625088,
+            "peak": 81625088,
+            "anon": 64278528,
+            "file": 15151104,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "66504 kB",
+              "VmRSS": "66504 kB",
+              "RssAnon": "62772 kB",
+              "RssFile": "3732 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.30254626999999346,
+          "after": {
+            "current": 88502272,
+            "peak": 89866240,
+            "anon": 71086080,
+            "file": 15151104,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "74256 kB",
+              "VmRSS": "73152 kB",
+              "RssAnon": "69420 kB",
+              "RssFile": "3732 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "vector4",
+      "N": 2000000,
+      "passed": false,
+      "phases": {
+        "write": {
+          "seconds": 14.112007430999995,
+          "after": {
+            "current": 133865472,
+            "peak": 134217728,
+            "anon": 128770048,
+            "file": 2084864,
+            "events": "low 0\nhigh 0\nmax 743\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=17058\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=17058",
+            "rss_auxiliary": {
+              "VmHWM": "129908 kB",
+              "VmRSS": "129568 kB",
+              "RssAnon": "125752 kB",
+              "RssFile": "3816 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.508633532999994,
+          "after": null,
+          "passed": false
+        }
+      },
+      "oom_killed": true
+    },
+    {
+      "version": "candidate",
+      "kind": "scalar",
+      "N": 50000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 0.3427604129999997,
+          "after": {
+            "current": 6733824,
+            "peak": 7237632,
+            "anon": 2125824,
+            "file": 2969600,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "6028 kB",
+              "VmRSS": "5816 kB",
+              "RssAnon": "2076 kB",
+              "RssFile": "3740 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.018263259000000254,
+          "after": {
+            "current": 13017088,
+            "peak": 13017088,
+            "anon": 8343552,
+            "file": 3010560,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "11892 kB",
+              "VmRSS": "11892 kB",
+              "RssAnon": "8148 kB",
+              "RssFile": "3744 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.0057086619999999755,
+          "after": {
+            "current": 11415552,
+            "peak": 13017088,
+            "anon": 8343552,
+            "file": 3010560,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "11680 kB",
+              "VmRSS": "10332 kB",
+              "RssAnon": "6588 kB",
+              "RssFile": "3744 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 0.5647535000000001,
+          "after": {
+            "current": 6483968,
+            "peak": 6483968,
+            "anon": 1912832,
+            "file": 2744320,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "5476 kB",
+              "VmRSS": "5476 kB",
+              "RssAnon": "1868 kB",
+              "RssFile": "3608 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.5331209220000002,
+          "after": {
+            "current": 4182016,
+            "peak": 6258688,
+            "anon": 663552,
+            "file": 241664,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "5636 kB",
+              "VmRSS": "5636 kB",
+              "RssAnon": "1880 kB",
+              "RssFile": "3756 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.01823535399999976,
+          "after": {
+            "current": 10588160,
+            "peak": 10588160,
+            "anon": 8331264,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "11892 kB",
+              "VmRSS": "11892 kB",
+              "RssAnon": "8136 kB",
+              "RssFile": "3756 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "scalar",
+      "N": 100000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 0.6623301759999993,
+          "after": {
+            "current": 11755520,
+            "peak": 12259328,
+            "anon": 3768320,
+            "file": 5615616,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "7616 kB",
+              "VmRSS": "7420 kB",
+              "RssAnon": "3680 kB",
+              "RssFile": "3740 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.03519725199999968,
+          "after": {
+            "current": 17428480,
+            "peak": 19349504,
+            "anon": 11268096,
+            "file": 5656576,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "14612 kB",
+              "VmRSS": "12892 kB",
+              "RssAnon": "9112 kB",
+              "RssFile": "3780 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.006049420000000083,
+          "after": {
+            "current": 17412096,
+            "peak": 19349504,
+            "anon": 9330688,
+            "file": 5656576,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "14612 kB",
+              "VmRSS": "12892 kB",
+              "RssAnon": "9112 kB",
+              "RssFile": "3780 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 0.6953854130000003,
+          "after": {
+            "current": 10887168,
+            "peak": 10887168,
+            "anon": 3489792,
+            "file": 5390336,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "7016 kB",
+              "VmRSS": "7016 kB",
+              "RssAnon": "3408 kB",
+              "RssFile": "3608 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.6805466409999994,
+          "after": {
+            "current": 5496832,
+            "peak": 5697536,
+            "anon": 3481600,
+            "file": 253952,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "7164 kB",
+              "VmRSS": "7164 kB",
+              "RssAnon": "3412 kB",
+              "RssFile": "3752 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.033220860999998436,
+          "after": {
+            "current": 11558912,
+            "peak": 13475840,
+            "anon": 9306112,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "14604 kB",
+              "VmRSS": "12840 kB",
+              "RssAnon": "9088 kB",
+              "RssFile": "3752 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "scalar",
+      "N": 250000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 1.6845314459999976,
+          "after": {
+            "current": 24432640,
+            "peak": 24940544,
+            "anon": 8552448,
+            "file": 13570048,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "12252 kB",
+              "VmRSS": "12092 kB",
+              "RssAnon": "8352 kB",
+              "RssFile": "3740 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.07859049500000026,
+          "after": {
+            "current": 30089216,
+            "peak": 32026624,
+            "anon": 14180352,
+            "file": 13611008,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19248 kB",
+              "VmRSS": "17624 kB",
+              "RssAnon": "13848 kB",
+              "RssFile": "3776 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.012814095999999608,
+          "after": {
+            "current": 30089216,
+            "peak": 32026624,
+            "anon": 14180352,
+            "file": 13611008,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19248 kB",
+              "VmRSS": "17624 kB",
+              "RssAnon": "13848 kB",
+              "RssFile": "3776 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 0.9831692029999992,
+          "after": {
+            "current": 23252992,
+            "peak": 23252992,
+            "anon": 8339456,
+            "file": 13340672,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "11748 kB",
+              "VmRSS": "11748 kB",
+              "RssAnon": "8144 kB",
+              "RssFile": "3604 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.9585801829999987,
+          "after": {
+            "current": 10129408,
+            "peak": 10129408,
+            "anon": 8343552,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "11924 kB",
+              "VmRSS": "11924 kB",
+              "RssAnon": "8148 kB",
+              "RssFile": "3776 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.07555164000000048,
+          "after": {
+            "current": 15929344,
+            "peak": 17846272,
+            "anon": 14155776,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19300 kB",
+              "VmRSS": "17600 kB",
+              "RssAnon": "13824 kB",
+              "RssFile": "3776 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "scalar",
+      "N": 500000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 3.4960448689999986,
+          "after": {
+            "current": 45445120,
+            "peak": 45953024,
+            "anon": 16547840,
+            "file": 26828800,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "20176 kB",
+              "VmRSS": "19900 kB",
+              "RssAnon": "16160 kB",
+              "RssFile": "3740 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.15106482899999918,
+          "after": {
+            "current": 51097600,
+            "peak": 53301248,
+            "anon": 22175744,
+            "file": 26869760,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "27172 kB",
+              "VmRSS": "25408 kB",
+              "RssAnon": "21656 kB",
+              "RssFile": "3752 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.014655534999999276,
+          "after": {
+            "current": 51097600,
+            "peak": 53301248,
+            "anon": 22175744,
+            "file": 26869760,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "27172 kB",
+              "VmRSS": "25408 kB",
+              "RssAnon": "21656 kB",
+              "RssFile": "3752 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 1.5423063720000023,
+          "after": {
+            "current": 45785088,
+            "peak": 45785088,
+            "anon": 16343040,
+            "file": 26591232,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19568 kB",
+              "VmRSS": "19568 kB",
+              "RssAnon": "15960 kB",
+              "RssFile": "3608 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.9262587710000005,
+          "after": {
+            "current": 18456576,
+            "peak": 18456576,
+            "anon": 15872000,
+            "file": 241664,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19736 kB",
+              "VmRSS": "19736 kB",
+              "RssAnon": "15960 kB",
+              "RssFile": "3776 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.1518978529999977,
+          "after": {
+            "current": 24256512,
+            "peak": 26173440,
+            "anon": 22155264,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "27048 kB",
+              "VmRSS": "25412 kB",
+              "RssAnon": "21636 kB",
+              "RssFile": "3776 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "scalar",
+      "N": 1000000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 6.9815757499999975,
+          "after": {
+            "current": 88813568,
+            "peak": 89321472,
+            "anon": 32542720,
+            "file": 53346304,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "35768 kB",
+              "VmRSS": "35520 kB",
+              "RssAnon": "31780 kB",
+              "RssFile": "3740 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.2988280299999957,
+          "after": {
+            "current": 94732288,
+            "peak": 96669696,
+            "anon": 38166528,
+            "file": 53387264,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "42760 kB",
+              "VmRSS": "41036 kB",
+              "RssAnon": "37272 kB",
+              "RssFile": "3764 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.013360525999999595,
+          "after": {
+            "current": 94732288,
+            "peak": 96669696,
+            "anon": 38166528,
+            "file": 53387264,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "42760 kB",
+              "VmRSS": "41036 kB",
+              "RssAnon": "37272 kB",
+              "RssFile": "3764 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 2.6709595230000005,
+          "after": {
+            "current": 88805376,
+            "peak": 88805376,
+            "anon": 32337920,
+            "file": 53092352,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "35188 kB",
+              "VmRSS": "35188 kB",
+              "RssAnon": "31580 kB",
+              "RssFile": "3608 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 1.383602916000001,
+          "after": {
+            "current": 34693120,
+            "peak": 34693120,
+            "anon": 32346112,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "35368 kB",
+              "VmRSS": "35368 kB",
+              "RssAnon": "31588 kB",
+              "RssFile": "3780 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.30182626300000237,
+          "after": {
+            "current": 40493056,
+            "peak": 42409984,
+            "anon": 38158336,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "42764 kB",
+              "VmRSS": "41044 kB",
+              "RssAnon": "37264 kB",
+              "RssFile": "3780 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "scalar",
+      "N": 2000000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 13.993200475000002,
+          "after": {
+            "current": 133775360,
+            "peak": 134217728,
+            "anon": 64614400,
+            "file": 65773568,
+            "events": "low 0\nhigh 0\nmax 173\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=7929\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=7929",
+            "rss_auxiliary": {
+              "VmHWM": "66840 kB",
+              "VmRSS": "66828 kB",
+              "RssAnon": "63100 kB",
+              "RssFile": "3728 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.6105105379999998,
+          "after": {
+            "current": 134000640,
+            "peak": 134217728,
+            "anon": 70168576,
+            "file": 62341120,
+            "events": "low 0\nhigh 0\nmax 266\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=15244\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=15244",
+            "rss_auxiliary": {
+              "VmHWM": "74028 kB",
+              "VmRSS": "72260 kB",
+              "RssAnon": "68524 kB",
+              "RssFile": "3736 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.005931709999998702,
+          "after": {
+            "current": 133988352,
+            "peak": 134217728,
+            "anon": 70168576,
+            "file": 62480384,
+            "events": "low 0\nhigh 0\nmax 392\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=24421\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=24421",
+            "rss_auxiliary": {
+              "VmHWM": "74028 kB",
+              "VmRSS": "72260 kB",
+              "RssAnon": "68524 kB",
+              "RssFile": "3736 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 4.923131339999998,
+          "after": {
+            "current": 105852928,
+            "peak": 134217728,
+            "anon": 64335872,
+            "file": 39067648,
+            "events": "low 0\nhigh 0\nmax 545\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=9153\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=9153",
+            "rss_auxiliary": {
+              "VmHWM": "66420 kB",
+              "VmRSS": "66420 kB",
+              "RssAnon": "62828 kB",
+              "RssFile": "3592 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 2.264467511999996,
+          "after": {
+            "current": 133287936,
+            "peak": 133287936,
+            "anon": 64335872,
+            "file": 67338240,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "66608 kB",
+              "VmRSS": "66608 kB",
+              "RssAnon": "62828 kB",
+              "RssFile": "3780 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.6031309410000034,
+          "after": {
+            "current": 133496832,
+            "peak": 134217728,
+            "anon": 70144000,
+            "file": 61906944,
+            "events": "low 0\nhigh 0\nmax 17\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=546\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=546",
+            "rss_auxiliary": {
+              "VmHWM": "73984 kB",
+              "VmRSS": "72260 kB",
+              "RssAnon": "68504 kB",
+              "RssFile": "3756 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "vector4",
+      "N": 50000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 0.3482923799999895,
+          "after": {
+            "current": 7868416,
+            "peak": 7868416,
+            "anon": 2473984,
+            "file": 3280896,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "6476 kB",
+              "VmRSS": "6476 kB",
+              "RssAnon": "2608 kB",
+              "RssFile": "3868 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.019753234000006614,
+          "after": {
+            "current": 14102528,
+            "peak": 15462400,
+            "anon": 8757248,
+            "file": 3805184,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "13588 kB",
+              "VmRSS": "12452 kB",
+              "RssAnon": "8552 kB",
+              "RssFile": "3900 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.005920412999998348,
+          "after": {
+            "current": 14098432,
+            "peak": 15462400,
+            "anon": 8757248,
+            "file": 3805184,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "13588 kB",
+              "VmRSS": "12580 kB",
+              "RssAnon": "8552 kB",
+              "RssFile": "4028 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 0.6002358989999976,
+          "after": {
+            "current": 6647808,
+            "peak": 6647808,
+            "anon": 1912832,
+            "file": 3543040,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "5476 kB",
+              "VmRSS": "5476 kB",
+              "RssAnon": "1868 kB",
+              "RssFile": "3608 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.5019228270000013,
+          "after": {
+            "current": 4108288,
+            "peak": 6180864,
+            "anon": 598016,
+            "file": 241664,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "5624 kB",
+              "VmRSS": "5624 kB",
+              "RssAnon": "1880 kB",
+              "RssFile": "3744 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.019333763000005888,
+          "after": {
+            "current": 10985472,
+            "peak": 12349440,
+            "anon": 8732672,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "13388 kB",
+              "VmRSS": "12272 kB",
+              "RssAnon": "8528 kB",
+              "RssFile": "3744 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "vector4",
+      "N": 100000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 0.6968143490000074,
+          "after": {
+            "current": 13471744,
+            "peak": 13471744,
+            "anon": 4317184,
+            "file": 7217152,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "8084 kB",
+              "VmRSS": "8084 kB",
+              "RssAnon": "4216 kB",
+              "RssFile": "3868 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.03289444100001049,
+          "after": {
+            "current": 19714048,
+            "peak": 21065728,
+            "anon": 10338304,
+            "file": 7258112,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "15128 kB",
+              "VmRSS": "13996 kB",
+              "RssAnon": "10096 kB",
+              "RssFile": "3900 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.005949786999991602,
+          "after": {
+            "current": 19701760,
+            "peak": 21065728,
+            "anon": 10338304,
+            "file": 7258112,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "15128 kB",
+              "VmRSS": "14124 kB",
+              "RssAnon": "10096 kB",
+              "RssFile": "4028 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 0.6655690979999918,
+          "after": {
+            "current": 12509184,
+            "peak": 12509184,
+            "anon": 3489792,
+            "file": 6991872,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "7016 kB",
+              "VmRSS": "7016 kB",
+              "RssAnon": "3408 kB",
+              "RssFile": "3608 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.566788828,
+          "after": {
+            "current": 5873664,
+            "peak": 6008832,
+            "anon": 3493888,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "7156 kB",
+              "VmRSS": "7156 kB",
+              "RssAnon": "3412 kB",
+              "RssFile": "3744 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.035047278999996934,
+          "after": {
+            "current": 12750848,
+            "peak": 14114816,
+            "anon": 10301440,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "14908 kB",
+              "VmRSS": "13804 kB",
+              "RssAnon": "10060 kB",
+              "RssFile": "3744 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "vector4",
+      "N": 250000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 1.7703886769999997,
+          "after": {
+            "current": 28815360,
+            "peak": 28815360,
+            "anon": 8769536,
+            "file": 16879616,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "12752 kB",
+              "VmRSS": "12752 kB",
+              "RssAnon": "8884 kB",
+              "RssFile": "3868 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.08026676699999769,
+          "after": {
+            "current": 35049472,
+            "peak": 36409344,
+            "anon": 16220160,
+            "file": 17612800,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19932 kB",
+              "VmRSS": "18700 kB",
+              "RssAnon": "14828 kB",
+              "RssFile": "3872 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.006436074000006897,
+          "after": {
+            "current": 35045376,
+            "peak": 36409344,
+            "anon": 15183872,
+            "file": 17612800,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19932 kB",
+              "VmRSS": "18828 kB",
+              "RssAnon": "14828 kB",
+              "RssFile": "4000 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 0.9763612750000021,
+          "after": {
+            "current": 27664384,
+            "peak": 27664384,
+            "anon": 8343552,
+            "file": 17342464,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "11756 kB",
+              "VmRSS": "11756 kB",
+              "RssAnon": "8148 kB",
+              "RssFile": "3608 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.679670612999999,
+          "after": {
+            "current": 10219520,
+            "peak": 10219520,
+            "anon": 7745536,
+            "file": 241664,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "11896 kB",
+              "VmRSS": "11896 kB",
+              "RssAnon": "8152 kB",
+              "RssFile": "3744 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.08094653199999868,
+          "after": {
+            "current": 17104896,
+            "peak": 18460672,
+            "anon": 15155200,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19564 kB",
+              "VmRSS": "18544 kB",
+              "RssAnon": "14800 kB",
+              "RssFile": "3744 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "vector4",
+      "N": 500000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 3.5382784040000104,
+          "after": {
+            "current": 54956032,
+            "peak": 54956032,
+            "anon": 16961536,
+            "file": 34553856,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "20560 kB",
+              "VmRSS": "20560 kB",
+              "RssAnon": "16692 kB",
+              "RssFile": "3868 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.1538599430000005,
+          "after": {
+            "current": 61190144,
+            "peak": 62550016,
+            "anon": 23179264,
+            "file": 34869248,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "27672 kB",
+              "VmRSS": "26532 kB",
+              "RssAnon": "22636 kB",
+              "RssFile": "3896 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.012817607999991765,
+          "after": {
+            "current": 61186048,
+            "peak": 62550016,
+            "anon": 23179264,
+            "file": 34869248,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "27672 kB",
+              "VmRSS": "26660 kB",
+              "RssAnon": "22636 kB",
+              "RssFile": "4024 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 1.5809978799999982,
+          "after": {
+            "current": 53506048,
+            "peak": 53506048,
+            "anon": 16338944,
+            "file": 34590720,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19564 kB",
+              "VmRSS": "19564 kB",
+              "RssAnon": "15956 kB",
+              "RssFile": "3608 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 0.9078364870000115,
+          "after": {
+            "current": 17936384,
+            "peak": 17936384,
+            "anon": 15740928,
+            "file": 241664,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "19700 kB",
+              "VmRSS": "19700 kB",
+              "RssAnon": "15960 kB",
+              "RssFile": "3740 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.15320894600000656,
+          "after": {
+            "current": 24813568,
+            "peak": 26177536,
+            "anon": 23150592,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "27572 kB",
+              "VmRSS": "26348 kB",
+              "RssAnon": "22608 kB",
+              "RssFile": "3740 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "vector4",
+      "N": 1000000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 6.306383632000006,
+          "after": {
+            "current": 106123264,
+            "peak": 106123264,
+            "anon": 33091584,
+            "file": 69345280,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "36180 kB",
+              "VmRSS": "36180 kB",
+              "RssAnon": "32316 kB",
+              "RssFile": "3864 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.3090103219999918,
+          "after": {
+            "current": 112095232,
+            "peak": 113455104,
+            "anon": 39174144,
+            "file": 69386240,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "43356 kB",
+              "VmRSS": "42132 kB",
+              "RssAnon": "38260 kB",
+              "RssFile": "3872 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.005525863000002573,
+          "after": {
+            "current": 112091136,
+            "peak": 113455104,
+            "anon": 39178240,
+            "file": 69386240,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "43356 kB",
+              "VmRSS": "42260 kB",
+              "RssAnon": "38260 kB",
+              "RssFile": "4000 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 2.776880687000002,
+          "after": {
+            "current": 105541632,
+            "peak": 105541632,
+            "anon": 32337920,
+            "file": 69091328,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "35092 kB",
+              "VmRSS": "35092 kB",
+              "RssAnon": "31580 kB",
+              "RssFile": "3512 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 1.3554211290000069,
+          "after": {
+            "current": 34656256,
+            "peak": 34656256,
+            "anon": 32325632,
+            "file": 241664,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "35360 kB",
+              "VmRSS": "35360 kB",
+              "RssAnon": "31580 kB",
+              "RssFile": "3780 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.2996792290000059,
+          "after": {
+            "current": 41553920,
+            "peak": 42897408,
+            "anon": 39141376,
+            "file": 352256,
+            "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+            "rss_auxiliary": {
+              "VmHWM": "43200 kB",
+              "VmRSS": "42004 kB",
+              "RssAnon": "38224 kB",
+              "RssFile": "3780 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "vector4",
+      "N": 2000000,
+      "passed": true,
+      "phases": {
+        "write": {
+          "seconds": 12.756461536999993,
+          "after": {
+            "current": 134062080,
+            "peak": 134217728,
+            "anon": 65093632,
+            "file": 65097728,
+            "events": "low 0\nhigh 0\nmax 380\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=9440\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=9440",
+            "rss_auxiliary": {
+              "VmHWM": "67496 kB",
+              "VmRSS": "67496 kB",
+              "RssAnon": "63632 kB",
+              "RssFile": "3864 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_first": {
+          "seconds": 0.6473557140000139,
+          "after": {
+            "current": 133787648,
+            "peak": 134217728,
+            "anon": 71176192,
+            "file": 60399616,
+            "events": "low 0\nhigh 0\nmax 623\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=17388\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=17388",
+            "rss_auxiliary": {
+              "VmHWM": "74056 kB",
+              "VmRSS": "73372 kB",
+              "RssAnon": "69508 kB",
+              "RssFile": "3864 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "update_cache_invalidation": {
+          "seconds": 0.004448110999987875,
+          "after": {
+            "current": 133808128,
+            "peak": 134217728,
+            "anon": 71176192,
+            "file": 60792832,
+            "events": "low 0\nhigh 0\nmax 1002\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=31012\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=31012",
+            "rss_auxiliary": {
+              "VmHWM": "74056 kB",
+              "VmRSS": "73500 kB",
+              "RssAnon": "69508 kB",
+              "RssFile": "3992 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "checkpoint_helper": {
+          "seconds": 5.875140560999995,
+          "after": {
+            "current": 125980672,
+            "peak": 134217728,
+            "anon": 64335872,
+            "file": 57946112,
+            "events": "low 0\nhigh 0\nmax 526\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=16220\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=16220",
+            "rss_auxiliary": {
+              "VmHWM": "66412 kB",
+              "VmRSS": "66412 kB",
+              "RssAnon": "62828 kB",
+              "RssFile": "3584 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "restart_recovery": {
+          "seconds": 2.3510321469999838,
+          "after": {
+            "current": 133414912,
+            "peak": 134217728,
+            "anon": 64335872,
+            "file": 67559424,
+            "events": "low 0\nhigh 0\nmax 15\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=1807\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=1807",
+            "rss_auxiliary": {
+              "VmHWM": "66592 kB",
+              "VmRSS": "66592 kB",
+              "RssAnon": "62828 kB",
+              "RssFile": "3764 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        },
+        "scan_after_recovery": {
+          "seconds": 0.6210561749999783,
+          "after": {
+            "current": 130248704,
+            "peak": 134217728,
+            "anon": 71139328,
+            "file": 57462784,
+            "events": "low 0\nhigh 0\nmax 54\noom 0\noom_kill 0\noom_group_kill 0",
+            "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=3586\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=3586",
+            "rss_auxiliary": {
+              "VmHWM": "74464 kB",
+              "VmRSS": "73176 kB",
+              "RssAnon": "69472 kB",
+              "RssFile": "3704 kB",
+              "RssShmem": "0 kB"
+            }
+          },
+          "passed": true
+        }
+      },
+      "oom_killed": false
+    }
+  ],
+  "transaction_1m": [
+    {
+      "version": "baseline",
+      "kind": "scalar",
+      "N": 1000000,
+      "pending_rows": 25000,
+      "pending": {
+        "current": 69390336,
+        "peak": 69390336,
+        "anon": 65884160,
+        "file": 1667072,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "68084 kB",
+          "VmRSS": "68084 kB",
+          "RssAnon": "64340 kB",
+          "RssFile": "3744 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "after_rollback": {
+        "current": 68067328,
+        "peak": 69390336,
+        "anon": 65884160,
+        "file": 1667072,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "68084 kB",
+          "VmRSS": "68084 kB",
+          "RssAnon": "64340 kB",
+          "RssFile": "3744 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "scalar",
+      "N": 1000000,
+      "pending_rows": 100000,
+      "pending": {
+        "current": 78475264,
+        "peak": 78475264,
+        "anon": 70680576,
+        "file": 5644288,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "72796 kB",
+          "VmRSS": "72796 kB",
+          "RssAnon": "69024 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "after_rollback": {
+        "current": 73175040,
+        "peak": 78475264,
+        "anon": 70680576,
+        "file": 344064,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "72796 kB",
+          "VmRSS": "72796 kB",
+          "RssAnon": "69024 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "scalar",
+      "N": 1000000,
+      "pending_rows": 250000,
+      "pending": {
+        "current": 95989760,
+        "peak": 95989760,
+        "anon": 80281600,
+        "file": 13594624,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "82144 kB",
+          "VmRSS": "82144 kB",
+          "RssAnon": "78400 kB",
+          "RssFile": "3744 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "after_rollback": {
+        "current": 82497536,
+        "peak": 95989760,
+        "anon": 80281600,
+        "file": 344064,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "82144 kB",
+          "VmRSS": "82144 kB",
+          "RssAnon": "78400 kB",
+          "RssFile": "3744 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "vector4",
+      "N": 1000000,
+      "pending_rows": 25000,
+      "pending": {
+        "current": 74887168,
+        "peak": 74887168,
+        "anon": 65884160,
+        "file": 6385664,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "68088 kB",
+          "VmRSS": "68088 kB",
+          "RssAnon": "64340 kB",
+          "RssFile": "3748 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "after_rollback": {
+        "current": 72896512,
+        "peak": 74887168,
+        "anon": 65884160,
+        "file": 4661248,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "68088 kB",
+          "VmRSS": "68088 kB",
+          "RssAnon": "64340 kB",
+          "RssFile": "3748 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "vector4",
+      "N": 1000000,
+      "pending_rows": 100000,
+      "pending": {
+        "current": 79564800,
+        "peak": 79564800,
+        "anon": 70459392,
+        "file": 7004160,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "72796 kB",
+          "VmRSS": "72796 kB",
+          "RssAnon": "69024 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "after_rollback": {
+        "current": 72396800,
+        "peak": 79564800,
+        "anon": 70680576,
+        "file": 344064,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "72796 kB",
+          "VmRSS": "72796 kB",
+          "RssAnon": "69024 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "kind": "vector4",
+      "N": 1000000,
+      "pending_rows": 250000,
+      "pending": {
+        "current": 99995648,
+        "peak": 99995648,
+        "anon": 80285696,
+        "file": 17592320,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "82144 kB",
+          "VmRSS": "82144 kB",
+          "RssAnon": "78404 kB",
+          "RssFile": "3740 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "after_rollback": {
+        "current": 82214912,
+        "peak": 99995648,
+        "anon": 80285696,
+        "file": 344064,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "82144 kB",
+          "VmRSS": "82144 kB",
+          "RssAnon": "78404 kB",
+          "RssFile": "3740 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "scalar",
+      "N": 1000000,
+      "pending_rows": 25000,
+      "pending": {
+        "current": 36806656,
+        "peak": 36806656,
+        "anon": 33128448,
+        "file": 1675264,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "36112 kB",
+          "VmRSS": "36112 kB",
+          "RssAnon": "32352 kB",
+          "RssFile": "3760 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "after_rollback": {
+        "current": 35483648,
+        "peak": 36806656,
+        "anon": 33128448,
+        "file": 1675264,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "36112 kB",
+          "VmRSS": "36112 kB",
+          "RssAnon": "32352 kB",
+          "RssFile": "3760 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "scalar",
+      "N": 1000000,
+      "pending_rows": 100000,
+      "pending": {
+        "current": 43593728,
+        "peak": 43593728,
+        "anon": 35565568,
+        "file": 5652480,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "38508 kB",
+          "VmRSS": "38508 kB",
+          "RssAnon": "34732 kB",
+          "RssFile": "3776 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "after_rollback": {
+        "current": 38039552,
+        "peak": 43593728,
+        "anon": 35565568,
+        "file": 352256,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "38508 kB",
+          "VmRSS": "38508 kB",
+          "RssAnon": "34732 kB",
+          "RssFile": "3776 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "scalar",
+      "N": 1000000,
+      "pending_rows": 250000,
+      "pending": {
+        "current": 56193024,
+        "peak": 56193024,
+        "anon": 40349696,
+        "file": 13602816,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "43184 kB",
+          "VmRSS": "43184 kB",
+          "RssAnon": "39404 kB",
+          "RssFile": "3780 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "after_rollback": {
+        "current": 42409984,
+        "peak": 56193024,
+        "anon": 40349696,
+        "file": 352256,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "43184 kB",
+          "VmRSS": "43184 kB",
+          "RssAnon": "39404 kB",
+          "RssFile": "3780 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "vector4",
+      "N": 1000000,
+      "pending_rows": 25000,
+      "pending": {
+        "current": 37076992,
+        "peak": 37076992,
+        "anon": 32935936,
+        "file": 1662976,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "36128 kB",
+          "VmRSS": "36128 kB",
+          "RssAnon": "32356 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "after_rollback": {
+        "current": 35352576,
+        "peak": 37076992,
+        "anon": 33132544,
+        "file": 352256,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "36128 kB",
+          "VmRSS": "36128 kB",
+          "RssAnon": "32356 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "vector4",
+      "N": 1000000,
+      "pending_rows": 100000,
+      "pending": {
+        "current": 45412352,
+        "peak": 45412352,
+        "anon": 35561472,
+        "file": 7254016,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "38504 kB",
+          "VmRSS": "38504 kB",
+          "RssAnon": "34728 kB",
+          "RssFile": "3776 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "after_rollback": {
+        "current": 38244352,
+        "peak": 45412352,
+        "anon": 35561472,
+        "file": 352256,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "38504 kB",
+          "VmRSS": "38504 kB",
+          "RssAnon": "34728 kB",
+          "RssFile": "3776 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "kind": "vector4",
+      "N": 1000000,
+      "pending_rows": 250000,
+      "pending": {
+        "current": 60153856,
+        "peak": 60153856,
+        "anon": 40349696,
+        "file": 17600512,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "43172 kB",
+          "VmRSS": "43172 kB",
+          "RssAnon": "39404 kB",
+          "RssFile": "3768 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "after_rollback": {
+        "current": 42373120,
+        "peak": 60153856,
+        "anon": 40349696,
+        "file": 352256,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "43172 kB",
+          "VmRSS": "43172 kB",
+          "RssAnon": "39404 kB",
+          "RssFile": "3768 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "passed": true,
+      "oom_killed": false
+    }
+  ],
+  "retention_settled": [
+    {
+      "version": "baseline",
+      "phase": "create",
+      "last_settled": {
+        "current": 2637824,
+        "peak": 6483968,
+        "anon": 282624,
+        "file": 307200,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "4008 kB",
+          "VmRSS": "4008 kB",
+          "RssAnon": "276 kB",
+          "RssFile": "3732 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.005414410999999397,
+      "settling_seconds_excluded": 1.502234100999999,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "phase": "committed_10k",
+      "last_settled": {
+        "current": 3723264,
+        "peak": 6483968,
+        "anon": 1126400,
+        "file": 839680,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "5148 kB",
+          "VmRSS": "4832 kB",
+          "RssAnon": "1100 kB",
+          "RssFile": "3732 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.05708319399999873,
+      "settling_seconds_excluded": 1.502130494000001,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "phase": "first_pending_250k",
+      "last_settled": {
+        "current": 33452032,
+        "peak": 33697792,
+        "anon": 17137664,
+        "file": 14131200,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "20672 kB",
+          "VmRSS": "20508 kB",
+          "RssAnon": "16736 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.4852946160000009,
+      "settling_seconds_excluded": 1.5016978289999994,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "phase": "first_rollback",
+      "last_settled": {
+        "current": 18640896,
+        "peak": 33697792,
+        "anon": 17137664,
+        "file": 880640,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "20672 kB",
+          "VmRSS": "20508 kB",
+          "RssAnon": "16736 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.006239002999999244,
+      "settling_seconds_excluded": 1.5019203380000015,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "phase": "second_pending_250k_reuse",
+      "last_settled": {
+        "current": 33017856,
+        "peak": 33697792,
+        "anon": 17682432,
+        "file": 14131200,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "21040 kB",
+          "VmRSS": "21040 kB",
+          "RssAnon": "17268 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.4419849399999993,
+      "settling_seconds_excluded": 1.5027995599999997,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "phase": "second_rollback",
+      "last_settled": {
+        "current": 19341312,
+        "peak": 33697792,
+        "anon": 17682432,
+        "file": 880640,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "21040 kB",
+          "VmRSS": "21040 kB",
+          "RssAnon": "17268 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.007931379000000405,
+      "settling_seconds_excluded": 1.5025886560000004,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "phase": "restart_after_rollbacks",
+      "last_settled": {
+        "current": 3280896,
+        "peak": 5754880,
+        "anon": 925696,
+        "file": 344064,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "4676 kB",
+          "VmRSS": "4676 kB",
+          "RssAnon": "904 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.5424347000000012,
+      "settling_seconds_excluded": 1.5036579779999997,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "phase": "third_pending_250k_before_kill",
+      "last_settled": {
+        "current": 33054720,
+        "peak": 33558528,
+        "anon": 17137664,
+        "file": 13594624,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "20788 kB",
+          "VmRSS": "20508 kB",
+          "RssAnon": "16736 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.4816459749999993,
+      "settling_seconds_excluded": 1.502317693000002,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "baseline",
+      "phase": "recover_uncommitted_tail",
+      "last_settled": {
+        "current": 18792448,
+        "peak": 18792448,
+        "anon": 16908288,
+        "file": 344064,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "20284 kB",
+          "VmRSS": "20284 kB",
+          "RssAnon": "16512 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.6566929449999996,
+      "settling_seconds_excluded": 1.502850446,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "phase": "create",
+      "last_settled": {
+        "current": 1912832,
+        "peak": 5656576,
+        "anon": 282624,
+        "file": 315392,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "4016 kB",
+          "VmRSS": "4016 kB",
+          "RssAnon": "276 kB",
+          "RssFile": "3740 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.004787731000000406,
+      "settling_seconds_excluded": 1.505633255000003,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "phase": "committed_10k",
+      "last_settled": {
+        "current": 3006464,
+        "peak": 5656576,
+        "anon": 876544,
+        "file": 843776,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "4784 kB",
+          "VmRSS": "4596 kB",
+          "RssAnon": "856 kB",
+          "RssFile": "3740 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.053733173000001244,
+      "settling_seconds_excluded": 1.5024103320000002,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "phase": "first_pending_250k",
+      "last_settled": {
+        "current": 24788992,
+        "peak": 25296896,
+        "anon": 8880128,
+        "file": 14135296,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "12652 kB",
+          "VmRSS": "12452 kB",
+          "RssAnon": "8672 kB",
+          "RssFile": "3780 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.582990462999998,
+      "settling_seconds_excluded": 1.5024659709999995,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "phase": "first_rollback",
+      "last_settled": {
+        "current": 11272192,
+        "peak": 25296896,
+        "anon": 8880128,
+        "file": 884736,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "12652 kB",
+          "VmRSS": "12452 kB",
+          "RssAnon": "8672 kB",
+          "RssFile": "3780 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.003710504000000725,
+      "settling_seconds_excluded": 1.5017754200000013,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "phase": "second_pending_250k_reuse",
+      "last_settled": {
+        "current": 24784896,
+        "peak": 25296896,
+        "anon": 8880128,
+        "file": 14135296,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "12652 kB",
+          "VmRSS": "12452 kB",
+          "RssAnon": "8672 kB",
+          "RssFile": "3780 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.5795304709999982,
+      "settling_seconds_excluded": 1.5029809729999997,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "phase": "second_rollback",
+      "last_settled": {
+        "current": 11034624,
+        "peak": 25296896,
+        "anon": 8880128,
+        "file": 884736,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "12652 kB",
+          "VmRSS": "12452 kB",
+          "RssAnon": "8672 kB",
+          "RssFile": "3780 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.005003238000000465,
+      "settling_seconds_excluded": 1.5013361589999974,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "phase": "restart_after_rollbacks",
+      "last_settled": {
+        "current": 2220032,
+        "peak": 6774784,
+        "anon": 610304,
+        "file": 352256,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "4376 kB",
+          "VmRSS": "4376 kB",
+          "RssAnon": "596 kB",
+          "RssFile": "3780 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.43235357100000016,
+      "settling_seconds_excluded": 1.5030606590000062,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "phase": "third_pending_250k_before_kill",
+      "last_settled": {
+        "current": 24174592,
+        "peak": 24682496,
+        "anon": 8876032,
+        "file": 13602816,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "12596 kB",
+          "VmRSS": "12448 kB",
+          "RssAnon": "8668 kB",
+          "RssFile": "3780 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.5358255850000049,
+      "settling_seconds_excluded": 1.501555605,
+      "passed": true,
+      "oom_killed": false
+    },
+    {
+      "version": "candidate",
+      "phase": "recover_uncommitted_tail",
+      "last_settled": {
+        "current": 10375168,
+        "peak": 10375168,
+        "anon": 8609792,
+        "file": 352256,
+        "events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+        "rss_auxiliary": {
+          "VmHWM": "12180 kB",
+          "VmRSS": "12180 kB",
+          "RssAnon": "8408 kB",
+          "RssFile": "3772 kB",
+          "RssShmem": "0 kB"
+        }
+      },
+      "stage_seconds": 0.6213728649999979,
+      "settling_seconds_excluded": 1.502007859999999,
+      "passed": true,
+      "oom_killed": false
+    }
+  ],
+  "limitations": [
+    "Boundary driver used identical frozen code and quota-only CPU configuration, but these single runs are not paired speed evidence.",
+    "For very short stages memory.stat counters can lag; compare continuous samples and RssAnon, and use 1m/2m for the main resident-memory observation.",
+    "The retention-v2 diagnostic takes three extra snapshots 0.5 seconds apart after each timed operation; the settling delay is excluded from stage seconds and explicitly recorded.",
+    "Rollback leaves anonymous high-water memory in both versions; no claim of immediate heap return or arbitrary transaction-size safety.",
+    "First failing baseline size is 2m, while candidate passes the predeclared 2m cap. Exact failure thresholds were not searched.",
+    "Raw io.stat is uncalibrated on a shared WSL device.",
+    "Checkpoint helper is separate from the production executable and is individually hashed."
+  ],
+  "canonical_report_mapping": {
+    "arena-retention-results.json": "original immediate-v1 result, retained without overwrite; prefer explicitly versioned reports",
+    "arena-retention-immediate-v1-results.json": "same original immediate samples",
+    "arena-retention-settled-v2-results.json": "new diagnostic with post-operation settling"
+  }
+}

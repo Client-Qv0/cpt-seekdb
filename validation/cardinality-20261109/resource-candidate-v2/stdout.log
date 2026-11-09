@@ -1,0 +1,95 @@
+{
+  "audit_id": "minivectordb-resource-candidate-v2",
+  "source_tree_sha256": "df56a37dcbae572b6283dfd4ee67cccc1e7e15f2117b59760cf7628936ae18f3",
+  "source_manifest_sha256": "7ef726aa64fd13c3f24ae5947a314bcf06ba9c8c31541779de38fe664dcfdd86",
+  "image_id": "sha256:27ea1213ba52ad529ba46eee11bd694b0a0a10cf36c2f9a6415f5f985376b6ef",
+  "binary_sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c",
+  "tests_run": 4,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "success": true,
+  "memory_max": 134217728,
+  "memory_swap_max": 0,
+  "cpu_max": "200000 100000",
+  "network": "none",
+  "driver_RLIMIT_AS_not_used": true,
+  "official_benchmark": false,
+  "limits": [
+    "These are four resource regression cases, not the official benchmark.",
+    "io.stat values are observations from the actual container cgroup on shared WSL /dev/sdd; dedicated-device and writeback-attribution calibration are unverified.",
+    "Driver output files and parsing live outside the container, consistent with separating test-driver overhead.",
+    "For any unexpected exit, exact final cgroup counters may be unavailable; last live sample and Docker OOMKilled state are preserved explicitly."
+  ],
+  "actual_executable_binding": {
+    "binary_path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate-v2/release/minivectordb",
+    "sha256_before": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c",
+    "sha256_after": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c",
+    "read_only_bind_mount": true,
+    "entrypoint": "/probe/minivectordb",
+    "runtime_image_embedded_binary_sha256_not_executed": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f"
+  },
+  "source_binding": {
+    "source_root": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate-v2/source",
+    "manifest_path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/candidate-v2-production-manifest.json",
+    "manifest_sha256": "7ef726aa64fd13c3f24ae5947a314bcf06ba9c8c31541779de38fe664dcfdd86",
+    "production_tree_sha256": "df56a37dcbae572b6283dfd4ee67cccc1e7e15f2117b59760cf7628936ae18f3",
+    "verified_files": [
+      {
+        "path": ".dockerignore",
+        "sha256": "b602eaa29e663fe28b895e2c349dd96eb06ce61272047a550959ff83bb0fb6d8"
+      },
+      {
+        "path": "CMakeLists.txt",
+        "sha256": "778bece9d37c8f4e83e6ea9e75f34406aee12936fcc0394d77bf96e143982d9b"
+      },
+      {
+        "path": "Dockerfile",
+        "sha256": "ae444e91aa7a6f2530184fdac3c95c9b9776686199b90043dee89b64d1ff2135"
+      },
+      {
+        "path": "src/compact_rows.hpp",
+        "sha256": "d38624d37078886fe74231b8512163e6dc286a694ff674befbc8466327bb8d53"
+      },
+      {
+        "path": "src/engine.cpp",
+        "sha256": "3b498b877cecb88f876524f0c76b45e415f254d8b48d13fc11c22de97968b8c6"
+      },
+      {
+        "path": "src/engine.hpp",
+        "sha256": "4a7f3908ceb85773254ddff50420abc92099c11cac570f0e7aefeb19902232a5"
+      },
+      {
+        "path": "src/main.cpp",
+        "sha256": "8bcc74f6b6bf9685f9dd4084167732ac81e77e7a68fb47171aa80d8d992c0700"
+      },
+      {
+        "path": "src/spill.cpp",
+        "sha256": "fca305b940394ebb88232a14d7b4dc4f4248228b703402f7089b1e4010c054df"
+      },
+      {
+        "path": "src/spill.hpp",
+        "sha256": "70451b7dd2c76a323c8ef86d2c697f8012001b916be6c0ca3e69ecb605e38d44"
+      },
+      {
+        "path": "src/sql.cpp",
+        "sha256": "7e30d939628b8375b027e82d3aeca26566ac85232ef1fee980c89a0fa5e3bd51"
+      },
+      {
+        "path": "src/sql.hpp",
+        "sha256": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593"
+      },
+      {
+        "path": "src/storage.cpp",
+        "sha256": "6f0513e41683887817deb6afc9aad29dfcce3d51998d1b27c218c574e996716f"
+      },
+      {
+        "path": "src/storage.hpp",
+        "sha256": "80acf1b26e5486ec178a92909f3ba41e0faf49e6779359fa614a2008b026b40b"
+      }
+    ]
+  },
+  "source_unchanged_after": true,
+  "binary_unchanged_after": true
+}
+CONTAINER_RESOURCE_SUMMARY [{"label": "storage/setup/restart", "peak": 134217728, "rows": null, "output_bytes": null, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 137, "Error": "", "StartedAt": "2026-11-09T07:43:51.51911071Z", "FinishedAt": "2026-11-09T07:43:55.617245786Z"}}, {"label": "__main__.ContainerLargeResponses.test_distance_topk_with_large_payload_exceeds_heap_budget", "peak": 134217728, "rows": 8000, "output_bytes": 160116974, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 0, "Error": "", "StartedAt": "2026-11-09T07:43:56.472744352Z", "FinishedAt": "2026-11-09T07:43:58.217028509Z"}}, {"label": "__main__.ContainerLargeResponses.test_large_limit_multikey_order_spills_without_changing_order", "peak": 134217728, "rows": 9600, "output_bytes": 192095235, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 0, "Error": "", "StartedAt": "2026-11-09T07:43:59.45478244Z", "FinishedAt": "2026-11-09T07:44:01.071996539Z"}}, {"label": "__main__.ContainerLargeResponses.test_no_limit_select_star_streams_beyond_memory_budget", "peak": 134217728, "rows": 9600, "output_bytes": 192221839, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 0, "Error": "", "StartedAt": "2026-11-09T07:44:02.306383958Z", "FinishedAt": "2026-11-09T07:44:05.863448314Z"}}, {"label": "storage/setup/restart", "peak": 5484544, "rows": null, "output_bytes": null, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 137, "Error": "", "StartedAt": "2026-11-09T07:44:07.190864102Z", "FinishedAt": "2026-11-09T07:44:07.393601942Z"}}, {"label": "storage/setup/restart", "peak": 134217728, "rows": null, "output_bytes": null, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 137, "Error": "", "StartedAt": "2026-11-09T07:44:08.256417448Z", "FinishedAt": "2026-11-09T07:44:11.922014639Z"}}, {"label": "storage/setup/restart", "peak": 86892544, "rows": null, "output_bytes": null, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 137, "Error": "", "StartedAt": "2026-11-09T07:44:12.771655489Z", "FinishedAt": "2026-11-09T07:44:13.372963893Z"}}]

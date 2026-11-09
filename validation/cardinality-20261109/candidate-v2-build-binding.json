@@ -1,0 +1,166 @@
+{
+  "recorded_at_utc": "2026-11-09T07:36:28.060977+00:00",
+  "variant": "candidate-v2",
+  "source_tree_sha256": "df56a37dcbae572b6283dfd4ee67cccc1e7e15f2117b59760cf7628936ae18f3",
+  "source_manifest_sha256": "7ef726aa64fd13c3f24ae5947a314bcf06ba9c8c31541779de38fe664dcfdd86",
+  "binary_inventory": [
+    {
+      "configuration": "release",
+      "path": "build-cardinality/candidate-v2/release/minivectordb",
+      "bytes": 375696,
+      "sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c"
+    },
+    {
+      "configuration": "release",
+      "path": "build-cardinality/candidate-v2/release/test_compact_rows",
+      "bytes": 148352,
+      "sha256": "c32ccd2abd3c2fcff5bbfd9eb2782e33af4d895bc050c697bc2eb1dbe8ed5c50"
+    },
+    {
+      "configuration": "release",
+      "path": "build-cardinality/candidate-v2/release/test_engine_extra",
+      "bytes": 389088,
+      "sha256": "338c6a349a7bddccbc784a33fef8fc37764f16aead7f54c8406b8284f4662127"
+    },
+    {
+      "configuration": "release",
+      "path": "build-cardinality/candidate-v2/release/test_parser",
+      "bytes": 111600,
+      "sha256": "ca0d43ce2445498b76d91bcf416e9d534d98276095cd773277fd8ea53202b4e8"
+    },
+    {
+      "configuration": "release",
+      "path": "build-cardinality/candidate-v2/release/test_spill",
+      "bytes": 165752,
+      "sha256": "dbeaf6a6638bff988ff9fe82d0ccf77afed599684dcda265a458cb033fdf6304"
+    },
+    {
+      "configuration": "release",
+      "path": "build-cardinality/candidate-v2/release/test_storage",
+      "bytes": 154984,
+      "sha256": "7ae90259d80cc90138e3134022ce3c705d239dd08ef827f05a165438d2fabf56"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-cardinality/candidate-v2/sanitize/minivectordb",
+      "bytes": 10326904,
+      "sha256": "5a74b73a98306df7f3fe75349b455636632447c1599d5fa2068a390e479d2187"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-cardinality/candidate-v2/sanitize/test_compact_rows",
+      "bytes": 3143976,
+      "sha256": "225ad170f7736d70208bef80feaa1b5d83f2bad415466da7382acb8c8b1db6d5"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-cardinality/candidate-v2/sanitize/test_engine_extra",
+      "bytes": 10682728,
+      "sha256": "1ab3245f422e2cbee49a57253a5f7df3fbfd47dda0201c05ebcdb3cd1a2efe4e"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-cardinality/candidate-v2/sanitize/test_parser",
+      "bytes": 2304176,
+      "sha256": "132531488903748445bace4c5a7fb89002eeda372df107cd58936d4cceee78d1"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-cardinality/candidate-v2/sanitize/test_spill",
+      "bytes": 2461160,
+      "sha256": "d3191f5ed348c4ffa6d3d3c91571fd01f2e18d090edfd959e395b3e6bf8d1501"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-cardinality/candidate-v2/sanitize/test_storage",
+      "bytes": 2850768,
+      "sha256": "48ce0149eb24aa265680b030d47046d39a15ebc3b091a1ce7630b2a2ae25f68f"
+    }
+  ],
+  "test_sources": [
+    {
+      "path": "tests/acceptance.py",
+      "bytes": 22524,
+      "sha256": "25b65948d76e2e6362662a855dba01f87550cf2167ddd0083bfc96eb66903d4b"
+    },
+    {
+      "path": "tests/audit_performance.py",
+      "bytes": 20416,
+      "sha256": "027611ff2b8369ede8a16213ceb84c96b385c8ab7c1ec1d8ae7bade3c8b5bee1"
+    },
+    {
+      "path": "tests/benchmark_local.py",
+      "bytes": 4307,
+      "sha256": "9580021fa540b59add07ce946a20aec539db3b3913f08c965159d709d7fdda94"
+    },
+    {
+      "path": "tests/cardinality_probe.py",
+      "bytes": 33301,
+      "sha256": "d17b60f2b86c582cd870edf5118d40c255069b2b37840caaf07cb08d8a850525"
+    },
+    {
+      "path": "tests/compare_local.py",
+      "bytes": 2448,
+      "sha256": "a232ea03af879949e359eab4cd20939b455e1dff32d43d71070caf10a16232d3"
+    },
+    {
+      "path": "tests/index_compatibility.py",
+      "bytes": 4762,
+      "sha256": "72650296402cb82fce51c735b731918012b1722f1ef5b2358f8880f97d1d909c"
+    },
+    {
+      "path": "tests/optimization_acceptance.py",
+      "bytes": 22032,
+      "sha256": "6e28faf282657ce1dd895b65dd2811a618abf7000972cbc3833561d6da3395dd"
+    },
+    {
+      "path": "tests/paired_benchmark.py",
+      "bytes": 48919,
+      "sha256": "6d98e16dac716c163a3ba3bf63f00b2d6099a10c542966f3224a756c8801bfe0"
+    },
+    {
+      "path": "tests/README.txt",
+      "bytes": 1790,
+      "sha256": "d1abe2daa8fba3fb3a88ff110b4a5542caf5cc01b2cf169ba1e29df00b8c996d"
+    },
+    {
+      "path": "tests/test_compact_rows.cpp",
+      "bytes": 13728,
+      "sha256": "6bcdb7b6af71e64d4ec53f4764f1e16eef73b3576f0bea9723ad4035fb5289e2"
+    },
+    {
+      "path": "tests/test_engine_extra.cpp",
+      "bytes": 5760,
+      "sha256": "59b52b4c9853ca2fbbdd582e06cdc80bb5368faa28a6998265b58bd475c4ad26"
+    },
+    {
+      "path": "tests/test_parser.cpp",
+      "bytes": 4813,
+      "sha256": "1203bf77712bf1e37dd1474ff4d1ff122b03fad901e3583500c466734fd5c62e"
+    },
+    {
+      "path": "tests/test_spill.cpp",
+      "bytes": 7344,
+      "sha256": "0d3d524609f0d1bda59e71c06d67483e755c461dae0e1e8133cd6b5bab947c2b"
+    },
+    {
+      "path": "tests/test_storage.cpp",
+      "bytes": 16051,
+      "sha256": "8ce88bcbdd4a46c56109a678e309bfa8ba4b12ff15b5042e5145cb4c2dfe9609"
+    }
+  ],
+  "build_and_test_script": {
+    "path": "validation/cardinality-20261109/validate-candidate-v2.sh",
+    "sha256": "fb2334dc618aff8b679e872c19bbef816a52fd604860980fd56ac68d190afb2d"
+  },
+  "regression_results": {
+    "release_ctest": "5/5; compact_rows 7 suites",
+    "release_acceptance": "19/19",
+    "release_optimization": "11/11",
+    "sanitize_ctest": "5/5",
+    "sanitize_acceptance": "18 pass, stress skipped",
+    "sanitize_optimization": "8 pass, LargeResponseAcceptance class (3 cases) skipped",
+    "bidirectional_wal_checkpoint": "passed; all1000 initial and999 final rows inclvectors"
+  },
+  "official_assessment_submitted": false
+}

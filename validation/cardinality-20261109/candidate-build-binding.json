@@ -1,0 +1,136 @@
+{
+  "source_tree_sha256": "0fa875ff0ff7911804f5682280e4af9e0608ee4b603a42498c13e949774ac392",
+  "source_manifest_sha256": "184edb1f4a1cc2d56456b0acd6c9a4e2002cf455ccb6b7f0e100a4f6d7541234",
+  "source_snapshot_archive_sha256": "431b77c327988915350b600d89158d72d91223d922924f32181bfa4563ee234c",
+  "binary_inventory": [
+    {
+      "configuration": "release",
+      "path": "build-cardinality/candidate/release/minivectordb",
+      "bytes": 375768,
+      "sha256": "6d9c0863f80d8ef74e7c0e3bd8ee63c95fe287db9c3b40341d45859a2afd3093"
+    },
+    {
+      "configuration": "release",
+      "path": "build-cardinality/candidate/release/test_parser",
+      "bytes": 111600,
+      "sha256": "ca0d43ce2445498b76d91bcf416e9d534d98276095cd773277fd8ea53202b4e8"
+    },
+    {
+      "configuration": "release",
+      "path": "build-cardinality/candidate/release/test_storage",
+      "bytes": 155056,
+      "sha256": "ae7984c8d6f7585d7e9af63fb0d9bdc13027f6a4c6ebac3d76dbd1a284734d6f"
+    },
+    {
+      "configuration": "release",
+      "path": "build-cardinality/candidate/release/test_engine_extra",
+      "bytes": 389160,
+      "sha256": "a773dec193314ec3290a453862cd37b22c2c05a9c6e481f6b284b6ea39856835"
+    },
+    {
+      "configuration": "release",
+      "path": "build-cardinality/candidate/release/test_spill",
+      "bytes": 165752,
+      "sha256": "dbeaf6a6638bff988ff9fe82d0ccf77afed599684dcda265a458cb033fdf6304"
+    },
+    {
+      "configuration": "release",
+      "path": "build-cardinality/candidate/release/test_compact_rows",
+      "bytes": 143672,
+      "sha256": "b810d93035dbe7d15e49d989c02b8c793feb467973ec84a8b44be48962e25c0a"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-cardinality/candidate/sanitize/minivectordb",
+      "bytes": 10317104,
+      "sha256": "4679089de31cbcda9b81f86d98f1ec9029bd2ab3dd0a19aa7b64d4039a99a4bc"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-cardinality/candidate/sanitize/test_parser",
+      "bytes": 2304160,
+      "sha256": "ff3a7902ffbcc2e0094130f3da9e89636c3e44d63ebddfcf1f4906f3294012b0"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-cardinality/candidate/sanitize/test_storage",
+      "bytes": 2840976,
+      "sha256": "1e5e98cabf9e9301bc9fc997c8397d75056494efddf2f5acd1d24357acd08c4d"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-cardinality/candidate/sanitize/test_engine_extra",
+      "bytes": 10677032,
+      "sha256": "2af37f5a46fabb6c16f2e2712aa68a890e0ce9ec3ff181b995e855af3fb6079a"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-cardinality/candidate/sanitize/test_spill",
+      "bytes": 2461152,
+      "sha256": "fe5b227fc09c9ad218255348a3d636fd21ed0ca02a60743589405ef5a752579d"
+    },
+    {
+      "configuration": "sanitize",
+      "path": "build-cardinality/candidate/sanitize/test_compact_rows",
+      "bytes": 3064528,
+      "sha256": "5973f824996c2dda792744eb8a123ffa99cd8e770a41c7d0b92337c14ddaf880"
+    }
+  ],
+  "baseline_release_binary_sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f",
+  "baseline_source_tree_sha256": "42affed2e283c8710151931f6f419eee64210eda42245be6d357dc20ae520bb2",
+  "baseline_compilation_source": "Previous audit build, copied binary retained unchanged; current original compiler version checked as GCC 13.3.0",
+  "candidate_release_command": "cmake -S build-cardinality/candidate/source -B build-cardinality/candidate/release -DCMAKE_BUILD_TYPE=Release; cmake --build build-cardinality/candidate/release --parallel 4",
+  "compiler_flag_files": {
+    "baseline-release-flags.make": "3e09c134af71d6468ecc3449358e1e618f1e6a51a00c730a7404956fbfbb9714",
+    "candidate-release-flags.make": "c6c957c3ec60544b489353bf85587fad4b2610679220380874cabfb2453d8f4e",
+    "baseline-release-link.txt": "ce9b259efb3a6810c1a86d0420fe0524af76d7008b05f6f6638e3945c296fb6d",
+    "candidate-release-link.txt": "ce9b259efb3a6810c1a86d0420fe0524af76d7008b05f6f6638e3945c296fb6d"
+  },
+  "test_sources": [
+    {
+      "path": "tests/acceptance.py",
+      "bytes": 22524,
+      "sha256": "25b65948d76e2e6362662a855dba01f87550cf2167ddd0083bfc96eb66903d4b"
+    },
+    {
+      "path": "tests/optimization_acceptance.py",
+      "bytes": 22032,
+      "sha256": "6e28faf282657ce1dd895b65dd2811a618abf7000972cbc3833561d6da3395dd"
+    },
+    {
+      "path": "tests/test_compact_rows.cpp",
+      "bytes": 11674,
+      "sha256": "d689498d52d9cfd49aeb52e2b7195565ca3c6c35ac5c52c08466d2cff4752ac5"
+    },
+    {
+      "path": "tests/test_engine_extra.cpp",
+      "bytes": 5760,
+      "sha256": "59b52b4c9853ca2fbbdd582e06cdc80bb5368faa28a6998265b58bd475c4ad26"
+    },
+    {
+      "path": "tests/test_parser.cpp",
+      "bytes": 4813,
+      "sha256": "1203bf77712bf1e37dd1474ff4d1ff122b03fad901e3583500c466734fd5c62e"
+    },
+    {
+      "path": "tests/test_spill.cpp",
+      "bytes": 7344,
+      "sha256": "0d3d524609f0d1bda59e71c06d67483e755c461dae0e1e8133cd6b5bab947c2b"
+    },
+    {
+      "path": "tests/test_storage.cpp",
+      "bytes": 16051,
+      "sha256": "8ce88bcbdd4a46c56109a678e309bfa8ba4b12ff15b5042e5145cb4c2dfe9609"
+    }
+  ],
+  "regression_results": {
+    "release_ctest": "5/5",
+    "release_acceptance": "19/19",
+    "release_optimization": "11/11",
+    "sanitizer_ctest": "5/5",
+    "sanitizer_acceptance": "18 pass, 1 stress skipped",
+    "sanitizer_optimization": "8 pass, large class (3 cases) skipped",
+    "bidirectional_wal_checkpoint_compatibility": "passed, all 1000 initial and 999 final rows including vectors"
+  },
+  "official_assessment_submitted": false
+}

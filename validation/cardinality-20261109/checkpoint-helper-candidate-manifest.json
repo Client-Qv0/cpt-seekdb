@@ -1,0 +1,24 @@
+{
+  "command": [
+    "g++",
+    "-std=c++17",
+    "-O2",
+    "-DNDEBUG",
+    "-I/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate/source/src",
+    "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/checkpoint-helper.cpp",
+    "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate/source/src/storage.cpp",
+    "-o",
+    "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/validation/cardinality-20261109/checkpoint-helper-candidate"
+  ],
+  "compiler": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "helper_sha256": "b48538a30db09a82286aeb425e27682b913582be9561f37079ff1c0bf913922e",
+  "helper_source_sha256": "c601af415eaef50ab0c2f55a5a8a9b324298cb14e54b82c757963a2753e699c0",
+  "candidate_production_manifest_sha256": "184edb1f4a1cc2d56456b0acd6c9a4e2002cf455ccb6b7f0e100a4f6d7541234",
+  "implementation_files": {
+    "storage.cpp": "2279677b9d2d384856ac01624e6fb17441fbc1822fbc84c9733a767c1880ee3d",
+    "storage.hpp": "80acf1b26e5486ec178a92909f3ba41e0faf49e6779359fa614a2008b026b40b",
+    "sql.hpp": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593",
+    "compact_rows.hpp": "1c817bc048517d51140f806dd8f31fa83aa9ac559c41d89e6a76f8a42d6637f5"
+  },
+  "scope": "Separate diagnostic helper; same source/flags as baseline helper with frozen candidate implementation. Not production CLI."
+}

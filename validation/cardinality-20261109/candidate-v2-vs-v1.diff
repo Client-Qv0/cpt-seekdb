@@ -1,0 +1,192 @@
+--- candidate-v1/src/compact_rows.hpp
++++ candidate-v2/src/compact_rows.hpp
+@@ -140,6 +140,25 @@
+       id = key < node(id).key ? left(id) : right(id);
+     return id;
+   }
++  struct InsertPosition {
++    Id existing = 0, parent = 0;
++    bool left = false;
++  };
++  InsertPosition insertion_position(int64_t key) const noexcept {
++    InsertPosition result;
++    Id id = root_;
++    while (id) {
++      const auto &n = node(id);
++      if (key == n.key) {
++        result.existing = id;
++        return result;
++      }
++      result.parent = id;
++      result.left = key < n.key;
++      id = result.left ? n.left : n.right;
++    }
++    return result;
++  }
+   void rotate_left(Id x) noexcept {
+     Id y = right(x), p = parent(x);
+     node(x).right = left(y);
+@@ -168,19 +187,18 @@
+     node(y).right = x;
+     parent(x, y);
+   }
+-  void insert_node(Id id) noexcept {
+-    Id p = 0, position = root_;
+-    while (position) {
+-      p = position;
+-      position =
+-          node(id).key < node(position).key ? left(position) : right(position);
+-    }
++  void insert_node(Id id, InsertPosition position) noexcept {
++    // The caller searched this tree before allocating or detaching a node.
++    // Neither operation changes this tree, so its insertion slot remains valid.
++    assert(!position.existing);
++    Id p = position.parent;
++    assert(p ? !(position.left ? left(p) : right(p)) : !root_);
+     node(id).left = node(id).right = 0;
+     parent(id, p);
+     red(id, true);
+     if (!p)
+       root_ = id;
+-    else if (node(id).key < node(p).key)
++    else if (position.left)
+       node(p).left = id;
+     else
+       node(p).right = id;
+@@ -434,12 +452,13 @@
+     return Iterator(this, find_id(key));
+   }
+   void set(int64_t key, Ref ref) {
+-    if (Id id = find_id(key))
+-      value(id, ref);
++    const auto position = insertion_position(key);
++    if (position.existing)
++      value(position.existing, ref);
+     else {
+       if (!arena_)
+         throw std::logic_error("cannot write an unbound compact row index");
+-      insert_node(arena_->acquire(key, ref));
++      insert_node(arena_->acquire(key, ref), position);
+     }
+   }
+   void update(Iterator position, Ref ref) noexcept {
+@@ -470,13 +489,13 @@
+     if (this == &source)
+       return;
+     Id id = position.id_;
+-    Id existing = find_id(source.node(id).key);
++    const auto destination = insertion_position(source.node(id).key);
+     source.detach(id);
+-    if (existing) {
+-      value(existing, source.value(id));
++    if (destination.existing) {
++      value(destination.existing, source.value(id));
+       arena_->release(id);
+     } else {
+-      insert_node(id);
++      insert_node(id, destination);
+     }
+   }
+   void clear() noexcept {
+--- candidate-v1/src/storage.cpp
++++ candidate-v2/src/storage.cpp
+@@ -231,15 +231,12 @@
+       } else {
+         auto &src_rows = ti->second;
+         auto &dst_rows = dst->second;
+-        while (!src_rows.empty()) {
+-          auto si = src_rows.begin();
+-          auto di = dst_rows.find(si.key());
++        for (auto next = src_rows.begin(); next != src_rows.end();) {
++          // Rotations and extraction preserve every other node's identity.
++          // Save the successor before removing this node from the source.
++          auto si = next++;
+           if (remove_deleted && si.ref().deleted) {
+-            if (di != dst_rows.end())
+-              dst_rows.erase(di);
+-            src_rows.erase(si);
+-          } else if (di != dst_rows.end()) {
+-            dst_rows.update(di, si.ref());
++            dst_rows.erase(si.key());
+             src_rows.erase(si);
+           } else {
+             dst_rows.transfer(src_rows, si);
+--- candidate-v1/tests/test_compact_rows.cpp
++++ candidate-v2/tests/test_compact_rows.cpp
+@@ -268,6 +268,64 @@
+   assert(arena.live_nodes() == model.size());
+ }
+ 
++void saved_successors_during_transfer() {
++  Arena arena;
++  std::vector<int64_t> keys{INT64_MIN, INT64_MAX};
++  for (int64_t key = -2048; key < 2048; ++key)
++    keys.push_back(key);
++  std::mt19937 rng(913);
++  for (int round = 0; round != 3; ++round) {
++    std::shuffle(keys.begin(), keys.end(), rng);
++    Rows source(arena), target(arena);
++    Model source_model, target_model;
++    for (auto key : keys) {
++      Ref incoming{uint64_t(key), uint32_t(key), bool(key & 1)};
++      source.set(key, incoming);
++      source_model[key] = incoming;
++      if (round != 0 && (uint64_t(key) & 1) == 0) {
++        target.set(key, Ref{42, 17, false});
++        target_model[key] = Ref{42, 17, false};
++      }
++    }
++    const auto action = [round](int64_t key) {
++      // Include both full draining (overlay) and retained predecessors, which
++      // exercise removing a node with two children while its successor is held.
++      return round == 2 ? uint64_t(key) % 3 : uint64_t(2);
++    };
++    for (auto key : keys) {
++      const auto op = action(key);
++      if (op == 2)
++        target_model[key] = source_model.at(key);
++      if (op != 0)
++        source_model.erase(key);
++    }
++    const auto high_water = arena.capacity_bytes();
++    allocation_budget = 0;
++    size_t visited = 0;
++    int64_t previous = 0;
++    for (auto next = source.begin(); next != source.end();) {
++      auto current = next++;
++      const auto key = current.key();
++      assert(visited == 0 || previous < key);
++      previous = key;
++      ++visited;
++      const auto op = action(key);
++      if (op == 1)
++        source.erase(current);
++      else if (op == 2)
++        target.transfer(source, current);
++      if (visited % 71 == 0)
++        assert(source.valid() && target.valid());
++    }
++    allocation_budget = -1;
++    assert(visited == keys.size() && arena.capacity_bytes() == high_water);
++    check(source, source_model);
++    check(target, target_model);
++    assert(arena.live_nodes() == source.size() + target.size());
++  }
++  assert(arena.live_nodes() == 0);
++}
++
+ void stable_iteration_and_snapshot() {
+   Arena arena;
+   {
+@@ -366,9 +424,10 @@
+   deletion_and_transfer_shapes();
+   failed_allocation_and_reuse();
+   allocation_free_transfers();
++  saved_successors_during_transfer();
+   stable_iteration_and_snapshot();
+   storage_commit_without_allocations();
+   std::cout
+-      << "compact_rows: 6 suites passed; allocation faults, no-allocation "
++      << "compact_rows: 7 suites passed; allocation faults, no-allocation "
+          "seal, high-water retention and slot reuse checked\n";
+ }

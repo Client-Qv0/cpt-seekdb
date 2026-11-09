@@ -1,0 +1,213 @@
+{
+  "candidate_version": "V1 only; frozen candidate source tree 0fa875ff0ff7911804f5682280e4af9e0608ee4b603a42498c13e949774ac392",
+  "scope": "Independent helper chrono around unchanged Store constructor. Not production executable end-to-end timings.",
+  "runs_passed": 12,
+  "summary": [
+    {
+      "kind": "scalar",
+      "paired_ratios": [
+        {
+          "pair": 1,
+          "constructor_candidate_over_baseline": 1.1150328821853732,
+          "launch_wall_candidate_over_baseline": 0.7883430988833373
+        },
+        {
+          "pair": 2,
+          "constructor_candidate_over_baseline": 1.116651284571254,
+          "launch_wall_candidate_over_baseline": 1.339355899584699
+        },
+        {
+          "pair": 3,
+          "constructor_candidate_over_baseline": 1.1213240503642663,
+          "launch_wall_candidate_over_baseline": 1.0783072025445055
+        }
+      ],
+      "medians": {
+        "baseline": {
+          "store_constructor_seconds": {
+            "median": 1.027094599,
+            "min": 1.020564139,
+            "max": 1.036059538,
+            "all": [
+              1.027094599,
+              1.036059538,
+              1.020564139
+            ]
+          },
+          "launch_to_ready_seconds": {
+            "median": 1.4737584660000032,
+            "min": 1.4685910779999993,
+            "max": 2.021179553999999,
+            "all": [
+              2.021179553999999,
+              1.4737584660000032,
+              1.4685910779999993
+            ]
+          },
+          "wall_outside_constructor_seconds": {
+            "median": 0.44802693899999935,
+            "min": 0.4376989280000032,
+            "max": 0.9940849549999988,
+            "all": [
+              0.9940849549999988,
+              0.4376989280000032,
+              0.44802693899999935
+            ]
+          },
+          "restore_user_microseconds": 627229,
+          "restore_system_microseconds": 382760
+        },
+        "candidate": {
+          "store_constructor_seconds": {
+            "median": 1.145244251,
+            "min": 1.144383114,
+            "max": 1.156917214,
+            "all": [
+              1.145244251,
+              1.156917214,
+              1.144383114
+            ]
+          },
+          "launch_to_ready_seconds": {
+            "median": 1.5933829530000008,
+            "min": 1.583592336999999,
+            "max": 1.9738870960000003,
+            "all": [
+              1.5933829530000008,
+              1.9738870960000003,
+              1.583592336999999
+            ]
+          },
+          "wall_outside_constructor_seconds": {
+            "median": 0.4481387020000007,
+            "min": 0.43920922299999887,
+            "max": 0.8169698820000004,
+            "all": [
+              0.4481387020000007,
+              0.8169698820000004,
+              0.43920922299999887
+            ]
+          },
+          "restore_user_microseconds": 825909,
+          "restore_system_microseconds": 304272
+        }
+      },
+      "median_constructor_ratio": 1.116651284571254,
+      "full_scan_digest_matches_all_six": true
+    },
+    {
+      "kind": "vector4",
+      "paired_ratios": [
+        {
+          "pair": 1,
+          "constructor_candidate_over_baseline": 1.0256749895807253,
+          "launch_wall_candidate_over_baseline": 1.0020270411061352
+        },
+        {
+          "pair": 2,
+          "constructor_candidate_over_baseline": 1.1165784291280025,
+          "launch_wall_candidate_over_baseline": 1.0899982105485044
+        },
+        {
+          "pair": 3,
+          "constructor_candidate_over_baseline": 1.1196532083811082,
+          "launch_wall_candidate_over_baseline": 0.972568404397333
+        }
+      ],
+      "medians": {
+        "baseline": {
+          "store_constructor_seconds": {
+            "median": 1.049007748,
+            "min": 1.044548773,
+            "max": 1.053651897,
+            "all": [
+              1.049007748,
+              1.053651897,
+              1.044548773
+            ]
+          },
+          "launch_to_ready_seconds": {
+            "median": 1.5049615870000004,
+            "min": 1.497073266000001,
+            "max": 1.6586558309999972,
+            "all": [
+              1.5049615870000004,
+              1.497073266000001,
+              1.6586558309999972
+            ]
+          },
+          "wall_outside_constructor_seconds": {
+            "median": 0.4559538390000004,
+            "min": 0.44342136900000106,
+            "max": 0.6141070579999972,
+            "all": [
+              0.4559538390000004,
+              0.44342136900000106,
+              0.6141070579999972
+            ]
+          },
+          "restore_user_microseconds": 692314,
+          "restore_system_microseconds": 350873
+        },
+        "candidate": {
+          "store_constructor_seconds": {
+            "median": 1.169532385,
+            "min": 1.075941011,
+            "max": 1.17648498,
+            "all": [
+              1.075941011,
+              1.17648498,
+              1.169532385
+            ]
+          },
+          "launch_to_ready_seconds": {
+            "median": 1.6131562549999998,
+            "min": 1.5080122060000036,
+            "max": 1.6318071810000063,
+            "all": [
+              1.5080122060000036,
+              1.6318071810000063,
+              1.6131562549999998
+            ]
+          },
+          "wall_outside_constructor_seconds": {
+            "median": 0.4436238699999999,
+            "min": 0.43207119500000357,
+            "max": 0.4553222010000064,
+            "all": [
+              0.43207119500000357,
+              0.4553222010000064,
+              0.4436238699999999
+            ]
+          },
+          "restore_user_microseconds": 827058,
+          "restore_system_microseconds": 338296
+        }
+      },
+      "median_constructor_ratio": 1.1165784291280025,
+      "full_scan_digest_matches_all_six": true
+    }
+  ],
+  "finding": "Median paired internal constructor ratio is about 1.1166 for both schemas, so the observed regression is not solely container launch overhead.",
+  "static_hypothesis": {
+    "basis": "Source inspection only; no instrumented traversal counter or profiler attribution.",
+    "paths": [
+      "compact_rows.hpp Rows::set calls find_id, then absent-key insert_node traverses the tree again.",
+      "storage.cpp overlay first does dst_rows.find; transfer again calls find_id; absent transfer then invokes insert_node traversal.",
+      "storage.cpp account_live performs a separate committed-row lookup before overlay."
+    ],
+    "status": "Extra user-mode index traversal is consistent with higher candidate restore user CPU, but exact causal fraction is not established."
+  },
+  "known_limits": [
+    "Store constructor chrono excludes Docker/client launch and all row verification.",
+    "Outside-constructor wall residual includes Docker launch/client synchronization/response, not a pure Docker launch metric.",
+    "Fixture copy and SHA reading prepopulate file cache outside DB cgroup; this is not an OS-cold experiment.",
+    "Row verification checks every row count/length and sampled exact bytes; FNV is cross-version corroboration, not a cryptographic independent full-data oracle.",
+    "Shared-device raw IO counters are uncalibrated."
+  ],
+  "cleanup": {
+    "stopped": true,
+    "pid": 408,
+    "cache_preserved": true
+  }
+}

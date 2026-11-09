@@ -1,0 +1,26 @@
+REAL DOCKER CONTAINERS, network=none, cpus=2, memory=2GiB, memory-swap=2GiB; /data bind mount
+Development protocol only. Kill operations target actual container via docker kill --signal KILL.
+test_01_published_example_and_rollback (acceptance.Acceptance.test_01_published_example_and_rollback) ... ok
+test_02_bigint_precision_and_bounds (acceptance.Acceptance.test_02_bigint_precision_and_bounds) ... ok
+test_03_unicode_length_and_codepoint_order (acceptance.Acceptance.test_03_unicode_length_and_codepoint_order) ... ok
+test_04_literals_comments_and_case (acceptance.Acceptance.test_04_literals_comments_and_case) ... ok
+test_05_vectors_use_stored_float32_and_euclidean_distance (acceptance.Acceptance.test_05_vectors_use_stored_float32_and_euclidean_distance) ... ok
+test_06_filter_before_topk_and_tie_by_primary_key (acceptance.Acceptance.test_06_filter_before_topk_and_tie_by_primary_key) ... ok
+test_07_scalar_conditions_projection_and_sort (acceptance.Acceptance.test_07_scalar_conditions_projection_and_sort) ... ok
+test_08_invalid_schema_does_not_leave_partial_table (acceptance.Acceptance.test_08_invalid_schema_does_not_leave_partial_table) ... ok
+test_09_autocommit_statement_atomicity (acceptance.Acceptance.test_09_autocommit_statement_atomicity) ... ok
+test_10_failed_statement_preserves_prior_transaction_work (acceptance.Acceptance.test_10_failed_statement_preserves_prior_transaction_work) ... ok
+test_11_vector_updates_deletes_and_rollback (acceptance.Acceptance.test_11_vector_updates_deletes_and_rollback) ... ok
+test_12_eof_rolls_back_uncommitted_rows (acceptance.Acceptance.test_12_eof_rolls_back_uncommitted_rows) ... ok
+test_13_sigkill_rolls_back_uncommitted_and_keeps_acknowledged (acceptance.Acceptance.test_13_sigkill_rolls_back_uncommitted_and_keeps_acknowledged) ... ok
+test_14_commit_with_lost_response_is_all_or_nothing (acceptance.Acceptance.test_14_commit_with_lost_response_is_all_or_nothing) ... ok
+test_15_repeated_startup_termination_preserves_committed_state (acceptance.Acceptance.test_15_repeated_startup_termination_preserves_committed_state) ... ok
+test_16_create_index_and_subsequent_exact_mutations (acceptance.Acceptance.test_16_create_index_and_subsequent_exact_mutations) ... ok
+test_17_rejected_sql_never_silently_changes_data (acceptance.Acceptance.test_17_rejected_sql_never_silently_changes_data) ... ok
+test_18_randomized_transaction_reference_model (acceptance.Acceptance.test_18_randomized_transaction_reference_model) ... ok
+test_19_disk_data_larger_than_address_space (acceptance.Acceptance.test_19_disk_data_larger_than_address_space) ... skipped 'Enable --stress for >memory data test'
+
+----------------------------------------------------------------------
+Ran 19 tests in 65.845s
+
+OK (skipped=1)

@@ -1,0 +1,30 @@
+{
+  "scope": "Diagnostic comparison, not official benchmark and not a replacement for the original 18 runs",
+  "identities": {
+    "baseline": {
+      "path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/baseline/release/minivectordb",
+      "sha256": "747092fd68833b52ec80020e050d4586d443220f513d6b3d932ab3e25eea072f"
+    },
+    "candidate": {
+      "path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-round2/build-cardinality/candidate-v2/release/minivectordb",
+      "sha256": "78996ec9a6d15c5357b5111a4fd78ed28bf1cde174538dee81ae5de1b2daf26c"
+    }
+  },
+  "adapter_sha256": "d17b60f2b86c582cd870edf5118d40c255069b2b37840caaf07cb08d8a850525",
+  "driver_sha256": "30f16355fa05a25881f161f458df812fe9ac812b6d3d81a14898e22af69172d9",
+  "initial_wal_sha256": "6fd59dd3ccfb5221314cb6a0794df0c333e927da6d72ae3955b6b66244a77d93",
+  "initial_wal_bytes": 69043217,
+  "repetitions_per_run": 5,
+  "num_runs": 12,
+  "cpuset": "0,1",
+  "memory_max": 134217728,
+  "swap_max": 0,
+  "cpu_max": "200000 100000",
+  "python_switchinterval_seconds": 0.005,
+  "adapter_difference": "Subclass overrides _monitor: sampler=on delegates unmodified monitor; off returns without background reads. No production or adapter source edits. cpu.stat/cpu.pressure/io.pressure are read synchronously outside each measured SQL round trip.",
+  "fixture_policy": "Each run copies the same frozen 1m vector4 WAL into a fresh ext4 directory and fsyncs it outside timing. No drop_caches. Copying/recovery can change page-cache ownership and allocator history relative to original write-then-query runs; this control cannot retroactively replace them.",
+  "timing": "Separate SQL send-to-complete-JSON-response wall times include the common Python/Docker consumer. All truth and comparisons occur outside measured intervals. CPU/pressure/io phase captures are outside timers.",
+  "limitations": "A sampler effect, if observed, supports an observer-cost explanation for this control but does not prove Python GIL is the sole cause of earlier results. io.stat volumes are not I/O service latency or finalized physical-I/O attribution.",
+  "prepare_only": false,
+  "runs": []
+}

@@ -1,6 +1,15 @@
 .gitattributes export-ignore
 .gitignore export-ignore
 
+# Keep the Linux submission reproducible from a Windows checkout.
+src/** text eol=lf
+tests/** text eol=lf
+agent/** text eol=lf
+validation/** text eol=lf
+Dockerfile text eol=lf
+CMakeLists.txt text eol=lf
+README.md text eol=lf
+
 # All OceanBase code is auto-formatted using clang-format.
 *.c filter=codeformat
 *.cc filter=codeformat
@@ -10,3 +19,13 @@
 *.i filter=codeformat
 *.ic filter=codeformat
 *.js filter=codeformat
+
+# Preserve audited evidence byte-for-byte, including archives and ELF helpers.
+validation/** -text -filter -whitespace
+# Do not let a developer's global formatting filter rewrite audited sources.
+src/** -text -filter
+tests/** -text -filter
+agent/** -text -filter
+.dockerignore text eol=lf -filter
+HANDOFF.md text eol=lf
+tools/handoff/** text eol=lf -filter

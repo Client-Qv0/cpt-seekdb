@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-09",
+  "synthetic": false,
+  "material_scope": "真实对话摘录与本轮本地验证。不是完整聊天导出；未记录的学生理解、解释或反馈不得从Agent工作推断。尚未完成官方评测适配。",
+  "conversations": [
+    {
+      "id": "user-verify",
+      "source": "student",
+      "content": "请你记住绝对要核实之后再让我提交"
+    },
+    {
+      "id": "user-start",
+      "source": "student",
+      "content": "现在可以开始解题了么"
+    },
+    {
+      "id": "assistant-start",
+      "source": "agent",
+      "content": "可以，现在开始实现。先把文档已明确的 SQL、精确向量检索、持久化、事务和崩溃恢复做出来并测试；正式输入输出协议尚未提供的部分单独留出适配接口。达到本地验证标准后，我会汇报证据和剩余缺项，再判断是否具备提测条件。"
+    },
+    {
+      "id": "review-varchar",
+      "source": "agent_review",
+      "content": "独立审查发现 WHERE 字符串比较误用了 VARCHAR 存储长度限制。VARCHAR(1) 存储 'a' 后，WHERE s < 'zz' 应可比较，而不是报长度超限。Agent 增加 comparison 转换模式并通过独立回归测试；这不是学生自行发现问题的证据。"
+    }
+  ],
+  "experiments": [
+    {
+      "id": "release-blackbox",
+      "source": "tool_result_summary",
+      "command": "python3 tests/acceptance.py --binary ./build/minivectordb -v",
+      "output": "18项常规黑盒测试通过，1项压力测试单独运行；包括140步随机参考模型。",
+      "executed": true
+    },
+    {
+      "id": "stress",
+      "source": "tool_output",
+      "output": "test_19_disk_data_larger_than_address_space (__main__.Acceptance.test_19_disk_data_larger_than_address_space) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 3.880s\n\nOK\n",
+      "limitation": "192MB数据/128MiB RLIMIT_AS；不是cgroup memory.peak，未计页缓存。",
+      "executed": true
+    },
+    {
+      "id": "asan-ubsan",
+      "source": "tool_output_excerpt",
+      "command": "ctest --test-dir build-sanitize --output-on-failure; python3 tests/acceptance.py --binary ./build-sanitize/minivectordb -v",
+      "output": "100% tests passed, 0 tests failed out of 3\nRan 19 tests in 2.469s\nOK (skipped=1)",
+      "limitation": "ASan/UBSan构建；压力测试不与ASan虚拟地址空间预算混用。",
+      "executed": true
+    },
+    {
+      "id": "benchmark",
+      "source": "tool_output",
+      "command": "python3 tests/benchmark_local.py --binary ./build/minivectordb --rows 10000 --queries 1000",
+      "output": "{\n  \"scope\": \"local development baseline, not official scoring\",\n  \"rows\": 10000,\n  \"dimension\": 128,\n  \"queries\": 1000,\n  \"write_seconds\": 0.6898058729999832,\n  \"query_seconds\": 4.6605685600000015,\n  \"data_file_bytes\": 5633351,\n  \"not_measured\": [\n    \"cgroup physical I/O\",\n    \"cgroup memory peak\",\n    \"official baseline ratio\",\n    \"official hidden cases\"\n  ],\n  \"recall_note\": \"exact backend; this timing run checks count, uniqueness and sorting only\"\n}\n",
+      "executed": true
+    }
+  ],
+  "limitations": [
+    "没有官方测试驱动和资源配置，不能认定可提测或满分。",
+    "没有将Agent规划、解释和代码冒充学生理解；当前真实学生技术学习证据仍不足。",
+    "当前向量检索为精确扫描，CREATE VECTOR INDEX仅保存元数据，尚未实现加速索引。",
+    "无LIMIT结果集会物化，日志尚未压缩，仍需资源边界验证。",
+    "Docker不可用，未执行镜像构建与运行；依赖版本待正式环境冻结。"
+  ]
+}
