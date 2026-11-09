@@ -1,0 +1,70 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 700B 0.1s done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/ubuntu:24.04
+#2 DONE 13.6s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 94B 0.1s done
+#3 DONE 0.1s
+
+#4 [builder 1/6] FROM docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#4 resolve docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 0.0s done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 54.81MB 0.9s done
+#5 DONE 0.9s
+
+#6 [builder 2/6] RUN apt-get update && apt-get install -y --no-install-recommends g++ cmake make     && rm -rf /var/lib/apt/lists/*
+#6 CACHED
+
+#7 [builder 3/6] WORKDIR /src
+#7 CACHED
+
+#8 [builder 4/6] COPY CMakeLists.txt ./
+#8 CACHED
+
+#9 [builder 5/6] COPY src/ src/
+#9 DONE 0.1s
+
+#10 [builder 6/6] RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release     && cmake --build build --parallel 2
+#10 0.307 -- The CXX compiler identification is GNU 13.3.0
+#10 0.322 -- Detecting CXX compiler ABI info
+#10 0.401 -- Detecting CXX compiler ABI info - done
+#10 0.407 -- Check for working CXX compiler: /usr/bin/c++ - skipped
+#10 0.407 -- Detecting CXX compile features
+#10 0.408 -- Detecting CXX compile features - done
+#10 0.409 -- Configuring done (0.2s)
+#10 0.414 -- Generating done (0.0s)
+#10 0.415 -- Build files have been written to: /src/build
+#10 0.450 [ 28%] Building CXX object CMakeFiles/mvdb.dir/src/storage.cpp.o
+#10 0.450 [ 28%] Building CXX object CMakeFiles/mvdb.dir/src/sql.cpp.o
+#10 2.181 [ 42%] Building CXX object CMakeFiles/mvdb.dir/src/engine.cpp.o
+#10 2.423 [ 57%] Building CXX object CMakeFiles/mvdb.dir/src/spill.cpp.o
+#10 5.223 [ 71%] Linking CXX static library libmvdb.a
+#10 5.250 [ 71%] Built target mvdb
+#10 5.264 [ 85%] Building CXX object CMakeFiles/minivectordb.dir/src/main.cpp.o
+#10 5.759 [100%] Linking CXX executable minivectordb
+#10 5.832 [100%] Built target minivectordb
+#10 DONE 5.9s
+
+#11 [stage-1 2/3] RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6     && rm -rf /var/lib/apt/lists/*
+#11 CACHED
+
+#12 [stage-1 3/3] COPY --from=builder /src/build/minivectordb /app/minivectordb
+#12 DONE 0.1s
+
+#13 exporting to image
+#13 exporting layers 0.1s done
+#13 exporting manifest sha256:fe3819ec875b02f93bac4e2a51af333ef4ba42586b52e74eff0db84d2a4fe9cc done
+#13 exporting config sha256:5295ef8a51eb0eac4c160d06d691a7753359d46f0add502310cd9689c6fd9b22 0.0s done
+#13 exporting attestation manifest sha256:d18425cc13f8f4b5257f2a926ce55d10075c0b6e1acd3e8a296a796a5eb0d684 0.0s done
+#13 exporting manifest list sha256:d0f8021e4ccab6abe529e86d36a1c6833a553b5bb1adec52384af6916c7443dc 0.0s done
+#13 naming to docker.io/library/codex-minivectordb-parser-safety:20261109 done
+#13 unpacking to docker.io/library/codex-minivectordb-parser-safety:20261109 0.0s done
+#13 DONE 0.2s
+exit=0

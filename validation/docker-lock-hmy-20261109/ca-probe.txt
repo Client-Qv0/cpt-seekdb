@@ -1,0 +1,57 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.ca-probe
+#1 transferring dockerfile: 1.45kB 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 94B 0.1s done
+#3 DONE 0.1s
+
+#4 [certs 1/2] FROM docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#4 resolve docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 0.0s done
+#4 CACHED
+
+#5 [certs 2/2] RUN rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\n' 'deb http://archive.ubuntu.com/ubuntu noble main' > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --no-install-recommends ca-certificates=20240203 openssl=3.0.13-0ubuntu3 libssl3t64=3.0.13-0ubuntu3     && sha256sum /etc/ssl/certs/ca-certificates.crt
+#5 0.648 Get:1 http://archive.ubuntu.com/ubuntu noble InRelease [256 kB]
+#5 2.674 Get:2 http://archive.ubuntu.com/ubuntu noble/main amd64 Packages [1808 kB]
+#5 11.02 Fetched 2064 kB in 11s (192 kB/s)
+#5 11.02 Reading package lists...
+#5 11.07 Reading package lists...
+#5 11.12 Building dependency tree...
+#5 11.12 Reading state information...
+#5 11.14 The following NEW packages will be installed:
+#5 11.14   ca-certificates openssl
+#5 11.14 The following packages will be DOWNGRADED:
+#5 11.14   libssl3t64
+#5 11.14 0 upgraded, 2 newly installed, 1 downgraded, 0 to remove and 0 not upgraded.
+#5 11.14 E: Packages were downgraded and -y was used without --allow-downgrades.
+#5 ERROR: process "/bin/sh -c rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\\n' 'deb http://archive.ubuntu.com/ubuntu noble main' > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --no-install-recommends ca-certificates=20240203 openssl=3.0.13-0ubuntu3 libssl3t64=3.0.13-0ubuntu3     && sha256sum /etc/ssl/certs/ca-certificates.crt" did not complete successfully: exit code: 100
+------
+ > [certs 2/2] RUN rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\n' 'deb http://archive.ubuntu.com/ubuntu noble main' > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --no-install-recommends ca-certificates=20240203 openssl=3.0.13-0ubuntu3 libssl3t64=3.0.13-0ubuntu3     && sha256sum /etc/ssl/certs/ca-certificates.crt:
+
+11.07 Reading package lists...
+11.12 Building dependency tree...
+11.12 Reading state information...
+11.14 The following NEW packages will be installed:
+11.14   ca-certificates openssl
+11.14 The following packages will be DOWNGRADED:
+11.14   libssl3t64
+11.14 0 upgraded, 2 newly installed, 1 downgraded, 0 to remove and 0 not upgraded.
+11.14 E: Packages were downgraded and -y was used without --allow-downgrades.
+------
+Dockerfile.ca-probe:5
+--------------------
+   4 |     FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS certs
+   5 | >>> RUN rm -f /etc/apt/sources.list.d/ubuntu.sources \
+   6 | >>>     && printf '%s\n' 'deb http://archive.ubuntu.com/ubuntu noble main' > /etc/apt/sources.list \
+   7 | >>>     && apt-get update -o APT::Update::Error-Mode=any \
+   8 | >>>     && apt-get install -y --no-install-recommends ca-certificates=20240203 openssl=3.0.13-0ubuntu3 libssl3t64=3.0.13-0ubuntu3 \
+   9 | >>>     && sha256sum /etc/ssl/certs/ca-certificates.crt
+  10 |     
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\\n' 'deb http://archive.ubuntu.com/ubuntu noble main' > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --no-install-recommends ca-certificates=20240203 openssl=3.0.13-0ubuntu3 libssl3t64=3.0.13-0ubuntu3     && sha256sum /etc/ssl/certs/ca-certificates.crt" did not complete successfully: exit code: 100
+exit=1

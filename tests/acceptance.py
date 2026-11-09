@@ -417,6 +417,32 @@ class Acceptance(unittest.TestCase):
         self.assertEqual(self.db.rows("SELECT id FROM large_rows WHERE id>=9590 ORDER BY id;"), [[i] for i in range(9590, 9600)])
         self.assertEqual(self.db.rows("SELECT payload FROM large_rows WHERE id=0;"), [[payload]])
 
+    def test_20_double_dash_without_space_cannot_silently_mutate(self):
+        self.db.ok("CREATE TABLE comment_guard (id BIGINT PRIMARY KEY, n BIGINT);")
+        self.db.ok("INSERT INTO comment_guard VALUES (1,10),(2,20);")
+        self.db.ok("BEGIN;")
+        self.db.ok("UPDATE comment_guard SET n=11 WHERE id=1;")
+        for sql in (
+            "DELETE FROM comment_guard WHERE id=1--2;",
+            "UPDATE comment_guard SET n=99 WHERE id=1--2;",
+            "DELETE FROM comment_guard WHERE id=2--not_a_comment;",
+        ):
+            self.fails(sql)
+            self.assertEqual(self.db.rows("SELECT id,n FROM comment_guard ORDER BY id;"), [[1, 11], [2, 20]])
+        self.db.ok("COMMIT;")
+        self.assertEqual(self.db.rows("SELECT id,n FROM comment_guard ORDER BY id; -- comment"), [[1, 11], [2, 20]])
+        self.assertEqual(self.db.rows("SELECT id,n FROM comment_guard ORDER BY id; --\tcomment"), [[1, 11], [2, 20]])
+        self.restart(kill=True)
+        self.assertEqual(self.db.rows("SELECT id,n FROM comment_guard ORDER BY id;"), [[1, 11], [2, 20]])
+
+    def test_21_rejected_double_dash_autocommit_survives_restart(self):
+        self.db.ok("CREATE TABLE comment_autocommit (id BIGINT PRIMARY KEY, n BIGINT);")
+        self.db.ok("INSERT INTO comment_autocommit VALUES (1,10),(2,20);")
+        self.fails("DELETE FROM comment_autocommit WHERE id=1--2;")
+        self.assertEqual(self.db.rows("SELECT id,n FROM comment_autocommit ORDER BY id;"), [[1, 10], [2, 20]])
+        self.restart(kill=True)
+        self.assertEqual(self.db.rows("SELECT id,n FROM comment_autocommit ORDER BY id;"), [[1, 10], [2, 20]])
+
 
 def main():
     global BINARY, STRESS

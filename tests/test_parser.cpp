@@ -44,6 +44,10 @@ int main() {
   s = parse_sql("SELECT * FROM t LIMIT 0"); check(s.limit == 0);
   s = parse_sql("/* leading */ UPDATE t SET s='/* text */', v='[1e2, -2.5]' WHERE id=+1 # trailing\n");
   check(s.kind == Statement::Update && s.assignments.size() == 2 && s.conditions[0].value.text == "+1");
+  s = parse_sql("SELECT * FROM t; -- comment\n");
+  check(s.kind == Statement::Select);
+  s = parse_sql("SELECT * FROM t; --\tcomment");
+  check(s.kind == Statement::Select);
   s = parse_sql("DELETE FROM t WHERE id <= 3"); check(s.kind == Statement::Delete);
   check(parse_sql("BEGIN;").kind == Statement::Begin);
   check(parse_sql("COMMIT").kind == Statement::Commit);
@@ -65,6 +69,9 @@ int main() {
     "CREATE TABLE t (id BIGINT PRIMARY KEY, v VECTOR(4294967296))", "CREATE TABLE t ()",
     "CREATE TABLE t (id BIGINT PRIMARY KEY, PRIMARY KEY (id))", "CREATE TABLE t (id BIGINT, PRIMARY KEY (missing))",
     "CREATE TABLE t (id BIGINT, PRIMARY KEY (id), PRIMARY KEY (id))", "SELECT * AS x FROM t",
+    "DELETE FROM t WHERE id=1--2", "UPDATE t SET n=9 WHERE id=1--2",
+    "SELECT * FROM t--not_a_comment", "SELECT * FROM t; --",
+    "SELECT * FROM t; -- comment\r DELETE FROM t", "SELECT * FROM t; # comment\r DELETE FROM t",
     "SELECT * FROM t /*", "SELECT * FROM t /* never closed", "/*! SELECT * FROM t */",
     "SELECT /*+ index(t) */ * FROM t", "BEGIN TRANSACTION", "ALTER TABLE t ADD COLUMN x BIGINT",
     "SELECT null FROM t", "SELECT * FROM t WHERE id=", "UPDATE t SET id=id+1", "SELECT * FROM ``"

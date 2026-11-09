@@ -1,0 +1,56 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.probe
+#1 transferring dockerfile: 266B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#2 DONE 14.7s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 94B 0.1s done
+#3 DONE 0.1s
+
+#4 [1/2] FROM docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#4 resolve docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 0.0s done
+#4 CACHED
+
+#5 [2/2] RUN apt-get update --snapshot 20261109T000000Z -o APT::Update::Error-Mode=any
+#5 0.729 Get:1 http://archive.ubuntu.com/ubuntu noble InRelease [256 kB]
+#5 0.729 Get:2 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+#5 0.849 Ign:3 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble InRelease
+#5 1.359 Ign:4 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates InRelease
+#5 1.882 Ign:5 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-backports InRelease
+#5 2.508 Get:6 http://security.ubuntu.com/ubuntu noble-security/multiverse amd64 Packages [55.6 kB]
+#5 2.622 Get:7 http://archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+#5 2.937 Ign:8 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security InRelease
+#5 3.589 Ign:3 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble InRelease
+#5 4.249 Get:9 http://security.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1557 kB]
+#5 4.292 Get:10 http://archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+#5 4.491 Get:11 http://archive.ubuntu.com/ubuntu noble/universe amd64 Packages [19.3 MB]
+#5 4.933 Ign:4 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates InRelease
+#5 5.323 Ign:5 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-backports InRelease
+#5 5.726 Ign:8 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security InRelease
+#5 6.163 Ign:3 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble InRelease
+#5 7.364 Ign:4 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates InRelease
+#5 8.023 Ign:5 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-backports InRelease
+#5 9.415 Ign:8 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security InRelease
+#5 11.88 Err:3 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble InRelease
+#5 11.88   Certificate verification failed: The certificate is NOT trusted. The certificate issuer is unknown.  Could not handshake: Error in the certificate verification. [IP: 185.125.189.69 443]
+#5 13.35 Err:4 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates InRelease
+#5 13.35   Certificate verification failed: The certificate is NOT trusted. The certificate issuer is unknown.  Could not handshake: Error in the certificate verification. [IP: 185.125.189.36 443]
+#5 16.94 Err:5 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-backports InRelease
+#5 16.94   Certificate verification failed: The certificate is NOT trusted. The certificate issuer is unknown.  Could not handshake: Error in the certificate verification. [IP: 185.125.189.37 443]
+#5 19.00 Err:8 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security InRelease
+#5 19.00   Certificate verification failed: The certificate is NOT trusted. The certificate issuer is unknown.  Could not handshake: Error in the certificate verification. [IP: 185.125.189.36 443]
+#5 25.44 Get:12 http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages [1425 kB]
+#5 51.48 Get:13 http://security.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [2132 kB]
+#5 135.1 Get:14 http://archive.ubuntu.com/ubuntu noble/main amd64 Packages [1808 kB]
+#5 145.5 Get:15 http://archive.ubuntu.com/ubuntu noble/restricted amd64 Packages [117 kB]
+#5 146.0 Get:16 http://archive.ubuntu.com/ubuntu noble/multiverse amd64 Packages [331 kB]
+#5 147.4 Get:17 http://archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Packages [61.7 kB]
+#5 147.4 Get:18 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [2177 kB]
+#5 161.7 Get:19 http://archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [2274 kB]
+#5 CANCELED
+ERROR: failed to build: failed to solve: Canceled: context canceled
+exit=124

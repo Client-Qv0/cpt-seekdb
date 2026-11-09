@@ -1,0 +1,20 @@
+# Isolated feasibility probe. The Ubuntu base release repository is used only
+# to build a CA bundle; the actual compiler/runtime packages would come from
+# the fixed Ubuntu snapshot if this probe proves workable.
+FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS certs
+RUN rm -f /etc/apt/sources.list.d/ubuntu.sources \
+    && printf '%s\n' 'deb http://archive.ubuntu.com/ubuntu noble main' > /etc/apt/sources.list \
+    && apt-get update -o APT::Update::Error-Mode=any \
+    && apt-get install -y --no-install-recommends ca-certificates=20240203 openssl=3.0.13-0ubuntu3 libssl3t64=3.0.13-0ubuntu3 \
+    && sha256sum /etc/ssl/certs/ca-certificates.crt
+
+FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+RUN rm -f /etc/apt/sources.list.d/ubuntu.sources \
+    && printf '%s\n' \
+      'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble main' \
+      'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates main' \
+      'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security main' \
+      > /etc/apt/sources.list \
+    && apt-get update -o APT::Update::Error-Mode=any \
+    && apt-cache policy g++ cmake make libstdc++6

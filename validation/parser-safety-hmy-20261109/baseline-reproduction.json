@@ -1,0 +1,88 @@
+{
+  "scope": "V2 control; local development protocol",
+  "records": [
+    {
+      "sql": "CREATE TABLE comment_guard (id BIGINT PRIMARY KEY, n BIGINT);",
+      "response": {
+        "ok": true,
+        "columns": [],
+        "rows": [],
+        "affected": 0
+      }
+    },
+    {
+      "sql": "INSERT INTO comment_guard VALUES (1,10),(2,20);",
+      "response": {
+        "ok": true,
+        "columns": [],
+        "rows": [],
+        "affected": 2
+      }
+    },
+    {
+      "sql": "SELECT id,n FROM comment_guard ORDER BY id;",
+      "response": {
+        "ok": true,
+        "columns": [
+          "id",
+          "n"
+        ],
+        "rows": [
+          [
+            1,
+            10
+          ],
+          [
+            2,
+            20
+          ]
+        ],
+        "affected": 0
+      }
+    },
+    {
+      "sql": "DELETE FROM comment_guard WHERE id=1--2;",
+      "response": {
+        "ok": true,
+        "columns": [],
+        "rows": [],
+        "affected": 1
+      }
+    },
+    {
+      "sql": "SELECT id,n FROM comment_guard ORDER BY id;",
+      "response": {
+        "ok": true,
+        "columns": [
+          "id",
+          "n"
+        ],
+        "rows": [
+          [
+            2,
+            20
+          ]
+        ],
+        "affected": 0
+      }
+    },
+    {
+      "phase": "after_restart",
+      "sql": "SELECT id,n FROM comment_guard ORDER BY id;",
+      "response": {
+        "ok": true,
+        "columns": [
+          "id",
+          "n"
+        ],
+        "rows": [
+          [
+            2,
+            20
+          ]
+        ],
+        "affected": 0
+      }
+    }
+  ]
+}

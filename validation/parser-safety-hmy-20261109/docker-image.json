@@ -1,0 +1,60 @@
+[
+    {
+        "Id": "sha256:d0f8021e4ccab6abe529e86d36a1c6833a553b5bb1adec52384af6916c7443dc",
+        "RepoTags": [
+            "codex-minivectordb-parser-safety:20261109"
+        ],
+        "RepoDigests": [
+            "codex-minivectordb-parser-safety@sha256:d0f8021e4ccab6abe529e86d36a1c6833a553b5bb1adec52384af6916c7443dc"
+        ],
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-11-09T22:51:23.19052345+08:00",
+        "Config": {
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Entrypoint": [
+                "/app/minivectordb"
+            ],
+            "Cmd": [
+                "--data-dir",
+                "/data",
+                "--dev-protocol"
+            ],
+            "Volumes": {
+                "/data": {}
+            },
+            "Labels": {
+                "org.opencontainers.image.version": "24.04"
+            },
+            "ArgsEscaped": true
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 117951567,
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:bec87777bc2fb2edcdf9af11df1531469e7df911309c1413082b18fcb8610278",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+                "sha256:803ee7baa295ae21e89c8171154463034f7c9d755df57ee94c1f3db3cfda174a"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-11-09T14:51:23.327494655Z"
+        },
+        "Descriptor": {
+            "mediaType": "application/vnd.oci.image.index.v1+json",
+            "digest": "sha256:d0f8021e4ccab6abe529e86d36a1c6833a553b5bb1adec52384af6916c7443dc",
+            "size": 855
+        },
+        "Identity": {
+            "Build": [
+                {
+                    "Ref": "pd4x52v0prewe676jdns2gvro",
+                    "CreatedAt": "2026-11-09T22:51:23.346951714+08:00"
+                }
+            ]
+        }
+    }
+]

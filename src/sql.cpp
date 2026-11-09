@@ -26,8 +26,15 @@ std::vector<Token> tokenize(const std::string& sql) {
   while (i < sql.size()) {
     const char c = sql[i];
     if (space(c)) { ++i; continue; }
-    if (c == '#' || (c == '-' && i + 1 < sql.size() && sql[i + 1] == '-')) {
-      while (i < sql.size() && sql[i] != '\n') ++i;
+    // MySQL treats -- as a comment only when followed by whitespace or a
+    // control character. Otherwise an unsupported expression such as 1--2
+    // must be rejected rather than silently truncated into a valid statement.
+    const bool dash_comment = c == '-' && i + 2 < sql.size() &&
+      sql[i + 1] == '-' &&
+      (static_cast<unsigned char>(sql[i + 2]) <= 0x20 ||
+       static_cast<unsigned char>(sql[i + 2]) == 0x7f);
+    if (c == '#' || dash_comment) {
+      while (i < sql.size() && sql[i] != '\n' && sql[i] != '\r') ++i;
       continue;
     }
     if (c == '/' && i + 1 < sql.size() && sql[i + 1] == '*') {
