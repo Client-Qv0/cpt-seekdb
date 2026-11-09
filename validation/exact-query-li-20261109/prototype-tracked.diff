@@ -1,0 +1,38 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 29beba7..7ee41c7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -9,7 +9,7 @@ target_compile_options(mvdb PRIVATE -Wall -Wextra -Wpedantic)
+ add_executable(minivectordb src/main.cpp)
+ target_link_libraries(minivectordb PRIVATE mvdb)
+ enable_testing()
+-foreach(unit parser storage engine_extra spill compact_rows)
++foreach(unit parser storage engine_extra spill compact_rows exact_distance)
+   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_${unit}.cpp")
+     add_executable(test_${unit} tests/test_${unit}.cpp)
+     target_link_libraries(test_${unit} PRIVATE mvdb)
+diff --git a/src/engine.cpp b/src/engine.cpp
+index e540b03..85fd424 100644
+--- a/src/engine.cpp
++++ b/src/engine.cpp
+@@ -1,4 +1,5 @@
+ #include "engine.hpp"
++#include "exact_distance.hpp"
+ #include "spill.hpp"
+ #include <algorithm>
+ #include <charconv>
+@@ -718,7 +719,13 @@ Result Engine::execute_statement(const Statement &st) {
+     scan_rows([&](int64_t key, const std::vector<Cell> &row) {
+       if (!matches(row, fs))
+         return;
+-      Neighbor n{std::get<double>(project(projection, row)), key};
++      auto distance = bounded_exact_distance(
++          std::get<std::vector<float>>(row[projection.col]), projection.query,
++          nearest.size() == *st.limit ? nearest.top().distance
++                                     : std::numeric_limits<double>::infinity());
++      if (!distance)
++        return;
++      Neighbor n{*distance, key};
+       if (nearest.size() < *st.limit)
+         nearest.push(n);
+       else if (better_neighbor(n, nearest.top())) {

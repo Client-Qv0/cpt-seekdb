@@ -1,5 +1,6 @@
 {
   "schema_version": 1,
+  "exact_query_workpackage_20261109": {"source":"actual user request and measured agent experiments; not proof of student understanding","user_prompt":"执行","base_commit":"75ecbf3e60a68de7d833aa899bc0fcb4c48df47e","decisions":["公开20例/95SQL先建立本地断言桥，明确ANN指令仅精确回退，未声称正式协议或29例准入。","生产Dockerfile无缓存构建与实际容器20例通过，镜像二进制与V2相同。","查询诊断显示2.468秒端到端中约2.182秒在Engine；先比较无额外常驻内存的两版精确剪枝原型，另做独立列式组件探针。","两版默认构建三组配对中位分别改善约5.2%和9.4%，第二版有一组退化；均未达20%目标，恢复生产V2并保存全部原型及负结果。"],"tool_results":["每版6066条独立参考通过；另外两个seed各1000条查询通过，过滤和无过滤Recall均为1。","第二版Release6/6、19/19、11/11；ASan/UBSan6/6、18普通黑盒通过加1压力跳过、8普通额外通过加大输出类跳过。真实128MiB资源4/4无OOM，百万行匿名内存与V2基本一致。","列式组件10k128与37x3各100条参考核对通过，超预算拒绝；尚未接入Engine，其进程内耗时不能充当数据库端到端成绩。"],"remaining":["完整列式缓存的Engine集成和事务/预算回退验证仍待完成","正式通信驱动及29例准入未验证，原UPDATE慢例仍未定位"],"production_source_changed":false,"official_assessment_submitted":false,"student_understanding_inferred":false},
   "handoff_update_investigation_20261109": {
     "recorded_at_utc": "2026-11-09T11:03:52Z",
     "source": "real user request excerpts, agent decisions, and server tool results",

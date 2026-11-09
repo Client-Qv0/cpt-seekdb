@@ -1,0 +1,683 @@
+{
+  "workloads": {
+    "vector128": {
+      "variants": {
+        "baseline": {
+          "runs": 3,
+          "runs_passed": 3,
+          "timings": {
+            "fixed_warmup_seconds_not_in_warm_query_time": {
+              "count": 3,
+              "values": [
+                0.030470427591353655,
+                0.02971027698367834,
+                0.031760329846292734
+              ],
+              "median": 0.030470427591353655,
+              "minimum": 0.02971027698367834,
+              "maximum": 0.031760329846292734,
+              "mean": 0.03064701147377491,
+              "population_stddev": 0.0008461936679533789,
+              "coefficient_of_variation": 0.027610968484724163
+            },
+            "process_first_query_seconds": {
+              "count": 3,
+              "values": [
+                0.026590339839458466,
+                0.02380419196560979,
+                0.0235080081038177
+              ],
+              "median": 0.02380419196560979,
+              "minimum": 0.0235080081038177,
+              "maximum": 0.026590339839458466,
+              "mean": 0.02463417996962865,
+              "population_stddev": 0.0013884889381976758,
+              "coefficient_of_variation": 0.05636432549853644
+            },
+            "restart_startup_to_first_response_seconds": {
+              "count": 3,
+              "values": [
+                0.2841681237332523,
+                0.2628433699719608,
+                0.27149859676137567
+              ],
+              "median": 0.27149859676137567,
+              "minimum": 0.2628433699719608,
+              "maximum": 0.2841681237332523,
+              "mean": 0.27283669682219625,
+              "population_stddev": 0.008757060563701539,
+              "coefficient_of_variation": 0.03209634431767216
+            },
+            "warm_queries_seconds": {
+              "count": 3,
+              "values": [
+                2.9926421511918306,
+                3.0776913901790977,
+                2.8839777801185846
+              ],
+              "median": 2.9926421511918306,
+              "minimum": 2.8839777801185846,
+              "maximum": 3.0776913901790977,
+              "mean": 2.9847704404965043,
+              "population_stddev": 0.07927888980311766,
+              "coefficient_of_variation": 0.026561134728314298
+            },
+            "write_batches_seconds": {
+              "count": 3,
+              "values": [
+                0.9694326128810644,
+                0.9732508570887148,
+                0.9479639106430113
+              ],
+              "median": 0.9694326128810644,
+              "minimum": 0.9479639106430113,
+              "maximum": 0.9732508570887148,
+              "mean": 0.9635491268709302,
+              "population_stddev": 0.011130108440937824,
+              "coefficient_of_variation": 0.011551158244605756
+            }
+          },
+          "resources": {
+            "main": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    13807616,
+                    14049280,
+                    13791232
+                  ],
+                  "median": 13807616,
+                  "minimum": 13791232,
+                  "maximum": 14049280,
+                  "mean": 13882709.333333334,
+                  "population_stddev": 117973.01699776757,
+                  "coefficient_of_variation": 0.008497838149971655
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    13807616,
+                    14049280,
+                    14053376
+                  ],
+                  "median": 14049280,
+                  "minimum": 13807616,
+                  "maximum": 14053376,
+                  "mean": 13970090.666666666,
+                  "population_stddev": 114899.10729369872,
+                  "coefficient_of_variation": 0.008224650078174061
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    7634944,
+                    7634944,
+                    7634944
+                  ],
+                  "median": 7634944,
+                  "minimum": 7634944,
+                  "maximum": 7634944,
+                  "mean": 7634944,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": 0.0
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    5636096,
+                    5636096,
+                    5636096
+                  ],
+                  "median": 5636096,
+                  "minimum": 5636096,
+                  "maximum": 5636096,
+                  "mean": 5636096,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": 0.0
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            },
+            "restart": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    946176,
+                    950272,
+                    999424
+                  ],
+                  "median": 950272,
+                  "minimum": 946176,
+                  "maximum": 999424,
+                  "mean": 965290.6666666666,
+                  "population_stddev": 24193.76830691922,
+                  "coefficient_of_variation": 0.02506371307874024
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    4685824,
+                    4550656,
+                    4784128
+                  ],
+                  "median": 4685824,
+                  "minimum": 4550656,
+                  "maximum": 4784128,
+                  "mean": 4673536,
+                  "population_stddev": 95709.76928192859,
+                  "coefficient_of_variation": 0.020479091052669453
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    610304,
+                    614400,
+                    614400
+                  ],
+                  "median": 614400,
+                  "minimum": 610304,
+                  "maximum": 614400,
+                  "mean": 613034.6666666666,
+                  "population_stddev": 1930.8729171600658,
+                  "coefficient_of_variation": 0.0031496961300068933
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "median": 0,
+                  "minimum": 0,
+                  "maximum": 0,
+                  "mean": 0,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": null
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            }
+          }
+        },
+        "candidate": {
+          "runs": 3,
+          "runs_passed": 3,
+          "timings": {
+            "fixed_warmup_seconds_not_in_warm_query_time": {
+              "count": 3,
+              "values": [
+                0.024629940278828144,
+                0.02578409295529127,
+                0.031030848156660795
+              ],
+              "median": 0.02578409295529127,
+              "minimum": 0.024629940278828144,
+              "maximum": 0.031030848156660795,
+              "mean": 0.027148293796926737,
+              "population_stddev": 0.0027855207014565167,
+              "coefficient_of_variation": 0.10260389556311068
+            },
+            "process_first_query_seconds": {
+              "count": 3,
+              "values": [
+                0.020518125034868717,
+                0.020901469979435205,
+                0.02654551202431321
+              ],
+              "median": 0.020901469979435205,
+              "minimum": 0.020518125034868717,
+              "maximum": 0.02654551202431321,
+              "mean": 0.022655035679539044,
+              "population_stddev": 0.0027554301513637506,
+              "coefficient_of_variation": 0.12162550482550441
+            },
+            "restart_startup_to_first_response_seconds": {
+              "count": 3,
+              "values": [
+                0.3043915838934481,
+                0.2689900971017778,
+                0.27472553541883826
+              ],
+              "median": 0.27472553541883826,
+              "minimum": 0.2689900971017778,
+              "maximum": 0.3043915838934481,
+              "mean": 0.2827024054713547,
+              "population_stddev": 0.015514276406829347,
+              "coefficient_of_variation": 0.054878473286996333
+            },
+            "warm_queries_seconds": {
+              "count": 3,
+              "values": [
+                2.8379123620688915,
+                2.6857840516604483,
+                2.7745465240441263
+              ],
+              "median": 2.7745465240441263,
+              "minimum": 2.6857840516604483,
+              "maximum": 2.8379123620688915,
+              "mean": 2.766080979257822,
+              "population_stddev": 0.06239393556710783,
+              "coefficient_of_variation": 0.022556800048510867
+            },
+            "write_batches_seconds": {
+              "count": 3,
+              "values": [
+                0.9701126776635647,
+                0.9315863559022546,
+                0.9779812786728144
+              ],
+              "median": 0.9701126776635647,
+              "minimum": 0.9315863559022546,
+              "maximum": 0.9779812786728144,
+              "mean": 0.9598934374128779,
+              "population_stddev": 0.02027226131437561,
+              "coefficient_of_variation": 0.021119283166487493
+            }
+          },
+          "resources": {
+            "main": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    13787136,
+                    13869056,
+                    14041088
+                  ],
+                  "median": 13869056,
+                  "minimum": 13787136,
+                  "maximum": 14041088,
+                  "mean": 13899093.333333334,
+                  "population_stddev": 105828.74726441562,
+                  "coefficient_of_variation": 0.007614075589420865
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    14045184,
+                    13869056,
+                    14041088
+                  ],
+                  "median": 14041088,
+                  "minimum": 13869056,
+                  "maximum": 14045184,
+                  "mean": 13985109.333333334,
+                  "population_stddev": 82079.13432508627,
+                  "coefficient_of_variation": 0.005869037729254764
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    7630848,
+                    7634944,
+                    7630848
+                  ],
+                  "median": 7630848,
+                  "minimum": 7630848,
+                  "maximum": 7634944,
+                  "mean": 7632213.333333333,
+                  "population_stddev": 1930.8729171600658,
+                  "coefficient_of_variation": 0.0002529899038234517
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    5636096,
+                    5636096,
+                    5636096
+                  ],
+                  "median": 5636096,
+                  "minimum": 5636096,
+                  "maximum": 5636096,
+                  "mean": 5636096,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": 0.0
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            },
+            "restart": {
+              "sampled_and_kernel_maxima": {
+                "memory_current_bytes": {
+                  "count": 3,
+                  "values": [
+                    958464,
+                    1191936,
+                    983040
+                  ],
+                  "median": 983040,
+                  "minimum": 958464,
+                  "maximum": 1191936,
+                  "mean": 1044480,
+                  "population_stddev": 104748.7434960439,
+                  "coefficient_of_variation": 0.10028793609838761
+                },
+                "memory_peak_bytes": {
+                  "count": 3,
+                  "values": [
+                    4227072,
+                    4366336,
+                    4579328
+                  ],
+                  "median": 4366336,
+                  "minimum": 4227072,
+                  "maximum": 4579328,
+                  "mean": 4390912,
+                  "population_stddev": 144854.0810977263,
+                  "coefficient_of_variation": 0.03298952042257424
+                },
+                "anon_bytes": {
+                  "count": 3,
+                  "values": [
+                    614400,
+                    610304,
+                    618496
+                  ],
+                  "median": 614400,
+                  "minimum": 610304,
+                  "maximum": 618496,
+                  "mean": 614400,
+                  "population_stddev": 3344.369995479966,
+                  "coefficient_of_variation": 0.005443310539518174
+                },
+                "file_bytes": {
+                  "count": 3,
+                  "values": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "median": 0,
+                  "minimum": 0,
+                  "maximum": 0,
+                  "mean": 0,
+                  "population_stddev": 0.0,
+                  "coefficient_of_variation": null
+                }
+              },
+              "unhealthy_runs": 0,
+              "events_by_run": [
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                },
+                {
+                  "low": 0,
+                  "high": 0,
+                  "max": 0,
+                  "oom": 0,
+                  "oom_kill": 0,
+                  "oom_group_kill": 0
+                }
+              ]
+            }
+          }
+        }
+      },
+      "pairs": [
+        {
+          "pair_index": 0,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "passed": true,
+          "baseline_over_candidate": {
+            "fixed_warmup_seconds_not_in_warm_query_time": 1.237129576702465,
+            "process_first_query_seconds": 1.295943941966947,
+            "restart_startup_to_first_response_seconds": 0.9335610403496734,
+            "warm_queries_seconds": 1.0545223986445227,
+            "write_batches_seconds": 0.9992989837179139
+          },
+          "candidate_over_baseline_resource_maxima": {
+            "main": {
+              "memory_current_bytes": 0.9985167606051617,
+              "memory_peak_bytes": 1.0172055769801245,
+              "anon_bytes": 0.9994635193133047,
+              "file_bytes": 1.0
+            },
+            "restart": {
+              "memory_current_bytes": 1.0129870129870129,
+              "memory_peak_bytes": 0.9020979020979021,
+              "anon_bytes": 1.0067114093959733,
+              "file_bytes": null
+            }
+          }
+        },
+        {
+          "pair_index": 1,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "passed": true,
+          "baseline_over_candidate": {
+            "fixed_warmup_seconds_not_in_warm_query_time": 1.1522715588713917,
+            "process_first_query_seconds": 1.1388764517055763,
+            "restart_startup_to_first_response_seconds": 0.9771488720363884,
+            "warm_queries_seconds": 1.1459191546976228,
+            "write_batches_seconds": 1.0447242501164669
+          },
+          "candidate_over_baseline_resource_maxima": {
+            "main": {
+              "memory_current_bytes": 0.9871720116618076,
+              "memory_peak_bytes": 0.9871720116618076,
+              "anon_bytes": 1.0,
+              "file_bytes": 1.0
+            },
+            "restart": {
+              "memory_current_bytes": 1.2543103448275863,
+              "memory_peak_bytes": 0.9594959495949595,
+              "anon_bytes": 0.9933333333333333,
+              "file_bytes": null
+            }
+          }
+        },
+        {
+          "pair_index": 2,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "passed": true,
+          "baseline_over_candidate": {
+            "fixed_warmup_seconds_not_in_warm_query_time": 1.0235082742807775,
+            "process_first_query_seconds": 0.8855737302142282,
+            "restart_startup_to_first_response_seconds": 0.9882539544329474,
+            "warm_queries_seconds": 1.0394411321367765,
+            "write_batches_seconds": 0.969306807109295
+          },
+          "candidate_over_baseline_resource_maxima": {
+            "main": {
+              "memory_current_bytes": 1.018117018117018,
+              "memory_peak_bytes": 0.9991256193529583,
+              "anon_bytes": 0.9994635193133047,
+              "file_bytes": 1.0
+            },
+            "restart": {
+              "memory_current_bytes": 0.9836065573770492,
+              "memory_peak_bytes": 0.9571917808219178,
+              "anon_bytes": 1.0066666666666666,
+              "file_bytes": null
+            }
+          }
+        }
+      ],
+      "valid_pairs": 3,
+      "paired_ratios": {
+        "fixed_warmup_seconds_not_in_warm_query_time": {
+          "count": 3,
+          "values": [
+            1.237129576702465,
+            1.1522715588713917,
+            1.0235082742807775
+          ],
+          "median": 1.1522715588713917,
+          "minimum": 1.0235082742807775,
+          "maximum": 1.237129576702465,
+          "mean": 1.1376364699515447,
+          "population_stddev": 0.08782237597504557,
+          "coefficient_of_variation": 0.07719722274619606
+        },
+        "process_first_query_seconds": {
+          "count": 3,
+          "values": [
+            1.295943941966947,
+            1.1388764517055763,
+            0.8855737302142282
+          ],
+          "median": 1.1388764517055763,
+          "minimum": 0.8855737302142282,
+          "maximum": 1.295943941966947,
+          "mean": 1.1067980412955838,
+          "population_stddev": 0.1690615193439294,
+          "coefficient_of_variation": 0.15274830008375437
+        },
+        "restart_startup_to_first_response_seconds": {
+          "count": 3,
+          "values": [
+            0.9335610403496734,
+            0.9771488720363884,
+            0.9882539544329474
+          ],
+          "median": 0.9771488720363884,
+          "minimum": 0.9335610403496734,
+          "maximum": 0.9882539544329474,
+          "mean": 0.9663212889396697,
+          "population_stddev": 0.023604464683859572,
+          "coefficient_of_variation": 0.024427139248645143
+        },
+        "warm_queries_seconds": {
+          "count": 3,
+          "values": [
+            1.0545223986445227,
+            1.1459191546976228,
+            1.0394411321367765
+          ],
+          "median": 1.0545223986445227,
+          "minimum": 1.0394411321367765,
+          "maximum": 1.1459191546976228,
+          "mean": 1.0799608951596407,
+          "population_stddev": 0.0470441647166382,
+          "coefficient_of_variation": 0.04356098903903747
+        },
+        "write_batches_seconds": {
+          "count": 3,
+          "values": [
+            0.9992989837179139,
+            1.0447242501164669,
+            0.969306807109295
+          ],
+          "median": 0.9992989837179139,
+          "minimum": 0.969306807109295,
+          "maximum": 1.0447242501164669,
+          "mean": 1.0044433469812253,
+          "population_stddev": 0.031003182981469132,
+          "coefficient_of_variation": 0.030866034480338523
+        }
+      },
+      "all_six_runs_passed": true,
+      "negative_median_timing_benefit": [
+        "restart_startup_to_first_response_seconds",
+        "write_batches_seconds"
+      ],
+      "interpretation": "Ratios use this frozen implementation baseline, not the official scoring baseline. Negative benefit and failed runs remain in evidence; no automatic source changes or rollback are performed."
+    }
+  },
+  "all_planned_runs_passed": true,
+  "interpretation": "Actual frozen baseline and candidate, matched resources/consumer/inputs. These are local evidence, not official performance points. All failed and negative-benefit runs are retained.",
+  "identities_unchanged": true
+}

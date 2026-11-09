@@ -1,0 +1,2001 @@
+{
+  "scope": "Local development bridge only; official transport not verified; ann directive uses existing exact backend, not ANN coverage. Error semantic mapping not frozen: require failure and nonempty code.",
+  "binary": "/opt/minivectordb-v2-query/build-query/minivectordb",
+  "binary_sha256": "4cfe8166fe9f6db4d829e9133bc25cb3a316aa49ad6b534c417a1e6b19f9b40e",
+  "manifest_version": "minivectordb-public-v4",
+  "cases": [
+    {
+      "id": "sql_crud",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, content VARCHAR(16));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (1, '初始');",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, content FROM docs;",
+          "expected": {
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "初始"
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "初始"
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "UPDATE docs SET content = '更新' WHERE id = 1;",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT content FROM docs;",
+          "expected": {
+            "columns": [
+              "content"
+            ],
+            "rows": [
+              [
+                "更新"
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "content"
+            ],
+            "rows": [
+              [
+                "更新"
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "DELETE FROM docs WHERE id = 1;",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id FROM docs;",
+          "expected": {
+            "columns": [
+              "id"
+            ],
+            "rows": []
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id"
+            ],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "sql_comparisons",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, value BIGINT);",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (1, 10), (2, 20), (3, 30);",
+          "expected": {
+            "affected_rows": 3
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 3
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id FROM docs WHERE value >= 20 AND value < 30;",
+          "expected": {
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                2
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                2
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id FROM docs WHERE value = 10;",
+          "expected": {
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                1
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                1
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "sql_ordering",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, value BIGINT);",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (3, 30), (1, 10), (2, 20);",
+          "expected": {
+            "affected_rows": 3
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 3
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id FROM docs ORDER BY value;",
+          "expected": {
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id FROM docs ORDER BY value DESC LIMIT 2;",
+          "expected": {
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                3
+              ],
+              [
+                2
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                3
+              ],
+              [
+                2
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "sql_empty",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, content VARCHAR(16));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id FROM docs;",
+          "expected": {
+            "columns": [
+              "id"
+            ],
+            "rows": []
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id"
+            ],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "DELETE FROM docs WHERE id = 1;",
+          "expected": {
+            "affected_rows": 0
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "sql_primary_key",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, content VARCHAR(16));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (1, '初始');",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (1, '重复');",
+          "expected": {
+            "error": "duplicate_key"
+          },
+          "actual": {
+            "ok": false,
+            "code": "DUPLICATE_KEY",
+            "error": "duplicate primary key"
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, content FROM docs;",
+          "expected": {
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "初始"
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "初始"
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "sql_unicode",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, content VARCHAR(16));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (1, '中文');",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT content FROM docs WHERE id = 1;",
+          "expected": {
+            "columns": [
+              "content"
+            ],
+            "rows": [
+              [
+                "中文"
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "content"
+            ],
+            "rows": [
+              [
+                "中文"
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "sql_bigint",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, value BIGINT);",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (9007199254740993, -9007199254740993);",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, value FROM docs;",
+          "expected": {
+            "columns": [
+              "id",
+              "value"
+            ],
+            "rows": [
+              [
+                9007199254740993,
+                -9007199254740993
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "value"
+            ],
+            "rows": [
+              [
+                9007199254740993,
+                -9007199254740993
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "sql_unsupported",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, content VARCHAR(16));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "ALTER TABLE docs ADD extra BIGINT;",
+          "expected": {
+            "error": "unsupported_sql"
+          },
+          "actual": {
+            "ok": false,
+            "code": "SYNTAX",
+            "error": "Expected a supported SQL statement at byte 0"
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id FROM docs;",
+          "expected": {
+            "columns": [
+              "id"
+            ],
+            "rows": []
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id"
+            ],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "storage_restart",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, content VARCHAR(16));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (1, '初始');",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, content FROM docs;",
+          "expected": {
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "初始"
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "初始"
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "vector_euclidean",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, embedding VECTOR(2));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (1, '[3,4]');",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, L2_DISTANCE(embedding, '[0,0]') AS distance FROM docs ORDER BY distance LIMIT 1;",
+          "expected": {
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                1,
+                5.0
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                1,
+                5
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "transaction_commit",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, content VARCHAR(16));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (1, '初始');",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "BEGIN;",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "UPDATE docs SET content = '修改' WHERE id = 1;",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "COMMIT;",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, content FROM docs;",
+          "expected": {
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "修改"
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "修改"
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "transaction_rollback",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, content VARCHAR(16));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (1, '初始');",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "BEGIN;",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "UPDATE docs SET content = '修改' WHERE id = 1;",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "ROLLBACK;",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, content FROM docs;",
+          "expected": {
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "初始"
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "初始"
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "storage_mutations",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, category VARCHAR(8), content VARCHAR(16), embedding VECTOR(2));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (3, '乙', '三', '[0, 2]'), (1, '甲', '一', '[0, 0]'), (2, '甲', '二', '[1, 0]');",
+          "expected": {
+            "affected_rows": 3
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 3
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "UPDATE docs SET embedding = '[3,4]', content = '修改' WHERE id = 1;",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "DELETE FROM docs WHERE id = 2;",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, content FROM docs ORDER BY id;",
+          "expected": {
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "修改"
+              ],
+              [
+                3,
+                "三"
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "修改"
+              ],
+              [
+                3,
+                "三"
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, L2_DISTANCE(embedding, '[0, 0]') AS distance FROM docs ORDER BY distance LIMIT 10;",
+          "expected": {
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                3,
+                2.0
+              ],
+              [
+                1,
+                5.0
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                3,
+                2
+              ],
+              [
+                1,
+                5
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "storage_multiple_tables",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, category VARCHAR(8), content VARCHAR(16));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (3, '乙', '三'), (1, '甲', '一'), (2, '甲', '二');",
+          "expected": {
+            "affected_rows": 3
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 3
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "CREATE TABLE tags (id BIGINT PRIMARY KEY, tag VARCHAR(8));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO tags VALUES (1, '独立');",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, tag FROM tags;",
+          "expected": {
+            "columns": [
+              "id",
+              "tag"
+            ],
+            "rows": [
+              [
+                1,
+                "独立"
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "tag"
+            ],
+            "rows": [
+              [
+                1,
+                "独立"
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id FROM docs ORDER BY id;",
+          "expected": {
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "vector_ties_and_filter",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, category VARCHAR(8), content VARCHAR(16), embedding VECTOR(2));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (8,'keep','八','[1,0]'), (3,'keep','三','[-1,0]'), (1,'skip','一','[0,0]'), (2,'skip','二','[0,0]');",
+          "expected": {
+            "affected_rows": 4
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 4
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, L2_DISTANCE(embedding, '[0,0]') AS distance FROM docs WHERE category = 'keep' ORDER BY distance LIMIT 1;",
+          "expected": {
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                3,
+                1.0
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                3,
+                1
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, L2_DISTANCE(embedding, '[0,0]') AS distance FROM docs WHERE category = 'keep' ORDER BY distance LIMIT 9;",
+          "expected": {
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                3,
+                1.0
+              ],
+              [
+                8,
+                1.0
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                3,
+                1
+              ],
+              [
+                8,
+                1
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, L2_DISTANCE(embedding, '[0,0]') AS distance FROM docs WHERE category = 'absent' ORDER BY distance LIMIT 9;",
+          "expected": {
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": []
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "vector_float32",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, category VARCHAR(8), content VARCHAR(16), embedding VECTOR(2));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (1,'x','a','[16777217,0]'),(2,'x','b','[16777216,0]');",
+          "expected": {
+            "affected_rows": 2
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 2
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, L2_DISTANCE(embedding, '[16777216,0]') AS distance FROM docs ORDER BY distance LIMIT 2;",
+          "expected": {
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                1,
+                0.0
+              ],
+              [
+                2,
+                0.0
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "vector_index_maintenance",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, category VARCHAR(8), content VARCHAR(16), embedding VECTOR(2));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (3, '乙', '三', '[0, 2]'), (1, '甲', '一', '[0, 0]'), (2, '甲', '二', '[1, 0]');",
+          "expected": {
+            "affected_rows": 3
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 3
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "CREATE VECTOR INDEX docs_vec ON docs(embedding);",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "UPDATE docs SET embedding = '[3,4]' WHERE id = 1;",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "DELETE FROM docs WHERE id = 2;",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (4,'甲','四','[0,0]');",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, L2_DISTANCE(embedding, '[0, 0]') AS distance FROM docs ORDER BY distance LIMIT 10;",
+          "expected": {
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                4,
+                0.0
+              ],
+              [
+                3,
+                2.0
+              ],
+              [
+                1,
+                5.0
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                4,
+                0
+              ],
+              [
+                3,
+                2
+              ],
+              [
+                1,
+                5
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, L2_DISTANCE(embedding, '[0, 0]') AS distance FROM docs ORDER BY distance LIMIT 10;",
+          "expected": {
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                4,
+                0.0
+              ],
+              [
+                3,
+                2.0
+              ],
+              [
+                1,
+                5.0
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                4,
+                0
+              ],
+              [
+                3,
+                2
+              ],
+              [
+                1,
+                5
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, L2_DISTANCE(embedding, '[0, 0]') AS distance FROM docs ORDER BY distance LIMIT 10;",
+          "expected": {
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                4,
+                0.0
+              ],
+              [
+                3,
+                2.0
+              ],
+              [
+                1,
+                5.0
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "distance"
+            ],
+            "rows": [
+              [
+                4,
+                0
+              ],
+              [
+                3,
+                2
+              ],
+              [
+                1,
+                5
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "ann-exact-fallback",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "transaction_failed_insert",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, category VARCHAR(8), content VARCHAR(16), embedding VECTOR(2));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (3, '乙', '三', '[0, 2]'), (1, '甲', '一', '[0, 0]'), (2, '甲', '二', '[1, 0]');",
+          "expected": {
+            "affected_rows": 3
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 3
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "BEGIN;",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "UPDATE docs SET content = '保留' WHERE id = 1;",
+          "expected": {
+            "affected_rows": 1
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 1
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (4,'新','四','[0,0]'),(2,'新','重复','[0,0]');",
+          "expected": {
+            "error": "duplicate_key"
+          },
+          "actual": {
+            "ok": false,
+            "code": "DUPLICATE_KEY",
+            "error": "duplicate primary key"
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id FROM docs ORDER BY id;",
+          "expected": {
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "COMMIT;",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id, content FROM docs ORDER BY id;",
+          "expected": {
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "保留"
+              ],
+              [
+                2,
+                "二"
+              ],
+              [
+                3,
+                "三"
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id",
+              "content"
+            ],
+            "rows": [
+              [
+                1,
+                "保留"
+              ],
+              [
+                2,
+                "二"
+              ],
+              [
+                3,
+                "三"
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "transaction_autocommit_atomic",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, category VARCHAR(8), content VARCHAR(16), embedding VECTOR(2));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (3, '乙', '三', '[0, 2]'), (1, '甲', '一', '[0, 0]'), (2, '甲', '二', '[1, 0]');",
+          "expected": {
+            "affected_rows": 3
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 3
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (4,'新','四','[0,0]'),(5,'新','错误','[0]');",
+          "expected": {
+            "error": "dimension_mismatch"
+          },
+          "actual": {
+            "ok": false,
+            "code": "TYPE",
+            "error": "vector dimension mismatch or trailing input"
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id FROM docs ORDER BY id;",
+          "expected": {
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "transaction_shutdown_rollback",
+      "checks": [
+        {
+          "sql": "CREATE TABLE docs (id BIGINT PRIMARY KEY, category VARCHAR(8), content VARCHAR(16));",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "INSERT INTO docs VALUES (3, '乙', '三'), (1, '甲', '一'), (2, '甲', '二');",
+          "expected": {
+            "affected_rows": 3
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 3
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "BEGIN;",
+          "expected": {},
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "DELETE FROM docs WHERE id >= 1;",
+          "expected": {
+            "affected_rows": 3
+          },
+          "actual": {
+            "ok": true,
+            "columns": [],
+            "rows": [],
+            "affected": 3
+          },
+          "mode": "exact",
+          "issues": []
+        },
+        {
+          "sql": "SELECT id FROM docs ORDER BY id;",
+          "expected": {
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ]
+            ]
+          },
+          "actual": {
+            "ok": true,
+            "columns": [
+              "id"
+            ],
+            "rows": [
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ]
+            ],
+            "affected": 0
+          },
+          "mode": "exact",
+          "issues": []
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "statements": 95
+}

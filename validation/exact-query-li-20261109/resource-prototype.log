@@ -1,0 +1,99 @@
+{
+  "audit_id": "resource-prototype",
+  "source_tree_sha256": "d187474cef38a236cef2d8c8e7b13777ba2b89970958323159ec9a8dfe5bd014",
+  "source_manifest_sha256": "03230361672ba38c3c8c82ec6da593cf8bcd31c9911dc21ff27ca2b7a3c599dc",
+  "image_id": "sha256:72c80cacf28467a00e72762db977fc770559cc4d9ffab6e22667a4ab25cda926",
+  "binary_sha256": "4cfe8166fe9f6db4d829e9133bc25cb3a316aa49ad6b534c417a1e6b19f9b40e",
+  "tests_run": 4,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "success": true,
+  "memory_max": 134217728,
+  "memory_swap_max": 0,
+  "cpu_max": "200000 100000",
+  "network": "none",
+  "driver_RLIMIT_AS_not_used": true,
+  "official_benchmark": false,
+  "limits": [
+    "These are four resource regression cases, not the official benchmark.",
+    "io.stat values are observations from the actual container cgroup on shared host ext4 device; dedicated-device and writeback-attribution calibration are unverified.",
+    "Driver output files and parsing live outside the container, consistent with separating test-driver overhead.",
+    "For any unexpected exit, exact final cgroup counters may be unavailable; last live sample and Docker OOMKilled state are preserved explicitly."
+  ],
+  "actual_executable_binding": {
+    "binary_path": "/opt/minivectordb-v2-query/build-query/minivectordb",
+    "sha256_before": "4cfe8166fe9f6db4d829e9133bc25cb3a316aa49ad6b534c417a1e6b19f9b40e",
+    "sha256_after": "4cfe8166fe9f6db4d829e9133bc25cb3a316aa49ad6b534c417a1e6b19f9b40e",
+    "read_only_bind_mount": true,
+    "entrypoint": "/probe/minivectordb",
+    "runtime_image_embedded_binary_sha256_not_executed": null
+  },
+  "source_binding": {
+    "source_root": "/opt/minivectordb-v2-query",
+    "manifest_path": "/opt/minivectordb-v2-query/validation/exact-query-li-20261109/candidate-manifest.json",
+    "manifest_sha256": "03230361672ba38c3c8c82ec6da593cf8bcd31c9911dc21ff27ca2b7a3c599dc",
+    "production_tree_sha256": "d187474cef38a236cef2d8c8e7b13777ba2b89970958323159ec9a8dfe5bd014",
+    "verified_files": [
+      {
+        "path": ".dockerignore",
+        "sha256": "b602eaa29e663fe28b895e2c349dd96eb06ce61272047a550959ff83bb0fb6d8"
+      },
+      {
+        "path": "CMakeLists.txt",
+        "sha256": "453bf3c0d538761e455003b10d4836eec4a488437bd198d6096fd8f2cbf5591d"
+      },
+      {
+        "path": "Dockerfile",
+        "sha256": "ae444e91aa7a6f2530184fdac3c95c9b9776686199b90043dee89b64d1ff2135"
+      },
+      {
+        "path": "src/compact_rows.hpp",
+        "sha256": "d38624d37078886fe74231b8512163e6dc286a694ff674befbc8466327bb8d53"
+      },
+      {
+        "path": "src/engine.cpp",
+        "sha256": "e2415b365c3177182789194b26fc728952353561f895013f2a45d6a828ab0672"
+      },
+      {
+        "path": "src/engine.hpp",
+        "sha256": "4a7f3908ceb85773254ddff50420abc92099c11cac570f0e7aefeb19902232a5"
+      },
+      {
+        "path": "src/main.cpp",
+        "sha256": "8bcc74f6b6bf9685f9dd4084167732ac81e77e7a68fb47171aa80d8d992c0700"
+      },
+      {
+        "path": "src/spill.cpp",
+        "sha256": "fca305b940394ebb88232a14d7b4dc4f4248228b703402f7089b1e4010c054df"
+      },
+      {
+        "path": "src/spill.hpp",
+        "sha256": "70451b7dd2c76a323c8ef86d2c697f8012001b916be6c0ca3e69ecb605e38d44"
+      },
+      {
+        "path": "src/sql.cpp",
+        "sha256": "7e30d939628b8375b027e82d3aeca26566ac85232ef1fee980c89a0fa5e3bd51"
+      },
+      {
+        "path": "src/sql.hpp",
+        "sha256": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593"
+      },
+      {
+        "path": "src/storage.cpp",
+        "sha256": "6f0513e41683887817deb6afc9aad29dfcce3d51998d1b27c218c574e996716f"
+      },
+      {
+        "path": "src/storage.hpp",
+        "sha256": "80acf1b26e5486ec178a92909f3ba41e0faf49e6779359fa614a2008b026b40b"
+      },
+      {
+        "path": "src/exact_distance.hpp",
+        "sha256": "c6c6968c81316a90d0100c2b6720409be2eff37d8de646a03e9f3f67276cec15"
+      }
+    ]
+  },
+  "source_unchanged_after": true,
+  "binary_unchanged_after": true
+}
+CONTAINER_RESOURCE_SUMMARY [{"label": "storage/setup/restart", "peak": 134217728, "rows": null, "output_bytes": null, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 137, "Error": "", "StartedAt": "2026-11-09T11:52:46.683831877Z", "FinishedAt": "2026-11-09T11:52:55.571201295Z"}}, {"label": "__main__.ContainerLargeResponses.test_distance_topk_with_large_payload_exceeds_heap_budget", "peak": 134217728, "rows": 8000, "output_bytes": 160116974, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 0, "Error": "", "StartedAt": "2026-11-09T11:52:55.887081858Z", "FinishedAt": "2026-11-09T11:53:00.585722068Z"}}, {"label": "__main__.ContainerLargeResponses.test_large_limit_multikey_order_spills_without_changing_order", "peak": 134217728, "rows": 9600, "output_bytes": 192095235, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 0, "Error": "", "StartedAt": "2026-11-09T11:53:03.002374443Z", "FinishedAt": "2026-11-09T11:53:07.741256524Z"}}, {"label": "__main__.ContainerLargeResponses.test_no_limit_select_star_streams_beyond_memory_budget", "peak": 134217728, "rows": 9600, "output_bytes": 192221839, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 0, "Error": "", "StartedAt": "2026-11-09T11:53:10.513434474Z", "FinishedAt": "2026-11-09T11:53:15.201282854Z"}}, {"label": "storage/setup/restart", "peak": 4812800, "rows": null, "output_bytes": null, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 137, "Error": "", "StartedAt": "2026-11-09T11:53:17.954166586Z", "FinishedAt": "2026-11-09T11:53:18.143265442Z"}}, {"label": "storage/setup/restart", "peak": 134217728, "rows": null, "output_bytes": null, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 137, "Error": "", "StartedAt": "2026-11-09T11:53:18.425071177Z", "FinishedAt": "2026-11-09T11:53:25.535469015Z"}}, {"label": "storage/setup/restart", "peak": 83869696, "rows": null, "output_bytes": null, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 137, "Error": "", "StartedAt": "2026-11-09T11:53:25.814718014Z", "FinishedAt": "2026-11-09T11:53:26.756357286Z"}}]
