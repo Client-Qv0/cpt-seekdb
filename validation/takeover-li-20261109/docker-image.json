@@ -1,0 +1,60 @@
+[
+    {
+        "Id": "sha256:e6a488daeedd6eac2787c107148aae7f5ff72427eafcd284552ee31a998d79be",
+        "RepoTags": [
+            "minivectordb-li-hmy:20261109"
+        ],
+        "RepoDigests": [
+            "minivectordb-li-hmy@sha256:e6a488daeedd6eac2787c107148aae7f5ff72427eafcd284552ee31a998d79be"
+        ],
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-11-09T15:40:12.713642496Z",
+        "Config": {
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Entrypoint": [
+                "/app/minivectordb"
+            ],
+            "Cmd": [
+                "--data-dir",
+                "/data",
+                "--dev-protocol"
+            ],
+            "Volumes": {
+                "/data": {}
+            },
+            "Labels": {
+                "org.opencontainers.image.version": "24.04"
+            },
+            "ArgsEscaped": true
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 117951544,
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:bec87777bc2fb2edcdf9af11df1531469e7df911309c1413082b18fcb8610278",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+                "sha256:db60d0970d2c81199980353c8bcc8021420dac4ad726da0676daf90619e4ee4d"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-11-09T15:40:12.892003156Z"
+        },
+        "Descriptor": {
+            "mediaType": "application/vnd.oci.image.index.v1+json",
+            "digest": "sha256:e6a488daeedd6eac2787c107148aae7f5ff72427eafcd284552ee31a998d79be",
+            "size": 855
+        },
+        "Identity": {
+            "Build": [
+                {
+                    "Ref": "rd808as6x7vhhxhthsqsdhl3i",
+                    "CreatedAt": "2026-11-09T15:40:12.922559426Z"
+                }
+            ]
+        }
+    }
+]

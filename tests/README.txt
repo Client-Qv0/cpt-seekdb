@@ -20,13 +20,24 @@ and a randomized independent transaction/vector-query reference model.
 
 Local performance-shape and persistence validation:
   python3 -m pip install numpy
+  mkdir -p build
+  python3 - <<'PY'
+from pathlib import Path
+import hashlib, json
+paths = [Path('.dockerignore'), Path('CMakeLists.txt'), Path('Dockerfile')]
+paths += sorted(p for p in Path('src').iterdir() if p.suffix in ('.cpp', '.hpp'))
+files = [{'path': str(p), 'bytes': p.stat().st_size,
+          'sha256': hashlib.sha256(p.read_bytes()).hexdigest()} for p in paths]
+tree = hashlib.sha256(json.dumps(files, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+Path('build/current-production-manifest.json').write_text(json.dumps({'files': files, 'tree_sha256': tree}, indent=2))
+PY
   docker build -t minivectordb-local .
   cid=$(docker create minivectordb-local)
   docker cp "$cid:/app/minivectordb" ./build/image-minivectordb
-  docker rm "$cid"
+  docker rm -v "$cid"
   python3 tests/benchmark_public_validation.py \
     --binary ./build/image-minivectordb --image minivectordb-local \
-    --source . --manifest validation/cardinality-20261109/candidate-v2-production-manifest.json \
+    --source . --manifest ./build/current-production-manifest.json \
     --output ./validation/my-new-benchmark-run --data-parent /var/tmp \
     --seed 3179 --rounds 3
 
@@ -35,7 +46,10 @@ directory must not already exist. This requires NumPy, Docker, cgroup v2, access
 to the container host's /proc and /sys/fs/cgroup, and at least two allowed CPUs.
 It uses 2 CPUs, 128 MiB and no swap for local testing; those are not asserted to
 be official limits. The source manifest must match the production inputs under
-test. The extracted binary is checked against the binary inside the exact image.
+test. Generate it before the image build and freeze the sources until the run
+finishes. The old candidate-v2 manifest describes the old parser and must not be
+used for the later SQL-comment safety revision. Never overwrite historical
+manifests to force a match. The extracted binary is checked against the binary inside the exact image.
 The harness retains inputs, per-query oracle checks, responses, cgroup samples,
 and a full post-restart readback. Database files remain in a task-specific
 directory below --data-parent and are not removed by the harness.
