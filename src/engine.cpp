@@ -1,4 +1,5 @@
 #include "engine.hpp"
+#include "exact_cache.hpp"
 #include "spill.hpp"
 #include <algorithm>
 #include <charconv>
@@ -439,6 +440,9 @@ struct Engine::Cache {
   };
   std::string table;
   std::vector<Entry> rows;
+  std::unique_ptr<exact::Compact> exact_view;
+  size_t exact_column = 0;
+  bool exact_bypass = false;
   bool complete = false;
   size_t bytes = 0;
   static constexpr size_t budget = 12 * 1024 * 1024;
@@ -730,17 +734,84 @@ Result Engine::execute_statement(const Statement &st) {
                         decltype(better_neighbor)>
         nearest(better_neighbor);
     const auto &projection = ps[keys[0].index];
-    scan_rows([&](int64_t key, const std::vector<Cell> &row) {
-      if (!matches(row, fs))
-        return;
-      Neighbor n{std::get<double>(project(projection, row)), key};
+    auto consider = [&](int64_t key, double distance) {
+      Neighbor n{distance, key};
       if (nearest.size() < *st.limit)
         nearest.push(n);
       else if (better_neighbor(n, nearest.top())) {
         nearest.pop();
         nearest.push(n);
       }
+    };
+    auto original_visit = [&](int64_t key, const std::vector<Cell> &row) {
+      if (matches(row, fs))
+        consider(key, std::get<double>(project(projection, row)));
+    };
+    const bool point_lookup = std::any_of(fs.begin(), fs.end(), [&](const Filter &f) {
+      return f.column == pk && f.op == "=";
     });
+    if (exact::available() && !point_lookup && st.table.size() <= 1024) {
+      if (cache_->table != st.table || cache_->exact_column != projection.col ||
+          cache_->complete) {
+        *cache_ = Cache{};
+        cache_->table = st.table;
+        cache_->exact_column = projection.col;
+      }
+      if (cache_->exact_view) {
+        const auto &view = *cache_->exact_view;
+        for (size_t i = 0; i < view.count; ++i) {
+          bool eligible = true;
+          for (const auto &f : fs) {
+            const int cmp = view.compare_scalar(f.column, i, f.value);
+            const bool yes = f.op == "=" ? cmp == 0 : f.op == "<" ? cmp < 0 :
+                f.op == "<=" ? cmp <= 0 : f.op == ">" ? cmp > 0 :
+                f.op == ">=" ? cmp >= 0 : false;
+            if (!yes) { eligible = false; break; }
+          }
+          if (eligible)
+            consider(view.keys[i], view.distance(i, projection.query));
+        }
+      } else if (cache_->exact_bypass) {
+        // Remember this view's budget bypass until existing invalidation clears it.
+        scan_rows(original_visit);
+      } else {
+        std::vector<Type> types;
+        for (const auto &column : schema.columns) types.push_back(column.type);
+        exact::Plan plan(std::move(types), projection.col, projection.query.size());
+        bool answered = false;
+        try {
+          // First scan answers this query and computes bounded allocation sizes.
+          // The old complete-row cache is absent throughout both build scans.
+          store_.scan(st.table, [&](int64_t key, const std::string &data) {
+            auto row = unpack_row(data, schema);
+            original_visit(key, row);
+            plan.observe(row);
+          });
+          answered = true;
+          if (plan.fits()) {
+            auto view = std::make_unique<exact::Compact>(plan);
+            size_t count = 0;
+            store_.scan(st.table, [&](int64_t key, const std::string &data) {
+              view->fill(count++, key, unpack_row(data, schema));
+            });
+            if (count != plan.count)
+              throw Error("CORRUPTION", "exact cache row count changed");
+            cache_->exact_view = std::move(view); // publish only after full fill
+          } else {
+            cache_->exact_bypass = true;
+          }
+        } catch (const std::bad_alloc &) {
+          if (!answered) { *cache_ = Cache{}; throw; }
+          // Cache allocation is optional; the complete first-scan result remains.
+          cache_->exact_bypass = true;
+        } catch (...) {
+          *cache_ = Cache{};
+          throw;
+        }
+      }
+    } else {
+      scan_rows(original_visit);
+    }
     std::vector<Neighbor> winners;
     while (!nearest.empty()) {
       winners.push_back(nearest.top());
