@@ -345,6 +345,46 @@ class CacheAndIndexAcceptance(unittest.TestCase):
                         for row, (distance, _) in zip(actual, expected):
                             self.assertAlmostEqual(row[1], distance, places=10)
 
+    def test_topk_reference_at_distance_loop_boundaries(self):
+        # The oracle uses FP32 inputs but accumulates in ordinary Python double
+        # precision, in the same component order; it does not use the TopK path.
+        def f32(value):
+            return struct.unpack("f", struct.pack("f", value))[0]
+
+        for dim in (31, 32, 33, 64, 65, 127, 128, 129):
+            rng = random.Random(20261110 + dim)
+            table = f"distance_boundary_{dim}"
+            self.db.ok(f"CREATE TABLE {table} (id BIGINT PRIMARY KEY, grp BIGINT, v VECTOR({dim}));")
+            vectors = {}
+            for key in range(48):
+                if key < 3:
+                    # Equal final distances, including values close enough that
+                    # a strict partial-distance cutoff must retain ties.
+                    vector = [1.0, (0.0 if key == 0 else 1e-8)] + [0.0] * (dim - 2)
+                else:
+                    scale = (1e-19, 1.0, 1e19)[key % 3]
+                    vector = [round(rng.uniform(-1, 1), 6) * scale for _ in range(dim)]
+                vectors[key] = [f32(x) for x in vector]
+            tuples = [
+                f"({key},{key % 3},'[" + ",".join(map(str, vectors[key])) + "]')"
+                for key in reversed(range(48))
+            ]
+            self.db.ok(f"INSERT INTO {table} VALUES " + ",".join(tuples) + ";")
+            for query in ([0.0] * dim, [f32(rng.uniform(-0.5, 0.5)) for _ in range(dim)]):
+                literal = ",".join(map(str, query))
+                for where, eligible in (("", lambda key: True), (" WHERE grp=1", lambda key: key % 3 == 1)):
+                    expected = sorted(
+                        (math.sqrt(sum((float(a) - float(b)) ** 2 for a, b in zip(vec, query))), key)
+                        for key, vec in vectors.items() if eligible(key)
+                    )
+                    for k in (1, 3, 10):
+                        sql = f"SELECT id,L2_DISTANCE(v,'[{literal}]') AS d FROM {table}{where} ORDER BY d LIMIT {k};"
+                        for _ in range(2):
+                            rows = self.db.rows(sql)
+                            self.assertEqual([row[0] for row in rows], [key for _, key in expected[:k]])
+                            for row, (distance, _) in zip(rows, expected[:k]):
+                                self.assertTrue(math.isclose(row[1], distance, rel_tol=1e-12, abs_tol=1e-300))
+
     def test_vector_string_filter_cache_transaction_lifecycle(self):
         self.db.ok("CREATE TABLE col_lifecycle (id BIGINT PRIMARY KEY, grp VARCHAR(10), v VECTOR(2));")
         self.db.ok("INSERT INTO col_lifecycle VALUES (3,'a','[0,1]'),(1,'','[0,-1]'),(2,'a','[0,1]');")

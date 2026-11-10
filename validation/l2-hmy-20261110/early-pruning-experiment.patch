@@ -1,0 +1,32 @@
+diff --git a/src/engine.cpp b/src/engine.cpp
+index 1750f9db7..c9bebcfe0 100644
+--- a/src/engine.cpp
++++ b/src/engine.cpp
+@@ -733,7 +733,26 @@ Result Engine::execute_statement(const Statement &st) {
+     scan_rows([&](int64_t key, const std::vector<Cell> &row) {
+       if (!matches(row, fs))
+         return;
+-      Neighbor n{std::get<double>(project(projection, row)), key};
++      double distance;
++      if (nearest.size() < *st.limit) {
++        distance = std::get<double>(project(projection, row));
++      } else {
++        // All squared terms are nonnegative. Check a partial distance only
++        // after a full block and reject strictly worse values; equality must
++        // survive because primary key breaks ties. sqrt avoids making an
++        // unsafe squared-threshold assumption near floating-point rounding.
++        const auto &a = std::get<std::vector<float>>(row[projection.col]);
++        const double cutoff = nearest.top().distance;
++        double sum = 0;
++        for (size_t i = 0; i < a.size(); ++i) {
++          double d = double(a[i]) - double(projection.query[i]);
++          sum += d * d;
++          if ((i & 31) == 31 && std::sqrt(sum) > cutoff)
++            return;
++        }
++        distance = std::sqrt(sum);
++      }
++      Neighbor n{distance, key};
+       if (nearest.size() < *st.limit)
+         nearest.push(n);
+       else if (better_neighbor(n, nearest.top())) {

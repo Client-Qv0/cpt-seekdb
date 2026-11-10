@@ -1,0 +1,63 @@
+{
+  "frozen_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+  "frozen_source": "/mnt/f/OceanBase/seekdb/cpt-seekdb/validation/perf-20261110-stdio/scripts/bench.py",
+  "adapter_sha256": "957be1db1ba19565aa5e37935f7394b17a65948706f9fdbe6b1320395837ee81",
+  "adapted_sha256": "e85601e79b1761b0df87f3e1a4dee9aed6cdac823b2e18f5f0959185763ca66a",
+  "substitutions": [
+    {
+      "before": "ROOT=pathlib.Path(__file__).resolve().parents[1]",
+      "after": "ROOT=pathlib.Path('/mnt/f/OceanBase/seekdb/cpt-seekdb/validation/l2-hmy-20261110/paired-main')"
+    },
+    {
+      "before": "ENV=dict(os.environ,DOCKER_HOST='unix:///var/tmp/minivectordb-perf-20261110/docker.sock')",
+      "after": "ENV=dict(os.environ)"
+    },
+    {
+      "before": "pathlib.Path('/var/tmp/minivectordb-perf-20261110/data')",
+      "after": "pathlib.Path('/var/tmp/mvdb-hmy-l2-paired-main-20261110')"
+    }
+  ],
+  "docker_host": null,
+  "docker_context": null,
+  "output_root": "/mnt/f/OceanBase/seekdb/cpt-seekdb/validation/l2-hmy-20261110/paired-main",
+  "data_root": "/var/tmp/mvdb-hmy-l2-paired-main-20261110",
+  "images": {
+    "base": {
+      "requested": "codex-hmy-l2-baseline:20261110",
+      "id": "sha256:e1375a443979c6ca1a91d22a166a4c1be149dfdfc3c181839567585bef9fca84",
+      "architecture": "amd64"
+    },
+    "candidate": {
+      "requested": "codex-hmy-l2-candidate:20261110",
+      "id": "sha256:cc4c8c05b0835262e4984ad26c37aacbb85aa74537856690e1c82a5f6ca3d671",
+      "architecture": "amd64"
+    }
+  },
+  "command": [
+    "/usr/bin/python3",
+    "/mnt/f/OceanBase/seekdb/cpt-seekdb/validation/l2-hmy-20261110/paired-main/tool/bench.adapted.py",
+    "--images",
+    "base=sha256:e1375a443979c6ca1a91d22a166a4c1be149dfdfc3c181839567585bef9fca84",
+    "candidate=sha256:cc4c8c05b0835262e4984ad26c37aacbb85aa74537856690e1c82a5f6ca3d671",
+    "--seeds",
+    "3179",
+    "3181",
+    "3187",
+    "3179",
+    "3181",
+    "3187",
+    "--rows",
+    "10000",
+    "--dim",
+    "128",
+    "--queries",
+    "1000",
+    "--prefix",
+    "hmy-main"
+  ],
+  "preflight_only": false,
+  "limits_unchanged": true,
+  "oracle_and_timers_unchanged": true,
+  "benchmark_scope": "Local comparison only, not official scorer or result guarantee",
+  "exit_code": 0
+}

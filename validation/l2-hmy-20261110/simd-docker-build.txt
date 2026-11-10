@@ -1,0 +1,71 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 660B 0.1s done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/ubuntu:24.04
+#2 DONE 3.5s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 94B 0.1s done
+#3 DONE 0.1s
+
+#4 [builder 1/6] FROM docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#4 resolve docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 0.0s done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 31.64kB 0.5s done
+#5 DONE 0.5s
+
+#6 [builder 2/6] RUN apt-get update && apt-get install -y --no-install-recommends g++ cmake make     && rm -rf /var/lib/apt/lists/*
+#6 CACHED
+
+#7 [builder 3/6] WORKDIR /src
+#7 CACHED
+
+#8 [builder 4/6] COPY CMakeLists.txt ./
+#8 CACHED
+
+#9 [builder 5/6] COPY src/ src/
+#9 DONE 0.1s
+
+#10 [builder 6/6] RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release     && cmake --build build --parallel 2
+#10 0.280 -- The CXX compiler identification is GNU 13.3.0
+#10 0.291 -- Detecting CXX compiler ABI info
+#10 0.364 -- Detecting CXX compiler ABI info - done
+#10 0.369 -- Check for working CXX compiler: /usr/bin/c++ - skipped
+#10 0.369 -- Detecting CXX compile features
+#10 0.370 -- Detecting CXX compile features - done
+#10 0.371 -- Configuring done (0.1s)
+#10 0.376 -- Generating done (0.0s)
+#10 0.377 -- Build files have been written to: /src/build
+#10 0.413 [ 25%] Building CXX object CMakeFiles/mvdb.dir/src/sql.cpp.o
+#10 0.413 [ 25%] Building CXX object CMakeFiles/mvdb.dir/src/storage.cpp.o
+#10 2.035 [ 37%] Building CXX object CMakeFiles/mvdb.dir/src/engine.cpp.o
+#10 2.333 [ 50%] Building CXX object CMakeFiles/mvdb.dir/src/spill.cpp.o
+#10 3.745 [ 62%] Building CXX object CMakeFiles/mvdb.dir/src/protocol.cpp.o
+#10 5.290 [ 75%] Linking CXX static library libmvdb.a
+#10 5.317 [ 75%] Built target mvdb
+#10 5.331 [ 87%] Building CXX object CMakeFiles/minivectordb.dir/src/main.cpp.o
+#10 5.860 [100%] Linking CXX executable minivectordb
+#10 5.933 [100%] Built target minivectordb
+#10 DONE 6.0s
+
+#11 [stage-1 2/3] RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6     && rm -rf /var/lib/apt/lists/*
+#11 CACHED
+
+#12 [stage-1 3/3] COPY --from=builder /src/build/minivectordb /app/minivectordb
+#12 DONE 0.0s
+
+#13 exporting to image
+#13 exporting layers 0.1s done
+#13 exporting manifest sha256:496fc8f36d67cc074ac95806652216c9257914d9cf05326ac5cf4d9488a73a71 0.0s done
+#13 exporting config sha256:d39149263b8a11aa9afcb282c36e94c3a1216cd2435b31d9f7ae0d2ade90e213 0.0s done
+#13 exporting attestation manifest sha256:cffe5c7fd055c458c7f7166cd43e5d68e58a2c9283cab9c1fed60b78833935a5 0.0s done
+#13 exporting manifest list sha256:2d817f8627837e0950f018ff168f6cad398f855b881d2dc2267a0c6fb8d084e3 0.0s done
+#13 naming to docker.io/library/codex-hmy-l2-simd:20261110 done
+#13 unpacking to docker.io/library/codex-hmy-l2-simd:20261110 0.0s done
+#13 DONE 0.2s
+exit=0

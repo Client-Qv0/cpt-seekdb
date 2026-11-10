@@ -1,0 +1,42 @@
+diff --git a/src/engine.cpp b/src/engine.cpp
+index 1750f9db7..df382cc4c 100644
+--- a/src/engine.cpp
++++ b/src/engine.cpp
+@@ -11,6 +11,10 @@
+ #include <queue>
+ #include <set>
+ #include <sstream>
++#if defined(__SSE2__)
++#include <emmintrin.h>
++#include <xmmintrin.h>
++#endif
+ 
+ namespace mvdb {
+ namespace {
+@@ -343,7 +347,25 @@ Cell project(const Projection &p, const std::vector<Cell> &row) {
+     return row[p.col];
+   const auto &a = std::get<std::vector<float>>(row[p.col]);
+   double sum = 0;
+-  for (size_t i = 0; i < a.size(); ++i) {
++  size_t i = 0;
++#if defined(__SSE2__)
++  // Compute four independent products in parallel, but accumulate their
++  // doubles in the original scalar order to preserve distance and tie rules.
++  for (; i + 4 <= a.size(); i += 4) {
++    const __m128 av = _mm_loadu_ps(a.data() + i);
++    const __m128 qv = _mm_loadu_ps(p.query.data() + i);
++    const __m128d d01 = _mm_sub_pd(_mm_cvtps_pd(av), _mm_cvtps_pd(qv));
++    const __m128d d23 = _mm_sub_pd(_mm_cvtps_pd(_mm_movehl_ps(av, av)),
++                                   _mm_cvtps_pd(_mm_movehl_ps(qv, qv)));
++    const __m128d p01 = _mm_mul_pd(d01, d01);
++    const __m128d p23 = _mm_mul_pd(d23, d23);
++    sum += _mm_cvtsd_f64(p01);
++    sum += _mm_cvtsd_f64(_mm_unpackhi_pd(p01, p01));
++    sum += _mm_cvtsd_f64(p23);
++    sum += _mm_cvtsd_f64(_mm_unpackhi_pd(p23, p23));
++  }
++#endif
++  for (; i < a.size(); ++i) {
+     double d = double(a[i]) - double(p.query[i]);
+     sum += d * d;
+   }

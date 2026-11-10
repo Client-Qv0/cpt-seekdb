@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/mnt/f/OceanBase/seekdb/cpt-seekdb/validation/perf-20261110-stdio/scripts/stdio_correctness.py", line 141, in <module>
+    results = [run(binary, output / label, label) for label, binary in [('baseline', args.baseline), ('candidate', args.candidate)]]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/f/OceanBase/seekdb/cpt-seekdb/validation/perf-20261110-stdio/scripts/stdio_correctness.py", line 89, in run
+    large = s.request('SELECT id,s FROM t ORDER BY id')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/f/OceanBase/seekdb/cpt-seekdb/validation/perf-20261110-stdio/scripts/stdio_correctness.py", line 59, in request
+    assert response['ok'] is ok, response
+           ^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'id': 9007199254740993, 'ok': False, 'error': {'code': 'IO', 'message': 'truncate sort temporary file: No such file or directory'}}
+exit=1
