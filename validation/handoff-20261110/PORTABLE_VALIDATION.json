@@ -1,0 +1,79 @@
+{
+  "adapter_sha256": "957be1db1ba19565aa5e37935f7394b17a65948706f9fdbe6b1320395837ee81",
+  "frozen_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+  "parameter_cases": [
+    {
+      "case": "help",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "passed": true
+    },
+    {
+      "case": "bad_batch",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "passed": true
+    },
+    {
+      "case": "unsafe_prefix",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "passed": true
+    },
+    {
+      "case": "duplicate_label",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "passed": true
+    },
+    {
+      "case": "existing_output",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "passed": true
+    },
+    {
+      "case": "python_optimized",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "passed": true
+    },
+    {
+      "case": "remote_daemon",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "passed": true
+    }
+  ],
+  "preflight_only_pass": true,
+  "no_benchmark_ran_in_preflight_only": true,
+  "smoke": {
+    "rows": 200,
+    "dimensions": 8,
+    "queries": 4,
+    "write_batch": 100,
+    "same_image_for_both_labels": true,
+    "runs": [
+      {
+        "label": "candidate",
+        "image": "sha256:9bc58b1037dabd597e1a5fd51a6f37d3adc3d88582680b58206b07bbd09f1310",
+        "oracle_checks": 10,
+        "recall": 1.0,
+        "ids_order_types_distances_filter_duplicates_checked": true
+      },
+      {
+        "label": "control",
+        "image": "sha256:9bc58b1037dabd597e1a5fd51a6f37d3adc3d88582680b58206b07bbd09f1310",
+        "oracle_checks": 10,
+        "recall": 1.0,
+        "ids_order_types_distances_filter_duplicates_checked": true
+      }
+    ]
+  },
+  "limits": "actual local cgroup v2:128MiB,no swap,2CPU,cpuset0,1;read-onlyroot;/data;defaultJSONL",
+  "source_changes": "three explicit environment/path substitutions only, frozen script not edited",
+  "earlier_attempt": "smoke-v1 preflight rejected absent auxiliary /proc/PID/io; changed only adapter to record absent proc detail as null, like frozen harness; mandatory cgroup accounting still enforced. smoke-v2 and final smoke passed.",
+  "claim": "portable adapter smoke/parameter validation only; no new performance benefit or formal result claimed",
+  "production_and_agent_modified": false,
+  "formal_assessment_submitted": false
+}

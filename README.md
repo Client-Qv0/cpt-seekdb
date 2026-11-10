@@ -1,5 +1,9 @@
 # MiniVectorDB — JSONL protocol implementation
 
+> **当前队友交接入口（2026-11-10）：[TEAM_HANDOFF.md](TEAM_HANDOFF.md)。**
+> 生产代码基线固定为 `6576b24e0774eb11352ab5bca3372cda32f8efd9`；包含交接文档的后续提交没有修改生产源码或 Agent 材料。
+> 从含交接包的分支 HEAD 建立个人开发分支，另建固定 `6576…` 基线 worktree。正式通过状态、本地实验结果及操作命令分别见交接文档；旧 HANDOFF 文件保留作历史记录。
+
 **Protocol update (2026-11-10):** the default native and Docker entrypoints now
 implement the published JSONL protocol at official commit
 `f4d4e26653af823a7601668802f80e374ad6643c`. The implementation is based on the
