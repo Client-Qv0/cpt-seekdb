@@ -1,0 +1,256 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.13kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#2 DONE 0.2s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 94B done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 DONE 0.0s
+
+#5 [certs 1/2] FROM docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#5 resolve docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 0.1s done
+#5 CACHED
+
+#4 [internal] load build context
+#4 transferring context: 110.54kB 0.0s done
+#4 DONE 0.1s
+
+#6 [certs 2/2] RUN rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\n' 'deb http://archive.ubuntu.com/ubuntu noble main' > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --allow-downgrades --no-install-recommends ca-certificates=20240203 openssl=3.0.13-0ubuntu3 libssl3t64=3.0.13-0ubuntu3     && printf '%s  %s\n' 6d84ab71cb726c0641b0af84303c316e3fa50db941dc8507d09045eb2fa5d238 /etc/ssl/certs/ca-certificates.crt | sha256sum -c -
+#6 ...
+
+#7 [stage-2 2/3] RUN test "$(dpkg-query -W -f='${Version}' libstdc++6)" = '14.2.0-4ubuntu2~24.04.1'
+#7 DONE 0.5s
+
+#6 [certs 2/2] RUN rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\n' 'deb http://archive.ubuntu.com/ubuntu noble main' > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --allow-downgrades --no-install-recommends ca-certificates=20240203 openssl=3.0.13-0ubuntu3 libssl3t64=3.0.13-0ubuntu3     && printf '%s  %s\n' 6d84ab71cb726c0641b0af84303c316e3fa50db941dc8507d09045eb2fa5d238 /etc/ssl/certs/ca-certificates.crt | sha256sum -c -
+#6 31.54 Get:1 http://archive.ubuntu.com/ubuntu noble InRelease [256 kB]
+#6 33.50 Get:2 http://archive.ubuntu.com/ubuntu noble/main amd64 Packages [1808 kB]
+#6 35.79 Fetched 2064 kB in 35s (58.5 kB/s)
+#6 35.79 Reading package lists...
+#6 35.89 Reading package lists...
+#6 35.97 Building dependency tree...
+#6 35.98 Reading state information...
+#6 36.02 The following NEW packages will be installed:
+#6 36.02   ca-certificates openssl
+#6 36.02 The following packages will be DOWNGRADED:
+#6 36.02   libssl3t64
+#6 36.73 0 upgraded, 2 newly installed, 1 downgraded, 0 to remove and 0 not upgraded.
+#6 36.73 Need to get 3097 kB of archives.
+#6 36.73 After this operation, 2316 kB of additional disk space will be used.
+#6 36.73 Get:1 http://archive.ubuntu.com/ubuntu noble/main amd64 libssl3t64 amd64 3.0.13-0ubuntu3 [1936 kB]
+#6 40.26 Get:2 http://archive.ubuntu.com/ubuntu noble/main amd64 openssl amd64 3.0.13-0ubuntu3 [1002 kB]
+#6 42.47 Get:3 http://archive.ubuntu.com/ubuntu noble/main amd64 ca-certificates all 20240203 [159 kB]
+#6 42.64 debconf: delaying package configuration, since apt-utils is not installed
+#6 42.66 Fetched 3097 kB in 6s (480 kB/s)
+#6 42.69 dpkg: warning: downgrading libssl3t64:amd64 from 3.0.13-0ubuntu3.16 to 3.0.13-0ubuntu3
+#6 42.69 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 4381 files and directories currently installed.)
+#6 42.72 Preparing to unpack .../libssl3t64_3.0.13-0ubuntu3_amd64.deb ...
+#6 42.73 Unpacking libssl3t64:amd64 (3.0.13-0ubuntu3) over (3.0.13-0ubuntu3.16) ...
+#6 42.90 Setting up libssl3t64:amd64 (3.0.13-0ubuntu3) ...
+#6 42.93 Selecting previously unselected package openssl.
+#6 42.93 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 4381 files and directories currently installed.)
+#6 42.94 Preparing to unpack .../openssl_3.0.13-0ubuntu3_amd64.deb ...
+#6 42.94 Unpacking openssl (3.0.13-0ubuntu3) ...
+#6 43.00 Selecting previously unselected package ca-certificates.
+#6 43.00 Preparing to unpack .../ca-certificates_20240203_all.deb ...
+#6 43.00 Unpacking ca-certificates (20240203) ...
+#6 43.07 Setting up openssl (3.0.13-0ubuntu3) ...
+#6 43.08 Setting up ca-certificates (20240203) ...
+#6 43.20 debconf: unable to initialize frontend: Dialog
+#6 43.20 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#6 43.20 debconf: falling back to frontend: Readline
+#6 43.20 debconf: unable to initialize frontend: Readline
+#6 43.20 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.38.2 /usr/local/share/perl/5.38.2 /usr/lib/x86_64-linux-gnu/perl5/5.38 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.38 /usr/share/perl/5.38 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8.)
+#6 43.20 debconf: falling back to frontend: Teletype
+#6 43.85 Updating certificates in /etc/ssl/certs...
+#6 44.77 146 added, 0 removed; done.
+#6 44.80 Processing triggers for libc-bin (2.39-0ubuntu8.9) ...
+#6 44.84 Processing triggers for ca-certificates (20240203) ...
+#6 44.85 Updating certificates in /etc/ssl/certs...
+#6 45.56 0 added, 0 removed; done.
+#6 45.56 Running hooks in /etc/ca-certificates/update.d...
+#6 45.56 done.
+#6 45.58 /etc/ssl/certs/ca-certificates.crt: OK
+#6 DONE 45.6s
+
+#8 [builder 2/7] COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+#8 DONE 0.0s
+
+#9 [builder 3/7] RUN rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\n'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security main'       > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --no-install-recommends g++=4:13.2.0-7ubuntu1 cmake=3.28.3-1build7 make=4.3-4.1build2     && rm -rf /var/lib/apt/lists/*
+#9 2.178 Get:1 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble InRelease [256 kB]
+#9 5.352 Get:2 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates InRelease [126 kB]
+#9 6.791 Get:3 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security InRelease [126 kB]
+#9 7.976 Get:4 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 Packages [1808 kB]
+#9 14.86 Get:5 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 Packages [1762 kB]
+#9 20.09 Get:6 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security/main amd64 Packages [1425 kB]
+#9 25.24 Fetched 5503 kB in 25s (220 kB/s)
+#9 25.24 Reading package lists...
+#9 25.46 Reading package lists...
+#9 25.66 Building dependency tree...
+#9 25.69 Reading state information...
+#9 25.72 The following additional packages will be installed:
+#9 25.72   binutils binutils-common binutils-x86-64-linux-gnu cmake-data cpp cpp-13
+#9 25.72   cpp-13-x86-64-linux-gnu cpp-x86-64-linux-gnu g++-13 g++-13-x86-64-linux-gnu
+#9 25.72   g++-x86-64-linux-gnu gcc gcc-13 gcc-13-base gcc-13-x86-64-linux-gnu
+#9 25.72   gcc-x86-64-linux-gnu libarchive13t64 libasan8 libatomic1 libbinutils
+#9 25.72   libbrotli1 libc-dev-bin libc6-dev libcc1-0 libcrypt-dev libctf-nobfd0
+#9 25.72   libctf0 libcurl4t64 libexpat1 libgcc-13-dev libgomp1 libgprofng0
+#9 25.72   libgssapi-krb5-2 libhwasan0 libicu74 libisl23 libitm1 libjansson4
+#9 25.72   libjsoncpp25 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libldap2
+#9 25.72   liblsan0 libmpc3 libmpfr6 libnghttp2-14 libpsl5t64 libquadmath0 librhash0
+#9 25.72   librtmp1 libsasl2-2 libsasl2-modules-db libsframe1 libssh-4 libstdc++-13-dev
+#9 25.72   libtsan2 libubsan1 libuv1t64 libxml2 linux-libc-dev rpcsvc-proto
+#9 25.72 Suggested packages:
+#9 25.72   binutils-doc gprofng-gui cmake-doc cmake-format elpa-cmake-mode ninja-build
+#9 25.72   cpp-doc gcc-13-locales cpp-13-doc g++-multilib g++-13-multilib gcc-13-doc
+#9 25.72   gcc-multilib manpages-dev autoconf automake libtool flex bison gdb gcc-doc
+#9 25.72   gcc-13-multilib gdb-x86-64-linux-gnu lrzip glibc-doc krb5-doc krb5-user
+#9 25.72   libstdc++-13-doc make-doc
+#9 25.72 Recommended packages:
+#9 25.72   manpages manpages-dev libc-devtools ca-certificates krb5-locales
+#9 25.72   libldap-common publicsuffix libsasl2-modules
+#9 25.79 The following NEW packages will be installed:
+#9 25.79   binutils binutils-common binutils-x86-64-linux-gnu cmake cmake-data cpp
+#9 25.79   cpp-13 cpp-13-x86-64-linux-gnu cpp-x86-64-linux-gnu g++ g++-13
+#9 25.79   g++-13-x86-64-linux-gnu g++-x86-64-linux-gnu gcc gcc-13 gcc-13-base
+#9 25.79   gcc-13-x86-64-linux-gnu gcc-x86-64-linux-gnu libarchive13t64 libasan8
+#9 25.79   libatomic1 libbinutils libbrotli1 libc-dev-bin libc6-dev libcc1-0
+#9 25.79   libcrypt-dev libctf-nobfd0 libctf0 libcurl4t64 libexpat1 libgcc-13-dev
+#9 25.79   libgomp1 libgprofng0 libgssapi-krb5-2 libhwasan0 libicu74 libisl23 libitm1
+#9 25.79   libjansson4 libjsoncpp25 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0
+#9 25.79   libldap2 liblsan0 libmpc3 libmpfr6 libnghttp2-14 libpsl5t64 libquadmath0
+#9 25.79   librhash0 librtmp1 libsasl2-2 libsasl2-modules-db libsframe1 libssh-4
+#9 25.79   libstdc++-13-dev libtsan2 libubsan1 libuv1t64 libxml2 linux-libc-dev make
+#9 25.79   rpcsvc-proto
+#9 27.65 0 upgraded, 66 newly installed, 0 to remove and 3 not upgraded.
+#9 27.65 Need to get 97.4 MB of archives.
+#9 27.65 After this operation, 343 MB of additional disk space will be used.
+#9 27.65 Get:1 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libexpat1 amd64 2.6.1-2ubuntu0.6 [98.9 kB]
+#9 29.82 Get:2 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libkrb5support0 amd64 1.20.1-6ubuntu2.10 [34.9 kB]
+#9 30.21 Get:3 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libk5crypto3 amd64 1.20.1-6ubuntu2.10 [81.9 kB]
+#9 30.84 Get:4 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 libkeyutils1 amd64 1.6.3-3build1 [9490 B]
+#9 31.30 Get:5 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libkrb5-3 amd64 1.20.1-6ubuntu2.10 [348 kB]
+#9 34.62 Get:6 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libgssapi-krb5-2 amd64 1.20.1-6ubuntu2.10 [143 kB]
+#9 36.19 Get:7 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libicu74 amd64 74.2-1ubuntu3.1 [10.9 MB]
+#9 129.2 Get:8 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libxml2 amd64 2.9.14+dfsg-1.3ubuntu3.10 [764 kB]
+#9 135.6 Get:9 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 libjansson4 amd64 2.14-2build2 [32.8 kB]
+#9 135.7 Get:10 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libnghttp2-14 amd64 1.59.0-1ubuntu0.4 [74.6 kB]
+#9 136.7 Get:11 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 libpsl5t64 amd64 0.21.2-1.1build1 [57.1 kB]
+#9 136.8 Get:12 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 libuv1t64 amd64 1.48.0-1.1build1 [97.3 kB]
+#9 137.6 Get:13 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 binutils-common amd64 2.42-4ubuntu2.10 [240 kB]
+#9 140.9 Get:14 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libsframe1 amd64 2.42-4ubuntu2.10 [15.7 kB]
+#9 141.0 Get:15 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libbinutils amd64 2.42-4ubuntu2.10 [577 kB]
+#9 147.9 Get:16 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libctf-nobfd0 amd64 2.42-4ubuntu2.10 [98.0 kB]
+#9 148.8 Get:17 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libctf0 amd64 2.42-4ubuntu2.10 [94.5 kB]
+#9 150.0 Get:18 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libgprofng0 amd64 2.42-4ubuntu2.10 [849 kB]
+#9 159.0 Get:19 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 binutils-x86-64-linux-gnu amd64 2.42-4ubuntu2.10 [2463 kB]
+#9 178.7 Get:20 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 binutils amd64 2.42-4ubuntu2.10 [18.2 kB]
+#9 178.8 Get:21 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libarchive13t64 amd64 3.7.2-2ubuntu0.9 [383 kB]
+#9 183.0 Get:22 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libbrotli1 amd64 1.1.0-2ubuntu0.1 [331 kB]
+#9 185.7 Get:23 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg1-5ubuntu3.1 [20.4 kB]
+#9 186.2 Get:24 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libsasl2-2 amd64 2.1.28+dfsg1-5ubuntu3.1 [53.2 kB]
+#9 186.6 Get:25 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libldap2 amd64 2.6.10+dfsg-0ubuntu0.24.04.1 [198 kB]
+#9 189.0 Get:26 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2build7 [56.3 kB]
+#9 189.0 Get:27 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libssh-4 amd64 0.10.6-2ubuntu0.5 [191 kB]
+#9 190.4 Get:28 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libcurl4t64 amd64 8.5.0-2ubuntu10.16 [344 kB]
+#9 192.9 Get:29 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 libjsoncpp25 amd64 1.9.5-6build1 [82.8 kB]
+#9 193.6 Get:30 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 librhash0 amd64 1.4.3-3build1 [129 kB]
+#9 194.6 Get:31 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 cmake-data all 3.28.3-1build7 [2155 kB]
+#9 210.6 Get:32 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 cmake amd64 3.28.3-1build7 [11.2 MB]
+#9 306.4 Get:33 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 gcc-13-base amd64 13.3.0-6ubuntu2~24.04.1 [51.6 kB]
+#9 306.9 Get:34 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libisl23 amd64 0.26-3build1.1 [680 kB]
+#9 311.9 Get:35 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libmpfr6 amd64 4.2.1-1build1.1 [353 kB]
+#9 314.3 Get:36 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libmpc3 amd64 1.3.1-1build1.1 [54.6 kB]
+#9 314.8 Get:37 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 cpp-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [10.7 MB]
+#9 407.0 Get:38 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 cpp-13 amd64 13.3.0-6ubuntu2~24.04.1 [1042 B]
+#9 408.2 Get:39 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 cpp-x86-64-linux-gnu amd64 4:13.2.0-7ubuntu1 [5326 B]
+#9 408.3 Get:40 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 cpp amd64 4:13.2.0-7ubuntu1 [22.4 kB]
+#9 409.1 Get:41 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libcc1-0 amd64 14.2.0-4ubuntu2~24.04.1 [48.0 kB]
+#9 409.3 Get:42 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libgomp1 amd64 14.2.0-4ubuntu2~24.04.1 [148 kB]
+#9 410.4 Get:43 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libitm1 amd64 14.2.0-4ubuntu2~24.04.1 [29.7 kB]
+#9 411.1 Get:44 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libatomic1 amd64 14.2.0-4ubuntu2~24.04.1 [10.5 kB]
+#9 411.1 Get:45 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libasan8 amd64 14.2.0-4ubuntu2~24.04.1 [3027 kB]
+#9 432.1 Get:46 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 liblsan0 amd64 14.2.0-4ubuntu2~24.04.1 [1322 kB]
+#9 441.4 Get:47 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libtsan2 amd64 14.2.0-4ubuntu2~24.04.1 [2772 kB]
+#9 463.2 Get:48 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libubsan1 amd64 14.2.0-4ubuntu2~24.04.1 [1184 kB]
+#9 472.7 Get:49 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libhwasan0 amd64 14.2.0-4ubuntu2~24.04.1 [1641 kB]
+#9 485.4 Get:50 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libquadmath0 amd64 14.2.0-4ubuntu2~24.04.1 [153 kB]
+#9 486.6 Get:51 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libgcc-13-dev amd64 13.3.0-6ubuntu2~24.04.1 [2681 kB]
+#9 506.7 Get:52 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 gcc-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [21.1 MB]
+#9 670.1 Get:53 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 gcc-13 amd64 13.3.0-6ubuntu2~24.04.1 [494 kB]
+#9 675.0 Get:54 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 gcc-x86-64-linux-gnu amd64 4:13.2.0-7ubuntu1 [1212 B]
+#9 675.0 Get:55 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 gcc amd64 4:13.2.0-7ubuntu1 [5018 B]
+#9 736.4 Ign:56 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libc-dev-bin amd64 2.39-0ubuntu8.9
+#9 738.2 Get:57 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 linux-libc-dev amd64 6.8.0-149.149 [1699 kB]
+#9 748.1 Ign:58 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 libcrypt-dev amd64 1:4.4.36-4build1
+#9 749.0 Ign:59 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 rpcsvc-proto amd64 1.4.2-0ubuntu7
+#9 749.8 Ign:60 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libc6-dev amd64 2.39-0ubuntu8.9
+#9 750.9 Ign:61 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libstdc++-13-dev amd64 13.3.0-6ubuntu2~24.04.1
+#9 751.8 Get:62 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 g++-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [12.2 MB]
+#9 820.2 Ign:63 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 g++-13 amd64 13.3.0-6ubuntu2~24.04.1
+#9 820.6 Get:64 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 g++-x86-64-linux-gnu amd64 4:13.2.0-7ubuntu1 [964 B]
+#9 821.1 Get:65 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 g++ amd64 4:13.2.0-7ubuntu1 [1100 B]
+#9 821.5 Ign:66 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 make amd64 4.3-4.1build2
+#9 822.2 Ign:56 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libc-dev-bin amd64 2.39-0ubuntu8.9
+#9 823.3 Ign:58 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 libcrypt-dev amd64 1:4.4.36-4build1
+#9 825.3 Get:59 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 rpcsvc-proto amd64 1.4.2-0ubuntu7 [67.4 kB]
+#9 845.4 Get:60 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libc6-dev amd64 2.39-0ubuntu8.9 [2126 kB]
+#9 968.6 Ign:60 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libc6-dev amd64 2.39-0ubuntu8.9
+#9 970.6 Get:61 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libstdc++-13-dev amd64 13.3.0-6ubuntu2~24.04.1 [2420 kB]
+#9 976.7 Ign:63 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 g++-13 amd64 13.3.0-6ubuntu2~24.04.1
+#9 977.7 Ign:66 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 make amd64 4.3-4.1build2
+#9 978.4 Get:56 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libc-dev-bin amd64 2.39-0ubuntu8.9 [20.4 kB]
+#9 979.4 Ign:58 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 libcrypt-dev amd64 1:4.4.36-4build1
+#9 985.3 Ign:60 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libc6-dev amd64 2.39-0ubuntu8.9
+#9 986.1 Ign:63 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 g++-13 amd64 13.3.0-6ubuntu2~24.04.1
+#9 987.0 Ign:66 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 make amd64 4.3-4.1build2
+#9 988.3 Err:58 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 libcrypt-dev amd64 1:4.4.36-4build1
+#9 988.3   503  Service Unavailable [IP: 185.125.189.36 443]
+#9 990.0 Ign:60 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libc6-dev amd64 2.39-0ubuntu8.9
+#9 1021.5 Err:60 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 libc6-dev amd64 2.39-0ubuntu8.9
+#9 1021.5   Connection timed out [IP: 185.125.189.36 443]
+#9 1021.8 Ign:63 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 g++-13 amd64 13.3.0-6ubuntu2~24.04.1
+#9 1022.8 Err:66 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 make amd64 4.3-4.1build2
+#9 1022.8   503  Service Unavailable [IP: 185.125.189.36 443]
+#9 1044.6 Get:63 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 g++-13 amd64 13.3.0-6ubuntu2~24.04.1 [16.0 kB]
+#9 1044.6 Fetched 95.0 MB in 16min 59s (93.2 kB/s)
+#9 1044.6 E: Failed to fetch https://snapshot.ubuntu.com/ubuntu/20261109T000000Z/pool/main/libx/libxcrypt/libcrypt-dev_4.4.36-4build1_amd64.deb  503  Service Unavailable [IP: 185.125.189.36 443]
+#9 1044.6 E: Failed to fetch https://snapshot.ubuntu.com/ubuntu/20261109T000000Z/pool/main/g/glibc/libc6-dev_2.39-0ubuntu8.9_amd64.deb  Connection timed out [IP: 185.125.189.36 443]
+#9 1044.6 E: Failed to fetch https://snapshot.ubuntu.com/ubuntu/20261109T000000Z/pool/main/m/make-dfsg/make_4.3-4.1build2_amd64.deb  503  Service Unavailable [IP: 185.125.189.36 443]
+#9 1044.6 E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+#9 ERROR: process "/bin/sh -c rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\\n'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security main'       > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --no-install-recommends g++=4:13.2.0-7ubuntu1 cmake=3.28.3-1build7 make=4.3-4.1build2     && rm -rf /var/lib/apt/lists/*" did not complete successfully: exit code: 100
+------
+ > [builder 3/7] RUN rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\n'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security main'       > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --no-install-recommends g++=4:13.2.0-7ubuntu1 cmake=3.28.3-1build7 make=4.3-4.1build2     && rm -rf /var/lib/apt/lists/*:
+1021.5   Connection timed out [IP: 185.125.189.36 443]
+1021.8 Ign:63 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 g++-13 amd64 13.3.0-6ubuntu2~24.04.1
+1022.8 Err:66 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble/main amd64 make amd64 4.3-4.1build2
+1022.8   503  Service Unavailable [IP: 185.125.189.36 443]
+1044.6 Get:63 https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates/main amd64 g++-13 amd64 13.3.0-6ubuntu2~24.04.1 [16.0 kB]
+1044.6 Fetched 95.0 MB in 16min 59s (93.2 kB/s)
+1044.6 E: Failed to fetch https://snapshot.ubuntu.com/ubuntu/20261109T000000Z/pool/main/libx/libxcrypt/libcrypt-dev_4.4.36-4build1_amd64.deb  503  Service Unavailable [IP: 185.125.189.36 443]
+1044.6 E: Failed to fetch https://snapshot.ubuntu.com/ubuntu/20261109T000000Z/pool/main/g/glibc/libc6-dev_2.39-0ubuntu8.9_amd64.deb  Connection timed out [IP: 185.125.189.36 443]
+1044.6 E: Failed to fetch https://snapshot.ubuntu.com/ubuntu/20261109T000000Z/pool/main/m/make-dfsg/make_4.3-4.1build2_amd64.deb  503  Service Unavailable [IP: 185.125.189.36 443]
+1044.6 E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?
+------
+WARNING: current commit information was not captured by the build: failed to read current commit information with git rev-parse --is-inside-work-tree
+Dockerfile:12
+--------------------
+  11 |     COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+  12 | >>> RUN rm -f /etc/apt/sources.list.d/ubuntu.sources \
+  13 | >>>     && printf '%s\n' \
+  14 | >>>       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble main' \
+  15 | >>>       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates main' \
+  16 | >>>       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security main' \
+  17 | >>>       > /etc/apt/sources.list \
+  18 | >>>     && apt-get update -o APT::Update::Error-Mode=any \
+  19 | >>>     && apt-get install -y --no-install-recommends g++=4:13.2.0-7ubuntu1 cmake=3.28.3-1build7 make=4.3-4.1build2 \
+  20 | >>>     && rm -rf /var/lib/apt/lists/*
+  21 |     WORKDIR /src
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\\n'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security main'       > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --no-install-recommends g++=4:13.2.0-7ubuntu1 cmake=3.28.3-1build7 make=4.3-4.1build2     && rm -rf /var/lib/apt/lists/*" did not complete successfully: exit code: 100

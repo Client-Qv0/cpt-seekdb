@@ -1,0 +1,74 @@
+from pathlib import Path
+import json,hashlib,subprocess
+p=Path(__file__).parent; r=json.loads((p/'REVIEW_RESULTS.json').read_text()); pr=json.loads((p/'pr1-snapshot.json').read_text()); package=json.loads((p/'package-comparison.json').read_text())
+text='''# MiniVectorDB 服务器独立交接复核（2026-11-10）
+
+本轮固定起点为 `9cea05e182875ae16f3f3c9c8e9cc688a65d653c`，固定生产基线为 `6576b24e0774eb11352ab5bca3372cda32f8efd9`。在 li@103.236.99.247:40327 的独立目录 `/home/li/minivectordb-review-20261110` 复核，分支 `verify/handoff-li-20261110`。用户明确要求将旧目录未完成、未提交的向量索引工作先放一边；未对 `/opt/minivectordb-v2` 的源码、分支或改动执行写入。其状态另存 old-workspace-status.txt。
+
+## 结论
+
+交接代码在本机 Release、适用 sanitizer、官方固定公开驱动以及实际容器恢复范围内通过。生产源码和 Agent 材料未修改，没有重新引入已撤回的 L2 方案，也没有引入 ANN。六组主负载与三组超缓存配对均执行；没有证据把本轮环境对照解释为新的代码优化。
+
+发现实际构建可用性风险：第一次原样 `docker build --no-cache` 因固定 Ubuntu 快照下载出现 503 和连接超时而失败。确认失败链接重新返回 HTTP 200 后，用同一 Dockerfile、`docker build --network=host` 重试成功。没有关闭 TLS、包签名或证书哈希检查。重试的证书阶段也重新执行，69 条解包版本与交接记录完全一致。成功重试没有 `--no-cache` 标志，不能将其说成两次无缓存构建成功；也不能据此证明正式平台默认构建网络稳定。网络模式与快照服务恢复没有单变量控制，不对首次故障作更细归因。
+
+## 版本与产物绑定
+
+- Dockerfile SHA-256：`6178916e2baf4b9a3b3481c1949fbbee71edca0cdae07ace94feebed19990c32`，与交接一致。
+- Agent 材料：119555 字节，SHA-256 `67ef22ef8e8f8f8492eb3563a2de91cc2504543a806200c17a6a68857eaefe42`，保持原样。
+- 本机原生、6576 基线镜像、9cea05e 实际 Dockerfile 重试镜像内二进制均为 `1d36080209fc61c2d4c5b65fdf2a0587048939b3c51e2eca34644bf848ec98b9`。
+- 9cea05e 与6576的 `src/` 和 CMakeLists.txt 无差异；镜像ID分别见 images.json，二进制相同不等于整个镜像相同。
+- 官方仓库固定 `f4d4e26653af823a7601668802f80e374ad6643c`，49 个协议/公开测试文件的工作字节与 Git blob 逐项一致，见 official-file-binding.json。驱动与 config.json 未修改。
+- NumPy 为2.3.3，位于独立 venv。官方文件源下载超时后，通过清华镜像获取同一 wheel，使用 PyPI 原始元数据的 SHA-256 和 pip --require-hashes 校验；失败记录保留。
+- PR #1 查询时仍开放、未合并，头为9cea05e，目标答题分支头为df451b5；快照保存在 pr1-snapshot.json。本轮不合并、不覆盖共享分支、不提交正式评测。
+
+## 本机验证范围
+
+| 测试 | 本机结果 | 证据 |
+|---|---|---|
+| Release CTest | 6/6 | ctest.log |
+| Release 黑盒含压力项 | 21/21 | acceptance.log |
+| Release 扩展含大输出 | 15/15 | optimization.log |
+| Agent 材料结构 | 5/5 | agent.log |
+| ASan/UBSan CTest | 6/6 | sanitize-ctest.log |
+| ASan/UBSan 黑盒 | 20通过，1压力项跳过 | sanitize-acceptance.log |
+| ASan/UBSan 扩展 | 12通过，另跳过大输出类 | sanitize-optimization.log |
+| 原生默认 JSONL 公开驱动 | 20/20 | official-native-all/ |
+| 实际 Docker 默认 JSONL 入口 | 握手、CRUD、20/20公开用例 | official-handshake/、official-crud/、official-all/ |
+| 128MiB容器强杀恢复 | 100批确认，完整10000行/1280000 FP32分量回读，未提交修改回滚 | container-recovery/ |
+| 配对正确性与资源预检 | 六主负载对+三超缓存对完成，所有实际查询独立参考核验 | paired-main/、paired-overflow/ |
+
+公开驱动按原版配置使用2 CPU、2GiB、128 PID；恢复与性能使用2 CPU、128MiB、0 swap。两者不能互相替代。性能真值在计时与数据库cgroup之外计算，检查ID、顺序、类型、过滤、去重、距离及Recall，所有被测返回Recall=1。压力/大输出在Release通过不代表这些项也跑过sanitizer。进程SIGKILL验证不等于断电验证。
+
+## 配对结果
+
+两版独立数据目录、交替顺序。主负载10000×128、1000条TopK10（半数过滤），种子3179/3181/3187重复两次；超缓存32000×128、100查询、三个种子。时间是请求写入到完整响应读取区间之和，解析、参考计算与采样在区间外。Docker启动和恢复另记。正的“耗时下降”表示候选更快，取逐对下降率中位数，不用双方耗时中位数之比。
+
+'''
+for name,title in [('paired-main','主负载'),('paired-overflow','超缓存')]:
+ w=r['workloads'][name];text+='### '+title+'\n\n| 轮次 | 基线写入s | 固定依赖写入s | 基线查询s | 固定依赖查询s |\n|---|---:|---:|---:|---:|\n'
+ for i,e in enumerate(w['pairs'],1):
+  b=e['records']['base']['times'];c=e['records']['candidate']['times'];text+=f"| {i} | {b['write_s']:.6f} | {c['write_s']:.6f} | {b['query_s']:.6f} | {c['query_s']:.6f} |\n"
+ text+='\n'
+ for metric,label in [('write_s','写入'),('query_s','查询'),('restart_ready_s','重启到ready（含Docker开销）')]:
+  m=w['metrics'][metric];text+=f"- {label}：配对耗时下降中位数 {m['paired_time_reduction']['median']*100:.3f}%，{m['candidate_faster_rounds']}/{len(w['pairs'])}组更快；两版原值、范围与有效CV在REVIEW_RESULTS.json。\n"
+ text+=f"- cgroup memory.peak 中位数：基线 {w['memory_peak']['base']['median']:.0f} B，候选 {w['memory_peak']['candidate']['median']:.0f} B。\n\n"
+text+='''两种负载都没有新增生产算法；写入和重启存在退化轮次，不能称全面改善。主机还有其它数据库容器运行，即使记录时负载较低也不是隔离专机。镜像/文件布局、缓存归属、启动调度和主机噪声均未单独归因。相同二进制的这些小幅差异不构成L2优化证据。
+
+## 限制与下一步
+
+memory.peak 是内核cgroup峰值，anon/file采样不同时达到最大值；RSS不替代cgroup。io.stat仅覆盖ready到shutdown前，未校准专用设备及完整生命周期回写，文件大小不作为物理I/O，不能推算官方40分或排名。首次查询不是全系统冷缓存；没有全局drop_caches。原始输入、请求/响应与资源轨迹保留在本服务器；为控制仓库体积，部分大文件仅提交路径/大小/哈希清单。
+
+没有新正式MySQL、性能或Agent评测；7637的历史成绩不属于本轮。材料结构通过不证明官方Agent语义评分有效，其无有效原始分的原因仍无平台报告。UPDATE慢例根因、真正ANN、容量极限及正式隐藏测试均未由本轮解决。
+
+下一步先由负责人审核PR #1，并按平台实际构建网络做环境预检；若继续性能工作，应从固定版本重新profile，只验证一个L2假设，保留负结果。旧目录向量索引仍暂缓。本轮不以修改持久化、精度、排序或返回数据换取性能。
+
+## 执行与异常记录
+
+run_checks.sh 是本机实际复核入口。原样运行会要求新的数据/输出目录；复做时须换新路径，不能覆盖本轮证据。原生构建及sanitizer命令见日志与PLAN；本机需要补装python3.12-venv，未改变全局NumPy版本。
+
+HTTPS/Raw传输失败日志保存在服务器的/home/li工作文件中；最终用Git稀疏检出固定提交，官方工具逐字节校验。首次pip超时、首次Docker构建失败、wrapper的Git安全目录拒绝均保留；wrapper随后仅为指定官方checkout加入单次safe.directory参数，没有放宽全局Git信任。Docker的自动Git来源捕获产生所有权警告，使用本报告的明确源SHA、文件哈希及二进制哈希绑定，不能声称自动来源标签完整。
+
+新clone的README因既有CRLF blob与文本属性组合显示纯换行差异。仅在新clone的.git/info/attributes对README禁用规范化并恢复原始blob，原始blob校验一致；未修改或提交README内容，也没有触碰用户旧工作目录。
+'''
+(p/'REPORT.md').write_text(text)
+print('Report written; all tables generated from REVIEW_RESULTS.json')
