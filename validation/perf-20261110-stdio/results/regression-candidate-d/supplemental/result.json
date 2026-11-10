@@ -1,0 +1,63 @@
+{
+  "scope": "independent-supplemental-formal-entry",
+  "passed": true,
+  "cases": [
+    {
+      "case": "framing-and-values",
+      "status": "PASS",
+      "assertions": 236,
+      "seconds": 1.4234947140000713
+    },
+    {
+      "case": "local-policy-boundaries",
+      "status": "PASS",
+      "details": {
+        "scope": "Local implementation policy beyond specified valid requests; not evidence of hidden input requirements or ANN implementation."
+      },
+      "assertions": 161,
+      "seconds": 1.3939812319999874
+    },
+    {
+      "case": "transaction-shutdown",
+      "status": "PASS",
+      "assertions": 146,
+      "seconds": 2.876757236000003
+    },
+    {
+      "case": "crash-recovery",
+      "status": "PASS",
+      "assertions": 121,
+      "seconds": 2.6501563430001625
+    },
+    {
+      "case": "vector-independent-oracle",
+      "status": "PASS",
+      "details": {
+        "oracle_queries": 72,
+        "seed": 291507,
+        "ann_scope": "request-mode switching with exact fallback; no ANN-index or official authorization claim"
+      },
+      "assertions": 2494,
+      "seconds": 1.478438960999938
+    },
+    {
+      "case": "bounded-large-output",
+      "status": "PASS",
+      "details": {
+        "rows_verified": 20000,
+        "memory": "128MiB",
+        "scope": "Stricter local diagnostic than official 2GiB; not a performance or physical-I/O benchmark."
+      },
+      "assertions": 21599,
+      "seconds": 4.311780066999972
+    },
+    {
+      "case": "broken-database-stdout",
+      "status": "SKIPPED",
+      "reason": "Docker daemon interposes logging/attach pipes; closing client stdout does not reliably make the database write return EPIPE. No entrypoint override or instrumentation used. Native legacy check cannot substitute for this missing formal-container check."
+    }
+  ],
+  "assertions": 24757,
+  "official_assessment_submitted": false,
+  "no_hidden_suite_claim": true
+}

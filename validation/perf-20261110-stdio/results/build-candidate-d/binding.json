@@ -1,0 +1,38 @@
+{
+  "source_path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-perf-20261110-f2c17157/candidate-d",
+  "source_sha256": {
+    ".dockerignore": "b602eaa29e663fe28b895e2c349dd96eb06ce61272047a550959ff83bb0fb6d8",
+    "CMakeLists.txt": "17a983d36a45b1f1bfef176ddebf3c563286804cca33a2c8969bbd4b0442ca42",
+    "Dockerfile": "8cec538ef8a491f4e16d89103ffd338e03f238d5a5c79d5a925fd4d6d571230c",
+    "src/compact_rows.hpp": "d38624d37078886fe74231b8512163e6dc286a694ff674befbc8466327bb8d53",
+    "src/engine.cpp": "a63573b1434d9b0f763ccdb5b4772b16f653942b567f28d70cad0ba61d27176e",
+    "src/engine.hpp": "f8f50c391a8051b066745452f8a7a7ccbb73c43e61990ffd281fd576c93785e1",
+    "src/main.cpp": "0964db4be4ebb3ed33a248bff6c77cd4b52283dcc1735f8bb53835a718bae4ed",
+    "src/protocol.cpp": "981a2da3a6d91b2b14206f099c5e10a3e9fba809c3f0ffb19f513b90480bfe73",
+    "src/protocol.hpp": "284ef8550f910a15fb2e273993b5a10b030884c5928cbff76260f1dcfd2095e8",
+    "src/spill.cpp": "fca305b940394ebb88232a14d7b4dc4f4248228b703402f7089b1e4010c054df",
+    "src/spill.hpp": "70451b7dd2c76a323c8ef86d2c697f8012001b916be6c0ca3e69ecb605e38d44",
+    "src/sql.cpp": "9bf66e221a8629b52b41622d5787ae41d712ad816d7e3485e3be4d2c2e0fb42d",
+    "src/sql.hpp": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593",
+    "src/storage.cpp": "1c1556c18a8d7bb588f3c7619587a0f75276b3df2a2b2cbfc93036f858c2c312",
+    "src/storage.hpp": "c3d50060eccea2e883fa844e32bd78062a8234386bf4a73a29751d3f42780a9f"
+  },
+  "command": [
+    "docker",
+    "build",
+    "--network",
+    "host",
+    "--pull=false",
+    "--iidfile",
+    "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-perf-20261110-f2c17157/results/build-candidate-d/image-id.txt",
+    "-t",
+    "minivectordb:perf-candidate-d",
+    "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-perf-20261110-f2c17157/candidate-d"
+  ],
+  "elapsed_s": 12.119763719000048,
+  "image_id": "sha256:9bc58b1037dabd597e1a5fd51a6f37d3adc3d88582680b58206b07bbd09f1310",
+  "binary_sha256": "1d36080209fc61c2d4c5b65fdf2a0587048939b3c51e2eca34644bf848ec98b9",
+  "exit_code": 0,
+  "build_config": "Dockerfile unchanged, Release, Ubuntu24.04 g++",
+  "script_sha256": "38cef9b0b44c9cacb96bd81d24fb4c703175df5417d123a259f290a167603e8c"
+}

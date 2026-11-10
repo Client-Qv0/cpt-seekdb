@@ -1,0 +1,332 @@
+{
+  "decision": "Keep D only: disable synchronized C/C++ standard streams and untie cin before all IO; retain every explicit flush. No storage, SQL, floating-point, cache or transaction change.",
+  "baseline_commit": "f2c17157db8c678f9165ae98519d03d935b4beb1",
+  "formal_result": {
+    "commit": "7637a037e8a44c9da8e3bd65694e4474075b5657",
+    "mysql": "PASS",
+    "performance_raw_score": 2277.870638,
+    "agent": "no valid raw score",
+    "source": "user reported and confirmed exact commit; not fetched by this tool; no claim for new candidate"
+  },
+  "selected_build": {
+    "source_path": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-perf-20261110-f2c17157/candidate-d",
+    "source_sha256": {
+      ".dockerignore": "b602eaa29e663fe28b895e2c349dd96eb06ce61272047a550959ff83bb0fb6d8",
+      "CMakeLists.txt": "17a983d36a45b1f1bfef176ddebf3c563286804cca33a2c8969bbd4b0442ca42",
+      "Dockerfile": "8cec538ef8a491f4e16d89103ffd338e03f238d5a5c79d5a925fd4d6d571230c",
+      "src/compact_rows.hpp": "d38624d37078886fe74231b8512163e6dc286a694ff674befbc8466327bb8d53",
+      "src/engine.cpp": "a63573b1434d9b0f763ccdb5b4772b16f653942b567f28d70cad0ba61d27176e",
+      "src/engine.hpp": "f8f50c391a8051b066745452f8a7a7ccbb73c43e61990ffd281fd576c93785e1",
+      "src/main.cpp": "0964db4be4ebb3ed33a248bff6c77cd4b52283dcc1735f8bb53835a718bae4ed",
+      "src/protocol.cpp": "981a2da3a6d91b2b14206f099c5e10a3e9fba809c3f0ffb19f513b90480bfe73",
+      "src/protocol.hpp": "284ef8550f910a15fb2e273993b5a10b030884c5928cbff76260f1dcfd2095e8",
+      "src/spill.cpp": "fca305b940394ebb88232a14d7b4dc4f4248228b703402f7089b1e4010c054df",
+      "src/spill.hpp": "70451b7dd2c76a323c8ef86d2c697f8012001b916be6c0ca3e69ecb605e38d44",
+      "src/sql.cpp": "9bf66e221a8629b52b41622d5787ae41d712ad816d7e3485e3be4d2c2e0fb42d",
+      "src/sql.hpp": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593",
+      "src/storage.cpp": "1c1556c18a8d7bb588f3c7619587a0f75276b3df2a2b2cbfc93036f858c2c312",
+      "src/storage.hpp": "c3d50060eccea2e883fa844e32bd78062a8234386bf4a73a29751d3f42780a9f"
+    },
+    "command": [
+      "docker",
+      "build",
+      "--network",
+      "host",
+      "--pull=false",
+      "--iidfile",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-perf-20261110-f2c17157/results/build-candidate-d/image-id.txt",
+      "-t",
+      "minivectordb:perf-candidate-d",
+      "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-perf-20261110-f2c17157/candidate-d"
+    ],
+    "elapsed_s": 12.119763719000048,
+    "image_id": "sha256:9bc58b1037dabd597e1a5fd51a6f37d3adc3d88582680b58206b07bbd09f1310",
+    "binary_sha256": "1d36080209fc61c2d4c5b65fdf2a0587048939b3c51e2eca34644bf848ec98b9",
+    "exit_code": 0,
+    "build_config": "Dockerfile unchanged, Release, Ubuntu24.04 g++",
+    "script_sha256": "38cef9b0b44c9cacb96bd81d24fb4c703175df5417d123a259f290a167603e8c"
+  },
+  "baseline_build": {
+    "commit": "f2c17157db8c678f9165ae98519d03d935b4beb1",
+    "formally_passed_production_commit": "7637a037e8a44c9da8e3bd65694e4474075b5657",
+    "production_source_sha256": {
+      "CMakeLists.txt": "17a983d36a45b1f1bfef176ddebf3c563286804cca33a2c8969bbd4b0442ca42",
+      "Dockerfile": "8cec538ef8a491f4e16d89103ffd338e03f238d5a5c79d5a925fd4d6d571230c",
+      ".dockerignore": "b602eaa29e663fe28b895e2c349dd96eb06ce61272047a550959ff83bb0fb6d8",
+      "src/compact_rows.hpp": "d38624d37078886fe74231b8512163e6dc286a694ff674befbc8466327bb8d53",
+      "src/engine.cpp": "a63573b1434d9b0f763ccdb5b4772b16f653942b567f28d70cad0ba61d27176e",
+      "src/engine.hpp": "f8f50c391a8051b066745452f8a7a7ccbb73c43e61990ffd281fd576c93785e1",
+      "src/main.cpp": "44da4841dae672ca0ec00d58b0d1edf027220c6efb1476ac47fd97a210bf4ca5",
+      "src/protocol.cpp": "981a2da3a6d91b2b14206f099c5e10a3e9fba809c3f0ffb19f513b90480bfe73",
+      "src/protocol.hpp": "284ef8550f910a15fb2e273993b5a10b030884c5928cbff76260f1dcfd2095e8",
+      "src/spill.cpp": "fca305b940394ebb88232a14d7b4dc4f4248228b703402f7089b1e4010c054df",
+      "src/spill.hpp": "70451b7dd2c76a323c8ef86d2c697f8012001b916be6c0ca3e69ecb605e38d44",
+      "src/sql.cpp": "9bf66e221a8629b52b41622d5787ae41d712ad816d7e3485e3be4d2c2e0fb42d",
+      "src/sql.hpp": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593",
+      "src/storage.cpp": "1c1556c18a8d7bb588f3c7619587a0f75276b3df2a2b2cbfc93036f858c2c312",
+      "src/storage.hpp": "c3d50060eccea2e883fa844e32bd78062a8234386bf4a73a29751d3f42780a9f"
+    },
+    "agent_sha256": "a5111afc0d8d1981421d5049a41252740e90b94b7f87c36dc47bee7d8c6673d6",
+    "image_id": "sha256:0ac647537c7a602213d4b8d896db59572e751bb6495e9328ed15cc42aee004cd",
+    "binary_sha256": "ade3e37de3f87723aad5fda8be8f9cb1809c714eac46edeb1d24ec2c4bbc68d7",
+    "daemon_command": [
+      "dockerd",
+      "--config-file",
+      "/var/tmp/minivectordb-perf-20261110/daemon.json",
+      "--data-root",
+      "/var/tmp/minivectordb-docker/data",
+      "--exec-root",
+      "/var/tmp/minivectordb-perf-20261110/exec",
+      "--pidfile",
+      "/var/tmp/minivectordb-perf-20261110/dockerd.pid",
+      "--host",
+      "unix:///var/tmp/minivectordb-perf-20261110/docker.sock",
+      "--bridge=none",
+      "--iptables=false",
+      "--ip6tables=false",
+      "--ip-forward=false",
+      "--ip-masq=false",
+      "--storage-driver=vfs"
+    ],
+    "pid": 704,
+    "socket": "unix:///var/tmp/minivectordb-perf-20261110/docker.sock",
+    "historical_evidence_modified": false
+  },
+  "rounds": [
+    {
+      "round": "paired-main-1-seed3179",
+      "baseline": {
+        "write_s": 0.855337237000299,
+        "first_query_s": 0.007234725000103026,
+        "query_s": 0.8007450690010955,
+        "filtered_query_s": 0.2975661930007618,
+        "unfiltered_query_s": 0.5031788760003337,
+        "restart_ready_s": 0.4734657750000224,
+        "restart_query_s": 0.00708950500006722
+      },
+      "selected_d": {
+        "write_s": 0.7019069370003308,
+        "first_query_s": 0.006648912999935419,
+        "query_s": 0.7313390919993026,
+        "filtered_query_s": 0.25948312299988174,
+        "unfiltered_query_s": 0.47185596899942084,
+        "restart_ready_s": 0.5075366949999989,
+        "restart_query_s": 0.007056143999989217
+      },
+      "experimental_de": {
+        "write_s": 0.6740843410003663,
+        "first_query_s": 0.006548170999963077,
+        "query_s": 0.6955011269981242,
+        "filtered_query_s": 0.2513654579990998,
+        "unfiltered_query_s": 0.44413566899902435,
+        "restart_ready_s": 0.46619076299998596,
+        "restart_query_s": 0.0067191059999913705
+      },
+      "D_write_speedup": 1.2185906591202358,
+      "D_query_speedup": 1.0949025941059078,
+      "E_incremental_query_speedup": 1.0515282630178615
+    },
+    {
+      "round": "paired-main-2-seed3181",
+      "baseline": {
+        "write_s": 0.9063654309987896,
+        "first_query_s": 0.006595690000040122,
+        "query_s": 0.7753533050002943,
+        "filtered_query_s": 0.28740531300081784,
+        "unfiltered_query_s": 0.48794799199947647,
+        "restart_ready_s": 0.49635648200001015,
+        "restart_query_s": 0.006903544000010697
+      },
+      "selected_d": {
+        "write_s": 0.664002673000482,
+        "first_query_s": 0.006562114999951518,
+        "query_s": 0.7287697410014289,
+        "filtered_query_s": 0.25943338300089636,
+        "unfiltered_query_s": 0.4693363580005325,
+        "restart_ready_s": 0.574710213000003,
+        "restart_query_s": 0.006873696999946333
+      },
+      "experimental_de": {
+        "write_s": 0.6335036349996699,
+        "first_query_s": 0.006540201000007073,
+        "query_s": 0.6912972620001483,
+        "filtered_query_s": 0.25095586400027514,
+        "unfiltered_query_s": 0.44034139799987315,
+        "restart_ready_s": 0.5650530259999869,
+        "restart_query_s": 0.0071274969999421955
+      },
+      "D_write_speedup": 1.3650026842559588,
+      "D_query_speedup": 1.0639208262610538,
+      "E_incremental_query_speedup": 1.054206028377518
+    },
+    {
+      "round": "paired-main-3-seed3187",
+      "baseline": {
+        "write_s": 0.9122918949997256,
+        "first_query_s": 0.0067996569999877465,
+        "query_s": 0.7566057019987511,
+        "filtered_query_s": 0.2770657999986952,
+        "unfiltered_query_s": 0.4795399020000559,
+        "restart_ready_s": 0.5025479220000761,
+        "restart_query_s": 0.0070971190000364
+      },
+      "selected_d": {
+        "write_s": 0.6605626519998395,
+        "first_query_s": 0.006890297000040846,
+        "query_s": 0.7259105079986057,
+        "filtered_query_s": 0.26098679899837407,
+        "unfiltered_query_s": 0.4649237090002316,
+        "restart_ready_s": 0.46805326600008357,
+        "restart_query_s": 0.007249544000046626
+      },
+      "experimental_de": {
+        "write_s": 0.6581214080002837,
+        "first_query_s": 0.007062645000019074,
+        "query_s": 0.6869264570016185,
+        "filtered_query_s": 0.24838932900058808,
+        "unfiltered_query_s": 0.4385371280010304,
+        "restart_ready_s": 0.4932281620000367,
+        "restart_query_s": 0.007390591999978824
+      },
+      "D_write_speedup": 1.3810830694677956,
+      "D_query_speedup": 1.0422850939088546,
+      "E_incremental_query_speedup": 1.056751418728505
+    },
+    {
+      "round": "paired-main-4-seed3179",
+      "baseline": {
+        "write_s": 0.9133107359995165,
+        "first_query_s": 0.007091567999964354,
+        "query_s": 0.7692210009990958,
+        "filtered_query_s": 0.2812444690000575,
+        "unfiltered_query_s": 0.48797653199903834,
+        "restart_ready_s": 0.6332994640000607,
+        "restart_query_s": 0.007157181000025048
+      },
+      "selected_d": {
+        "write_s": 0.6743300310001814,
+        "first_query_s": 0.006666729000016858,
+        "query_s": 0.7365945810018957,
+        "filtered_query_s": 0.2650017580010626,
+        "unfiltered_query_s": 0.47159282300083305,
+        "restart_ready_s": 0.49214479800002664,
+        "restart_query_s": 0.007549531999984538
+      },
+      "experimental_de": {
+        "write_s": 0.7036964250006577,
+        "first_query_s": 0.007108847000040441,
+        "query_s": 0.7424526060017342,
+        "filtered_query_s": 0.2737319760016135,
+        "unfiltered_query_s": 0.46872063000012076,
+        "restart_ready_s": 0.5071617859999833,
+        "restart_query_s": 0.007403846999977759
+      },
+      "D_write_speedup": 1.3543972446917032,
+      "D_query_speedup": 1.0442935922129954,
+      "E_incremental_query_speedup": 0.9921099004131924
+    },
+    {
+      "round": "paired-main-5-seed3181",
+      "baseline": {
+        "write_s": 0.9178112440002906,
+        "first_query_s": 0.00857578399995873,
+        "query_s": 0.778847585999074,
+        "filtered_query_s": 0.28819309400023485,
+        "unfiltered_query_s": 0.49065449199883915,
+        "restart_ready_s": 0.48760897199997544,
+        "restart_query_s": 0.007109427000045798
+      },
+      "selected_d": {
+        "write_s": 0.6246704520008279,
+        "first_query_s": 0.007663868999998158,
+        "query_s": 0.7633401909996564,
+        "filtered_query_s": 0.27107879500022136,
+        "unfiltered_query_s": 0.4922613959994351,
+        "restart_ready_s": 0.49091099899999335,
+        "restart_query_s": 0.0071913940000740695
+      },
+      "experimental_de": {
+        "write_s": 0.6743689700002733,
+        "first_query_s": 0.006460951000008208,
+        "query_s": 0.7777534489987374,
+        "filtered_query_s": 0.29410950499936916,
+        "unfiltered_query_s": 0.4836439439993683,
+        "restart_ready_s": 0.4685035740000103,
+        "restart_query_s": 0.007680789999994886
+      },
+      "D_write_speedup": 1.46927270380811,
+      "D_query_speedup": 1.0203151821196645,
+      "E_incremental_query_speedup": 0.981468088611325
+    },
+    {
+      "round": "paired-main-6-seed3187",
+      "baseline": {
+        "write_s": 0.9129372830003604,
+        "first_query_s": 0.007029905999957009,
+        "query_s": 0.7737207849986589,
+        "filtered_query_s": 0.28551392499980466,
+        "unfiltered_query_s": 0.48820685999885427,
+        "restart_ready_s": 0.547981185000026,
+        "restart_query_s": 0.007433502999901975
+      },
+      "selected_d": {
+        "write_s": 0.674206212000172,
+        "first_query_s": 0.00732683299997916,
+        "query_s": 0.7506049530001064,
+        "filtered_query_s": 0.27539871499948276,
+        "unfiltered_query_s": 0.47520623800062367,
+        "restart_ready_s": 0.5095165629999201,
+        "restart_query_s": 0.006792098000005353
+      },
+      "experimental_de": {
+        "write_s": 0.6281181769993509,
+        "first_query_s": 0.0073411990000522565,
+        "query_s": 0.7483205309970344,
+        "filtered_query_s": 0.27904926299686394,
+        "unfiltered_query_s": 0.4692712680001705,
+        "restart_ready_s": 0.49499932799994895,
+        "restart_query_s": 0.007281033000026582
+      },
+      "D_write_speedup": 1.354092066716418,
+      "D_query_speedup": 1.0307962689376888,
+      "E_incremental_query_speedup": 1.0030527319623694
+    }
+  ],
+  "main_speedups": {
+    "write_s": 1.359699964473831,
+    "first_query_s": 1.0344208724090094,
+    "query_s": 1.0432893430609251,
+    "filtered_query_s": 1.0623712610448846,
+    "unfiltered_query_s": 1.0330895244317206,
+    "restart_ready_s": 1.0334859083585226,
+    "restart_query_s": 0.9964721377714494
+  },
+  "overflow_speedups": {
+    "write_s": 1.3402825486423924,
+    "first_query_s": 1.0668175737722212,
+    "query_s": 1.0474677523436227,
+    "filtered_query_s": 1.0508992182454193,
+    "unfiltered_query_s": 1.0443050100149507,
+    "restart_ready_s": 0.9856992668889061,
+    "restart_query_s": 1.0410433092821623
+  },
+  "candidate_decisions": {
+    "A": "Three-round isolated write median speedup1.057x; query0.966x. Risk/benefit not stable across metrics this round; do not merge storage path. Fault-tested experiment retained.",
+    "B": "Three-round isolated query median speedup1.016x, one round regressed; no stable enough incremental evidence, not merged.",
+    "C": "Three-round write median speedup0.99981x and query0.97456x; no stable benefit, not merged. Short substrings often use SSO, not per-component heap allocation.",
+    "D": "Six paired rounds: both write and query faster than baseline in every round. Keep after full local regression.",
+    "E": "DE versus D: four query wins, two losses; median incremental speedup=1.027290x. Extra O(D) query scratch and unstable incremental effect; not merged. Correctness experiments retained.",
+    "AB": "Built a combined A+B image but did not benchmark or select it. Do not call this a measured negative result."
+  },
+  "known_limits": [
+    "Only local performance comparisons; no new official performance score or rank inferred.",
+    "CREATE INDEX remains metadata-only and ann uses exact fallback; independent unfinished work.",
+    "Restart-to-ready includes Docker/CLI startup, not isolated recovery time.",
+    "First-query means empty process rowcache, not globally cold OS cache.",
+    "memory.peak is actual cgroup v2; sampled anon/file are not simultaneous maxima and RSS is auxiliary.",
+    "io.stat raw counters cover ready to pre_shutdown; pagecache ownership and late writeback limit attribution. File sizes are not physical IO.",
+    "Docker stdout EPIPE injection remains skipped; native closed-pipe termination tested separately, not a substitute.",
+    "Agent semantic scoring is not available locally; do not guarantee valid score or manufacture student understanding."
+  ],
+  "official_assessment_submitted": false
+}

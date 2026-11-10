@@ -1,0 +1,553 @@
+{
+  "scope": "local controlled JSONL Docker comparison, not official score",
+  "prefix": "paired-overflow",
+  "labels": {
+    "baseline": {
+      "write_s": {
+        "median": 2.902875830001676,
+        "min": 2.8250131549998514,
+        "max": 2.924424654000404,
+        "all": [
+          2.8250131549998514,
+          2.924424654000404,
+          2.902875830001676
+        ]
+      },
+      "first_query_s": {
+        "median": 0.02189831700002287,
+        "min": 0.021476733999861608,
+        "max": 0.02235089600003448,
+        "all": [
+          0.02235089600003448,
+          0.021476733999861608,
+          0.02189831700002287
+        ]
+      },
+      "query_s": {
+        "median": 1.557363134001207,
+        "min": 1.529833963998044,
+        "max": 1.722255211000629,
+        "all": [
+          1.722255211000629,
+          1.529833963998044,
+          1.557363134001207
+        ]
+      },
+      "filtered_query_s": {
+        "median": 0.7493961390005097,
+        "min": 0.7394613769984062,
+        "max": 0.8241409590004878,
+        "all": [
+          0.8241409590004878,
+          0.7394613769984062,
+          0.7493961390005097
+        ]
+      },
+      "unfiltered_query_s": {
+        "median": 0.8079669950006974,
+        "min": 0.7903725869996379,
+        "max": 0.8981142520001413,
+        "all": [
+          0.8981142520001413,
+          0.7903725869996379,
+          0.8079669950006974
+        ]
+      },
+      "restart_ready_s": {
+        "median": 0.5466849019999245,
+        "min": 0.5187061210001502,
+        "max": 0.5922332430000097,
+        "all": [
+          0.5922332430000097,
+          0.5466849019999245,
+          0.5187061210001502
+        ]
+      },
+      "restart_query_s": {
+        "median": 0.02078032899999016,
+        "min": 0.019771641000033924,
+        "max": 0.025103510999997525,
+        "all": [
+          0.025103510999997525,
+          0.019771641000033924,
+          0.02078032899999016
+        ]
+      },
+      "memory_peak_bytes": {
+        "median": 32559104,
+        "min": 32481280,
+        "max": 32739328,
+        "all": [
+          32739328,
+          32559104,
+          32481280
+        ]
+      },
+      "anon_max_sampled": {
+        "median": 11829248,
+        "min": 11829248,
+        "max": 11829248,
+        "all": [
+          11829248,
+          11829248,
+          11829248
+        ]
+      },
+      "file_max_sampled": {
+        "median": 18026496,
+        "min": 18026496,
+        "max": 18026496,
+        "all": [
+          18026496,
+          18026496,
+          18026496
+        ]
+      }
+    },
+    "d": {
+      "write_s": {
+        "median": 2.1528900339990287,
+        "min": 2.1077743330026806,
+        "max": 2.244481988000871,
+        "all": [
+          2.1077743330026806,
+          2.244481988000871,
+          2.1528900339990287
+        ]
+      },
+      "first_query_s": {
+        "median": 0.020942046000072878,
+        "min": 0.02013158999989173,
+        "max": 0.021937684000022273,
+        "all": [
+          0.020942046000072878,
+          0.02013158999989173,
+          0.021937684000022273
+        ]
+      },
+      "query_s": {
+        "median": 1.5388720850005484,
+        "min": 1.4867886199997429,
+        "max": 1.569966230000773,
+        "all": [
+          1.5388720850005484,
+          1.569966230000773,
+          1.4867886199997429
+        ]
+      },
+      "filtered_query_s": {
+        "median": 0.7369110589997945,
+        "min": 0.7130999109997447,
+        "max": 0.753840283000045,
+        "all": [
+          0.7369110589997945,
+          0.753840283000045,
+          0.7130999109997447
+        ]
+      },
+      "unfiltered_query_s": {
+        "median": 0.8019610260007539,
+        "min": 0.7736887089999982,
+        "max": 0.816125947000728,
+        "all": [
+          0.8019610260007539,
+          0.816125947000728,
+          0.7736887089999982
+        ]
+      },
+      "restart_ready_s": {
+        "median": 0.5546163219999016,
+        "min": 0.5502898969998569,
+        "max": 0.58996288000003,
+        "all": [
+          0.5502898969998569,
+          0.5546163219999016,
+          0.58996288000003
+        ]
+      },
+      "restart_query_s": {
+        "median": 0.019961060999776237,
+        "min": 0.019434656999919753,
+        "max": 0.020100955000089016,
+        "all": [
+          0.019434656999919753,
+          0.020100955000089016,
+          0.019961060999776237
+        ]
+      },
+      "memory_peak_bytes": {
+        "median": 32411648,
+        "min": 32354304,
+        "max": 32698368,
+        "all": [
+          32354304,
+          32411648,
+          32698368
+        ]
+      },
+      "anon_max_sampled": {
+        "median": 11849728,
+        "min": 11849728,
+        "max": 11853824,
+        "all": [
+          11849728,
+          11853824,
+          11849728
+        ]
+      },
+      "file_max_sampled": {
+        "median": 18026496,
+        "min": 18026496,
+        "max": 18030592,
+        "all": [
+          18026496,
+          18030592,
+          18026496
+        ]
+      }
+    }
+  },
+  "ratios": {
+    "d": {
+      "pairs": [
+        {
+          "round": "paired-overflow-1-seed3179",
+          "write_s": 1.3402825486423924,
+          "first_query_s": 1.0672737515692927,
+          "query_s": 1.1191672314986565,
+          "filtered_query_s": 1.1183723584215033,
+          "unfiltered_query_s": 1.1198976295380432,
+          "restart_ready_s": 1.0762204543983545,
+          "restart_query_s": 1.2916878852094575
+        },
+        {
+          "round": "paired-overflow-2-seed3181",
+          "write_s": 1.3029396848068042,
+          "first_query_s": 1.0668175737722212,
+          "query_s": 0.9744374972939964,
+          "filtered_query_s": 0.980925792471032,
+          "unfiltered_query_s": 0.9684443803119677,
+          "restart_ready_s": 0.9856992668889061,
+          "restart_query_s": 0.9836169972992013
+        },
+        {
+          "round": "paired-overflow-3-seed3187",
+          "write_s": 1.3483623334952861,
+          "first_query_s": 0.9982055079287603,
+          "query_s": 1.0474677523436227,
+          "filtered_query_s": 1.0508992182454193,
+          "unfiltered_query_s": 1.0443050100149507,
+          "restart_ready_s": 0.8792182331880335,
+          "restart_query_s": 1.0410433092821623
+        }
+      ],
+      "median_speedup": {
+        "write_s": 1.3402825486423924,
+        "first_query_s": 1.0668175737722212,
+        "query_s": 1.0474677523436227,
+        "filtered_query_s": 1.0508992182454193,
+        "unfiltered_query_s": 1.0443050100149507,
+        "restart_ready_s": 0.9856992668889061,
+        "restart_query_s": 1.0410433092821623
+      }
+    }
+  },
+  "trials": [
+    {
+      "label": "baseline",
+      "image": "minivectordb:perf-baseline",
+      "seed": 3179,
+      "rows": 32000,
+      "dim": 128,
+      "queries": 100,
+      "write_batch": 100,
+      "times": {
+        "write_s": 2.8250131549998514,
+        "first_query_s": 0.02235089600003448,
+        "query_s": 1.722255211000629,
+        "filtered_query_s": 0.8241409590004878,
+        "unfiltered_query_s": 0.8981142520001413,
+        "restart_ready_s": 0.5922332430000097,
+        "restart_query_s": 0.025103510999997525
+      },
+      "oracle_checks": 112,
+      "recall": 1.0,
+      "maximum_distance_error": 5.329070518200751e-15,
+      "id_order_types_filter_duplicates_checked": true,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "cold_note": "first DB query on new data and empty process rowcache; OS pagecache not globally dropped",
+      "timing": "sum of write request/read complete response intervals; JSON parsing, validation, evidence serialization, resource capture outside timers; Docker startup reported separately",
+      "physical_io_note": "raw io.stat retained; cgroup pagecache charge and asynchronous writeback can affect attribution, file sizes not treated as physical IO",
+      "harness_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+      "workload_sha256": "9d90ceffe1640e940a16fa1c438a2392ebafe40d8cb824ae005e583cbf9a4f45",
+      "restart_note": "restart_ready_s includes Docker create/run CLI and recovery; not isolated recovery CPU time",
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete",
+      "round": "paired-overflow-1-seed3179",
+      "memory_peak_bytes": 32739328,
+      "anon_max_sampled": 11829248,
+      "file_max_sampled": 18026496,
+      "memory_events_final_sample": {
+        "low": "0",
+        "high": "0",
+        "max": "0",
+        "oom": "0",
+        "oom_kill": "0",
+        "oom_group_kill": "0"
+      },
+      "io_stat_initial_raw": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+      "io_stat_final_raw": "8:48 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n"
+    },
+    {
+      "label": "d",
+      "image": "minivectordb:perf-candidate-d",
+      "seed": 3179,
+      "rows": 32000,
+      "dim": 128,
+      "queries": 100,
+      "write_batch": 100,
+      "times": {
+        "write_s": 2.1077743330026806,
+        "first_query_s": 0.020942046000072878,
+        "query_s": 1.5388720850005484,
+        "filtered_query_s": 0.7369110589997945,
+        "unfiltered_query_s": 0.8019610260007539,
+        "restart_ready_s": 0.5502898969998569,
+        "restart_query_s": 0.019434656999919753
+      },
+      "oracle_checks": 112,
+      "recall": 1.0,
+      "maximum_distance_error": 5.329070518200751e-15,
+      "id_order_types_filter_duplicates_checked": true,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "cold_note": "first DB query on new data and empty process rowcache; OS pagecache not globally dropped",
+      "timing": "sum of write request/read complete response intervals; JSON parsing, validation, evidence serialization, resource capture outside timers; Docker startup reported separately",
+      "physical_io_note": "raw io.stat retained; cgroup pagecache charge and asynchronous writeback can affect attribution, file sizes not treated as physical IO",
+      "harness_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+      "workload_sha256": "9d90ceffe1640e940a16fa1c438a2392ebafe40d8cb824ae005e583cbf9a4f45",
+      "restart_note": "restart_ready_s includes Docker create/run CLI and recovery; not isolated recovery CPU time",
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete",
+      "round": "paired-overflow-1-seed3179",
+      "memory_peak_bytes": 32354304,
+      "anon_max_sampled": 11849728,
+      "file_max_sampled": 18026496,
+      "memory_events_final_sample": {
+        "low": "0",
+        "high": "0",
+        "max": "0",
+        "oom": "0",
+        "oom_kill": "0",
+        "oom_group_kill": "0"
+      },
+      "io_stat_initial_raw": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+      "io_stat_final_raw": "8:48 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n"
+    },
+    {
+      "label": "baseline",
+      "image": "minivectordb:perf-baseline",
+      "seed": 3181,
+      "rows": 32000,
+      "dim": 128,
+      "queries": 100,
+      "write_batch": 100,
+      "times": {
+        "write_s": 2.924424654000404,
+        "first_query_s": 0.021476733999861608,
+        "query_s": 1.529833963998044,
+        "filtered_query_s": 0.7394613769984062,
+        "unfiltered_query_s": 0.7903725869996379,
+        "restart_ready_s": 0.5466849019999245,
+        "restart_query_s": 0.019771641000033924
+      },
+      "oracle_checks": 112,
+      "recall": 1.0,
+      "maximum_distance_error": 5.329070518200751e-15,
+      "id_order_types_filter_duplicates_checked": true,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "cold_note": "first DB query on new data and empty process rowcache; OS pagecache not globally dropped",
+      "timing": "sum of write request/read complete response intervals; JSON parsing, validation, evidence serialization, resource capture outside timers; Docker startup reported separately",
+      "physical_io_note": "raw io.stat retained; cgroup pagecache charge and asynchronous writeback can affect attribution, file sizes not treated as physical IO",
+      "harness_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+      "workload_sha256": "abd29de1cde014d061856a9c84df38479e1eea9f80f10fc6c0b92e87c7ba8da7",
+      "restart_note": "restart_ready_s includes Docker create/run CLI and recovery; not isolated recovery CPU time",
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete",
+      "round": "paired-overflow-2-seed3181",
+      "memory_peak_bytes": 32559104,
+      "anon_max_sampled": 11829248,
+      "file_max_sampled": 18026496,
+      "memory_events_final_sample": {
+        "low": "0",
+        "high": "0",
+        "max": "0",
+        "oom": "0",
+        "oom_kill": "0",
+        "oom_group_kill": "0"
+      },
+      "io_stat_initial_raw": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+      "io_stat_final_raw": "8:48 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n"
+    },
+    {
+      "label": "d",
+      "image": "minivectordb:perf-candidate-d",
+      "seed": 3181,
+      "rows": 32000,
+      "dim": 128,
+      "queries": 100,
+      "write_batch": 100,
+      "times": {
+        "write_s": 2.244481988000871,
+        "first_query_s": 0.02013158999989173,
+        "query_s": 1.569966230000773,
+        "filtered_query_s": 0.753840283000045,
+        "unfiltered_query_s": 0.816125947000728,
+        "restart_ready_s": 0.5546163219999016,
+        "restart_query_s": 0.020100955000089016
+      },
+      "oracle_checks": 112,
+      "recall": 1.0,
+      "maximum_distance_error": 5.329070518200751e-15,
+      "id_order_types_filter_duplicates_checked": true,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "cold_note": "first DB query on new data and empty process rowcache; OS pagecache not globally dropped",
+      "timing": "sum of write request/read complete response intervals; JSON parsing, validation, evidence serialization, resource capture outside timers; Docker startup reported separately",
+      "physical_io_note": "raw io.stat retained; cgroup pagecache charge and asynchronous writeback can affect attribution, file sizes not treated as physical IO",
+      "harness_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+      "workload_sha256": "abd29de1cde014d061856a9c84df38479e1eea9f80f10fc6c0b92e87c7ba8da7",
+      "restart_note": "restart_ready_s includes Docker create/run CLI and recovery; not isolated recovery CPU time",
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete",
+      "round": "paired-overflow-2-seed3181",
+      "memory_peak_bytes": 32411648,
+      "anon_max_sampled": 11853824,
+      "file_max_sampled": 18030592,
+      "memory_events_final_sample": {
+        "low": "0",
+        "high": "0",
+        "max": "0",
+        "oom": "0",
+        "oom_kill": "0",
+        "oom_group_kill": "0"
+      },
+      "io_stat_initial_raw": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+      "io_stat_final_raw": "8:48 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n"
+    },
+    {
+      "label": "baseline",
+      "image": "minivectordb:perf-baseline",
+      "seed": 3187,
+      "rows": 32000,
+      "dim": 128,
+      "queries": 100,
+      "write_batch": 100,
+      "times": {
+        "write_s": 2.902875830001676,
+        "first_query_s": 0.02189831700002287,
+        "query_s": 1.557363134001207,
+        "filtered_query_s": 0.7493961390005097,
+        "unfiltered_query_s": 0.8079669950006974,
+        "restart_ready_s": 0.5187061210001502,
+        "restart_query_s": 0.02078032899999016
+      },
+      "oracle_checks": 112,
+      "recall": 1.0,
+      "maximum_distance_error": 5.329070518200751e-15,
+      "id_order_types_filter_duplicates_checked": true,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "cold_note": "first DB query on new data and empty process rowcache; OS pagecache not globally dropped",
+      "timing": "sum of write request/read complete response intervals; JSON parsing, validation, evidence serialization, resource capture outside timers; Docker startup reported separately",
+      "physical_io_note": "raw io.stat retained; cgroup pagecache charge and asynchronous writeback can affect attribution, file sizes not treated as physical IO",
+      "harness_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+      "workload_sha256": "a7e5967398e69f905facdcb797fcfd76348739c875fa22c8714cfb150375de30",
+      "restart_note": "restart_ready_s includes Docker create/run CLI and recovery; not isolated recovery CPU time",
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete",
+      "round": "paired-overflow-3-seed3187",
+      "memory_peak_bytes": 32481280,
+      "anon_max_sampled": 11829248,
+      "file_max_sampled": 18026496,
+      "memory_events_final_sample": {
+        "low": "0",
+        "high": "0",
+        "max": "0",
+        "oom": "0",
+        "oom_kill": "0",
+        "oom_group_kill": "0"
+      },
+      "io_stat_initial_raw": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+      "io_stat_final_raw": "8:48 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n"
+    },
+    {
+      "label": "d",
+      "image": "minivectordb:perf-candidate-d",
+      "seed": 3187,
+      "rows": 32000,
+      "dim": 128,
+      "queries": 100,
+      "write_batch": 100,
+      "times": {
+        "write_s": 2.1528900339990287,
+        "first_query_s": 0.021937684000022273,
+        "query_s": 1.4867886199997429,
+        "filtered_query_s": 0.7130999109997447,
+        "unfiltered_query_s": 0.7736887089999982,
+        "restart_ready_s": 0.58996288000003,
+        "restart_query_s": 0.019961060999776237
+      },
+      "oracle_checks": 112,
+      "recall": 1.0,
+      "maximum_distance_error": 5.329070518200751e-15,
+      "id_order_types_filter_duplicates_checked": true,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "cold_note": "first DB query on new data and empty process rowcache; OS pagecache not globally dropped",
+      "timing": "sum of write request/read complete response intervals; JSON parsing, validation, evidence serialization, resource capture outside timers; Docker startup reported separately",
+      "physical_io_note": "raw io.stat retained; cgroup pagecache charge and asynchronous writeback can affect attribution, file sizes not treated as physical IO",
+      "harness_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+      "workload_sha256": "a7e5967398e69f905facdcb797fcfd76348739c875fa22c8714cfb150375de30",
+      "restart_note": "restart_ready_s includes Docker create/run CLI and recovery; not isolated recovery CPU time",
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete",
+      "round": "paired-overflow-3-seed3187",
+      "memory_peak_bytes": 32698368,
+      "anon_max_sampled": 11849728,
+      "file_max_sampled": 18026496,
+      "memory_events_final_sample": {
+        "low": "0",
+        "high": "0",
+        "max": "0",
+        "oom": "0",
+        "oom_kill": "0",
+        "oom_group_kill": "0"
+      },
+      "io_stat_initial_raw": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+      "io_stat_final_raw": "8:48 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n"
+    }
+  ],
+  "oracle_checks": 672,
+  "all_recall_one": true
+}

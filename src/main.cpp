@@ -5,6 +5,9 @@
 #include <string>
 
 int main(int argc, char **argv) {
+  // Protocol I/O uses C++ streams exclusively and flushes every response.
+  std::ios::sync_with_stdio(false);
+  std::cin.tie(nullptr);
   std::string directory = "/data";
   bool development = false;
   for (int i = 1; i < argc; ++i) {

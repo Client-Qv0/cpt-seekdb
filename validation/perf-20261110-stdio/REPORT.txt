@@ -1,0 +1,47 @@
+MiniVectorDB measured JSONL stream optimization — 2026-11-10
+
+Selected production change: candidate D only. Source, binary and Docker IDs are in results/build-candidate-d/binding.json.
+Baseline f2c17157db8c678f9165ae98519d03d935b4beb1 has identical production to officially passed7637a037e8a44c9da8e3bd65694e4474075b5657. The new candidate has not been officially submitted.
+Main workload:10,000rows×128D,100rows/INSERT,1000TopK10queries,half filtered; seeds3179/3181/3187 repeated twice; six alternating baseline→D→DE / DE→D→baseline rounds.
+Overflow workload:32,000rows×128D,100queries,three alternating pairs; raw vector bytes alone exceed12MiB rowcache.
+Every measured run uses actual default Docker entry and JSONL,read-only root,/data bind,128MiB memory,0swap,2CPUs,cpuset0,1. Independent NumPy oracle executes outside DB cgroup and timed intervals. All returned IDs/order/types/distances/filter/duplicates checked; Recall1.0.
+Timers include request write through complete response read. Oracle,JSON validation,evidence writes and resource snapshots are outside timer. Sum of request intervals is local protocol throughput, not official end-to-end E.
+
+Six primary paired rounds (seconds):
+round | baseline write | D write | baseline1000queries | D1000queries | E increment over D
+paired-main-1-seed3179 | 0.855337 | 0.701907 | 0.800745 | 0.731339 | 1.051528x
+paired-main-2-seed3181 | 0.906365 | 0.664003 | 0.775353 | 0.728770 | 1.054206x
+paired-main-3-seed3187 | 0.912292 | 0.660563 | 0.756606 | 0.725911 | 1.056751x
+paired-main-4-seed3179 | 0.913311 | 0.674330 | 0.769221 | 0.736595 | 0.992110x
+paired-main-5-seed3181 | 0.917811 | 0.624670 | 0.778848 | 0.763340 | 0.981468x
+paired-main-6-seed3187 | 0.912937 | 0.674206 | 0.773721 | 0.750605 | 1.003053x
+
+Median of paired speedup ratios: write1.359700x,query1.043289x. Median elapsed times: write0.912615→0.669104s; query0.774537→0.733967s. Do not equate median ratios with ratios of medians.
+Main memory.peak median15,325,184→15,290,368bytes; maximum15,560,704→15,917,056bytes. The small maximum increase is disclosed, not called memory reduction. No sampled max/OOM/oom_kill events.
+Overflow: median write2.902876→2.152890s,100queries1.557363→1.538872s. One paired query run regressed2.62%; Docker-inclusive restart median0.546685→0.554616s(regressed1.45%). Retained for consistent write gain, not every metric winning.
+Overflow memory.peak median32,559,104→32,411,648bytes. Complete raw counters, sampled anon/file peaks, ranges and all timings are in summary JSONs. These are tested scales, not a proven maximum supported cardinality.
+
+Validation: unmodified official handshake,sql_crud and all20public cases pass. Supplemental formal-default-container regression6pass+1explicit skip,24,757assertions; includes transaction shutdown rollback,error continuation,SIGKILLrecovery,72independentvectorqueries,20k-rowlargeoutput under128MiB. Native ReleaseCTest6/6. Sanitizer evidence and native stream tests are separately bound by hashes.
+
+Candidate selection:
+A: Three-round isolated write median speedup1.057x; query0.966x. Risk/benefit not stable across metrics this round; do not merge storage path. Fault-tested experiment retained.
+B: Three-round isolated query median speedup1.016x, one round regressed; no stable enough incremental evidence, not merged.
+C: Three-round write median speedup0.99981x and query0.97456x; no stable benefit, not merged. Short substrings often use SSO, not per-component heap allocation.
+D: Six paired rounds: both write and query faster than baseline in every round. Keep after full local regression.
+E: DE versus D: four query wins, two losses; median incremental speedup=1.027290x. Extra O(D) query scratch and unstable incremental effect; not merged. Correctness experiments retained.
+AB: Built a combined A+B image but did not benchmark or select it. Do not call this a measured negative result.
+
+Limits:
+Only local performance comparisons; no new official performance score or rank inferred.
+CREATE INDEX remains metadata-only and ann uses exact fallback; independent unfinished work.
+Restart-to-ready includes Docker/CLI startup, not isolated recovery time.
+First-query means empty process rowcache, not globally cold OS cache.
+memory.peak is actual cgroup v2; sampled anon/file are not simultaneous maxima and RSS is auxiliary.
+io.stat raw counters cover ready to pre_shutdown; pagecache ownership and late writeback limit attribution. File sizes are not physical IO.
+Docker stdout EPIPE injection remains skipped; native closed-pipe termination tested separately, not a substitute.
+Agent semantic scoring is not available locally; do not guarantee valid score or manufacture student understanding.
+
+Reproduce correctness: build baseline from pinnedf2c17157 and this revision in separateRelease directories,then run python3 tests/test_formal_stdio.py --baseline /absolute/baseline --candidate /absolute/candidate --output /new/output/path. Dockerfile stays unchanged.
+Performance tool requires Python+NumPy and root read access to host cgroup/proc. Frozen scripts/bench.py uses task-local Docker socket unix:///var/tmp/minivectordb-perf-20261110/docker.sock; prepare matching daemon/image tags or explicitly record any adapter modification. Run with --images baseline=IMAGE d=IMAGE --seeds 3179 3181 3187 3179 3181 3187 --prefix NEW; defaults10k/128D/1000queries. Use --rows 32000 --queries 100 for overflow. Every prefix and data directory must be new. NormalOSpagecache remains enabled.
+Official protocol suite is available at oceanbase/seekdb f4d4e26653af823a7601668802f80e374ad6643c. Public suite is not the hidden formal suite.
+Next performance issue worth investigating: exact distance scalar-loop userCPU hotspot; current E did not establish stable incremental gains. No ANN or disk-format work was added.

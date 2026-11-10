@@ -150,7 +150,7 @@
     "无LIMIT结果集会物化，日志尚未压缩，仍需资源边界验证。",
     "Docker不可用，未执行镜像构建与运行；依赖版本待正式环境冻结。"
   ],
-  "historical_entries_notice": "所有 20261109 字段及原 conversations/experiments/limitations 均为历史阶段，不是当前状态。当前记录见 official_protocol_repair_20261110。历史失败、负结果和限制保留，不把旧实验重新绑定到当前通过提交。",
+  "historical_entries_notice": "所有 20261109 字段及原 conversations/experiments/limitations 均为历史阶段，不是当前状态。当前记录见 official_protocol_repair_20261110。历史失败、负结果和限制保留，不把旧实验重新绑定到当前通过提交。 当前优化轮另见 performance_round_20261110_stdio；此前“仅材料修改”说明仅属于f2c17157材料修复。新候选没有正式成绩。",
   "optimization_round_20261109": {
     "recorded_at_utc": "2026-11-09T08:31:56.321841+00:00",
     "prior_material_sha256": "fa31e841267da0e5248e0e1d59fe9b2dac53874f13b6bc2e5600895eeec7e0a3",
@@ -1089,5 +1089,188 @@
       "本节的技术解释和取舍来自 Agent，未声称学生提出。未记录学生自己的机制解释、预测和后续纠错复盘，保持缺口。",
       "没有重新运行历史实验或重新提交正式评测；新材料不宣称保证有效评价分。"
     ]
+  },
+  "performance_round_20261110_stdio": {
+    "source": "real user excerpts, Agent-authored experimental hypotheses/decisions, version-bound local tool evidence; not a full conversation export",
+    "user_records": [
+      {
+        "role": "user",
+        "source": "original userMessage retrieved by advisory Agent read_thread; unchanged text",
+        "thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+        "message_id": "01a1c469-b8cd-76e1-b32e-df09e18d4a13",
+        "turn_id": "01a1c469-b87d-7cc2-b09e-3d0ec26cfd5a",
+        "content": "继续进行提优（可以考虑先前未考虑的方向），并考虑是否能够通过prompt\n",
+        "episode": "performance-and-material-followup"
+      },
+      {
+        "role": "user",
+        "source": "answer field extracted verbatim from original question-reply wrapper; complete wrapper retained in provenance/advisor-user-excerpts.json",
+        "thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+        "message_id": "01a1c46f-0cb8-79a1-9da4-4c17d5e3322a",
+        "turn_id": "01a1c469-b87d-7cc2-b09e-3d0ec26cfd5a",
+        "content": "两项都做：提升优化效果和 Agent Prompt 得分",
+        "episode": "performance-and-material-followup",
+        "question_context": {
+          "role": "assistant",
+          "source": "advisory Agent question, not student speech",
+          "content": "你说的“通过 prompt”主要指什么？性能优化已在执行，这个选择不会阻塞实验。"
+        }
+      },
+      {
+        "role": "user",
+        "source": "answer field extracted verbatim from original question-reply wrapper; complete wrapper retained in provenance/advisor-user-excerpts.json",
+        "thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+        "message_id": "01a1c479-0a4f-74c2-b552-14856b890830",
+        "turn_id": "01a1c469-b87d-7cc2-b09e-3d0ec26cfd5a",
+        "content": "你自己选择一个书写即可",
+        "episode": "performance-and-material-followup",
+        "question_context": {
+          "role": "assistant",
+          "source": "advisory Agent question, not student speech",
+          "content": "为了留下你本人真实的实验判断：你预计“合并日志写入”“减少向量文本解析开销”“复用 TopK 缓存结果”中哪一项收益最大，为什么？可以用一两句话回答，也可以说暂时无法判断。实验会继续，不需要等你回答。"
+        }
+      },
+      {
+        "role": "user",
+        "source": "original userMessage retrieved by advisory Agent read_thread; unchanged text",
+        "thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+        "message_id": "01a1c3c7-0f8d-7733-99d2-e1cc18aab89b",
+        "turn_id": "01a1c3c7-0f08-7d33-b104-27c22add527b",
+        "content": "再读取一下执行对话的最新进度，看看验证和推送是否完成，现在能不能重新提测。\n",
+        "episode": "protocol-repair-and-verification"
+      },
+      {
+        "role": "user",
+        "source": "original userMessage retrieved by advisory Agent read_thread; unchanged text",
+        "thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+        "message_id": "01a1c396-c0d2-73b1-baef-cee317971e0b",
+        "turn_id": "01a1c396-c06d-7362-99e3-87b8d006836b",
+        "content": "根据修改协议给我新提示词\n",
+        "episode": "protocol-repair-and-verification"
+      },
+      {
+        "role": "user",
+        "source": "original userMessage retrieved by advisory Agent read_thread; unchanged text",
+        "thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+        "message_id": "01a1c394-7b59-7b32-8af6-e89021515199",
+        "turn_id": "01a1c394-7b0d-7042-b476-f0c4b56b385e",
+        "content": "到官网上看一下协议是不是更新了\n",
+        "episode": "protocol-repair-and-verification"
+      }
+    ],
+    "attribution_limit": "用户让Agent自行选择并书写判断，因此以下技术预测、分析和复盘全部属于Agent；没有替用户编造独立解释。三条协议更新/提示词/验证追问属于先前同一次修复链，关联official_protocol_repair_20261110旧握手失败→协议修复→用户正式成绩反馈，不拆分成新成果。",
+    "baseline_commit": "f2c17157db8c678f9165ae98519d03d935b4beb1",
+    "baseline_binary_sha256": "ade3e37de3f87723aad5fda8be8f9cb1809c714eac46edeb1d24ec2c4bbc68d7",
+    "selected_source_sha256": {
+      ".dockerignore": "b602eaa29e663fe28b895e2c349dd96eb06ce61272047a550959ff83bb0fb6d8",
+      "CMakeLists.txt": "17a983d36a45b1f1bfef176ddebf3c563286804cca33a2c8969bbd4b0442ca42",
+      "Dockerfile": "8cec538ef8a491f4e16d89103ffd338e03f238d5a5c79d5a925fd4d6d571230c",
+      "src/compact_rows.hpp": "d38624d37078886fe74231b8512163e6dc286a694ff674befbc8466327bb8d53",
+      "src/engine.cpp": "a63573b1434d9b0f763ccdb5b4772b16f653942b567f28d70cad0ba61d27176e",
+      "src/engine.hpp": "f8f50c391a8051b066745452f8a7a7ccbb73c43e61990ffd281fd576c93785e1",
+      "src/main.cpp": "0964db4be4ebb3ed33a248bff6c77cd4b52283dcc1735f8bb53835a718bae4ed",
+      "src/protocol.cpp": "981a2da3a6d91b2b14206f099c5e10a3e9fba809c3f0ffb19f513b90480bfe73",
+      "src/protocol.hpp": "284ef8550f910a15fb2e273993b5a10b030884c5928cbff76260f1dcfd2095e8",
+      "src/spill.cpp": "fca305b940394ebb88232a14d7b4dc4f4248228b703402f7089b1e4010c054df",
+      "src/spill.hpp": "70451b7dd2c76a323c8ef86d2c697f8012001b916be6c0ca3e69ecb605e38d44",
+      "src/sql.cpp": "9bf66e221a8629b52b41622d5787ae41d712ad816d7e3485e3be4d2c2e0fb42d",
+      "src/sql.hpp": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593",
+      "src/storage.cpp": "1c1556c18a8d7bb588f3c7619587a0f75276b3df2a2b2cbfc93036f858c2c312",
+      "src/storage.hpp": "c3d50060eccea2e883fa844e32bd78062a8234386bf4a73a29751d3f42780a9f"
+    },
+    "selected_binary_sha256": "1d36080209fc61c2d4c5b65fdf2a0587048939b3c51e2eca34644bf848ec98b9",
+    "selected_image_id": "sha256:9bc58b1037dabd597e1a5fd51a6f37d3adc3d88582680b58206b07bbd09f1310",
+    "agent_process": [
+      {
+        "role": "assistant",
+        "stage": "observation",
+        "content": "先冻结f2c17157实际生产源码、镜像和二进制；没有用HEAD冒充历史被测版本。A合并三段pwrite、B复用TopK赢家缓存、C减少短向量token复制分别实测。"
+      },
+      {
+        "role": "assistant",
+        "stage": "falsifiable_hypotheses",
+        "content": "若日志写系统调用或赢家反序列化是主要耗时，A/B应在相同默认JSONL Docker负载下重复获益；若短token处理是瓶颈，C写入应更快。三组交替实验没有支持把这些候选直接合并。C短字符串常用SSO，不能声称每个分量都有堆分配。"
+      },
+      {
+        "role": "assistant",
+        "stage": "new_hypothesis",
+        "content": "建议方Agent提出默认C++同步流可能拖慢长JSONL输入，实施D仅关闭sync_with_stdio并解除cin绑定，所有显式flush保留。独立perf诊断在实际基线ELF中定位61.34%用户CPU样本于L2循环；不能接受gprof把优化clone错归pack_row的标签。由此实验E：FP32解析后一次提升double，保持运算顺序。"
+      },
+      {
+        "role": "assistant",
+        "stage": "controlled_comparison",
+        "content": "D/DE与baseline六轮交替、三个seed重复；同数据、固定资源、默认Docker入口，首次查询/预热后查询分别记录。独立NumPy穷举在被测cgroup和计时之外核对所有实际TopK、距离、过滤、ID类型/唯一性和顺序。另测32k行超12MiB缓存三对。"
+      },
+      {
+        "role": "assistant",
+        "stage": "decision",
+        "content": "仅保留D，六对写入与查询均快于基线。E相对D两轮退化，不能用DE相对旧baseline的总收益证明E有效；A/B/C/E原型、负结果和工具证据均保留但未合并。不改磁盘格式、同步持久性、计算、事务或缓存语义。"
+      },
+      {
+        "role": "assistant",
+        "stage": "reflection",
+        "content": "先前关注存储/计算并未覆盖协议输入本身；小改动也应通过真实入口实测。采样热点帮助提出假设，不等于端到端收益证明。增量消融、资源和失败结果必须保留；正式性能与Agent分数只能由后续平台结果确认。"
+      }
+    ],
+    "paired_result_extraction": {
+      "role": "tool",
+      "kind": "exact selected JSON values plus computed E/D ratio, not fabricated stdout",
+      "source_sha256": "b0421c01eb12c7cc330a830d552971f6cec785b5f71c878e37f84eb7aa79b6b9",
+      "content": "[{\"round\": \"paired-main-1-seed3179\", \"base_write_s\": 0.855337237000299, \"D_write_s\": 0.7019069370003308, \"base_query_s\": 0.8007450690010955, \"D_query_s\": 0.7313390919993026, \"DE_query_s\": 0.6955011269981242, \"E_over_D\": 1.0515282630178615}, {\"round\": \"paired-main-2-seed3181\", \"base_write_s\": 0.9063654309987896, \"D_write_s\": 0.664002673000482, \"base_query_s\": 0.7753533050002943, \"D_query_s\": 0.7287697410014289, \"DE_query_s\": 0.6912972620001483, \"E_over_D\": 1.054206028377518}, {\"round\": \"paired-main-3-seed3187\", \"base_write_s\": 0.9122918949997256, \"D_write_s\": 0.6605626519998395, \"base_query_s\": 0.7566057019987511, \"D_query_s\": 0.7259105079986057, \"DE_query_s\": 0.6869264570016185, \"E_over_D\": 1.056751418728505}, {\"round\": \"paired-main-4-seed3179\", \"base_write_s\": 0.9133107359995165, \"D_write_s\": 0.6743300310001814, \"base_query_s\": 0.7692210009990958, \"D_query_s\": 0.7365945810018957, \"DE_query_s\": 0.7424526060017342, \"E_over_D\": 0.9921099004131924}, {\"round\": \"paired-main-5-seed3181\", \"base_write_s\": 0.9178112440002906, \"D_write_s\": 0.6246704520008279, \"base_query_s\": 0.778847585999074, \"D_query_s\": 0.7633401909996564, \"DE_query_s\": 0.7777534489987374, \"E_over_D\": 0.981468088611325}, {\"round\": \"paired-main-6-seed3187\", \"base_write_s\": 0.9129372830003604, \"D_write_s\": 0.674206212000172, \"base_query_s\": 0.7737207849986589, \"D_query_s\": 0.7506049530001064, \"DE_query_s\": 0.7483205309970344, \"E_over_D\": 1.0030527319623694}]"
+    },
+    "tool_records": [
+      {
+        "role": "tool",
+        "kind": "complete artifact text",
+        "artifact": "results/stdio-review/result.json",
+        "sha256": "10d5e77f9f633b89bd4c426bbf03801774694fbe8a2af7f2bbdb028b04ebcdf5",
+        "content": "{\n  \"tool_sha256\": \"bed145f5d66ad5da2ef12377a642c77fc3cb1e8ed9bd70657402d25fbf4af070\",\n  \"status\": \"PASS\",\n  \"versions\": [\n    {\n      \"label\": \"baseline\",\n      \"status\": \"PASS\",\n      \"binary\": \"/tmp/minivdb-perf-topk/baseline/minivectordb\",\n      \"binary_sha256\": \"ade3e37de3f87723aad5fda8be8f9cb1809c714eac46edeb1d24ec2c4bbc68d7\",\n      \"cases\": [\n        \"ready emitted before input\",\n        \"newline framing and response flush before next request\",\n        \"error response then Unicode/BIGINT/object-ID continued communication\",\n        \"large streamed result >4MiB consumed completely without next request\",\n        \"explicit shutdown response flush then exit0, no extra stdout\",\n        \"empty EOF after ready exits0\",\n        \"EOF shutdown rolls back uncommitted transaction and reopens\",\n        \"closed stdout causes nonzero exit; committed data preserved and uncommitted discarded\"\n      ],\n      \"broken_stdout_exit_code\": -13,\n      \"trace_sha256\": \"173135f180ef22ca0c5ed41b3ab117a46980063b54c14f8161f13c64673ded93\",\n      \"scope\": \"Native default formal JSONL entry, correctness only. No Docker or performance claims.\"\n    },\n    {\n      \"label\": \"candidate\",\n      \"status\": \"PASS\",\n      \"binary\": \"/tmp/minivdb-perf-stdio/build/minivectordb\",\n      \"binary_sha256\": \"1d36080209fc61c2d4c5b65fdf2a0587048939b3c51e2eca34644bf848ec98b9\",\n      \"cases\": [\n        \"ready emitted before input\",\n        \"newline framing and response flush before next request\",\n        \"error response then Unicode/BIGINT/object-ID continued communication\",\n        \"large streamed result >4MiB consumed completely without next request\",\n        \"explicit shutdown response flush then exit0, no extra stdout\",\n        \"empty EOF after ready exits0\",\n        \"EOF shutdown rolls back uncommitted transaction and reopens\",\n        \"closed stdout causes nonzero exit; committed data preserved and uncommitted discarded\"\n      ],\n      \"broken_stdout_exit_code\": -13,\n      \"trace_sha256\": \"7f098a760e90cec7b4b63909ec8ceea424b6ec1cb0b56b653bb0432ce9904869\",\n      \"scope\": \"Native default formal JSONL entry, correctness only. No Docker or performance claims.\"\n    }\n  ]\n}\n"
+      },
+      {
+        "role": "tool",
+        "kind": "complete artifact text",
+        "artifact": "results/regression-candidate-d/supplemental/result.json",
+        "sha256": "4bc502d3be5b5ee0518b29625f18621c0afca8d485bd4faeb6e467fe3ce64b42",
+        "content": "{\n  \"scope\": \"independent-supplemental-formal-entry\",\n  \"passed\": true,\n  \"cases\": [\n    {\n      \"case\": \"framing-and-values\",\n      \"status\": \"PASS\",\n      \"assertions\": 236,\n      \"seconds\": 1.4234947140000713\n    },\n    {\n      \"case\": \"local-policy-boundaries\",\n      \"status\": \"PASS\",\n      \"details\": {\n        \"scope\": \"Local implementation policy beyond specified valid requests; not evidence of hidden input requirements or ANN implementation.\"\n      },\n      \"assertions\": 161,\n      \"seconds\": 1.3939812319999874\n    },\n    {\n      \"case\": \"transaction-shutdown\",\n      \"status\": \"PASS\",\n      \"assertions\": 146,\n      \"seconds\": 2.876757236000003\n    },\n    {\n      \"case\": \"crash-recovery\",\n      \"status\": \"PASS\",\n      \"assertions\": 121,\n      \"seconds\": 2.6501563430001625\n    },\n    {\n      \"case\": \"vector-independent-oracle\",\n      \"status\": \"PASS\",\n      \"details\": {\n        \"oracle_queries\": 72,\n        \"seed\": 291507,\n        \"ann_scope\": \"request-mode switching with exact fallback; no ANN-index or official authorization claim\"\n      },\n      \"assertions\": 2494,\n      \"seconds\": 1.478438960999938\n    },\n    {\n      \"case\": \"bounded-large-output\",\n      \"status\": \"PASS\",\n      \"details\": {\n        \"rows_verified\": 20000,\n        \"memory\": \"128MiB\",\n        \"scope\": \"Stricter local diagnostic than official 2GiB; not a performance or physical-I/O benchmark.\"\n      },\n      \"assertions\": 21599,\n      \"seconds\": 4.311780066999972\n    },\n    {\n      \"case\": \"broken-database-stdout\",\n      \"status\": \"SKIPPED\",\n      \"reason\": \"Docker daemon interposes logging/attach pipes; closing client stdout does not reliably make the database write return EPIPE. No entrypoint override or instrumentation used. Native legacy check cannot substitute for this missing formal-container check.\"\n    }\n  ],\n  \"assertions\": 24757,\n  \"official_assessment_submitted\": false,\n  \"no_hidden_suite_claim\": true\n}\n"
+      },
+      {
+        "role": "tool",
+        "kind": "complete artifact text",
+        "artifact": "results/regression-candidate-d/ctest.stdout.log",
+        "sha256": "84e9e7d0baa85c2be4cb3dc02e428e42ce7ff08967644e5e06fb8c50f0cf6473",
+        "content": "Internal ctest changing into directory: /tmp/minivectordb-perf-final-candidate-d\nTest project /tmp/minivectordb-perf-final-candidate-d\n    Start 1: parser\n1/6 Test #1: parser ...........................   Passed    0.00 sec\n    Start 2: storage\n2/6 Test #2: storage ..........................   Passed    2.66 sec\n    Start 3: engine_extra\n3/6 Test #3: engine_extra .....................   Passed    0.03 sec\n    Start 4: spill\n4/6 Test #4: spill ............................   Passed    0.03 sec\n    Start 5: compact_rows\n5/6 Test #5: compact_rows .....................   Passed    0.32 sec\n    Start 6: protocol\n6/6 Test #6: protocol .........................   Passed    0.02 sec\n\n100% tests passed, 0 tests failed out of 6\n\nTotal Test time (real) =   3.09 sec\n"
+      },
+      {
+        "role": "tool",
+        "kind": "complete artifact text",
+        "artifact": "results/sanitizer-d/result.json",
+        "sha256": "7163f12c8722bfa61f91a4645f7afce85f9638db257974a9e64da1acdcfff5f1",
+        "content": "{\n  \"status\": \"PASS\",\n  \"ctest_exit_code\": 0,\n  \"formalstdio_exit_code\": 0,\n  \"build_type\": \"Debug\",\n  \"sanitizers\": [\n    \"address\",\n    \"undefined\"\n  ],\n  \"sanitizer_environment\": {\n    \"ASAN_OPTIONS\": \"detect_leaks=1:halt_on_error=1\",\n    \"UBSAN_OPTIONS\": \"halt_on_error=1:print_stacktrace=1\"\n  },\n  \"source_sha256\": {\n    \"CMakeLists.txt\": \"17a983d36a45b1f1bfef176ddebf3c563286804cca33a2c8969bbd4b0442ca42\",\n    \"src/compact_rows.hpp\": \"d38624d37078886fe74231b8512163e6dc286a694ff674befbc8466327bb8d53\",\n    \"src/engine.cpp\": \"a63573b1434d9b0f763ccdb5b4772b16f653942b567f28d70cad0ba61d27176e\",\n    \"src/engine.hpp\": \"f8f50c391a8051b066745452f8a7a7ccbb73c43e61990ffd281fd576c93785e1\",\n    \"src/main.cpp\": \"0964db4be4ebb3ed33a248bff6c77cd4b52283dcc1735f8bb53835a718bae4ed\",\n    \"src/protocol.cpp\": \"981a2da3a6d91b2b14206f099c5e10a3e9fba809c3f0ffb19f513b90480bfe73\",\n    \"src/protocol.hpp\": \"284ef8550f910a15fb2e273993b5a10b030884c5928cbff76260f1dcfd2095e8\",\n    \"src/spill.cpp\": \"fca305b940394ebb88232a14d7b4dc4f4248228b703402f7089b1e4010c054df\",\n    \"src/spill.hpp\": \"70451b7dd2c76a323c8ef86d2c697f8012001b916be6c0ca3e69ecb605e38d44\",\n    \"src/sql.cpp\": \"9bf66e221a8629b52b41622d5787ae41d712ad816d7e3485e3be4d2c2e0fb42d\",\n    \"src/sql.hpp\": \"7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593\",\n    \"src/storage.cpp\": \"1c1556c18a8d7bb588f3c7619587a0f75276b3df2a2b2cbfc93036f858c2c312\",\n    \"src/storage.hpp\": \"c3d50060eccea2e883fa844e32bd78062a8234386bf4a73a29751d3f42780a9f\",\n    \"tests/acceptance.py\": \"31737a0b9508f63f45993cf6e60014a361cfe24710bceb526aa3ddaaa3f954ac\",\n    \"tests/audit_performance.py\": \"027611ff2b8369ede8a16213ceb84c96b385c8ab7c1ec1d8ae7bade3c8b5bee1\",\n    \"tests/benchmark_local.py\": \"9580021fa540b59add07ce946a20aec539db3b3913f08c965159d709d7fdda94\",\n    \"tests/benchmark_public_validation.py\": \"8e96530ea5d307113ebef51faa1a3cc1f824fcd928a2a8842d49e44d4b01c4d7\",\n    \"tests/cardinality_probe.py\": \"d4bc04d5b9a4d7bae73cb2f26517c104cc413bad5cec13bceeb5cb24b44de791\",\n    \"tests/compare_local.py\": \"a232ea03af879949e359eab4cd20939b455e1dff32d43d71070caf10a16232d3\",\n    \"tests/index_compatibility.py\": \"72650296402cb82fce51c735b731918012b1722f1ef5b2358f8880f97d1d909c\",\n    \"tests/optimization_acceptance.py\": \"5393ea952024b24cf37bac0b1002211ce18307d88a1e8d1c2be231b47b9e8aa4\",\n    \"tests/paired_benchmark.py\": \"6d98e16dac716c163a3ba3bf63f00b2d6099a10c542966f3224a756c8801bfe0\",\n    \"tests/public_samples.py\": \"19916fd3b05b1d6c24c286cb2656ef58fd2c9038cc06045e253ab2593080c32a\",\n    \"tests/README.txt\": \"5b7e2099983474cd6226290d941abb484f3f597240c1ef5c9a3441ef0f158e0a\",\n    \"tests/test_agent_material.py\": \"6e4493ea9f7e7e37717ac285d55e7533e159c223637ab14fd0201b75c17e9a1d\",\n    \"tests/test_benchmark_public_validation.py\": \"23bf9f835af805aa5c6701d95a2e9d466a5a6c292c41396e97b3568178f81ed1\",\n    \"tests/test_compact_rows.cpp\": \"6bcdb7b6af71e64d4ec53f4764f1e16eef73b3576f0bea9723ad4035fb5289e2\",\n    \"tests/test_engine_extra.cpp\": \"59b52b4c9853ca2fbbdd582e06cdc80bb5368faa28a6998265b58bd475c4ad26\",\n    \"tests/test_parser.cpp\": \"acb63e84908071d8dc9ba5f9c696ea34efa3bea6003c08eb344ab74eadfddf65\",\n    \"tests/test_protocol.cpp\": \"714c5a631770c9873caaa6e16ea8baf5969f62c11bca54dc323664bfc54841a3\",\n    \"tests/test_public_bridge.py\": \"dcd06ec168e9f9b245eb1dc8cbba7d02aa2782abbe255af0b002c14dd9aa2897\",\n    \"tests/test_spill.cpp\": \"0d3d524609f0d1bda59e71c06d67483e755c461dae0e1e8133cd6b5bab947c2b\",\n    \"tests/test_storage.cpp\": \"8ce88bcbdd4a46c56109a678e309bfa8ba4b12ff15b5042e5145cb4c2dfe9609\"\n  },\n  \"binary\": \"/tmp/minivdb-perf-stdio-sanitizer/minivectordb\",\n  \"binary_sha256\": \"194dc2350c59295509a14bc1b20a98acd0dee6a71e88558e2377907fd5bee04c\",\n  \"baseline_binary_sha256\": \"ade3e37de3f87723aad5fda8be8f9cb1809c714eac46edeb1d24ec2c4bbc68d7\",\n  \"tool_sha256\": {\n    \"scripts/storage_sanitizer_d.py\": \"ffc6af2acba0207054c7c7c7ce9cad4e0018ba8df055b6a3db84354cfa296763\",\n    \"scripts/stdio_correctness.py\": \"bed145f5d66ad5da2ef12377a642c77fc3cb1e8ed9bd70657402d25fbf4af070\"\n  },\n  \"scope\": \"Native Linux sanitizer/debug build and default JSONL interface. No Docker or performance claims. Broken stdout is expected nonzero/SIGPIPE, not a sanitizer PASS by itself.\",\n  \"commands\": [\n    {\n      \"label\": \"configure\",\n      \"command\": [\n        \"cmake\",\n        \"-S\",\n        \"/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-perf-20261110-f2c17157/candidate-d\",\n        \"-B\",\n        \"/tmp/minivdb-perf-stdio-sanitizer\",\n        \"-DCMAKE_BUILD_TYPE=Debug\",\n        \"-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer\",\n        \"-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined\"\n      ],\n      \"exit_code\": 0,\n      \"elapsed_s\": 1.2192611109999234,\n      \"stdout_sha256\": \"34f8c60e4f2a7f684bf433a320311686f3ce0c7b47c11fb1c279b6286bb299e3\",\n      \"stderr_sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\n    },\n    {\n      \"label\": \"build\",\n      \"command\": [\n        \"cmake\",\n        \"--build\",\n        \"/tmp/minivdb-perf-stdio-sanitizer\",\n        \"-j2\"\n      ],\n      \"exit_code\": 0,\n      \"elapsed_s\": 7.685907637000128,\n      \"stdout_sha256\": \"93fbe44e2d17a5a043eb05106d3e31c159577d6450c4e32cfff66f87b8b6cfbf\",\n      \"stderr_sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\n    },\n    {\n      \"label\": \"ctest\",\n      \"command\": [\n        \"ctest\",\n        \"--test-dir\",\n        \"/tmp/minivdb-perf-stdio-sanitizer\",\n        \"--output-on-failure\",\n        \"-V\"\n      ],\n      \"exit_code\": 0,\n      \"elapsed_s\": 9.478271045000156,\n      \"stdout_sha256\": \"bce19867f6eb59baa386bee292e9a9395f1c27de694fe3e98535a78805ea2c24\",\n      \"stderr_sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\n    },\n    {\n      \"label\": \"formalstdio\",\n      \"command\": [\n        \"python3\",\n        \"/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-perf-20261110-f2c17157/scripts/stdio_correctness.py\",\n        \"--baseline\",\n        \"/tmp/minivdb-perf-topk/baseline/minivectordb\",\n        \"--candidate\",\n        \"/tmp/minivdb-perf-stdio-sanitizer/minivectordb\",\n        \"--output\",\n        \"/tmp/minivdb-perf-stdio-sanitizer/formal-correctness\"\n      ],\n      \"exit_code\": 0,\n      \"elapsed_s\": 1.6325455809999312,\n      \"stdout_sha256\": \"c334882587ab98798fee7566c13bf0806409b4f7ab1c87f0a56aff9bac1b78a8\",\n      \"stderr_sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\n    }\n  ]\n}\n"
+      }
+    ],
+    "candidate_decisions": {
+      "A": "Three-round isolated write median speedup1.057x; query0.966x. Risk/benefit not stable across metrics this round; do not merge storage path. Fault-tested experiment retained.",
+      "B": "Three-round isolated query median speedup1.016x, one round regressed; no stable enough incremental evidence, not merged.",
+      "C": "Three-round write median speedup0.99981x and query0.97456x; no stable benefit, not merged. Short substrings often use SSO, not per-component heap allocation.",
+      "D": "Six paired rounds: both write and query faster than baseline in every round. Keep after full local regression.",
+      "E": "DE versus D: four query wins, two losses; median incremental speedup=1.027290x. Extra O(D) query scratch and unstable incremental effect; not merged. Correctness experiments retained.",
+      "AB": "Built a combined A+B image but did not benchmark or select it. Do not call this a measured negative result."
+    },
+    "resource_and_limits": [
+      "Only local performance comparisons; no new official performance score or rank inferred.",
+      "CREATE INDEX remains metadata-only and ann uses exact fallback; independent unfinished work.",
+      "Restart-to-ready includes Docker/CLI startup, not isolated recovery time.",
+      "First-query means empty process rowcache, not globally cold OS cache.",
+      "memory.peak is actual cgroup v2; sampled anon/file are not simultaneous maxima and RSS is auxiliary.",
+      "io.stat raw counters cover ready to pre_shutdown; pagecache ownership and late writeback limit attribution. File sizes are not physical IO.",
+      "Docker stdout EPIPE injection remains skipped; native closed-pipe termination tested separately, not a substitute.",
+      "Agent semantic scoring is not available locally; do not guarantee valid score or manufacture student understanding."
+    ],
+    "genuine_evidence_gaps": [
+      "没有用户本人独立解释性能原因或复盘的新增记录；用户明确要求Agent书写，未将Agent文字转成学生贡献。",
+      "没有新候选正式成绩或本地Agent语义评分器。",
+      "官方隐藏用例未运行；公开20例通过不构成正式全部通过承诺。"
+    ],
+    "formal_assessment_submitted": false
   }
 }

@@ -1,0 +1,120 @@
+{
+  "status": "PASS",
+  "ctest_exit_code": 0,
+  "formalstdio_exit_code": 0,
+  "build_type": "Debug",
+  "sanitizers": [
+    "address",
+    "undefined"
+  ],
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "source_sha256": {
+    "CMakeLists.txt": "17a983d36a45b1f1bfef176ddebf3c563286804cca33a2c8969bbd4b0442ca42",
+    "src/compact_rows.hpp": "d38624d37078886fe74231b8512163e6dc286a694ff674befbc8466327bb8d53",
+    "src/engine.cpp": "a63573b1434d9b0f763ccdb5b4772b16f653942b567f28d70cad0ba61d27176e",
+    "src/engine.hpp": "f8f50c391a8051b066745452f8a7a7ccbb73c43e61990ffd281fd576c93785e1",
+    "src/main.cpp": "0964db4be4ebb3ed33a248bff6c77cd4b52283dcc1735f8bb53835a718bae4ed",
+    "src/protocol.cpp": "981a2da3a6d91b2b14206f099c5e10a3e9fba809c3f0ffb19f513b90480bfe73",
+    "src/protocol.hpp": "284ef8550f910a15fb2e273993b5a10b030884c5928cbff76260f1dcfd2095e8",
+    "src/spill.cpp": "fca305b940394ebb88232a14d7b4dc4f4248228b703402f7089b1e4010c054df",
+    "src/spill.hpp": "70451b7dd2c76a323c8ef86d2c697f8012001b916be6c0ca3e69ecb605e38d44",
+    "src/sql.cpp": "9bf66e221a8629b52b41622d5787ae41d712ad816d7e3485e3be4d2c2e0fb42d",
+    "src/sql.hpp": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593",
+    "src/storage.cpp": "1c1556c18a8d7bb588f3c7619587a0f75276b3df2a2b2cbfc93036f858c2c312",
+    "src/storage.hpp": "c3d50060eccea2e883fa844e32bd78062a8234386bf4a73a29751d3f42780a9f",
+    "tests/acceptance.py": "31737a0b9508f63f45993cf6e60014a361cfe24710bceb526aa3ddaaa3f954ac",
+    "tests/audit_performance.py": "027611ff2b8369ede8a16213ceb84c96b385c8ab7c1ec1d8ae7bade3c8b5bee1",
+    "tests/benchmark_local.py": "9580021fa540b59add07ce946a20aec539db3b3913f08c965159d709d7fdda94",
+    "tests/benchmark_public_validation.py": "8e96530ea5d307113ebef51faa1a3cc1f824fcd928a2a8842d49e44d4b01c4d7",
+    "tests/cardinality_probe.py": "d4bc04d5b9a4d7bae73cb2f26517c104cc413bad5cec13bceeb5cb24b44de791",
+    "tests/compare_local.py": "a232ea03af879949e359eab4cd20939b455e1dff32d43d71070caf10a16232d3",
+    "tests/index_compatibility.py": "72650296402cb82fce51c735b731918012b1722f1ef5b2358f8880f97d1d909c",
+    "tests/optimization_acceptance.py": "5393ea952024b24cf37bac0b1002211ce18307d88a1e8d1c2be231b47b9e8aa4",
+    "tests/paired_benchmark.py": "6d98e16dac716c163a3ba3bf63f00b2d6099a10c542966f3224a756c8801bfe0",
+    "tests/public_samples.py": "19916fd3b05b1d6c24c286cb2656ef58fd2c9038cc06045e253ab2593080c32a",
+    "tests/README.txt": "5b7e2099983474cd6226290d941abb484f3f597240c1ef5c9a3441ef0f158e0a",
+    "tests/test_agent_material.py": "6e4493ea9f7e7e37717ac285d55e7533e159c223637ab14fd0201b75c17e9a1d",
+    "tests/test_benchmark_public_validation.py": "23bf9f835af805aa5c6701d95a2e9d466a5a6c292c41396e97b3568178f81ed1",
+    "tests/test_compact_rows.cpp": "6bcdb7b6af71e64d4ec53f4764f1e16eef73b3576f0bea9723ad4035fb5289e2",
+    "tests/test_engine_extra.cpp": "59b52b4c9853ca2fbbdd582e06cdc80bb5368faa28a6998265b58bd475c4ad26",
+    "tests/test_parser.cpp": "acb63e84908071d8dc9ba5f9c696ea34efa3bea6003c08eb344ab74eadfddf65",
+    "tests/test_protocol.cpp": "714c5a631770c9873caaa6e16ea8baf5969f62c11bca54dc323664bfc54841a3",
+    "tests/test_public_bridge.py": "dcd06ec168e9f9b245eb1dc8cbba7d02aa2782abbe255af0b002c14dd9aa2897",
+    "tests/test_spill.cpp": "0d3d524609f0d1bda59e71c06d67483e755c461dae0e1e8133cd6b5bab947c2b",
+    "tests/test_storage.cpp": "8ce88bcbdd4a46c56109a678e309bfa8ba4b12ff15b5042e5145cb4c2dfe9609"
+  },
+  "binary": "/tmp/minivdb-perf-stdio-sanitizer/minivectordb",
+  "binary_sha256": "194dc2350c59295509a14bc1b20a98acd0dee6a71e88558e2377907fd5bee04c",
+  "baseline_binary_sha256": "ade3e37de3f87723aad5fda8be8f9cb1809c714eac46edeb1d24ec2c4bbc68d7",
+  "tool_sha256": {
+    "scripts/storage_sanitizer_d.py": "ffc6af2acba0207054c7c7c7ce9cad4e0018ba8df055b6a3db84354cfa296763",
+    "scripts/stdio_correctness.py": "bed145f5d66ad5da2ef12377a642c77fc3cb1e8ed9bd70657402d25fbf4af070"
+  },
+  "scope": "Native Linux sanitizer/debug build and default JSONL interface. No Docker or performance claims. Broken stdout is expected nonzero/SIGPIPE, not a sanitizer PASS by itself.",
+  "commands": [
+    {
+      "label": "configure",
+      "command": [
+        "cmake",
+        "-S",
+        "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-perf-20261110-f2c17157/candidate-d",
+        "-B",
+        "/tmp/minivdb-perf-stdio-sanitizer",
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 1.2192611109999234,
+      "stdout_sha256": "34f8c60e4f2a7f684bf433a320311686f3ce0c7b47c11fb1c279b6286bb299e3",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "build",
+      "command": [
+        "cmake",
+        "--build",
+        "/tmp/minivdb-perf-stdio-sanitizer",
+        "-j2"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 7.685907637000128,
+      "stdout_sha256": "93fbe44e2d17a5a043eb05106d3e31c159577d6450c4e32cfff66f87b8b6cfbf",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "ctest",
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/tmp/minivdb-perf-stdio-sanitizer",
+        "--output-on-failure",
+        "-V"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 9.478271045000156,
+      "stdout_sha256": "bce19867f6eb59baa386bee292e9a9395f1c27de694fe3e98535a78805ea2c24",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "formalstdio",
+      "command": [
+        "python3",
+        "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-perf-20261110-f2c17157/scripts/stdio_correctness.py",
+        "--baseline",
+        "/tmp/minivdb-perf-topk/baseline/minivectordb",
+        "--candidate",
+        "/tmp/minivdb-perf-stdio-sanitizer/minivectordb",
+        "--output",
+        "/tmp/minivdb-perf-stdio-sanitizer/formal-correctness"
+      ],
+      "exit_code": 0,
+      "elapsed_s": 1.6325455809999312,
+      "stdout_sha256": "c334882587ab98798fee7566c13bf0806409b4f7ab1c87f0a56aff9bac1b78a8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
