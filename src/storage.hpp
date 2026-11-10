@@ -20,6 +20,8 @@ public:
   void begin();
   void commit();
   void rollback();
+  // Explicit, checked shutdown. Unlike the destructor, failures are reported.
+  void close();
   // Compacts only committed data; rejects an active statement or transaction.
   void checkpoint();
   void begin_statement();

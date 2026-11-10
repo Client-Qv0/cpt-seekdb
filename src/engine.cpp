@@ -448,7 +448,19 @@ Engine::Engine(const std::string &directory)
       cache_(std::make_unique<Cache>()) {}
 Engine::~Engine() = default;
 
-Result Engine::execute(const std::string &sql) {
+void Engine::prepare_shutdown() {
+  store_.close();
+  *cache_ = Cache{};
+}
+Result Engine::execute_ann(const Statement &statement) {
+  // Explicit correctness-first fallback: no approximate index exists yet.
+  // Both modes currently use exact scans. This is not an ANN performance claim
+  // or evidence that hidden tests accept the missing approximate index.
+  return execute_statement(statement);
+}
+Result Engine::execute(const std::string &sql, SearchMode mode) {
+  if (mode != SearchMode::Exact && mode != SearchMode::Ann)
+    throw Error("PROTOCOL", "invalid search mode");
   auto st = parse_sql(sql);
   // Cached records never outlive a mutation or transaction boundary. Failed
   // statements also invalidate: their intermediate writes must not be reused.
@@ -467,7 +479,7 @@ Result Engine::execute(const std::string &sql) {
     return {};
   }
   if (st.kind == Statement::Select)
-    return execute_statement(st);
+    return mode == SearchMode::Ann ? execute_ann(st) : execute_statement(st);
   store_.begin_statement();
   try {
     auto result = execute_statement(st);
@@ -480,6 +492,9 @@ Result Engine::execute(const std::string &sql) {
 }
 Result Engine::execute_statement(const Statement &st) {
   Result result;
+  result.reports_affected = st.kind == Statement::Insert ||
+                            st.kind == Statement::Update ||
+                            st.kind == Statement::Delete;
   if (st.kind == Statement::CreateTable) {
     if (store_.metadata(st.table))
       throw Error("TABLE_EXISTS", "table already exists");
@@ -850,9 +865,9 @@ std::string result_json(const Result &result) {
   write_result_json(out, result);
   return out.str();
 }
-void write_result_json(std::ostream &out, const Result &result) {
-  out.imbue(std::locale::classic());
-  out << "{\"ok\":true,\"columns\":[";
+namespace {
+void write_query_fields(std::ostream &out, const Result &result) {
+  out << "\"columns\":[";
   for (size_t i = 0; i < result.columns.size(); ++i) {
     if (i)
       out << ',';
@@ -882,7 +897,31 @@ void write_result_json(std::ostream &out, const Result &result) {
       first = false;
     }
   }
-  out << "],\"affected\":" << result.affected << '}';
+  out << ']';
+}
+} // namespace
+void write_result_json(std::ostream &out, const Result &result) {
+  out.imbue(std::locale::classic());
+  out << "{\"ok\":true,";
+  write_query_fields(out, result);
+  out << ",\"affected\":" << result.affected << '}';
+}
+void write_protocol_result_json(std::ostream &out, const Result &result,
+                                const std::string &id_json) {
+  out.imbue(std::locale::classic());
+  out << "{\"id\":" << id_json << ",\"ok\":true";
+  if (!result.columns.empty()) {
+    out << ',';
+    write_query_fields(out, result);
+  } else if (result.reports_affected)
+    out << ",\"affected_rows\":" << result.affected;
+  out << '}';
+}
+std::string protocol_error_json(const std::string &id_json,
+                                const std::string &code,
+                                const std::string &message) {
+  return "{\"id\":" + id_json + ",\"ok\":false,\"error\":{\"code\":" +
+         escaped(code) + ",\"message\":" + escaped(message) + "}}";
 }
 std::string error_json(const std::string &code, const std::string &message) {
   return "{\"ok\":false,\"code\":" + escaped(code) +

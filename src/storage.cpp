@@ -523,6 +523,31 @@ void Store::rollback() {
   s.pending.clear();
   s.transaction = false;
 }
+void Store::close() {
+  auto &s = *impl_;
+  s.check();
+  s.no_scan();
+  if (s.statement)
+    throw Error("TRANSACTION", "cannot close during an active statement");
+  if (s.transaction)
+    rollback();
+  // COMMIT already syncs committed data; also persist rollback truncation
+  // before acknowledging shutdown, and report errors instead of swallowing
+  // them in the destructor.
+  if (s.fd >= 0)
+    sync_fd(s.fd);
+  auto close_checked = [](int &fd, const char *operation) {
+    if (fd >= 0) {
+      const int old = fd;
+      fd = -1; // Linux releases it even on close errors; do not retry.
+      if (::close(old) != 0)
+        io_error(operation);
+    }
+  };
+  close_checked(s.fd, "close journal");
+  close_checked(s.lockfd, "close lock");
+  close_checked(s.dirfd, "close data directory");
+}
 void Store::begin_statement() {
   auto &s = *impl_;
   s.check();

@@ -8,17 +8,20 @@
 namespace mvdb {
 class RowStream;
 using Cell = std::variant<int64_t, std::string, std::vector<float>, double>;
+enum class SearchMode { Exact, Ann };
 struct Result {
   std::vector<std::string> columns;
   std::vector<std::vector<Cell>> rows;
   uint64_t affected = 0;
   std::shared_ptr<RowStream> stream;
+  bool reports_affected = false;
 };
 class Engine {
 public:
   explicit Engine(const std::string &directory);
   ~Engine();
-  Result execute(const std::string &sql);
+  Result execute(const std::string &sql, SearchMode mode = SearchMode::Exact);
+  void prepare_shutdown();
 
 private:
   Store store_;
@@ -26,8 +29,15 @@ private:
   struct Cache;
   std::unique_ptr<Cache> cache_;
   Result execute_statement(const Statement &statement);
+  Result execute_ann(const Statement &statement);
 };
 std::string result_json(const Result &result);
 void write_result_json(std::ostream &out, const Result &result);
+// id_json is the validated, unconverted JSON token from parse_request.
+void write_protocol_result_json(std::ostream &out, const Result &result,
+                                const std::string &id_json);
+std::string protocol_error_json(const std::string &id_json,
+                                const std::string &code,
+                                const std::string &message);
 std::string error_json(const std::string &code, const std::string &message);
 } // namespace mvdb
