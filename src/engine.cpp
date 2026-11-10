@@ -759,6 +759,14 @@ Result Engine::execute_statement(const Statement &st) {
       }
       if (cache_->exact_view) {
         const auto &view = *cache_->exact_view;
+        size_t pending[4], pending_count = 0;
+        auto flush = [&] {
+          double distances[4];
+          exact::distances4(view, pending, projection.query, distances);
+          for (size_t lane = 0; lane < 4; ++lane)
+            consider(view.keys[pending[lane]], distances[lane]);
+          pending_count = 0;
+        };
         for (size_t i = 0; i < view.count; ++i) {
           bool eligible = true;
           for (const auto &f : fs) {
@@ -768,9 +776,13 @@ Result Engine::execute_statement(const Statement &st) {
                 f.op == ">=" ? cmp >= 0 : false;
             if (!yes) { eligible = false; break; }
           }
-          if (eligible)
-            consider(view.keys[i], view.distance(i, projection.query));
+          if (eligible) {
+            pending[pending_count++] = i;
+            if (pending_count == 4) flush();
+          }
         }
+        for (size_t lane = 0; lane < pending_count; ++lane)
+          consider(view.keys[pending[lane]], view.distance(pending[lane], projection.query));
       } else if (cache_->exact_bypass) {
         // Remember this view's budget bypass until existing invalidation clears it.
         scan_rows(original_visit);

@@ -1,5 +1,6 @@
 #include "exact_cache.hpp"
 #include <cmath>
+#include <array>
 #include <cstring>
 #include <iostream>
 #include <limits>
@@ -32,6 +33,34 @@ int main() {
         require(cache.keys[i]==int64_t(i)-5);
       }
     }
+  // C2: SIMD lanes must preserve every scalar bit for contiguous and gathered
+  // records, finite FP32 extrema/subnormals and dimensional boundaries.
+  for(size_t dim: {size_t(1),size_t(3),size_t(5),size_t(31),size_t(128),size_t(129)}) {
+    exact::Plan plan({Type::BigInt,Type::Vector},1,dim);
+    const float values[]={0.0f,-0.0f,std::numeric_limits<float>::max(),
+      -std::numeric_limits<float>::max(),std::numeric_limits<float>::denorm_min(),
+      -std::numeric_limits<float>::denorm_min(),1.0f,std::nextafter(1.0f,2.0f),1e-20f,1e20f};
+    std::vector<std::vector<Cell>> rows;
+    for(size_t i=0;i<12;++i) {
+      std::vector<float> v(dim);
+      for(size_t d=0;d<dim;++d) v[d]=values[(i*7+d)%10];
+      rows.push_back({int64_t(i),v});plan.observe(rows.back());
+    }
+    exact::Compact cache(plan);
+    for(size_t i=0;i<rows.size();++i) cache.fill(i,int64_t(i),rows[i]);
+    for(size_t iteration=0;iteration<100;++iteration) {
+      std::vector<float> q(dim);
+      for(size_t d=0;d<dim;++d) q[d]=values[(iteration+d*3)%10];
+      for(const auto& indices: {std::array<size_t,4>{0,1,2,3},
+          std::array<size_t,4>{4,5,6,7},std::array<size_t,4>{0,2,5,11}}) {
+        double output[4];exact::distances4(cache,indices.data(),q,output);
+        for(size_t lane=0;lane<4;++lane) {
+          double scalar=cache.distance(indices[lane],q);
+          require(std::memcmp(&scalar,&output[lane],sizeof(double))==0);
+        }
+      }
+    }
+  }
   exact::Plan overflow({Type::BigInt,Type::Vector},1,128);
   std::vector<Cell> row{int64_t(0),std::vector<float>(128)};
   for(int i=0;i<32000;++i) overflow.observe(row);

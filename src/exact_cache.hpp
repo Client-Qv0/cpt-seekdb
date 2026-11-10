@@ -5,6 +5,9 @@
 #include <cstring>
 #include <limits>
 #include <string_view>
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+#include <immintrin.h>
+#endif
 
 namespace mvdb::exact {
 constexpr size_t budget = 12 * 1024 * 1024;
@@ -116,4 +119,38 @@ struct Compact {
     return std::sqrt(sum);
   }
 };
+inline void distances4_scalar(const Compact& cache,const size_t* rows,
+                              const std::vector<float>& q,double* out) {
+  for(size_t lane=0;lane<4;++lane) out[lane]=cache.distance(rows[lane],q);
+}
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+// Every lane is one independent record. Never horizontally reduce dimensions;
+// no-fma prevents contraction even if a caller builds with FMA support enabled.
+__attribute__((target("avx2,no-fma"),noinline))
+inline void distances4_avx2(const Compact& cache,const size_t* rows,
+                           const std::vector<float>& q,double* out) {
+  const bool contiguous=rows[0]%4==0 && rows[1]==rows[0]+1 &&
+      rows[2]==rows[0]+2 && rows[3]==rows[0]+3;
+  const size_t start=cache.index(rows[0]);
+  const __m128i indices=_mm_set_epi32(int(cache.index(rows[3])),
+      int(cache.index(rows[2])),int(cache.index(rows[1])),int(start));
+  __m256d sum=_mm256_setzero_pd();
+  for(size_t d=0;d<cache.dim;++d) {
+    __m128 values=contiguous ? _mm_loadu_ps(cache.vectors.data()+start+d*4) :
+        _mm_i32gather_ps(cache.vectors.data()+d*4,indices,4);
+    __m256d delta=_mm256_sub_pd(_mm256_cvtps_pd(values),
+                              _mm256_set1_pd(double(q[d])));
+    __m256d square=_mm256_mul_pd(delta,delta);
+    sum=_mm256_add_pd(sum,square);
+  }
+  _mm256_storeu_pd(out,_mm256_sqrt_pd(sum));
+}
+#endif
+inline void distances4(const Compact& cache,const size_t* rows,
+                       const std::vector<float>& q,double* out) {
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  if(available()) {distances4_avx2(cache,rows,q,out);return;}
+#endif
+  distances4_scalar(cache,rows,q,out);
+}
 } // namespace mvdb::exact
