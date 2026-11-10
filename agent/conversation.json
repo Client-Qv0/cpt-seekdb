@@ -1,6 +1,28 @@
 {
   "schema_version": 1,
-  "exact_query_workpackage_20261109": {"source":"actual user request and measured agent experiments; not proof of student understanding","user_prompt":"执行","base_commit":"75ecbf3e60a68de7d833aa899bc0fcb4c48df47e","decisions":["公开20例/95SQL先建立本地断言桥，明确ANN指令仅精确回退，未声称正式协议或29例准入。","生产Dockerfile无缓存构建与实际容器20例通过，镜像二进制与V2相同。","查询诊断显示2.468秒端到端中约2.182秒在Engine；先比较无额外常驻内存的两版精确剪枝原型，另做独立列式组件探针。","两版默认构建三组配对中位分别改善约5.2%和9.4%，第二版有一组退化；均未达20%目标，恢复生产V2并保存全部原型及负结果。"],"tool_results":["每版6066条独立参考通过；另外两个seed各1000条查询通过，过滤和无过滤Recall均为1。","第二版Release6/6、19/19、11/11；ASan/UBSan6/6、18普通黑盒通过加1压力跳过、8普通额外通过加大输出类跳过。真实128MiB资源4/4无OOM，百万行匿名内存与V2基本一致。","列式组件10k128与37x3各100条参考核对通过，超预算拒绝；尚未接入Engine，其进程内耗时不能充当数据库端到端成绩。"],"remaining":["完整列式缓存的Engine集成和事务/预算回退验证仍待完成","正式通信驱动及29例准入未验证，原UPDATE慢例仍未定位"],"production_source_changed":false,"official_assessment_submitted":false,"student_understanding_inferred":false},
+  "exact_query_workpackage_20261109": {
+    "source": "actual user request and measured agent experiments; not proof of student understanding",
+    "user_prompt": "执行",
+    "base_commit": "75ecbf3e60a68de7d833aa899bc0fcb4c48df47e",
+    "decisions": [
+      "公开20例/95SQL先建立本地断言桥，明确ANN指令仅精确回退，未声称正式协议或29例准入。",
+      "生产Dockerfile无缓存构建与实际容器20例通过，镜像二进制与V2相同。",
+      "查询诊断显示2.468秒端到端中约2.182秒在Engine；先比较无额外常驻内存的两版精确剪枝原型，另做独立列式组件探针。",
+      "两版默认构建三组配对中位分别改善约5.2%和9.4%，第二版有一组退化；均未达20%目标，恢复生产V2并保存全部原型及负结果。"
+    ],
+    "tool_results": [
+      "每版6066条独立参考通过；另外两个seed各1000条查询通过，过滤和无过滤Recall均为1。",
+      "第二版Release6/6、19/19、11/11；ASan/UBSan6/6、18普通黑盒通过加1压力跳过、8普通额外通过加大输出类跳过。真实128MiB资源4/4无OOM，百万行匿名内存与V2基本一致。",
+      "列式组件10k128与37x3各100条参考核对通过，超预算拒绝；尚未接入Engine，其进程内耗时不能充当数据库端到端成绩。"
+    ],
+    "remaining": [
+      "完整列式缓存的Engine集成和事务/预算回退验证仍待完成",
+      "正式通信驱动及29例准入未验证，原UPDATE慢例仍未定位"
+    ],
+    "production_source_changed": false,
+    "official_assessment_submitted": false,
+    "student_understanding_inferred": false
+  },
   "handoff_update_investigation_20261109": {
     "recorded_at_utc": "2026-11-09T11:03:52Z",
     "source": "real user request excerpts, agent decisions, and server tool results",
@@ -65,9 +87,9 @@
     "official_assessment_submitted": false,
     "student_understanding_inferred": false
   },
-  "date": "2026-11-09",
+  "date": "2026-11-10",
   "synthetic": false,
-  "material_scope": "真实对话摘录与本轮本地验证。不是完整聊天导出；未记录的学生理解、解释或反馈不得从Agent工作推断。尚未完成官方评测适配。",
+  "material_scope": "真实历史摘录及可核对工具输出，新增正式 JSONL 修复和用户反馈。不是完整会话导出；历史身份和缺失的学生解释不作推断。用户提供/采用的技术指令不自动证明独立创作或理解；Agent 判断、原始工具输出、工具摘要、平台结果转述分别归因。",
   "conversations": [
     {
       "id": "user-verify",
@@ -128,7 +150,7 @@
     "无LIMIT结果集会物化，日志尚未压缩，仍需资源边界验证。",
     "Docker不可用，未执行镜像构建与运行；依赖版本待正式环境冻结。"
   ],
-  "historical_entries_notice": "原有 conversations、experiments、limitations 保留为先前版本记录，不代表本轮当前状态。当前结论见 optimization_round_20261109；它是工作过程摘要，不是完整对话导出或学生自行理解的证明。",
+  "historical_entries_notice": "所有 20261109 字段及原 conversations/experiments/limitations 均为历史阶段，不是当前状态。当前记录见 official_protocol_repair_20261110。历史失败、负结果和限制保留，不把旧实验重新绑定到当前通过提交。",
   "optimization_round_20261109": {
     "recorded_at_utc": "2026-11-09T08:31:56.321841+00:00",
     "prior_material_sha256": "fa31e841267da0e5248e0e1d59fe9b2dac53874f13b6bc2e5600895eeec7e0a3",
@@ -155,8 +177,14 @@
         "summary": "V2两类2m阶梯通过无OOM，1m三档事务和retention通过；主要匿名内存约少32MB。写入仍有约1%–2%配对退化，部分毫秒级操作负项已保留并继续做采样开关对照，未把全面提速当结论。"
       },
       {
-        "source": "tool_result_summary_and_agent_decision",
-        "summary": "额外12次sampler开关对照通过，但不能解释原更新约6→13ms负结果；未将其改写为GIL噪声。最终保留V2作为稳定内存与规模改善，披露约1%–2%写入退化和单行延迟代价，未宣称全面提速。下一轮优先复现相同写入历史并定位单行更新延迟；未提交正式评测。"
+        "source": "tool_result_summary",
+        "summary": "额外12次sampler开关对照通过",
+        "attribution_note": "2026-11-10 从原混合条目的前半段原样拆分；仍为历史工具结果摘要，不是新实验。"
+      },
+      {
+        "source": "agent",
+        "summary": "但不能解释原更新约6→13ms负结果；未将其改写为GIL噪声。最终保留V2作为稳定内存与规模改善，披露约1%–2%写入退化和单行延迟代价，未宣称全面提速。下一轮优先复现相同写入历史并定位单行更新延迟；未提交正式评测。",
+        "attribution_note": "2026-11-10 从原混合条目的后半段原样拆分；这是 Agent 决策与计划，不是学生理解。"
       }
     ],
     "evidence_report": "validation/cardinality-20261109/REPORT.md",
@@ -166,162 +194,900 @@
     "official_assessment_submitted": false,
     "student_technical_feedback_inferred": false,
     "completed_at_utc": "2026-11-09T08:48:04.548637+00:00"
-  }
-,
-  "local_hmy_round_20261109": {
-  "scope": "本轮真实用户指令摘录、Agent 工作和本机工具结果；不是完整聊天导出，不推断学生的技术理解。",
-  "user_excerpts": [
-    {
-      "source": "student",
-      "content": "让我接着他的做。如果要下载什么环境的话尽量不要下在C盘，在E盘新建个文件夹可以下那里面。"
-    },
-    {
-      "source": "student",
-      "content": "对文件的修改先不要提交到远端Github仓库，先做好等我看完确认我自己手动提交。"
-    }
-  ],
-  "agent_work": [
-    "在 E 盘独立工作区重建 V2，扩展参考模型，实验列式缓存并保留在隔离快照；生产源码维持 V2。",
-    "对照的查询时间有改善也有退化，未达到预设目标；原型预算峰值和磁盘 I/O 仍缺证据。"
-  ],
-  "tool_results": [
-    "只读清单检查 13、49、320、141、206 项均零失败；本机 Release CTest 使用 Linux 临时目录 5/5 通过；公开桥 20 例、95 条 SQL 通过。",
-    "128 MiB cgroup 下三组对照热查询秒数（V2/原型）：1.238757/1.198919、1.132450/1.340345、1.225005/1.281727。数据目录位于 tmpfs，不能作为磁盘物理 I/O 测量。"
-  ],
-  "limitations": "本记录仅摘要当前会话；用户没有对实验作技术解释或学习反馈。未提交、未推送、未参加正式评测。"
-}
-,
-  "public_benchmark_hmy_20261109": {
-  "scope": "真实用户指令摘录、Agent 工作与本机工具结果；不是完整聊天导出，不推断学生技术理解。",
-  "user_excerpt": {
-    "source": "student",
-    "content": "继续做先把3.3 小型性能 benchmark（40 分）完成，至少要把已经公开的能够跑通过。"
   },
-  "agent_work": "按题面公开规模编写本地验证驱动，重建生产镜像，独立验证查询和重启后全部记录；正式驱动和官方基线未取得。",
-  "tool_results": [
-    "种子3179三轮及种子9143、27183、2468各一轮通过；每轮100批写入、1000个计时查询，过滤和无过滤平均Recall@10均为1.0，重启后核对全部10000条记录。",
-    "提交确认后强杀：100批写入均已确认，重启后完整核对10000条记录通过；生产镜像公开功能桥20例、95条SQL通过。",
-    "WSL共享ext4设备的16MiB同步写入校准观测到该容器io.stat写入增量16MiB；它不是官方独占数据设备统计。"
-  ],
-  "limitations": "仅本地开发协议及本地生成负载，未证明正式29例准入、正式驱动兼容、官方性能分数或名次；未提交或推送。"
-}
-,
+  "local_hmy_round_20261109": {
+    "scope": "本轮真实用户指令摘录、Agent 工作和本机工具结果；不是完整聊天导出，不推断学生的技术理解。",
+    "user_excerpts": [
+      {
+        "source": "student",
+        "content": "让我接着他的做。如果要下载什么环境的话尽量不要下在C盘，在E盘新建个文件夹可以下那里面。"
+      },
+      {
+        "source": "student",
+        "content": "对文件的修改先不要提交到远端Github仓库，先做好等我看完确认我自己手动提交。"
+      }
+    ],
+    "agent_work": [
+      "在 E 盘独立工作区重建 V2，扩展参考模型，实验列式缓存并保留在隔离快照；生产源码维持 V2。",
+      "对照的查询时间有改善也有退化，未达到预设目标；原型预算峰值和磁盘 I/O 仍缺证据。"
+    ],
+    "tool_results": [
+      "只读清单检查 13、49、320、141、206 项均零失败；本机 Release CTest 使用 Linux 临时目录 5/5 通过；公开桥 20 例、95 条 SQL 通过。",
+      "128 MiB cgroup 下三组对照热查询秒数（V2/原型）：1.238757/1.198919、1.132450/1.340345、1.225005/1.281727。数据目录位于 tmpfs，不能作为磁盘物理 I/O 测量。"
+    ],
+    "limitations": "本记录仅摘要当前会话；用户没有对实验作技术解释或学习反馈。未提交、未推送、未参加正式评测。"
+  },
+  "public_benchmark_hmy_20261109": {
+    "scope": "真实用户指令摘录、Agent 工作与本机工具结果；不是完整聊天导出，不推断学生技术理解。",
+    "user_excerpt": {
+      "source": "student",
+      "content": "继续做先把3.3 小型性能 benchmark（40 分）完成，至少要把已经公开的能够跑通过。"
+    },
+    "agent_work": "按题面公开规模编写本地验证驱动，重建生产镜像，独立验证查询和重启后全部记录；正式驱动和官方基线未取得。",
+    "tool_results": [
+      "种子3179三轮及种子9143、27183、2468各一轮通过；每轮100批写入、1000个计时查询，过滤和无过滤平均Recall@10均为1.0，重启后核对全部10000条记录。",
+      "提交确认后强杀：100批写入均已确认，重启后完整核对10000条记录通过；生产镜像公开功能桥20例、95条SQL通过。",
+      "WSL共享ext4设备的16MiB同步写入校准观测到该容器io.stat写入增量16MiB；它不是官方独占数据设备统计。"
+    ],
+    "limitations": "仅本地开发协议及本地生成负载，未证明正式29例准入、正式驱动兼容、官方性能分数或名次；未提交或推送。"
+  },
   "current_session_hmy_20261109": {
-  "scope": "本次会话的可核对摘录；保留学生、Agent 和工具来源，非完整聊天导出。",
-  "historical_attribution": "此前条目来自队友交接或更早工作记录，身份和完整会话无法在本次会话中独立验证；不得自动归为当前学生的技术理解。",
-  "prior_material_sha256": "69a0e93a461eda00024332c9a00216a586fdc8ede7ff11df9bc060da1a6ca54a",
-  "dialogue": [
-    {
-      "id": "student-benchmark-question",
-      "source": "student",
-      "content": "### 3.3 小型性能 benchmark（40 分）这个完成了吗/"
+    "scope": "本次会话的可核对摘录；保留学生、Agent 和工具来源，非完整聊天导出。",
+    "historical_attribution": "此前条目来自队友交接或更早工作记录，身份和完整会话无法在本次会话中独立验证；不得自动归为当前学生的技术理解。",
+    "prior_material_sha256": "69a0e93a461eda00024332c9a00216a586fdc8ede7ff11df9bc060da1a6ca54a",
+    "dialogue": [
+      {
+        "id": "student-benchmark-question",
+        "source": "student",
+        "content": "### 3.3 小型性能 benchmark（40 分）这个完成了吗/"
+      },
+      {
+        "id": "agent-benchmark-answer",
+        "source": "agent",
+        "content": "目前通过的是 20 个公开样例、95 条 SQL；正式的 29 个 MySQL case 尚未全部验证通过。"
+      },
+      {
+        "id": "student-vscode-question",
+        "source": "student",
+        "content": "你改了什么，为什么我vscode里面资源管理器没有显示有什么修改？"
+      },
+      {
+        "id": "student-submission-question",
+        "source": "student",
+        "content": "可是我后面提交不是要测试seekdb 仓库的 `2026-competition-round2`，你写在E:\\MiniVectorDB\\work我怎么git提交？"
+      },
+      {
+        "id": "agent-worktree-answer",
+        "source": "agent",
+        "content": "E 盘目录虽然是独立工作区，但它仍然连接着同一个 Git 仓库，可以正常提交。"
+      },
+      {
+        "id": "student-branch-question",
+        "source": "student",
+        "content": "是不是要创立`2026-competition-round2`  分支，然后给这些分支的内容整理到`2026-competition-round2`里面去？"
+      },
+      {
+        "id": "agent-branch-answer",
+        "source": "agent",
+        "content": "最新的 `perf/exact-query-li-20261109` 已经包含前两条分支的提交。"
+      },
+      {
+        "id": "student-move-request",
+        "source": "student",
+        "content": "E:\\MiniVectorDB\\work能不能给这部分内容搞到F:\\OceanBase\\seekdb\\cpt-seekdb，分两个地方看起来费劲"
+      },
+      {
+        "id": "agent-move-answer",
+        "source": "agent",
+        "content": "文件已经复制到 F 盘，212 个文件与 E 盘副本的哈希逐一一致，原生产源码的历史清单也通过了校验。"
+      },
+      {
+        "id": "student-next-task",
+        "source": "student",
+        "content": "队友在创建分支，我先继续做下一个任务。"
+      }
+    ],
+    "tool_observations": [
+      {
+        "id": "six-round-offline-audit",
+        "source": "tool_output",
+        "content": "seed-3179 round 1: passed\nseed-3179 round 2: passed\nseed-3179 round 3: passed\nseed-9143 round 1: passed\nseed-27183 round 1: passed\nseed-2468-audit round 1: passed\nexit=0\n",
+        "context": "本地 seed 3179 三轮，以及 9143、27183、2468 各一轮；原始输出摘录，非官方驱动。"
+      },
+      {
+        "id": "post-commit-kill",
+        "source": "tool_output",
+        "content": "{\"passed\": true, \"batches\": 100, \"readback_rows\": 10000, \"failure\": null}\nexit=0\n",
+        "context": "100 批确认写入后主动 SIGKILL，单独重启并回读 10000 条；不是断电测试。"
+      },
+      {
+        "id": "git-worktrees",
+        "source": "tool_output_excerpt",
+        "content": "F:/OceanBase/seekdb/cpt-seekdb 75214d472 [2026-competition]\nE:/MiniVectorDB/work           944c08ee3 [codex/minivectordb-hmy-20261109]",
+        "context": "用户提出提交路径问题时只读检查的结果；这是当时状态。"
+      },
+      {
+        "id": "worktree-copy-verification",
+        "source": "tool_output",
+        "content": "Verified 212 files in both worktrees.",
+        "context": "根据迁移前 SHA-256 清单逐项复核 E、F 两个工作区的 212 个本轮文件。"
+      },
+      {
+        "id": "f-worktree-public",
+        "source": "tool_output_excerpt",
+        "content": "{\"passed\": true, \"cases\": 20, \"statements\": 95}\nexit=0",
+        "context": "从 F 盘源码本机重建后的本地公开样例桥；不是正式 29 例准入。"
+      }
+    ],
+    "evidence_links": [
+      {
+        "context": "本地 benchmark 任务及事后核验；任务指令本身不自动证明学生技术理解。",
+        "student_pointer": "/public_benchmark_hmy_20261109/user_excerpt/content",
+        "student_excerpt": "继续做先把3.3 小型性能 benchmark（40 分）完成，至少要把已经公开的能够跑通过。",
+        "result_pointer": "/current_session_hmy_20261109/tool_observations/0/content",
+        "result_excerpt": "seed-3179 round 1: passed\nseed-3179 round 2: passed\nseed-3179 round 3: passed"
+      },
+      {
+        "context": "用户提出分离工作区与提交位置的疑问，工具结果记录当时两个工作区。",
+        "student_pointer": "/current_session_hmy_20261109/dialogue/3/content",
+        "student_excerpt": "可是我后面提交不是要测试seekdb 仓库的 `2026-competition-round2`，你写在E:\\MiniVectorDB\\work我怎么git提交？",
+        "result_pointer": "/current_session_hmy_20261109/tool_observations/2/content",
+        "result_excerpt": "E:/MiniVectorDB/work           944c08ee3 [codex/minivectordb-hmy-20261109]"
+      },
+      {
+        "context": "用户要求把工作集中到 F 盘；工具检查迁移后文件与备份一致。",
+        "student_pointer": "/current_session_hmy_20261109/dialogue/7/content",
+        "student_excerpt": "E:\\MiniVectorDB\\work能不能给这部分内容搞到F:\\OceanBase\\seekdb\\cpt-seekdb，分两个地方看起来费劲",
+        "result_pointer": "/current_session_hmy_20261109/tool_observations/3/content",
+        "result_excerpt": "Verified 212 files in both worktrees."
+      }
+    ],
+    "limitations": [
+      "引用链接仅辅助定位真实材料，不是评分或保证得分；泛泛任务指令不自动构成有效实例。",
+      "没有把用户的问题当成已掌握数据库机制；没有将 Agent 方案、解释或验证自动归因给学生。",
+      "公开 20 例/95 SQL 与本地性能实验不等于正式 29 例、正式通信协议或官方得分。",
+      "本次对话和历史队友对话均非完整导出；缺失的学习过程不能补造。"
+    ]
+  },
+  "material_revision_20261110": {
+    "source": "agent_material_edit",
+    "production_base_commit": "7637a037e8a44c9da8e3bd65694e4474075b5657",
+    "prior_material_sha256": "af4b8df2a07d1f4e464f41ee8180dfe73e01bb7011734c820bddd3c16c7cfb64",
+    "prior_material_date": "2026-11-09",
+    "prior_material_scope": "真实对话摘录与本轮本地验证。不是完整聊天导出；未记录的学生理解、解释或反馈不得从Agent工作推断。尚未完成官方评测适配。",
+    "changed": "保留历史事实；拆分一条工具摘要/Agent决策；补版本索引和真实协议修复证据。仅材料文件改变，生产代码未修改。",
+    "history_fields": [
+      "exact_query_workpackage_20261109",
+      "handoff_update_investigation_20261109",
+      "conversations",
+      "experiments",
+      "limitations",
+      "optimization_round_20261109",
+      "local_hmy_round_20261109",
+      "public_benchmark_hmy_20261109",
+      "current_session_hmy_20261109"
+    ],
+    "withdrawn_action": "上一轮 ORGANIZER_QUESTION.txt 方案已由用户撤销，不发送、不推荐、不作为前置条件。旧审计封存文件仅作历史存档。",
+    "authorship_limit": "对话里收到的长指令可能采纳 Agent 建议。按用户提供的要求记录，不能据此宣称学生独立技术理解；建议方 Agent 的分析仍归 Agent。",
+    "missing": "学生亲自解释结果、独立预测与复盘的未记录内容仍缺失，没有代写或倒填。"
+  },
+  "version_index": {
+    "failed_submission": {
+      "commit": "d85b5061d2e6aa12fd0d7bcedf7b493a695c40c0",
+      "meaning": "用户提供的旧实际提测版本；旧正式失败原始输入/平台日志未获得。"
     },
-    {
-      "id": "agent-benchmark-answer",
-      "source": "agent",
-      "content": "目前通过的是 20 个公开样例、95 条 SQL；正式的 29 个 MySQL case 尚未全部验证通过。"
+    "accepted_production": {
+      "commit": "7637a037e8a44c9da8e3bd65694e4474075b5657",
+      "tree": "c53dcfa3377860109cc096e0693da1f88bfcf9f6",
+      "binary_sha256": "ade3e37de3f87723aad5fda8be8f9cb1809c714eac46edeb1d24ec2c4bbc68d7",
+      "image_id": "sha256:0ac647537c7a602213d4b8d896db59572e751bb6495e9328ed15cc42aee004cd",
+      "binding": "镜像构建时尚未生成提交；提交后逐一核对 15 个生产构建输入 SHA256 与此 Git tree 一致。"
     },
-    {
-      "id": "student-vscode-question",
-      "source": "student",
-      "content": "你改了什么，为什么我vscode里面资源管理器没有显示有什么修改？"
+    "official_tools": {
+      "repository": "https://github.com/oceanbase/seekdb",
+      "commit": "f4d4e26653af823a7601668802f80e374ad6643c",
+      "modified": false
     },
-    {
-      "id": "student-submission-question",
-      "source": "student",
-      "content": "可是我后面提交不是要测试seekdb 仓库的 `2026-competition-round2`，你写在E:\\MiniVectorDB\\work我怎么git提交？"
+    "historical_memory_round": {
+      "source_tree_digest_type": "historical source-manifest SHA256, not Git commit SHA",
+      "baseline_source_tree": "42affed2e283c8710151931f6f419eee64210eda42245be6d357dc20ae520bb2",
+      "candidate_v2_source_tree": "df56a37dcbae572b6283dfd4ee67cccc1e7e15f2117b59760cf7628936ae18f3"
     },
-    {
-      "id": "agent-worktree-answer",
-      "source": "agent",
-      "content": "E 盘目录虽然是独立工作区，但它仍然连接着同一个 Git 仓库，可以正常提交。"
+    "historical_exact_query": {
+      "base_commit": "75ecbf3e60a68de7d833aa899bc0fcb4c48df47e",
+      "note": "原型实验、负结果和最终保留生产 V2 属于该历史阶段；不标成 7637 的测试。"
     },
-    {
-      "id": "student-branch-question",
-      "source": "student",
-      "content": "是不是要创立`2026-competition-round2`  分支，然后给这些分支的内容整理到`2026-competition-round2`里面去？"
+    "other_historical_entries": "保留各条目原有版本/来源字段；未给出完整提交标识的旧实验不得推定为 accepted_production。"
+  },
+  "official_protocol_repair_20261110": {
+    "source": "current_execution_chat_and_frozen_tool_artifacts",
+    "scope": "2026-11-10 发生的协议修复、验证及后续用户反馈，2026-11-10 整理。不是完整聊天导出；不包含未发生的学生反思。",
+    "user_records": [
+      {
+        "id": "user-evidence-standard",
+        "source": "user_supplied_instruction",
+        "content": "不要将进程 RSS 当成 cgroup 内存峰值，也不要将文件大小当成物理 I/O。",
+        "source_locator": "用户要求审计验证证据的消息；节选，不是完整消息。",
+        "message_id": "01a1be8b-32a7-7422-bd4d-73b0351377f3",
+        "exact_timestamp": null,
+        "source_thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id_provenance": "建议方 Agent 通过 read_thread 回读并转交 message_id；执行方和独立审查 Agent 对照可见用户文字核对准确节选。",
+        "episode_id": "verification-evidence-audit",
+        "authorship_note": "执行对话可见用户原文；仅证明提供/采用了要求或反馈，不证明独立完成技术分析。"
+      },
+      {
+        "id": "user-no-bridge-proof",
+        "source": "user_supplied_instruction",
+        "content": "重点核对目前 --dev-protocol 开发接口\n   是否与正式驱动一致，不能用自制公开样例桥通过证明正式协议兼容。",
+        "source_locator": "用户要求定位准入失败的第 3 项；保留节选中的换行。",
+        "message_id": "01a1c36a-e2a1-70c1-94fe-afaa3edc70d4",
+        "exact_timestamp": null,
+        "source_thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id_provenance": "建议方 Agent 通过 read_thread 回读并转交 message_id；执行方和独立审查 Agent 对照可见用户文字核对准确节选。",
+        "episode_id": "formal-protocol-admission",
+        "authorship_note": "执行对话可见用户原文；仅证明提供/采用了要求或反馈，不证明独立完成技术分析。"
+      },
+      {
+        "id": "user-official-protocol",
+        "source": "user_supplied_instruction",
+        "content": "以实际被测提交 d85b5061d2e6aa12fd0d7bcedf7b493a695c40c0\n为对照，先用官方原版工具运行旧镜像的 --handshake-only，\n保存修复前失败证据，不修改工具来迁就程序。",
+        "source_locator": "用户“官方协议已发布”消息的连续原文节选。",
+        "message_id": "01a1c396-f7bc-7162-8286-b90c17c41e75",
+        "exact_timestamp": null,
+        "source_thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id_provenance": "建议方 Agent 通过 read_thread 回读并转交 message_id；执行方和独立审查 Agent 对照可见用户文字核对准确节选。",
+        "episode_id": "formal-protocol-admission",
+        "authorship_note": "执行对话可见用户原文；仅证明提供/采用了要求或反馈，不证明独立完成技术分析。"
+      },
+      {
+        "id": "user-jsonl-values",
+        "source": "user_supplied_instruction",
+        "content": "- 解析 execute/shutdown 请求，原样保留请求 id 的值和类型。\n- 按规范返回 columns/rows、affected_rows、嵌套 error 对象。\n- 每条响应换行并 flush；stdout 只能有协议报文。\n- shutdown 回滚未提交事务，完成清理，返回响应后退出0。\n- 正确处理 search_mode，不再由测试桥吞掉模式切换。\n- BIGINT 不经浮点转换，正确处理 JSON 转义和 Unicode。",
+        "source_locator": "用户“官方协议已发布”消息中连续 6 项要求；不能据收到此指令推断独立创作。",
+        "message_id": "01a1c396-f7bc-7162-8286-b90c17c41e75",
+        "exact_timestamp": null,
+        "source_thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id_provenance": "建议方 Agent 通过 read_thread 回读并转交 message_id；执行方和独立审查 Agent 对照可见用户文字核对准确节选。",
+        "episode_id": "formal-protocol-admission",
+        "authorship_note": "执行对话可见用户原文；仅证明提供/采用了要求或反馈，不证明独立完成技术分析。"
+      },
+      {
+        "id": "user-fix-validation-order",
+        "source": "user_supplied_instruction",
+        "content": "验证顺序：\n1. 官方 handshake-only；\n2. 官方 sql_crud；\n3. 官方全部公开用例；\n4. 经正式协议执行事务、错误后继续、重启和强杀恢复回归；\n5. 实际 Docker 默认入口、只读根文件系统、/data 持久化及资源验证。",
+        "source_locator": "用户“官方协议已发布”消息原文节选。",
+        "message_id": "01a1c396-f7bc-7162-8286-b90c17c41e75",
+        "exact_timestamp": null,
+        "source_thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id_provenance": "建议方 Agent 通过 read_thread 回读并转交 message_id；执行方和独立审查 Agent 对照可见用户文字核对准确节选。",
+        "episode_id": "formal-protocol-admission",
+        "authorship_note": "执行对话可见用户原文；仅证明提供/采用了要求或反馈，不证明独立完成技术分析。"
+      },
+      {
+        "id": "user-no-score-promise",
+        "source": "user_supplied_instruction",
+        "content": "交付可复核的修复及验证结果，不以只修好 ready 作为完成，\n不以公开用例通过承诺正式全部通过，不自动提交正式评测。",
+        "source_locator": "用户“官方协议已发布”消息末尾原文。",
+        "message_id": "01a1c396-f7bc-7162-8286-b90c17c41e75",
+        "exact_timestamp": null,
+        "source_thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id_provenance": "建议方 Agent 通过 read_thread 回读并转交 message_id；执行方和独立审查 Agent 对照可见用户文字核对准确节选。",
+        "episode_id": "formal-protocol-admission",
+        "authorship_note": "执行对话可见用户原文；仅证明提供/采用了要求或反馈，不证明独立完成技术分析。"
+      },
+      {
+        "id": "user-result-feedback",
+        "source": "user_reported_result",
+        "content": "最新正式评测结果：\nMySQL 正式用例通过，性能原始分为 2277.870638；\nAgent Prompt 显示“本项没有有效原始分”。",
+        "source_locator": "用户本次正式评测反馈消息开头；不是 Agent 直接从平台 API 读取的日志。",
+        "message_id": "01a1c446-613e-74e0-aa8e-1413dc14a287",
+        "exact_timestamp": null,
+        "source_thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id_provenance": "建议方 Agent 通过 read_thread 回读并转交 message_id；执行方和独立审查 Agent 对照可见用户文字核对准确节选。",
+        "episode_id": "formal-protocol-admission",
+        "authorship_note": "执行对话可见用户原文；仅证明提供/采用了要求或反馈，不证明独立完成技术分析。"
+      },
+      {
+        "id": "user-version-confirmation",
+        "source": "user_reported_result",
+        "content": "是，使用上述 commit 和分支",
+        "source_locator": "用户对明确包含 7637a037e8a44c9da8e3bd65694e4474075b5657 与 2026-competition-round2 的确认问题所作回复。",
+        "message_id": "01a1c447-94cf-7230-ab3f-9be1ac9c5d06",
+        "exact_timestamp": null,
+        "source_thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id_provenance": "建议方 Agent 通过 read_thread 回读并转交 message_id；执行方和独立审查 Agent 对照可见用户文字核对准确节选。",
+        "episode_id": "formal-protocol-admission",
+        "authorship_note": "执行对话可见用户原文；仅证明提供/采用了要求或反馈，不证明独立完成技术分析。"
+      }
+    ],
+    "agent_decisions": [
+      {
+        "id": "agent-earliest-failure",
+        "source": "agent_retrospective_summary",
+        "content": "先锁定旧实际提交和新官方工具。旧镜像在原版握手检查等待 120 秒后 TIMEOUT，stdout 没有 ready；这证实其与已发布接口不兼容，但缺少旧平台原始日志，不能断言是那次正式失败唯一原因。清理导致 exit 137 不能写成自发崩溃。"
+      },
+      {
+        "id": "agent-contract-not-bridge",
+        "source": "agent_retrospective_summary",
+        "content": "修改实际默认入口和序列化：恢复后主动 ready、请求 ID 保留校验后的 JSON 原始 token、嵌套 error、逐条 flush、解析并验证每请求 search_mode；ann 当前仍是精确扫描回退，未实现 ANN 加速索引。shutdown 先回滚并检查同步/关闭再响应。没有修改官方驱动迎合程序，也没有通过取消持久化同步换速度。"
+      },
+      {
+        "id": "agent-independent-checks",
+        "source": "agent_retrospective_summary",
+        "content": "公开驱动通过后仍增加实际容器事务/恢复、独立向量参考和大整数/Unicode 检查；数值相等不应掩盖 JSON 数字与字符串类型差异。保留 Docker stdout EPIPE 检查不可可靠触发的跳过，不把原生测试当成容器检查已通过。"
+      },
+      {
+        "id": "agent-material-correction",
+        "source": "agent_retrospective_summary",
+        "content": "先前材料中的正式协议未验证、Docker 不可用等限制属于历史时点；本次用版本索引和独立新节消除当前/历史混淆，不改写历史结果。平台新结果来自用户反馈，结构检查不能证明 Agent 语义评审有效，缺失的学生解释没有由 Agent 代填。"
+      }
+    ],
+    "tool_records": [
+      {
+        "id": "before-handshake",
+        "source": "tool_output",
+        "content": "{\n  \"scope\": \"public-protocol-check\",\n  \"passed\": false,\n  \"cases\": [\n    {\n      \"id\": \"handshake\",\n      \"status\": \"TIMEOUT\",\n      \"message\": \"JSON response timeout\",\n      \"duration_ms\": 120856\n    }\n  ],\n  \"note\": \"Local diagnostic only; no performance/Agent scores or platform callbacks.\"\n}\n",
+        "artifact_path_at_execution": "runtime/old-handshake-official/result.json",
+        "artifact_sha256": "07aa7e36bb8629482f320fc7781e702535bdc46e1b033f9204fa5574489fbec4",
+        "code_commit_binding": "d85b5061d2e6aa12fd0d7bcedf7b493a695c40c0",
+        "scope": "官方原版本地诊断；非历史平台失败输入",
+        "source_date": "2026-11-10",
+        "excerpt": false,
+        "observed_in_material_edit": false
+      },
+      {
+        "id": "after-handshake",
+        "source": "tool_output",
+        "content": "{\n  \"scope\": \"public-protocol-check\",\n  \"passed\": true,\n  \"cases\": [\n    {\n      \"id\": \"handshake\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1437\n    }\n  ],\n  \"note\": \"Local diagnostic only; no performance/Agent scores or platform callbacks.\"\n}\n",
+        "artifact_path_at_execution": "runtime/v1-handshake/official-output/result.json",
+        "artifact_sha256": "09cca4d832506f869b0d13a797c64bab94b8b1230b20a9b9be3c293b00c9f3d5",
+        "code_commit_binding": "7637a037e8a44c9da8e3bd65694e4474075b5657",
+        "scope": "官方原版本地握手检查",
+        "source_date": "2026-11-10",
+        "excerpt": false,
+        "observed_in_material_edit": false
+      },
+      {
+        "id": "after-crud",
+        "source": "tool_output",
+        "content": "{\n  \"scope\": \"public-protocol-check\",\n  \"passed\": true,\n  \"cases\": [\n    {\n      \"id\": \"sql_crud\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1373\n    }\n  ],\n  \"note\": \"Local diagnostic only; no performance/Agent scores or platform callbacks.\"\n}\n",
+        "artifact_path_at_execution": "runtime/v1-sql-crud/official-output/result.json",
+        "artifact_sha256": "5e09769aa0fb1aa185a6e810f4c25c860216b94ae4ca29a406dfca9dd36f6f17",
+        "code_commit_binding": "7637a037e8a44c9da8e3bd65694e4474075b5657",
+        "scope": "官方原版本地 sql_crud",
+        "source_date": "2026-11-10",
+        "excerpt": false,
+        "observed_in_material_edit": false
+      },
+      {
+        "id": "after-public",
+        "source": "tool_output",
+        "content": "{\n  \"scope\": \"public-protocol-check\",\n  \"passed\": true,\n  \"cases\": [\n    {\n      \"id\": \"sql_crud\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1473\n    },\n    {\n      \"id\": \"sql_comparisons\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1405\n    },\n    {\n      \"id\": \"sql_ordering\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1430\n    },\n    {\n      \"id\": \"sql_empty\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1416\n    },\n    {\n      \"id\": \"sql_primary_key\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1345\n    },\n    {\n      \"id\": \"sql_unicode\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1549\n    },\n    {\n      \"id\": \"sql_bigint\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1576\n    },\n    {\n      \"id\": \"sql_unsupported\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1750\n    },\n    {\n      \"id\": \"storage_restart\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 2711\n    },\n    {\n      \"id\": \"vector_euclidean\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1436\n    },\n    {\n      \"id\": \"transaction_commit\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1372\n    },\n    {\n      \"id\": \"transaction_rollback\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1406\n    },\n    {\n      \"id\": \"storage_mutations\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 2678\n    },\n    {\n      \"id\": \"storage_multiple_tables\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 2537\n    },\n    {\n      \"id\": \"vector_ties_and_filter\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1570\n    },\n    {\n      \"id\": \"vector_float32\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 1396\n    },\n    {\n      \"id\": \"vector_index_maintenance\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 2847\n    },\n    {\n      \"id\": \"transaction_failed_insert\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 2778\n    },\n    {\n      \"id\": \"transaction_autocommit_atomic\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 2565\n    },\n    {\n      \"id\": \"transaction_shutdown_rollback\",\n      \"status\": \"PASS\",\n      \"message\": \"\",\n      \"duration_ms\": 2529\n    }\n  ],\n  \"note\": \"Local diagnostic only; no performance/Agent scores or platform callbacks.\"\n}\n",
+        "artifact_path_at_execution": "runtime/v1-all-public/official-output/result.json",
+        "artifact_sha256": "585742d06dfb81ac71df7ebb264e9a77f2178a2613353109530bd84222ee61c4",
+        "code_commit_binding": "7637a037e8a44c9da8e3bd65694e4474075b5657",
+        "scope": "官方原版本地 20 公开用例；不能冒充隐藏正式评测",
+        "source_date": "2026-11-10",
+        "excerpt": false,
+        "observed_in_material_edit": false
+      },
+      {
+        "id": "supplemental",
+        "source": "tool_output",
+        "content": "{\n  \"scope\": \"independent-supplemental-formal-entry\",\n  \"passed\": true,\n  \"cases\": [\n    {\n      \"case\": \"framing-and-values\",\n      \"status\": \"PASS\",\n      \"assertions\": 236,\n      \"seconds\": 1.3103074629999583\n    },\n    {\n      \"case\": \"local-policy-boundaries\",\n      \"status\": \"PASS\",\n      \"details\": {\n        \"scope\": \"Local implementation policy beyond specified valid requests; not evidence of hidden input requirements or ANN implementation.\"\n      },\n      \"assertions\": 161,\n      \"seconds\": 1.352975896000089\n    },\n    {\n      \"case\": \"transaction-shutdown\",\n      \"status\": \"PASS\",\n      \"assertions\": 146,\n      \"seconds\": 2.411891602999958\n    },\n    {\n      \"case\": \"crash-recovery\",\n      \"status\": \"PASS\",\n      \"assertions\": 121,\n      \"seconds\": 2.891784978999908\n    },\n    {\n      \"case\": \"vector-independent-oracle\",\n      \"status\": \"PASS\",\n      \"details\": {\n        \"oracle_queries\": 72,\n        \"seed\": 291507,\n        \"ann_scope\": \"request-mode switching with exact fallback; no ANN-index or official authorization claim\"\n      },\n      \"assertions\": 2494,\n      \"seconds\": 1.519515910999985\n    },\n    {\n      \"case\": \"bounded-large-output\",\n      \"status\": \"PASS\",\n      \"details\": {\n        \"rows_verified\": 20000,\n        \"memory\": \"128MiB\",\n        \"scope\": \"Stricter local diagnostic than official 2GiB; not a performance or physical-I/O benchmark.\"\n      },\n      \"assertions\": 21599,\n      \"seconds\": 3.8823030519999975\n    },\n    {\n      \"case\": \"broken-database-stdout\",\n      \"status\": \"SKIPPED\",\n      \"reason\": \"Docker daemon interposes logging/attach pipes; closing client stdout does not reliably make the database write return EPIPE. No entrypoint override or instrumentation used. Native legacy check cannot substitute for this missing formal-container check.\"\n    }\n  ],\n  \"assertions\": 24757,\n  \"official_assessment_submitted\": false,\n  \"no_hidden_suite_claim\": true\n}\n",
+        "artifact_path_at_execution": "supplemental/results-v1/result.json",
+        "artifact_sha256": "263c47fdc16fd6546968f090f15ff4f7e533eaf374c111cd4c5461ead42a4d99",
+        "code_commit_binding": "7637a037e8a44c9da8e3bd65694e4474075b5657",
+        "scope": "Agent 编写补充回归；含明确跳过项，不是官方评分器",
+        "source_date": "2026-11-10",
+        "excerpt": false,
+        "observed_in_material_edit": false
+      },
+      {
+        "id": "native-tests",
+        "source": "tool_output",
+        "content": "Internal ctest changing into directory: /var/tmp/minivectordb-protocol-native\nUpdateCTestConfiguration  from :/var/tmp/minivectordb-protocol-native/DartConfiguration.tcl\nUpdateCTestConfiguration  from :/var/tmp/minivectordb-protocol-native/DartConfiguration.tcl\nTest project /var/tmp/minivectordb-protocol-native\nConstructing a list of tests\nDone constructing a list of tests\nUpdating test list for fixtures\nAdded 0 tests to meet fixture requirements\nChecking test dependency graph...\nChecking test dependency graph end\ntest 1\n    Start 1: parser\n\n1: Test command: /var/tmp/minivectordb-protocol-native/test_parser\n1: Working Directory: /var/tmp/minivectordb-protocol-native\n1: Test timeout computed to be: 10000000\n1: parser checks passed: 76\n1/6 Test #1: parser ...........................   Passed    0.00 sec\ntest 2\n    Start 2: storage\n\n2: Test command: /var/tmp/minivectordb-protocol-native/test_storage\n2: Working Directory: /var/tmp/minivectordb-protocol-native\n2: Test timeout computed to be: 10000000\n2: storage: 9 suites passed (including commit truncation, recovery interruption, and checkpoint crash boundaries)\n2/6 Test #2: storage ..........................   Passed    2.81 sec\ntest 3\n    Start 3: engine_extra\n\n3: Test command: /var/tmp/minivectordb-protocol-native/test_engine_extra\n3: Working Directory: /var/tmp/minivectordb-protocol-native\n3: Test timeout computed to be: 10000000\n3: engine extra checks passed: 30\n3/6 Test #3: engine_extra .....................   Passed    0.03 sec\ntest 4\n    Start 4: spill\n\n4: Test command: /var/tmp/minivectordb-protocol-native/test_spill\n4: Working Directory: /var/tmp/minivectordb-protocol-native\n4: Test timeout computed to be: 10000000\n4: spill checks passed: 9900\n4/6 Test #4: spill ............................   Passed    0.03 sec\ntest 5\n    Start 5: compact_rows\n\n5: Test command: /var/tmp/minivectordb-protocol-native/test_compact_rows\n5: Working Directory: /var/tmp/minivectordb-protocol-native\n5: Test timeout computed to be: 10000000\n5: compact_rows: 7 suites passed; allocation faults, no-allocation seal, high-water retention and slot reuse checked\n5/6 Test #5: compact_rows .....................   Passed    0.33 sec\ntest 6\n    Start 6: protocol\n\n6: Test command: /var/tmp/minivectordb-protocol-native/test_protocol\n6: Working Directory: /var/tmp/minivectordb-protocol-native\n6: Test timeout computed to be: 10000000\n6: 80 protocol checks passed\n6/6 Test #6: protocol .........................   Passed    0.03 sec\n\n100% tests passed, 0 tests failed out of 6\n\nTotal Test time (real) =   3.23 sec\n",
+        "artifact_path_at_execution": "native-regression-v1/ctest.stdout.log",
+        "artifact_sha256": "e2eba01a0892092c74671c0364ce69d16c440cbb82132603919852c0aa515629",
+        "code_commit_binding": "7637a037e8a44c9da8e3bd65694e4474075b5657",
+        "scope": "原生本地 Release 回归；本轮材料编辑没有重新运行生产测试",
+        "source_date": "2026-11-10",
+        "excerpt": false,
+        "observed_in_material_edit": false
+      }
+    ],
+    "raw_protocol_examples": {
+      "source_root": "minivectordb-protocol-20261110-f4d4e266",
+      "official_commit": "f4d4e26653af823a7601668802f80e374ad6643c",
+      "versions": {
+        "old": {
+          "commit": "d85b5061d2e6aa12fd0d7bcedf7b493a695c40c0",
+          "image_id": "sha256:0adec5c97817e184ba3b8f367b93b85d1d5ea4d660faef724ebe0eabcb33de4c",
+          "binary_sha256": "ffe90b07f75fbb8b38ddf225b5e04176318d3f46614e5a195c646b18314aae4d",
+          "binding": {
+            "path": "runtime/old-handshake-binding.json",
+            "sha256": "c18c50b62aee812f438bc61d48d0f24b239d9c91bf9d2323f7f328331327058b"
+          }
+        },
+        "candidate": {
+          "commit": "7637a037e8a44c9da8e3bd65694e4474075b5657",
+          "image_id": "sha256:0ac647537c7a602213d4b8d896db59572e751bb6495e9328ed15cc42aee004cd",
+          "binary_sha256": "ade3e37de3f87723aad5fda8be8f9cb1809c714eac46edeb1d24ec2c4bbc68d7",
+          "binding": {
+            "path": "runtime/candidate-v1/build-binding.json",
+            "sha256": "cd5480c184603124a3930f64231646e9016d6d3435ea44a0e16efe7740ebef78"
+          },
+          "binding_note": "构建和执行时源码尚未提交；事后 Git blob/SHA256 与 7637 的生产输入逐项一致，不能称当时直接检出了该 SHA。"
+        }
+      },
+      "records": [
+        {
+          "id": "old-official-handshake",
+          "title": "修复前官方握手超时",
+          "source": "evidence_bundle",
+          "version_key": "old",
+          "occurred_at_utc": "2026-11-10T03:57:04.200811+00:00",
+          "scope": "原版公开 protocol_check/run.py --handshake-only；不是历史平台内部日志",
+          "fragments": [
+            {
+              "kind": "exact_raw_text",
+              "line_start": null,
+              "line_end": null,
+              "content": "{\n  \"scope\": \"public-protocol-check\",\n  \"passed\": false,\n  \"cases\": [\n    {\n      \"id\": \"handshake\",\n      \"status\": \"TIMEOUT\",\n      \"message\": \"JSON response timeout\",\n      \"duration_ms\": 120856\n    }\n  ],\n  \"note\": \"Local diagnostic only; no performance/Agent scores or platform callbacks.\"\n}\n",
+              "source_id": "source-1",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_parsed_json_value",
+              "json_pointer": "/driver_exit_code",
+              "value": 1,
+              "source_id": "source-2",
+              "source": "tool_value_extracted_from_json",
+              "content": "1",
+              "content_note": "从已校验 JSON pointer 值序列化为字符串供引用；不是整行原始日志。"
+            },
+            {
+              "kind": "exact_parsed_json_value",
+              "json_pointer": "/running",
+              "value": true,
+              "source_id": "source-3",
+              "source": "tool_value_extracted_from_json",
+              "content": "true",
+              "content_note": "从已校验 JSON pointer 值序列化为字符串供引用；不是整行原始日志。"
+            },
+            {
+              "kind": "exact_parsed_json_value",
+              "json_pointer": "/stdout_bytes_so_far",
+              "value": 0,
+              "source_id": "source-3",
+              "source": "tool_value_extracted_from_json",
+              "content": "0",
+              "content_note": "从已校验 JSON pointer 值序列化为字符串供引用；不是整行原始日志。"
+            },
+            {
+              "kind": "exact_parsed_json_value",
+              "json_pointer": "/oom_killed",
+              "value": false,
+              "source_id": "source-3",
+              "source": "tool_value_extracted_from_json",
+              "content": "false",
+              "content_note": "从已校验 JSON pointer 值序列化为字符串供引用；不是整行原始日志。"
+            }
+          ],
+          "interpretation": {
+            "source": "agent_retrospective_summary",
+            "expected": "恢复后程序应在接收请求前主动发出 ready；原版驱动等待该报文。",
+            "observed": "驱动结果为 TIMEOUT/JSON response timeout，等待约120秒；等待中程序存活、stdout为0字节、未OOM。",
+            "limitations": "这是已复现的启动协议不兼容，不声称能确定历史正式评测的所有失败根因。"
+          }
+        },
+        {
+          "id": "v1-handshake",
+          "title": "修复后官方握手与shutdown",
+          "source": "evidence_bundle",
+          "version_key": "candidate",
+          "occurred_at_utc": "2026-11-10T04:08:07.645326+00:00",
+          "scope": "未修改官方驱动/config；真实Docker默认入口、只读根、持久/data、2GiB限制",
+          "fragments": [
+            {
+              "kind": "exact_raw_text",
+              "line_start": null,
+              "line_end": null,
+              "content": "{\"id\": 1, \"op\": \"shutdown\"}\n",
+              "source_id": "source-4",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": null,
+              "line_end": null,
+              "content": "{\"type\":\"ready\"}\n{\"id\":1,\"ok\":true}\n",
+              "source_id": "source-5",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_parsed_json_value",
+              "json_pointer": "/docker_cli_exit_code",
+              "value": 0,
+              "source_id": "source-6",
+              "source": "tool_value_extracted_from_json",
+              "content": "0",
+              "content_note": "从已校验 JSON pointer 值序列化为字符串供引用；不是整行原始日志。"
+            }
+          ],
+          "interpretation": {
+            "source": "agent_retrospective_summary",
+            "expected": "先ready，每个请求一条响应；shutdown响应后退出0。",
+            "observed": "原始输出包含精确ready和shutdown成功响应，CLI退出0。",
+            "limitations": "仅公开诊断，不能由此单独保证隐藏用例或Agent评分。"
+          }
+        },
+        {
+          "id": "v1-sql-crud",
+          "title": "原版sql_crud请求与响应",
+          "source": "evidence_bundle",
+          "version_key": "candidate",
+          "occurred_at_utc": "2026-11-10T04:08:15.892820+00:00",
+          "scope": "未修改官方驱动/config；真实Docker默认入口、只读根、持久/data、2GiB限制",
+          "fragments": [
+            {
+              "kind": "exact_raw_text",
+              "line_start": null,
+              "line_end": null,
+              "content": "{\"id\": 1, \"op\": \"execute\", \"sql\": \"CREATE TABLE docs (id BIGINT PRIMARY KEY, content VARCHAR(16));\", \"search_mode\": \"exact\"}\n{\"id\": 2, \"op\": \"execute\", \"sql\": \"INSERT INTO docs VALUES (1, '初始');\", \"search_mode\": \"exact\"}\n{\"id\": 3, \"op\": \"execute\", \"sql\": \"SELECT id, content FROM docs;\", \"search_mode\": \"exact\"}\n{\"id\": 4, \"op\": \"execute\", \"sql\": \"UPDATE docs SET content = '更新' WHERE id = 1;\", \"search_mode\": \"exact\"}\n{\"id\": 5, \"op\": \"execute\", \"sql\": \"SELECT content FROM docs;\", \"search_mode\": \"exact\"}\n{\"id\": 6, \"op\": \"execute\", \"sql\": \"DELETE FROM docs WHERE id = 1;\", \"search_mode\": \"exact\"}\n{\"id\": 7, \"op\": \"execute\", \"sql\": \"SELECT id FROM docs;\", \"search_mode\": \"exact\"}\n{\"id\": 8, \"op\": \"shutdown\"}\n",
+              "source_id": "source-7",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": null,
+              "line_end": null,
+              "content": "{\"type\":\"ready\"}\n{\"id\":1,\"ok\":true}\n{\"id\":2,\"ok\":true,\"affected_rows\":1}\n{\"id\":3,\"ok\":true,\"columns\":[\"id\",\"content\"],\"rows\":[[1,\"初始\"]]}\n{\"id\":4,\"ok\":true,\"affected_rows\":1}\n{\"id\":5,\"ok\":true,\"columns\":[\"content\"],\"rows\":[[\"更新\"]]}\n{\"id\":6,\"ok\":true,\"affected_rows\":1}\n{\"id\":7,\"ok\":true,\"columns\":[\"id\"],\"rows\":[]}\n{\"id\":8,\"ok\":true}\n",
+              "source_id": "source-8",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_parsed_json_value",
+              "json_pointer": "/docker_cli_exit_code",
+              "value": 0,
+              "source_id": "source-9",
+              "source": "tool_value_extracted_from_json",
+              "content": "0",
+              "content_note": "从已校验 JSON pointer 值序列化为字符串供引用；不是整行原始日志。"
+            }
+          ],
+          "interpretation": {
+            "source": "agent_retrospective_summary",
+            "expected": "插入/更新/删除影响1行，查询依次得到初始值、更新值、空结果；保留列名和请求id。",
+            "observed": "记录中的查询返回[1,初始]、更新、空结果，各写操作affected_rows为1；CLI退出0。",
+            "limitations": "仅公开诊断，不能由此单独保证隐藏用例或Agent评分。"
+          }
+        },
+        {
+          "id": "bigint-unicode",
+          "title": "大整数id与Unicode真实报文",
+          "source": "evidence_bundle",
+          "version_key": "candidate",
+          "occurred_at_utc": "2026-11-10T04:09:46.954244048Z",
+          "scope": "独立补充测试，经正式Docker默认接口",
+          "fragments": [
+            {
+              "kind": "exact_raw_text",
+              "line_start": 7,
+              "line_end": 7,
+              "content": "{\"id\":9007199254740993,\"op\":\"execute\",\"sql\":\"SELECT id FROM docs ORDER BY id;\",\"search_mode\":\"exact\"}\n",
+              "source_id": "source-10",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": 8,
+              "line_end": 8,
+              "content": "{\"id\":9007199254740993,\"ok\":true,\"columns\":[\"id\"],\"rows\":[]}\n",
+              "source_id": "source-11",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": 13,
+              "line_end": 16,
+              "content": "{\"id\":\"编号🚀\\n\\\"\\\\\",\"op\":\"execute\",\"sql\":\"SELECT id FROM docs ORDER BY id;\",\"search_mode\":\"exact\"}\n{\"id\":14,\"op\":\"execute\",\"sql\":\"INSERT INTO docs VALUES (9007199254740993,'第一行\\nsecond; {\\\"quote\\\":\\\"值\\\"}\\\\\\\\tail\\t🚀');\",\"search_mode\":\"exact\"}\n{\"id\":15,\"op\":\"execute\",\"sql\":\"SELECT id,content FROM docs ORDER BY id;\",\"search_mode\":\"exact\"}\n{\"id\": \"\\u4e2d\\u6587\\ud83d\\ude80\", \"op\": \"execute\", \"sql\": \"SELECT\\n id,content\\n FROM docs ORDER BY id;\", \"search_mode\": \"exact\"}\n",
+              "source_id": "source-10",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": 14,
+              "line_end": 17,
+              "content": "{\"id\":\"编号🚀\\n\\\"\\\\\",\"ok\":true,\"columns\":[\"id\"],\"rows\":[]}\n{\"id\":14,\"ok\":true,\"affected_rows\":1}\n{\"id\":15,\"ok\":true,\"columns\":[\"id\",\"content\"],\"rows\":[[9007199254740993,\"第一行\\u000asecond; {\\\"quote\\\":\\\"值\\\"}\\\\tail\\u0009🚀\"]]}\n{\"id\":\"\\u4e2d\\u6587\\ud83d\\ude80\",\"ok\":true,\"columns\":[\"id\",\"content\"],\"rows\":[[9007199254740993,\"第一行\\u000asecond; {\\\"quote\\\":\\\"值\\\"}\\\\tail\\u0009🚀\"]]}\n",
+              "source_id": "source-11",
+              "source": "tool_output"
+            }
+          ],
+          "interpretation": {
+            "source": "agent_retrospective_summary",
+            "expected": "id=9007199254740993不经double舍入；字符串id保留类型和值；SQL大整数及转义中文/换行/emoji往返保持语义。",
+            "observed": "响应保留9007199254740993；字符串id与SQL内容的中文、换行、引号、反斜线和emoji均被实际返回。",
+            "limitations": "这是补充输入覆盖；不将扩展id边界推断为隐藏题包必测要求。"
+          }
+        },
+        {
+          "id": "sql-error-continue",
+          "title": "错误后继续同一会话",
+          "source": "evidence_bundle",
+          "version_key": "candidate",
+          "occurred_at_utc": "2026-11-10T04:09:46.954244048Z",
+          "scope": "独立补充测试；同一framing-and-values会话",
+          "fragments": [
+            {
+              "kind": "exact_raw_text",
+              "line_start": 17,
+              "line_end": 18,
+              "content": "{\"id\":16,\"op\":\"execute\",\"sql\":\"INSERT INTO docs VALUES (1,'one'),(2,'two');\",\"search_mode\":\"exact\"}\n{\"id\":17,\"op\":\"execute\",\"sql\":\"UPDATE docs SET content='changed' WHERE id=1;\",\"search_mode\":\"exact\"}\n",
+              "source_id": "source-10",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": 18,
+              "line_end": 19,
+              "content": "{\"id\":16,\"ok\":true,\"affected_rows\":2}\n{\"id\":17,\"ok\":true,\"affected_rows\":1}\n",
+              "source_id": "source-11",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": 22,
+              "line_end": 23,
+              "content": "{\"id\":21,\"op\":\"execute\",\"sql\":\"INSERT INTO docs VALUES (1,'duplicate');\",\"search_mode\":\"exact\"}\n{\"id\":22,\"op\":\"execute\",\"sql\":\"SELECT content FROM docs WHERE id=1;\",\"search_mode\":\"exact\"}\n",
+              "source_id": "source-10",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": 23,
+              "line_end": 24,
+              "content": "{\"id\":21,\"ok\":false,\"error\":{\"code\":\"DUPLICATE_KEY\",\"message\":\"duplicate primary key\"}}\n{\"id\":22,\"ok\":true,\"columns\":[\"content\"],\"rows\":[[\"changed\"]]}\n",
+              "source_id": "source-11",
+              "source": "tool_output"
+            }
+          ],
+          "interpretation": {
+            "source": "agent_retrospective_summary",
+            "expected": "更新id=1成功后，重复主键应返回嵌套error，不终止会话；后续查询应继续返回changed。",
+            "observed": "id=21返回DUPLICATE_KEY，紧随其后的id=22查询成功返回changed。",
+            "limitations": "这里摘录的id=1源记录由同会话第17行批量INSERT建立；完整上下文存在原日志，片段没有改写报文。"
+          }
+        },
+        {
+          "id": "transaction-shutdown",
+          "title": "失败语句原子性、shutdown回滚与重启",
+          "source": "evidence_bundle",
+          "version_key": "candidate",
+          "occurred_at_utc": "2026-11-10T04:09:49.626336131Z",
+          "scope": "独立补充测试，两个进程复用同一/data",
+          "fragments": [
+            {
+              "kind": "exact_raw_text",
+              "line_start": null,
+              "line_end": null,
+              "content": "{\"id\":1,\"op\":\"execute\",\"sql\":\"CREATE TABLE t (id BIGINT PRIMARY KEY, n BIGINT);\",\"search_mode\":\"exact\"}\n{\"id\":2,\"op\":\"execute\",\"sql\":\"INSERT INTO t VALUES (1,10);\",\"search_mode\":\"exact\"}\n{\"id\":3,\"op\":\"execute\",\"sql\":\"BEGIN;\",\"search_mode\":\"exact\"}\n{\"id\":4,\"op\":\"execute\",\"sql\":\"INSERT INTO t VALUES (2,20);\",\"search_mode\":\"exact\"}\n{\"id\":5,\"op\":\"execute\",\"sql\":\"INSERT INTO t VALUES (3,30),(2,200);\",\"search_mode\":\"exact\"}\n{\"id\":6,\"op\":\"execute\",\"sql\":\"SELECT id,n FROM t ORDER BY id;\",\"search_mode\":\"exact\"}\n{\"id\":7,\"op\":\"execute\",\"sql\":\"UPDATE t SET n=21 WHERE id=2;\",\"search_mode\":\"exact\"}\n{\"id\":8,\"op\":\"execute\",\"sql\":\"COMMIT;\",\"search_mode\":\"exact\"}\n{\"id\":9,\"op\":\"execute\",\"sql\":\"BEGIN;\",\"search_mode\":\"exact\"}\n{\"id\":10,\"op\":\"execute\",\"sql\":\"UPDATE t SET n=99 WHERE id=1;\",\"search_mode\":\"exact\"}\n{\"id\":11,\"op\":\"execute\",\"sql\":\"INSERT INTO t VALUES (4,40);\",\"search_mode\":\"exact\"}\n{\"id\":12,\"op\":\"execute\",\"sql\":\"SELECT id,n FROM t ORDER BY id;\",\"search_mode\":\"exact\"}\n{\"id\":\"shutdown-结束\",\"op\":\"shutdown\"}\n",
+              "source_id": "source-12",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": null,
+              "line_end": null,
+              "content": "{\"type\":\"ready\"}\n{\"id\":1,\"ok\":true}\n{\"id\":2,\"ok\":true,\"affected_rows\":1}\n{\"id\":3,\"ok\":true}\n{\"id\":4,\"ok\":true,\"affected_rows\":1}\n{\"id\":5,\"ok\":false,\"error\":{\"code\":\"DUPLICATE_KEY\",\"message\":\"duplicate primary key\"}}\n{\"id\":6,\"ok\":true,\"columns\":[\"id\",\"n\"],\"rows\":[[1,10],[2,20]]}\n{\"id\":7,\"ok\":true,\"affected_rows\":1}\n{\"id\":8,\"ok\":true}\n{\"id\":9,\"ok\":true}\n{\"id\":10,\"ok\":true,\"affected_rows\":1}\n{\"id\":11,\"ok\":true,\"affected_rows\":1}\n{\"id\":12,\"ok\":true,\"columns\":[\"id\",\"n\"],\"rows\":[[1,99],[2,21],[4,40]]}\n{\"id\":\"shutdown-结束\",\"ok\":true}\n",
+              "source_id": "source-13",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": null,
+              "line_end": null,
+              "content": "{\"id\":1,\"op\":\"execute\",\"sql\":\"SELECT id,n FROM t ORDER BY id;\",\"search_mode\":\"exact\"}\n{\"id\":2,\"op\":\"execute\",\"sql\":\"BEGIN;\",\"search_mode\":\"exact\"}\n{\"id\":3,\"op\":\"execute\",\"sql\":\"DELETE FROM t WHERE id=1;\",\"search_mode\":\"exact\"}\n{\"id\":4,\"op\":\"execute\",\"sql\":\"ROLLBACK;\",\"search_mode\":\"exact\"}\n{\"id\":5,\"op\":\"execute\",\"sql\":\"SELECT id,n FROM t ORDER BY id;\",\"search_mode\":\"exact\"}\n{\"id\":\"shutdown-结束\",\"op\":\"shutdown\"}\n",
+              "source_id": "source-14",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": null,
+              "line_end": null,
+              "content": "{\"type\":\"ready\"}\n{\"id\":1,\"ok\":true,\"columns\":[\"id\",\"n\"],\"rows\":[[1,10],[2,21]]}\n{\"id\":2,\"ok\":true}\n{\"id\":3,\"ok\":true,\"affected_rows\":1}\n{\"id\":4,\"ok\":true}\n{\"id\":5,\"ok\":true,\"columns\":[\"id\",\"n\"],\"rows\":[[1,10],[2,21]]}\n{\"id\":\"shutdown-结束\",\"ok\":true}\n",
+              "source_id": "source-15",
+              "source": "tool_output"
+            }
+          ],
+          "interpretation": {
+            "source": "agent_retrospective_summary",
+            "expected": "事务中批量INSERT含重复键时不能部分写入id=3；提交后只保留[1,10]、[2,21]；第二事务未提交的[1,99]和[4,40]在shutdown后应回滚；重启后显式ROLLBACK也应还原。",
+            "observed": "失败INSERT后仅[1,10]、[2,20]；提交更新2为21后开启未提交事务，关机前可见[1,99]、[2,21]、[4,40]，重启恢复为[1,10]、[2,21]；删除后ROLLBACK仍得到这两行。",
+            "limitations": "实际SQL与完整请求响应直接嵌入；不把正常shutdown当断电测试。"
+          }
+        },
+        {
+          "id": "shutdown-sync-fault",
+          "title": "shutdown同步故障不返回假成功",
+          "source": "evidence_bundle",
+          "version_key": "candidate",
+          "occurred_at_utc": null,
+          "scope": "补充原生Linux LD_PRELOAD故障注入；执行日期2026-11-10，未单独记录精确起止时间",
+          "fragments": [
+            {
+              "kind": "exact_raw_text",
+              "line_start": 50,
+              "line_end": 62,
+              "content": " env=dict(os.environ,LD_PRELOAD=str(library.resolve()),MVDB_TEST_FAULT_MARKER=str(marker.resolve()),MVDB_TEST_FAULT_OPERATION=operation)\n s=Session(directory,operation+\"-failure\",env)\n for ident,sql in enumerate((\"CREATE TABLE t(id BIGINT PRIMARY KEY)\",\"INSERT INTO t VALUES(1)\",\"BEGIN\",\"INSERT INTO t VALUES(2)\"),1):\n  assert s.request(ident,sql)[\"ok\"] is True\n marker.write_text(\"inject only after successful committed and pending writes\")\n response=s.request(5)\n assert response[\"ok\"] is False and response[\"error\"][\"code\"]==\"IO\",response\n status=s.finish(1); marker.unlink()\n restored=Session(directory,operation+\"-restart\",dict(os.environ))\n res=restored.request(\"check\",\"SELECT id FROM t ORDER BY id\")\n assert res[\"ok\"] is True and res[\"rows\"]==[[1]],res\n assert restored.request(\"bye\")=={\"id\":\"bye\",\"ok\":True}\n restored.finish(0)\n",
+              "source_id": "source-16",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": null,
+              "line_end": null,
+              "content": "{\"type\":\"ready\"}\n{\"id\":1,\"ok\":true}\n{\"id\":2,\"ok\":true,\"affected_rows\":1}\n{\"id\":3,\"ok\":true}\n{\"id\":4,\"ok\":true,\"affected_rows\":1}\n{\"id\":5,\"ok\":false,\"error\":{\"code\":\"IO\",\"message\":\"sync journal: Input/output error\"}}\n",
+              "source_id": "source-17",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_raw_text",
+              "line_start": null,
+              "line_end": null,
+              "content": "{\"type\":\"ready\"}\n{\"id\":\"check\",\"ok\":true,\"columns\":[\"id\"],\"rows\":[[1]]}\n{\"id\":\"bye\",\"ok\":true}\n",
+              "source_id": "source-18",
+              "source": "tool_output"
+            },
+            {
+              "kind": "exact_parsed_json_value",
+              "json_pointer": "/results/1",
+              "value": {
+                "operation": "sync",
+                "failure_response": {
+                  "id": 5,
+                  "ok": false,
+                  "error": {
+                    "code": "IO",
+                    "message": "sync journal: Input/output error"
+                  }
+                },
+                "exit_code": 1,
+                "recovered_rows": [
+                  [
+                    1
+                  ]
+                ],
+                "passed": true
+              },
+              "source_id": "source-19",
+              "source": "tool_value_extracted_from_json",
+              "content": "{\"operation\": \"sync\", \"failure_response\": {\"id\": 5, \"ok\": false, \"error\": {\"code\": \"IO\", \"message\": \"sync journal: Input/output error\"}}, \"exit_code\": 1, \"recovered_rows\": [[1]], \"passed\": true}",
+              "content_note": "从已校验 JSON pointer 值序列化为字符串供引用；不是整行原始日志。"
+            }
+          ],
+          "interpretation": {
+            "source": "agent_retrospective_summary",
+            "expected": "先提交id=1，在事务内暂存id=2；仅在shutdown阶段注入同步EIO，应返回IO错误并exit1；恢复只保留已提交id=1。",
+            "observed": "原始stdout给出sync journal: Input/output error；结果对象exit_code=1；重启查询返回[[1]]。",
+            "limitations": "原生注入，不能冒充Docker实际入口故障注入或物理断电验证。"
+          }
+        }
+      ],
+      "selection_policy": "原始文本逐字节解码或明确标为JSON pointer值；interpretation为本轮Agent事后摘要，不是学生原话或原始工具输出。未重跑测试，未修改封存证据。",
+      "sources": [
+        {
+          "id": "source-1",
+          "path": "runtime/old-handshake-official/result.json",
+          "sha256": "07aa7e36bb8629482f320fc7781e702535bdc46e1b033f9204fa5574489fbec4"
+        },
+        {
+          "id": "source-2",
+          "path": "runtime/old-handshake-binding.json",
+          "sha256": "c18c50b62aee812f438bc61d48d0f24b239d9c91bf9d2323f7f328331327058b"
+        },
+        {
+          "id": "source-3",
+          "path": "runtime/old-handshake-running-observation.json",
+          "sha256": "f8bac04e5473df6a44e44047c7f0cd388974e3c8a4cfb82cfbf08e7ff35bd3aa"
+        },
+        {
+          "id": "source-4",
+          "path": "runtime/v1-handshake/docker-witness/1794283687885081158-8887-vectordb-judge-7acdceb31aee41329225ae0a33e41e57/stdin.jsonl",
+          "sha256": "bc5b16a025078880b7646cb38d5f842465f526429dcea604cc7df7d1b0e97794"
+        },
+        {
+          "id": "source-5",
+          "path": "runtime/v1-handshake/docker-witness/1794283687885081158-8887-vectordb-judge-7acdceb31aee41329225ae0a33e41e57/stdout.jsonl",
+          "sha256": "4ddf9db1cd5dc9bc5f644ab12b7c75dd8a17783d12c0d39909c15e4d8c7831cd"
+        },
+        {
+          "id": "source-6",
+          "path": "runtime/v1-handshake/docker-witness/1794283687885081158-8887-vectordb-judge-7acdceb31aee41329225ae0a33e41e57/exit.json",
+          "sha256": "5692e75a0903254cc5bac7a127f7472de4fea6fb20c71c7b4a2f0d3c7d438d26"
+        },
+        {
+          "id": "source-7",
+          "path": "runtime/v1-sql-crud/docker-witness/1794283696119751022-9091-vectordb-judge-7a35285e60a14a47a3546092af5e5fb7/stdin.jsonl",
+          "sha256": "91f05b92860e30a5ab447e37001cb04f698f617417cd8ebbafabc7cf6b99526d"
+        },
+        {
+          "id": "source-8",
+          "path": "runtime/v1-sql-crud/docker-witness/1794283696119751022-9091-vectordb-judge-7a35285e60a14a47a3546092af5e5fb7/stdout.jsonl",
+          "sha256": "02866bf5d93d64f86dbc3625f7c973a88b165b4fcf18c54d6a91f349c6ff0a43"
+        },
+        {
+          "id": "source-9",
+          "path": "runtime/v1-sql-crud/docker-witness/1794283696119751022-9091-vectordb-judge-7a35285e60a14a47a3546092af5e5fb7/exit.json",
+          "sha256": "3266e9e9caf7b3eeb90a4d82b00fb283835c28a1c5612222f5b08330b387c9a9"
+        },
+        {
+          "id": "source-10",
+          "path": "supplemental/results-v1/framing-and-values/first/stdin.raw.jsonl",
+          "sha256": "7d0d99eed2a3536cbed923d8c5bbcfc7a6cb8249e11f76c7b50b3859f7f10606"
+        },
+        {
+          "id": "source-11",
+          "path": "supplemental/results-v1/framing-and-values/first/stdout.raw.jsonl",
+          "sha256": "e8ef8a38694a7fbbaec4b0152ac379e4b78630ddd4b66bc9e34ac7f8104cd513"
+        },
+        {
+          "id": "source-12",
+          "path": "supplemental/results-v1/transaction-shutdown/first/stdin.raw.jsonl",
+          "sha256": "4e861472a922bc978c9f08fc5df71f942b97f839641875e5a9f151cb1329cf75"
+        },
+        {
+          "id": "source-13",
+          "path": "supplemental/results-v1/transaction-shutdown/first/stdout.raw.jsonl",
+          "sha256": "e5457b1b9367e5c54a235e6a0ca569b07969dc4f45a7cd0f5d5524b270f91772"
+        },
+        {
+          "id": "source-14",
+          "path": "supplemental/results-v1/transaction-shutdown/restart/stdin.raw.jsonl",
+          "sha256": "64eabde6f167e338f1cfebb9b1e672c4226c9f07df60e9456c3625ba83af318e"
+        },
+        {
+          "id": "source-15",
+          "path": "supplemental/results-v1/transaction-shutdown/restart/stdout.raw.jsonl",
+          "sha256": "af82a7c49098806aa55994883843df526f948318701e368450f408bfb18dba4e"
+        },
+        {
+          "id": "source-16",
+          "path": "fault-review/run.py",
+          "sha256": "d7e0d75e4f74390be381d27594f81a13d0cc32fe884799eb0b7abbd59375fa91"
+        },
+        {
+          "id": "source-17",
+          "path": "native-regression-v1/shutdown-faults/sync-failure.stdout.jsonl",
+          "sha256": "edae18fc2a0d47ec43c39826250c7561631ca95e605248475ace192c8c5a2aea"
+        },
+        {
+          "id": "source-18",
+          "path": "native-regression-v1/shutdown-faults/sync-restart.stdout.jsonl",
+          "sha256": "38746ed328dd84297127b48cbae9f6c967b94d22d329b62b9229d0f0fd35bfc1"
+        },
+        {
+          "id": "source-19",
+          "path": "native-regression-v1/shutdown-faults/result.json",
+          "sha256": "1177f9b0cbe5e4a5cb593d4759828fb82208805d2d319b534d25f1c04e041319"
+        }
+      ]
     },
-    {
-      "id": "agent-branch-answer",
-      "source": "agent",
-      "content": "最新的 `perf/exact-query-li-20261109` 已经包含前两条分支的提交。"
+    "episode_note": "多个同源 protocol 要求节选、工具检查及正式反馈属于同一协议修复链；记录 ID 只是定位标识，不是独立评分实例，不重复计分或自评得分。",
+    "outcome": {
+      "source": "user_reported_platform_result",
+      "code_commit": "7637a037e8a44c9da8e3bd65694e4474075b5657",
+      "branch": "2026-competition-round2",
+      "mysql_formal_cases": "passed",
+      "performance_raw_score": "2277.870638",
+      "agent_prompt_message": "本项没有有效原始分",
+      "platform_record_url": null,
+      "limitation": "用户明确确认版本；执行 Agent 本轮未直接读取平台后台，没有将该提示等同于有效零分。"
     },
-    {
-      "id": "student-move-request",
-      "source": "student",
-      "content": "E:\\MiniVectorDB\\work能不能给这部分内容搞到F:\\OceanBase\\seekdb\\cpt-seekdb，分两个地方看起来费劲"
-    },
-    {
-      "id": "agent-move-answer",
-      "source": "agent",
-      "content": "文件已经复制到 F 盘，212 个文件与 E 盘副本的哈希逐一一致，原生产源码的历史清单也通过了校验。"
-    },
-    {
-      "id": "student-next-task",
-      "source": "student",
-      "content": "队友在创建分支，我先继续做下一个任务。"
-    }
-  ],
-  "tool_observations": [
-    {
-      "id": "six-round-offline-audit",
-      "source": "tool_output",
-      "content": "seed-3179 round 1: passed\nseed-3179 round 2: passed\nseed-3179 round 3: passed\nseed-9143 round 1: passed\nseed-27183 round 1: passed\nseed-2468-audit round 1: passed\nexit=0\n",
-      "context": "本地 seed 3179 三轮，以及 9143、27183、2468 各一轮；原始输出摘录，非官方驱动。"
-    },
-    {
-      "id": "post-commit-kill",
-      "source": "tool_output",
-      "content": "{\"passed\": true, \"batches\": 100, \"readback_rows\": 10000, \"failure\": null}\nexit=0\n",
-      "context": "100 批确认写入后主动 SIGKILL，单独重启并回读 10000 条；不是断电测试。"
-    },
-    {
-      "id": "git-worktrees",
-      "source": "tool_output_excerpt",
-      "content": "F:/OceanBase/seekdb/cpt-seekdb 75214d472 [2026-competition]\nE:/MiniVectorDB/work           944c08ee3 [codex/minivectordb-hmy-20261109]",
-      "context": "用户提出提交路径问题时只读检查的结果；这是当时状态。"
-    },
-    {
-      "id": "worktree-copy-verification",
-      "source": "tool_output",
-      "content": "Verified 212 files in both worktrees.",
-      "context": "根据迁移前 SHA-256 清单逐项复核 E、F 两个工作区的 212 个本轮文件。"
-    },
-    {
-      "id": "f-worktree-public",
-      "source": "tool_output_excerpt",
-      "content": "{\"passed\": true, \"cases\": 20, \"statements\": 95}\nexit=0",
-      "context": "从 F 盘源码本机重建后的本地公开样例桥；不是正式 29 例准入。"
-    }
-  ],
-  "evidence_links": [
-    {
-      "context": "本地 benchmark 任务及事后核验；任务指令本身不自动证明学生技术理解。",
-      "student_pointer": "/public_benchmark_hmy_20261109/user_excerpt/content",
-      "student_excerpt": "继续做先把3.3 小型性能 benchmark（40 分）完成，至少要把已经公开的能够跑通过。",
-      "result_pointer": "/current_session_hmy_20261109/tool_observations/0/content",
-      "result_excerpt": "seed-3179 round 1: passed\nseed-3179 round 2: passed\nseed-3179 round 3: passed"
-    },
-    {
-      "context": "用户提出分离工作区与提交位置的疑问，工具结果记录当时两个工作区。",
-      "student_pointer": "/current_session_hmy_20261109/dialogue/3/content",
-      "student_excerpt": "可是我后面提交不是要测试seekdb 仓库的 `2026-competition-round2`，你写在E:\\MiniVectorDB\\work我怎么git提交？",
-      "result_pointer": "/current_session_hmy_20261109/tool_observations/2/content",
-      "result_excerpt": "E:/MiniVectorDB/work           944c08ee3 [codex/minivectordb-hmy-20261109]"
-    },
-    {
-      "context": "用户要求把工作集中到 F 盘；工具检查迁移后文件与备份一致。",
-      "student_pointer": "/current_session_hmy_20261109/dialogue/7/content",
-      "student_excerpt": "E:\\MiniVectorDB\\work能不能给这部分内容搞到F:\\OceanBase\\seekdb\\cpt-seekdb，分两个地方看起来费劲",
-      "result_pointer": "/current_session_hmy_20261109/tool_observations/3/content",
-      "result_excerpt": "Verified 212 files in both worktrees."
-    }
-  ],
-  "limitations": [
-    "引用链接仅辅助定位真实材料，不是评分或保证得分；泛泛任务指令不自动构成有效实例。",
-    "没有把用户的问题当成已掌握数据库机制；没有将 Agent 方案、解释或验证自动归因给学生。",
-    "公开 20 例/95 SQL 与本地性能实验不等于正式 29 例、正式通信协议或官方得分。",
-    "本次对话和历史队友对话均非完整导出；缺失的学习过程不能补造。"
-  ]
-}
+    "learning_evidence_limits": [
+      "用户确实要求固定版本、原版工具对照、保留负结果，并收到实际结果；该记录不自动证明其独立设计或亲自运行实验。",
+      "本节的技术解释和取舍来自 Agent，未声称学生提出。未记录学生自己的机制解释、预测和后续纠错复盘，保持缺口。",
+      "没有重新运行历史实验或重新提交正式评测；新材料不宣称保证有效评价分。"
+    ]
+  }
 }
