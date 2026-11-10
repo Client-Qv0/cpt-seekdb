@@ -1462,5 +1462,204 @@
       "io.stat 仅记录 ready 到 shutdown 前的原始计数，不是完整生命周期、专用设备物理 I/O。",
       "本轮没有新增用户自行解释、验证或复盘技术假设的记录，不把 Agent 的解释归因于用户。"
     ]
+  },
+  "user_followup_20261110": {
+    "scope": "Actual user and assistant excerpts; no student understanding inferred.",
+    "messages": [
+      {
+        "role": "user",
+        "source": "user_message",
+        "content": "还差什么，继续做。"
+      },
+      {
+        "role": "assistant",
+        "source": "request_user_input_async",
+        "content": "为了补充真实的 Agent 学习材料：看过上一轮两种 L2 方案的结果后，你自己会怎样判断要不要合入？请按实际理解回答；如果还不确定，直接写“不确定”即可。"
+      },
+      {
+        "role": "user",
+        "source": "user_answer",
+        "content": "不确定。"
+      },
+      {
+        "role": "assistant",
+        "source": "commentary",
+        "content": "没关系。判断时要同时看正确性和多轮对照：两种方案虽然通过了已做的正确性检查，但六组里都只有三组更快，且存在明显退化，所以目前不合入更稳妥。你的回答会按原样记录，不会写成你已经掌握了这些判断。"
+      },
+      {
+        "role": "assistant",
+        "source": "request_user_input_async",
+        "content": "之前截图里 Agent Prompt 显示“本项没有有效原始分”。平台是否还能展开该项的评测报告或错误码？如果有，请复制原文；如果没有，回复“没有”即可。"
+      },
+      {
+        "role": "user",
+        "source": "user_answer",
+        "content": "有这项"
+      },
+      {
+        "role": "assistant",
+        "source": "commentary",
+        "content": "了解，平台上有这个评价项目。要判断为什么没有有效原始分，还需要看该项目展开后的具体提示；目前仅凭“有这项”无法确定原因。"
+      },
+      {
+        "role": "assistant",
+        "source": "request_user_input_async",
+        "content": "请复制 Agent Prompt 项目展开后的错误提示或评测报告原文；如果只有“本项没有有效原始分”、不能展开，请回复“不能展开”。"
+      },
+      {
+        "role": "user",
+        "source": "user_answer",
+        "content": "本项没有有效原始分  ，只有这个"
+      },
+      {
+        "role": "assistant",
+        "source": "commentary",
+        "content": "明白，平台只显示“本项没有有效原始分”，没有更具体的错误信息；因此现在无法判断是材料、评审还是平台读取环节造成的。我会把这一限制和你的原话如实保留，同时完成本地材料与构建检查。"
+      }
+    ],
+    "limitations": [
+      "该片段仅记录本轮真实提问和回答；不把 Agent 的解释归因于用户。",
+      "用户表示对优化合入判断不确定，本片段不证明用户独立理解或设计验证。",
+      "没有进一步的官方评测报告或错误码；Agent 无有效原始分的原因尚未知。"
+    ]
+  },
+  "docker_pinning_followup_20261110": {
+    "scope": "Agent actions and local tool results; not evidence of unspoken student understanding.",
+    "related_real_user_request": "/user_followup_20261110/messages/0/content",
+    "agent_summary": "Agent investigated locked Docker dependencies using a pinned Ubuntu base and dated package snapshot; the user did not propose or explain this implementation.",
+    "tool_results": [
+      {
+        "source": "tool_output_summary",
+        "content": "Two independent no-cache candidate builds passed; 69 unpacked package-version records and source hashes matched. Their database binaries and the prior native baseline all had SHA256 1d36080209fc61c2d4c5b65fdf2a0587048939b3c51e2eca34644bf848ec98b9. Whole image IDs differed; byte-identical images are not claimed."
+      },
+      {
+        "source": "tool_output_summary",
+        "content": "The actual repository Dockerfile matched the tested candidate file by SHA256 6178916e2baf4b9a3b3481c1949fbbee71edca0cdae07ace94feebed19990c32. The default production image passed the unmodified official f4d4e266 public handshake, CRUD and all 20 public cases."
+      },
+      {
+        "source": "tool_output",
+        "content": "{\"status\": \"PASS\", \"acknowledged_batches\": 100, \"readback_rows\": 10000, \"checked_fp32_components\": 1280000, \"uncommitted_changes_rolled_back\": true}\nexit=0",
+        "artifact_sha256": "eed9d76655a5ae0e1d9045031c2bdf4c125f5ebf81546744e94c44a878996305"
+      },
+      {
+        "source": "tool_output_summary",
+        "content": "The actual default Docker entry under 128 MiB and zero swap was killed after 100 acknowledged batches while a later transaction was still open. A new container read back all 10,000 IDs, groups and 1,280,000 FP32 components; the uncommitted update, delete and insert were absent. SIGKILL exit 137 was not OOM; this does not test power loss."
+      },
+      {
+        "source": "tool_output_summary",
+        "content": "Actual benchmark results and a separately run same-image noise control are recorded below. Physical I/O only covers ready to pre-shutdown samples, not the official full lifecycle. Other containers ran on the shared host; performance conclusions remain limited."
+      }
+    ],
+    "performance_experiments": [
+      {
+        "experiment": "paired-main",
+        "source_sha256": "9abc1e9f69b418abe8c99d66b555cd845fb3b86104dd6cbc551b84824e031586",
+        "faster_query_pairs": 4,
+        "pair_count": 6,
+        "median_paired_query_reduction": 0.020740278648117783,
+        "oracle_checks": 12144,
+        "rounds": [
+          {
+            "round": "hmy-pin-main-1-seed3179",
+            "base_query_s": 1.066159682966827,
+            "candidate_query_s": 0.9893908799822384,
+            "paired_query_reduction": 0.07200497656313753
+          },
+          {
+            "round": "hmy-pin-main-2-seed3181",
+            "base_query_s": 1.0180772060230083,
+            "candidate_query_s": 0.9915439830656396,
+            "paired_query_reduction": 0.026062093130458597
+          },
+          {
+            "round": "hmy-pin-main-3-seed3187",
+            "base_query_s": 1.0670079300471116,
+            "candidate_query_s": 1.0987819789952482,
+            "paired_query_reduction": -0.029778643675810068
+          },
+          {
+            "round": "hmy-pin-main-4-seed3179",
+            "base_query_s": 1.0115976480519748,
+            "candidate_query_s": 0.9960003659653012,
+            "paired_query_reduction": 0.015418464165776968
+          },
+          {
+            "round": "hmy-pin-main-5-seed3181",
+            "base_query_s": 1.0187158399785403,
+            "candidate_query_s": 1.1795164580253186,
+            "paired_query_reduction": -0.15784639026538105
+          },
+          {
+            "round": "hmy-pin-main-6-seed3187",
+            "base_query_s": 1.0275307730516943,
+            "candidate_query_s": 0.9900904250644089,
+            "paired_query_reduction": 0.036437203604219204
+          }
+        ]
+      },
+      {
+        "experiment": "paired-overflow",
+        "source_sha256": "1f07dda8611dd26a9e52bd27f650c35dc087831706239d94342064238e9b69f0",
+        "faster_query_pairs": 1,
+        "pair_count": 3,
+        "median_paired_query_reduction": -0.01962300177996812,
+        "oracle_checks": 672,
+        "rounds": [
+          {
+            "round": "hmy-pin-overflow-1-seed3179",
+            "base_query_s": 1.841025695008284,
+            "candidate_query_s": 1.9548653239726264,
+            "paired_query_reduction": -0.06183489414243626
+          },
+          {
+            "round": "hmy-pin-overflow-2-seed3181",
+            "base_query_s": 1.7867542060121195,
+            "candidate_query_s": 1.821815686977061,
+            "paired_query_reduction": -0.01962300177996812
+          },
+          {
+            "round": "hmy-pin-overflow-3-seed3187",
+            "base_query_s": 2.0495587129735213,
+            "candidate_query_s": 1.845842354996421,
+            "paired_query_reduction": 0.09939522917181842
+          }
+        ]
+      },
+      {
+        "experiment": "noise-overflow",
+        "source_sha256": "c74107a7d5320e797621264710acae90e1727527c46f400429a42e8a155476ce",
+        "faster_query_pairs": 3,
+        "pair_count": 3,
+        "median_paired_query_reduction": 0.00957850018291262,
+        "oracle_checks": 672,
+        "rounds": [
+          {
+            "round": "hmy-pin-noise-1-seed3179",
+            "base_query_s": 1.8299382439836336,
+            "candidate_query_s": 1.7864873299877218,
+            "paired_query_reduction": 0.023744470141966456
+          },
+          {
+            "round": "hmy-pin-noise-2-seed3181",
+            "base_query_s": 1.8680556089966558,
+            "candidate_query_s": 1.8501624380041903,
+            "paired_query_reduction": 0.00957850018291262
+          },
+          {
+            "round": "hmy-pin-noise-3-seed3187",
+            "base_query_s": 1.8252453259883623,
+            "candidate_query_s": 1.8169917669947608,
+            "paired_query_reduction": 0.004521890222692226
+          }
+        ]
+      }
+    ],
+    "limitations": [
+      "The user explicitly answered 不确定。 when asked to interpret the earlier L2 experiments; this is not a claimed independent technical explanation.",
+      "The user reported only 本项没有有效原始分 and no more detailed platform error; the cause is unknown.",
+      "No new official MySQL result, Agent score, performance score or ranking was obtained.",
+      "Docker build snapshot availability and platform build-time limits remain to be verified by platform environment precheck.",
+      "Full benchmark inputs and traces remain locally saved and hashed; no claim that every large input was included in the submitted Git tree."
+    ]
   }
 }

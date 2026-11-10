@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "image_id": "sha256:e2e1401651204504b9745ed6d056e452f4df3a38073eb9725f3818591897668e",
+  "seed": 20261110,
+  "acknowledged_batches": 100,
+  "readback_rows": 10000,
+  "checked_fp32_components": 1280000,
+  "uncommitted_changes_rolled_back": true,
+  "kill": {
+    "exit_code": 137,
+    "oom_killed": false,
+    "snapshot": {
+      "memory.max": "134217728\n",
+      "memory.swap.max": "0\n",
+      "memory.peak": "14217216\n",
+      "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "cpu.max": "200000 100000\n",
+      "io.stat": "8:48 rbytes=0 wbytes=6127616 rios=0 wios=208 dbytes=0 dios=0\n"
+    }
+  },
+  "restart": {
+    "exit_code": 0,
+    "oom_killed": false,
+    "snapshot": {
+      "memory.max": "134217728\n",
+      "memory.swap.max": "0\n",
+      "memory.peak": "10616832\n",
+      "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "cpu.max": "200000 100000\n",
+      "io.stat": "8:48 \n"
+    }
+  },
+  "scope": "actual default JSONL Docker entry; SIGKILL after all acknowledgements, not a power-failure test",
+  "trace_sha256": {
+    "before": "5b621f81b2834da80350d7d31f23a74fedb362d0750beb210b4717d4a3a6334c",
+    "after": "4c3f97a8093a17eb99af83fdeb5cbbc9ee1386cb3feacf78c99a0418d3050c91"
+  }
+}

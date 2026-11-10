@@ -1,0 +1,59 @@
+[
+    {
+        "Id": "sha256:4048aa29e6dbb6c55353194db935c764ef40fddde2d67d4836b54df23bf24564",
+        "RepoTags": [
+            "codex-hmy-pinned-candidate-b:20261110"
+        ],
+        "RepoDigests": [
+            "codex-hmy-pinned-candidate-b@sha256:4048aa29e6dbb6c55353194db935c764ef40fddde2d67d4836b54df23bf24564"
+        ],
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-11-10T19:54:37.631313037+08:00",
+        "Config": {
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Entrypoint": [
+                "/app/minivectordb"
+            ],
+            "Cmd": [
+                "--data-dir",
+                "/data"
+            ],
+            "Volumes": {
+                "/data": {}
+            },
+            "Labels": {
+                "org.opencontainers.image.version": "24.04"
+            },
+            "ArgsEscaped": true
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 118008808,
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:bec87777bc2fb2edcdf9af11df1531469e7df911309c1413082b18fcb8610278",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+                "sha256:6f75912f95987ede7dfae3bbf9e05d6dfedaa61abd5d65fd95baea4aa848c4db"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-11-10T11:54:37.774517506Z"
+        },
+        "Descriptor": {
+            "mediaType": "application/vnd.oci.image.index.v1+json",
+            "digest": "sha256:4048aa29e6dbb6c55353194db935c764ef40fddde2d67d4836b54df23bf24564",
+            "size": 855
+        },
+        "Identity": {
+            "Build": [
+                {
+                    "Ref": "3619qsp7iqmpliywd1zo34hmd",
+                    "CreatedAt": "2026-11-10T19:54:37.794180896+08:00"
+                }
+            ]
+        }
+    }
+]
