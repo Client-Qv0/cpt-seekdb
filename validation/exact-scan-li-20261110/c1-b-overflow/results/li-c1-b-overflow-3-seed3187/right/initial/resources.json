@@ -1,0 +1,102 @@
+[
+  {
+    "label": "ready",
+    "monotonic": 2813479.243384468,
+    "cgroup": "/sys/fs/cgroup/system.slice/docker-5c5fd5c6a679640a2557ba4f6f0099c07eb67a5fcf609c60b7efb1dc0e66010b.scope",
+    "files": {
+      "memory.current": "634880\n",
+      "memory.peak": "4399104\n",
+      "memory.stat": "anon 290816\nfile 4096\nkernel 339968\nkernel_stack 16384\npagetables 57344\nsec_pagetables 0\npercpu 2136\nsock 0\nvmalloc 16384\nshmem 0\nzswap 0\nzswapped 0\nfile_mapped 0\nfile_dirty 4096\nfile_writeback 0\nswapcached 0\nanon_thp 0\nfile_thp 0\nshmem_thp 0\ninactive_anon 0\nactive_anon 290816\ninactive_file 4096\nactive_file 0\nunevictable 0\nslab_reclaimable 84904\nslab_unreclaimable 144248\nslab 229152\nworkingset_refault_anon 0\nworkingset_refault_file 0\nworkingset_activate_anon 0\nworkingset_activate_file 0\nworkingset_restore_anon 0\nworkingset_restore_file 0\nworkingset_nodereclaim 0\npgscan 0\npgsteal 0\npgscan_kswapd 0\npgscan_direct 0\npgscan_khugepaged 0\npgsteal_kswapd 0\npgsteal_direct 0\npgsteal_khugepaged 0\npgfault 1234\npgmajfault 0\npgrefill 0\npgactivate 0\npgdeactivate 0\npglazyfree 0\npglazyfreed 0\nzswpin 0\nzswpout 0\nzswpwb 0\nthp_fault_alloc 0\nthp_collapse_alloc 0\nthp_swpout 0\nthp_swpout_fallback 0\n",
+      "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "memory.pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory.max": "134217728\n",
+      "memory.swap.max": "0\n",
+      "cpu.max": "200000 100000\n",
+      "cpu.stat": "usage_usec 50784\nuser_usec 34543\nsystem_usec 16240\ncore_sched.force_idle_usec 0\nnr_periods 1\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "io.stat": "253:0 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+      "cpuset.cpus.effective": "0-1\n",
+      "proc_status": "Name:\tminivectordb\nUmask:\t0022\nState:\tS (sleeping)\nTgid:\t1686487\nNgid:\t0\nPid:\t1686487\nPPid:\t1686464\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t0 \nNStgid:\t1686487\t1\nNSpid:\t1686487\t1\nNSpgid:\t1686487\t1\nNSsid:\t1686487\t1\nKthread:\t0\nVmPeak:\t    6872 kB\nVmSize:\t    6872 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t    3840 kB\nVmRSS:\t    3840 kB\nRssAnon:\t     256 kB\nRssFile:\t    3584 kB\nRssShmem:\t       0 kB\nVmData:\t     428 kB\nVmStk:\t     132 kB\nVmExe:\t     304 kB\nVmLib:\t    3716 kB\nVmPTE:\t      56 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t1\nSigQ:\t1/31481\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000000000000\nSigCgt:\t0000000000000000\nCapInh:\t0000000000000000\nCapPrm:\t00000000a80425fb\nCapEff:\t00000000a80425fb\nCapBnd:\t00000000a80425fb\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t2\nSeccomp_filters:\t1\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\t3\nCpus_allowed_list:\t0-1\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t23\nnonvoluntary_ctxt_switches:\t23\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+      "proc_io": "rchar: 54641\nwchar: 10170\nsyscr: 48\nsyscw: 10\nread_bytes: 0\nwrite_bytes: 8192\ncancelled_write_bytes: 0\n"
+    }
+  },
+  {
+    "label": "after_write",
+    "monotonic": 2813483.174292606,
+    "cgroup": "/sys/fs/cgroup/system.slice/docker-5c5fd5c6a679640a2557ba4f6f0099c07eb67a5fcf609c60b7efb1dc0e66010b.scope",
+    "files": {
+      "memory.current": "21495808\n",
+      "memory.peak": "21700608\n",
+      "memory.stat": "anon 2588672\nfile 17956864\nkernel 876544\nkernel_stack 16384\npagetables 61440\nsec_pagetables 0\npercpu 2136\nsock 0\nvmalloc 16384\nshmem 0\nzswap 0\nzswapped 0\nfile_mapped 0\nfile_dirty 45056\nfile_writeback 0\nswapcached 0\nanon_thp 0\nfile_thp 0\nshmem_thp 0\ninactive_anon 0\nactive_anon 2588672\ninactive_file 17915904\nactive_file 0\nunevictable 0\nslab_reclaimable 615736\nslab_unreclaimable 144248\nslab 759984\nworkingset_refault_anon 0\nworkingset_refault_file 0\nworkingset_activate_anon 0\nworkingset_activate_file 0\nworkingset_restore_anon 0\nworkingset_restore_file 0\nworkingset_nodereclaim 0\npgscan 0\npgsteal 0\npgscan_kswapd 0\npgscan_direct 0\npgscan_khugepaged 0\npgsteal_kswapd 0\npgsteal_direct 0\npgsteal_khugepaged 0\npgfault 2048\npgmajfault 0\npgrefill 0\npgactivate 0\npgdeactivate 0\npglazyfree 0\npglazyfreed 0\nzswpin 0\nzswpout 0\nzswpwb 0\nthp_fault_alloc 0\nthp_collapse_alloc 0\nthp_swpout 0\nthp_swpout_fallback 0\n",
+      "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "memory.pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory.max": "134217728\n",
+      "memory.swap.max": "0\n",
+      "cpu.max": "200000 100000\n",
+      "cpu.stat": "usage_usec 2445880\nuser_usec 2174937\nsystem_usec 270943\ncore_sched.force_idle_usec 0\nnr_periods 40\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "io.stat": "253:0 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n",
+      "cpuset.cpus.effective": "0-1\n",
+      "proc_status": "Name:\tminivectordb\nUmask:\t0022\nState:\tS (sleeping)\nTgid:\t1686487\nNgid:\t0\nPid:\t1686487\nPPid:\t1686464\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t0 \nNStgid:\t1686487\t1\nNSpid:\t1686487\t1\nNSpgid:\t1686487\t1\nNSsid:\t1686487\t1\nKthread:\t0\nVmPeak:\t    9136 kB\nVmSize:\t    9136 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t    6308 kB\nVmRSS:\t    6308 kB\nRssAnon:\t    2468 kB\nRssFile:\t    3840 kB\nRssShmem:\t       0 kB\nVmData:\t    2692 kB\nVmStk:\t     132 kB\nVmExe:\t     304 kB\nVmLib:\t    3716 kB\nVmPTE:\t      60 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t1\nSigQ:\t1/31481\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000000000000\nSigCgt:\t0000000000000000\nCapInh:\t0000000000000000\nCapPrm:\t00000000a80425fb\nCapEff:\t00000000a80425fb\nCapBnd:\t00000000a80425fb\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t2\nSeccomp_filters:\t1\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\t3\nCpus_allowed_list:\t0-1\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t2202\nnonvoluntary_ctxt_switches:\t139\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+      "proc_io": "rchar: 81605057\nwchar: 18049578\nsyscr: 11398\nsyscw: 96976\nread_bytes: 0\nwrite_bytes: 19341312\ncancelled_write_bytes: 0\n"
+    }
+  },
+  {
+    "label": "first_query",
+    "monotonic": 2813483.229800541,
+    "cgroup": "/sys/fs/cgroup/system.slice/docker-5c5fd5c6a679640a2557ba4f6f0099c07eb67a5fcf609c60b7efb1dc0e66010b.scope",
+    "files": {
+      "memory.current": "21495808\n",
+      "memory.peak": "21700608\n",
+      "memory.stat": "anon 2588672\nfile 18026496\nkernel 880640\nkernel_stack 16384\npagetables 61440\nsec_pagetables 0\npercpu 2136\nsock 0\nvmalloc 16384\nshmem 0\nzswap 0\nzswapped 0\nfile_mapped 0\nfile_dirty 0\nfile_writeback 0\nswapcached 0\nanon_thp 0\nfile_thp 0\nshmem_thp 0\ninactive_anon 0\nactive_anon 2588672\ninactive_file 18026496\nactive_file 0\nunevictable 0\nslab_reclaimable 620328\nslab_unreclaimable 144248\nslab 764576\nworkingset_refault_anon 0\nworkingset_refault_file 0\nworkingset_activate_anon 0\nworkingset_activate_file 0\nworkingset_restore_anon 0\nworkingset_restore_file 0\nworkingset_nodereclaim 0\npgscan 0\npgsteal 0\npgscan_kswapd 0\npgscan_direct 0\npgscan_khugepaged 0\npgsteal_kswapd 0\npgsteal_direct 0\npgsteal_khugepaged 0\npgfault 2048\npgmajfault 0\npgrefill 0\npgactivate 0\npgdeactivate 0\npglazyfree 0\npglazyfreed 0\nzswpin 0\nzswpout 0\nzswpwb 0\nthp_fault_alloc 0\nthp_collapse_alloc 0\nthp_swpout 0\nthp_swpout_fallback 0\n",
+      "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "memory.pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory.max": "134217728\n",
+      "memory.swap.max": "0\n",
+      "cpu.max": "200000 100000\n",
+      "cpu.stat": "usage_usec 2499266\nuser_usec 2208083\nsystem_usec 291182\ncore_sched.force_idle_usec 0\nnr_periods 41\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "io.stat": "253:0 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n",
+      "cpuset.cpus.effective": "0-1\n",
+      "proc_status": "Name:\tminivectordb\nUmask:\t0022\nState:\tS (sleeping)\nTgid:\t1686487\nNgid:\t0\nPid:\t1686487\nPPid:\t1686464\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t0 \nNStgid:\t1686487\t1\nNSpid:\t1686487\t1\nNSpgid:\t1686487\t1\nNSsid:\t1686487\t1\nKthread:\t0\nVmPeak:\t    9136 kB\nVmSize:\t    9136 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t    6436 kB\nVmRSS:\t    6436 kB\nRssAnon:\t    2468 kB\nRssFile:\t    3968 kB\nRssShmem:\t       0 kB\nVmData:\t    2692 kB\nVmStk:\t     132 kB\nVmExe:\t     304 kB\nVmLib:\t    3716 kB\nVmPTE:\t      60 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t1\nSigQ:\t1/31481\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000000000000\nSigCgt:\t0000000000000000\nCapInh:\t0000000000000000\nCapPrm:\t00000000a80425fb\nCapEff:\t00000000a80425fb\nCapBnd:\t00000000a80425fb\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t2\nSeccomp_filters:\t1\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\t3\nCpus_allowed_list:\t0-1\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t2203\nnonvoluntary_ctxt_switches:\t139\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+      "proc_io": "rchar: 98445039\nwchar: 18049895\nsyscr: 43410\nsyscw: 96978\nread_bytes: 0\nwrite_bytes: 19341312\ncancelled_write_bytes: 0\n"
+    }
+  },
+  {
+    "label": "after_queries",
+    "monotonic": 2813489.726361363,
+    "cgroup": "/sys/fs/cgroup/system.slice/docker-5c5fd5c6a679640a2557ba4f6f0099c07eb67a5fcf609c60b7efb1dc0e66010b.scope",
+    "files": {
+      "memory.current": "21495808\n",
+      "memory.peak": "21700608\n",
+      "memory.stat": "anon 2588672\nfile 18026496\nkernel 880640\nkernel_stack 16384\npagetables 61440\nsec_pagetables 0\npercpu 2136\nsock 0\nvmalloc 16384\nshmem 0\nzswap 0\nzswapped 0\nfile_mapped 0\nfile_dirty 0\nfile_writeback 0\nswapcached 0\nanon_thp 0\nfile_thp 0\nshmem_thp 0\ninactive_anon 0\nactive_anon 2588672\ninactive_file 18026496\nactive_file 0\nunevictable 0\nslab_reclaimable 620328\nslab_unreclaimable 144248\nslab 764576\nworkingset_refault_anon 0\nworkingset_refault_file 0\nworkingset_activate_anon 0\nworkingset_activate_file 0\nworkingset_restore_anon 0\nworkingset_restore_file 0\nworkingset_nodereclaim 0\npgscan 0\npgsteal 0\npgscan_kswapd 0\npgscan_direct 0\npgscan_khugepaged 0\npgsteal_kswapd 0\npgsteal_direct 0\npgsteal_khugepaged 0\npgfault 2049\npgmajfault 0\npgrefill 0\npgactivate 0\npgdeactivate 0\npglazyfree 0\npglazyfreed 0\nzswpin 0\nzswpout 0\nzswpwb 0\nthp_fault_alloc 0\nthp_collapse_alloc 0\nthp_swpout 0\nthp_swpout_fallback 0\n",
+      "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "memory.pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory.max": "134217728\n",
+      "memory.swap.max": "0\n",
+      "cpu.max": "200000 100000\n",
+      "cpu.stat": "usage_usec 8849590\nuser_usec 6008670\nsystem_usec 2840919\ncore_sched.force_idle_usec 0\nnr_periods 106\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "io.stat": "253:0 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n",
+      "cpuset.cpus.effective": "0-1\n",
+      "proc_status": "Name:\tminivectordb\nUmask:\t0022\nState:\tS (sleeping)\nTgid:\t1686487\nNgid:\t0\nPid:\t1686487\nPPid:\t1686464\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t0 \nNStgid:\t1686487\t1\nNSpid:\t1686487\t1\nNSpgid:\t1686487\t1\nNSsid:\t1686487\t1\nKthread:\t0\nVmPeak:\t    9136 kB\nVmSize:\t    9136 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t    6436 kB\nVmRSS:\t    6436 kB\nRssAnon:\t    2468 kB\nRssFile:\t    3968 kB\nRssShmem:\t       0 kB\nVmData:\t    2692 kB\nVmStk:\t     132 kB\nVmExe:\t     304 kB\nVmLib:\t    3716 kB\nVmPTE:\t      60 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t1\nSigQ:\t1/31481\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000000000000\nSigCgt:\t0000000000000000\nCapInh:\t0000000000000000\nCapPrm:\t00000000a80425fb\nCapEff:\t00000000a80425fb\nCapBnd:\t00000000a80425fb\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t2\nSeccomp_filters:\t1\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\t3\nCpus_allowed_list:\t0-1\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t2313\nnonvoluntary_ctxt_switches:\t187\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+      "proc_io": "rchar: 1950843720\nwchar: 18084687\nsyscr: 3564730\nsyscw: 97198\nread_bytes: 0\nwrite_bytes: 19341312\ncancelled_write_bytes: 0\n"
+    }
+  },
+  {
+    "label": "pre_shutdown",
+    "monotonic": 2813489.727672276,
+    "cgroup": "/sys/fs/cgroup/system.slice/docker-5c5fd5c6a679640a2557ba4f6f0099c07eb67a5fcf609c60b7efb1dc0e66010b.scope",
+    "files": {
+      "memory.current": "21495808\n",
+      "memory.peak": "21700608\n",
+      "memory.stat": "anon 2588672\nfile 18026496\nkernel 880640\nkernel_stack 16384\npagetables 61440\nsec_pagetables 0\npercpu 2136\nsock 0\nvmalloc 16384\nshmem 0\nzswap 0\nzswapped 0\nfile_mapped 0\nfile_dirty 0\nfile_writeback 0\nswapcached 0\nanon_thp 0\nfile_thp 0\nshmem_thp 0\ninactive_anon 0\nactive_anon 2588672\ninactive_file 18026496\nactive_file 0\nunevictable 0\nslab_reclaimable 620328\nslab_unreclaimable 144248\nslab 764576\nworkingset_refault_anon 0\nworkingset_refault_file 0\nworkingset_activate_anon 0\nworkingset_activate_file 0\nworkingset_restore_anon 0\nworkingset_restore_file 0\nworkingset_nodereclaim 0\npgscan 0\npgsteal 0\npgscan_kswapd 0\npgscan_direct 0\npgscan_khugepaged 0\npgsteal_kswapd 0\npgsteal_direct 0\npgsteal_khugepaged 0\npgfault 2049\npgmajfault 0\npgrefill 0\npgactivate 0\npgdeactivate 0\npglazyfree 0\npglazyfreed 0\nzswpin 0\nzswpout 0\nzswpwb 0\nthp_fault_alloc 0\nthp_collapse_alloc 0\nthp_swpout 0\nthp_swpout_fallback 0\n",
+      "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "memory.pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+      "memory.max": "134217728\n",
+      "memory.swap.max": "0\n",
+      "cpu.max": "200000 100000\n",
+      "cpu.stat": "usage_usec 8849590\nuser_usec 6008670\nsystem_usec 2840919\ncore_sched.force_idle_usec 0\nnr_periods 106\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0\n",
+      "io.stat": "253:0 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n",
+      "cpuset.cpus.effective": "0-1\n",
+      "proc_status": "Name:\tminivectordb\nUmask:\t0022\nState:\tS (sleeping)\nTgid:\t1686487\nNgid:\t0\nPid:\t1686487\nPPid:\t1686464\nTracerPid:\t0\nUid:\t0\t0\t0\t0\nGid:\t0\t0\t0\t0\nFDSize:\t64\nGroups:\t0 \nNStgid:\t1686487\t1\nNSpid:\t1686487\t1\nNSpgid:\t1686487\t1\nNSsid:\t1686487\t1\nKthread:\t0\nVmPeak:\t    9136 kB\nVmSize:\t    9136 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t    6436 kB\nVmRSS:\t    6436 kB\nRssAnon:\t    2468 kB\nRssFile:\t    3968 kB\nRssShmem:\t       0 kB\nVmData:\t    2692 kB\nVmStk:\t     132 kB\nVmExe:\t     304 kB\nVmLib:\t    3716 kB\nVmPTE:\t      60 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t1\nSigQ:\t1/31481\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000000000000\nSigCgt:\t0000000000000000\nCapInh:\t0000000000000000\nCapPrm:\t00000000a80425fb\nCapEff:\t00000000a80425fb\nCapBnd:\t00000000a80425fb\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t2\nSeccomp_filters:\t1\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\t3\nCpus_allowed_list:\t0-1\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t2313\nnonvoluntary_ctxt_switches:\t187\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+      "proc_io": "rchar: 1950843720\nwchar: 18084687\nsyscr: 3564730\nsyscw: 97198\nread_bytes: 0\nwrite_bytes: 19341312\ncancelled_write_bytes: 0\n"
+    }
+  }
+]

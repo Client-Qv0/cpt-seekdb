@@ -1,0 +1,60 @@
+{
+  "frozen_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+  "frozen_source": "/home/li/minivectordb-exact-scan-20261110/validation/perf-20261110-stdio/scripts/bench.py",
+  "adapter_sha256": "957be1db1ba19565aa5e37935f7394b17a65948706f9fdbe6b1320395837ee81",
+  "adapted_sha256": "13b761f945136f9c96939720b9b35ce771c839b77c13310386e8a180fc342dca",
+  "substitutions": [
+    {
+      "before": "ROOT=pathlib.Path(__file__).resolve().parents[1]",
+      "after": "ROOT=pathlib.Path('/home/li/minivectordb-exact-scan-20261110/validation/exact-scan-li-20261110/final-b-holdout')"
+    },
+    {
+      "before": "ENV=dict(os.environ,DOCKER_HOST='unix:///var/tmp/minivectordb-perf-20261110/docker.sock')",
+      "after": "ENV=dict(os.environ)"
+    },
+    {
+      "before": "pathlib.Path('/var/tmp/minivectordb-perf-20261110/data')",
+      "after": "pathlib.Path('/home/li/exact-scan-final-b-holdout-data-20261110')"
+    }
+  ],
+  "docker_host": "unix:///var/run/docker.sock",
+  "docker_context": null,
+  "output_root": "/home/li/minivectordb-exact-scan-20261110/validation/exact-scan-li-20261110/final-b-holdout",
+  "data_root": "/home/li/exact-scan-final-b-holdout-data-20261110",
+  "images": {
+    "left": {
+      "requested": "mvdb-li-review:9cea05e",
+      "id": "sha256:14957ef07f665050d3b6bfebf180c4822acea378d5e038e41ad8d9562417407a",
+      "architecture": "amd64"
+    },
+    "right": {
+      "requested": "mvdb-li-exact:c2-3490b49",
+      "id": "sha256:f8ccc8d89f578f5e4905827a08690161a942d041ceea06d05044528c98495bf7",
+      "architecture": "amd64"
+    }
+  },
+  "command": [
+    "/home/li/mvdb-review-venv-20261110/bin/python",
+    "/home/li/minivectordb-exact-scan-20261110/validation/exact-scan-li-20261110/final-b-holdout/tool/bench.adapted.py",
+    "--images",
+    "left=sha256:14957ef07f665050d3b6bfebf180c4822acea378d5e038e41ad8d9562417407a",
+    "right=sha256:f8ccc8d89f578f5e4905827a08690161a942d041ceea06d05044528c98495bf7",
+    "--seeds",
+    "65003",
+    "65011",
+    "65027",
+    "--rows",
+    "10000",
+    "--dim",
+    "128",
+    "--queries",
+    "1000",
+    "--prefix",
+    "li-final-b-holdout"
+  ],
+  "preflight_only": false,
+  "limits_unchanged": true,
+  "oracle_and_timers_unchanged": true,
+  "benchmark_scope": "Local comparison only, not official scorer or result guarantee",
+  "exit_code": 0
+}

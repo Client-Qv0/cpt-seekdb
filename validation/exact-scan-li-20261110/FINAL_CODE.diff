@@ -1,0 +1,380 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 85771c6..b99a1b6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -9,7 +9,7 @@ target_compile_options(mvdb PRIVATE -Wall -Wextra -Wpedantic)
+ add_executable(minivectordb src/main.cpp)
+ target_link_libraries(minivectordb PRIVATE mvdb)
+ enable_testing()
+-foreach(unit parser storage engine_extra spill compact_rows protocol)
++foreach(unit parser storage engine_extra spill compact_rows protocol exact_cache)
+   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_${unit}.cpp")
+     add_executable(test_${unit} tests/test_${unit}.cpp)
+     target_link_libraries(test_${unit} PRIVATE mvdb)
+diff --git a/src/engine.cpp b/src/engine.cpp
+index 1750f9d..96094e6 100644
+--- a/src/engine.cpp
++++ b/src/engine.cpp
+@@ -1,4 +1,5 @@
+ #include "engine.hpp"
++#include "exact_cache.hpp"
+ #include "spill.hpp"
+ #include <algorithm>
+ #include <charconv>
+@@ -439,6 +440,9 @@ struct Engine::Cache {
+   };
+   std::string table;
+   std::vector<Entry> rows;
++  std::unique_ptr<exact::Compact> exact_view;
++  size_t exact_column = 0;
++  bool exact_bypass = false;
+   bool complete = false;
+   size_t bytes = 0;
+   static constexpr size_t budget = 12 * 1024 * 1024;
+@@ -730,17 +734,96 @@ Result Engine::execute_statement(const Statement &st) {
+                         decltype(better_neighbor)>
+         nearest(better_neighbor);
+     const auto &projection = ps[keys[0].index];
+-    scan_rows([&](int64_t key, const std::vector<Cell> &row) {
+-      if (!matches(row, fs))
+-        return;
+-      Neighbor n{std::get<double>(project(projection, row)), key};
++    auto consider = [&](int64_t key, double distance) {
++      Neighbor n{distance, key};
+       if (nearest.size() < *st.limit)
+         nearest.push(n);
+       else if (better_neighbor(n, nearest.top())) {
+         nearest.pop();
+         nearest.push(n);
+       }
++    };
++    auto original_visit = [&](int64_t key, const std::vector<Cell> &row) {
++      if (matches(row, fs))
++        consider(key, std::get<double>(project(projection, row)));
++    };
++    const bool point_lookup = std::any_of(fs.begin(), fs.end(), [&](const Filter &f) {
++      return f.column == pk && f.op == "=";
+     });
++    if (exact::available() && !point_lookup && st.table.size() <= 1024) {
++      if (cache_->table != st.table || cache_->exact_column != projection.col ||
++          cache_->complete) {
++        *cache_ = Cache{};
++        cache_->table = st.table;
++        cache_->exact_column = projection.col;
++      }
++      if (cache_->exact_view) {
++        const auto &view = *cache_->exact_view;
++        size_t pending[4], pending_count = 0;
++        auto flush = [&] {
++          double distances[4];
++          exact::distances4(view, pending, projection.query, distances);
++          for (size_t lane = 0; lane < 4; ++lane)
++            consider(view.keys[pending[lane]], distances[lane]);
++          pending_count = 0;
++        };
++        for (size_t i = 0; i < view.count; ++i) {
++          bool eligible = true;
++          for (const auto &f : fs) {
++            const int cmp = view.compare_scalar(f.column, i, f.value);
++            const bool yes = f.op == "=" ? cmp == 0 : f.op == "<" ? cmp < 0 :
++                f.op == "<=" ? cmp <= 0 : f.op == ">" ? cmp > 0 :
++                f.op == ">=" ? cmp >= 0 : false;
++            if (!yes) { eligible = false; break; }
++          }
++          if (eligible) {
++            pending[pending_count++] = i;
++            if (pending_count == 4) flush();
++          }
++        }
++        for (size_t lane = 0; lane < pending_count; ++lane)
++          consider(view.keys[pending[lane]], view.distance(pending[lane], projection.query));
++      } else if (cache_->exact_bypass) {
++        // Remember this view's budget bypass until existing invalidation clears it.
++        scan_rows(original_visit);
++      } else {
++        std::vector<Type> types;
++        for (const auto &column : schema.columns) types.push_back(column.type);
++        exact::Plan plan(std::move(types), projection.col, projection.query.size());
++        bool answered = false;
++        try {
++          // First scan answers this query and computes bounded allocation sizes.
++          // The old complete-row cache is absent throughout both build scans.
++          store_.scan(st.table, [&](int64_t key, const std::string &data) {
++            auto row = unpack_row(data, schema);
++            original_visit(key, row);
++            plan.observe(row);
++          });
++          answered = true;
++          if (plan.fits()) {
++            auto view = std::make_unique<exact::Compact>(plan);
++            size_t count = 0;
++            store_.scan(st.table, [&](int64_t key, const std::string &data) {
++              view->fill(count++, key, unpack_row(data, schema));
++            });
++            if (count != plan.count)
++              throw Error("CORRUPTION", "exact cache row count changed");
++            cache_->exact_view = std::move(view); // publish only after full fill
++          } else {
++            cache_->exact_bypass = true;
++          }
++        } catch (const std::bad_alloc &) {
++          if (!answered) { *cache_ = Cache{}; throw; }
++          // Cache allocation is optional; the complete first-scan result remains.
++          cache_->exact_bypass = true;
++        } catch (...) {
++          *cache_ = Cache{};
++          throw;
++        }
++      }
++    } else {
++      scan_rows(original_visit);
++    }
+     std::vector<Neighbor> winners;
+     while (!nearest.empty()) {
+       winners.push_back(nearest.top());
+diff --git a/src/exact_cache.hpp b/src/exact_cache.hpp
+new file mode 100644
+index 0000000..8faa333
+--- /dev/null
++++ b/src/exact_cache.hpp
+@@ -0,0 +1,156 @@
++#pragma once
++// Transient exact-search view. No disk/protocol representation depends on this.
++#include "engine.hpp"
++#include <cmath>
++#include <cstring>
++#include <limits>
++#include <string_view>
++#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
++#include <immintrin.h>
++#endif
++
++namespace mvdb::exact {
++constexpr size_t budget = 12 * 1024 * 1024;
++inline bool available() {
++#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
++  return __builtin_cpu_supports("avx2");
++#else
++  return false;
++#endif
++}
++inline size_t add(size_t a,size_t b) {
++  return a>budget || b>budget-a ? budget+1 : a+b;
++}
++inline size_t mul(size_t a,size_t b) {
++  return b && a>budget/b ? budget+1 : a*b;
++}
++struct ScalarColumn {
++  Type type;
++  std::vector<int64_t> integers;
++  std::vector<size_t> offsets;
++  std::vector<char> text;
++};
++struct Plan {
++  std::vector<Type> types;
++  std::vector<size_t> text_bytes;
++  size_t vector_column,dim,count=0;
++  Plan(std::vector<Type> t,size_t v,size_t d)
++      :types(std::move(t)),text_bytes(types.size()),vector_column(v),dim(d) {}
++  void observe(const std::vector<Cell>& row) {
++    count=add(count,1);
++    for(size_t c=0;c<types.size();++c)
++      if(types[c]==Type::Varchar)
++        text_bytes[c]=add(text_bytes[c],std::get<std::string>(row[c]).size());
++  }
++  size_t required_bytes() const {
++    // Fixed reserve covers objects, table identity, allocator metadata and the
++    // four-lane query scratch. Count all owned capacity again after allocation.
++    size_t bytes=4096;
++    if(!dim || vector_column>=types.size() || dim>budget || count>budget) return budget+1;
++    bytes=add(bytes,mul(types.size(),sizeof(ScalarColumn)+sizeof(Type)+sizeof(size_t)+96));
++    bytes=add(bytes,mul(count,sizeof(int64_t)));
++    bytes=add(bytes,mul(mul((count+3)/4,dim),4*sizeof(float)));
++    for(size_t c=0;c<types.size();++c) {
++      if(types[c]==Type::BigInt) bytes=add(bytes,mul(count,sizeof(int64_t)));
++      if(types[c]==Type::Varchar) {
++        bytes=add(bytes,mul(count+1,sizeof(size_t)));
++        bytes=add(bytes,text_bytes[c]);
++      }
++    }
++    return bytes;
++  }
++  bool fits() const {return required_bytes()<=budget;}
++};
++struct Compact {
++  size_t dim,count,vector_column;
++  std::vector<int64_t> keys;
++  std::vector<float> vectors;
++  std::vector<ScalarColumn> columns;
++  explicit Compact(const Plan& p):dim(p.dim),count(p.count),vector_column(p.vector_column) {
++    if(!p.fits()) throw Error("RESOURCE","exact cache plan exceeds budget");
++    keys.resize(count);
++    vectors.resize(((count+3)/4)*dim*4);
++    columns.resize(p.types.size());
++    for(size_t c=0;c<columns.size();++c) {
++      auto& col=columns[c];col.type=p.types[c];
++      if(col.type==Type::BigInt) col.integers.resize(count);
++      if(col.type==Type::Varchar) {col.offsets.resize(count+1);col.text.resize(p.text_bytes[c]);}
++    }
++    // Include the live sizing plan until it is destroyed after publication.
++    if(allocated_bytes()>budget) throw Error("RESOURCE","exact cache allocation exceeds budget");
++  }
++  size_t allocated_bytes() const {
++    size_t bytes=4096+columns.capacity()*(sizeof(ScalarColumn)+sizeof(Type)+sizeof(size_t)+96);
++    bytes+=keys.capacity()*sizeof(int64_t)+vectors.capacity()*sizeof(float);
++    for(const auto& c:columns) bytes+=c.integers.capacity()*sizeof(int64_t)+c.offsets.capacity()*sizeof(size_t)+c.text.capacity();
++    return bytes;
++  }
++  size_t index(size_t row,size_t dimension=0) const {
++    return (row/4)*dim*4+dimension*4+row%4;
++  }
++  void fill(size_t i,int64_t key,const std::vector<Cell>& row) {
++    if(i>=count) throw Error("CORRUPTION","exact cache row count changed");
++    keys[i]=key;
++    const auto& v=std::get<std::vector<float>>(row[vector_column]);
++    if(v.size()!=dim) throw Error("CORRUPTION","exact cache dimension changed");
++    for(size_t d=0;d<dim;++d) vectors[index(i,d)]=v[d];
++    for(size_t c=0;c<columns.size();++c) {
++      auto& col=columns[c];
++      if(col.type==Type::BigInt) col.integers[i]=std::get<int64_t>(row[c]);
++      if(col.type==Type::Varchar) {
++        const auto& s=std::get<std::string>(row[c]);size_t offset=col.offsets[i];
++        if(offset>col.text.size() || s.size()>col.text.size()-offset) throw Error("CORRUPTION","exact cache text size changed");
++        if(!s.empty()) std::memcpy(col.text.data()+offset,s.data(),s.size());
++        col.offsets[i+1]=offset+s.size();
++      }
++    }
++  }
++  int compare_scalar(size_t c,size_t row,const Cell& value) const {
++    const auto& col=columns[c];
++    if(col.type==Type::BigInt) {auto a=col.integers[row],b=std::get<int64_t>(value);return (a>b)-(a<b);}
++    const size_t begin=col.offsets[row],length=col.offsets[row+1]-begin;
++    std::string_view a(length?col.text.data()+begin:"",length);
++    std::string_view b=std::get<std::string>(value);
++    int cmp=a.compare(b);return (cmp>0)-(cmp<0);
++  }
++  double distance(size_t row,const std::vector<float>& q) const {
++    double sum=0;
++    for(size_t d=0;d<dim;++d) {double x=double(vectors[index(row,d)])-double(q[d]);sum+=x*x;}
++    return std::sqrt(sum);
++  }
++};
++inline void distances4_scalar(const Compact& cache,const size_t* rows,
++                              const std::vector<float>& q,double* out) {
++  for(size_t lane=0;lane<4;++lane) out[lane]=cache.distance(rows[lane],q);
++}
++#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
++// Every lane is one independent record. Never horizontally reduce dimensions;
++// no-fma prevents contraction even if a caller builds with FMA support enabled.
++__attribute__((target("avx2,no-fma"),noinline))
++inline void distances4_avx2(const Compact& cache,const size_t* rows,
++                           const std::vector<float>& q,double* out) {
++  const bool contiguous=rows[0]%4==0 && rows[1]==rows[0]+1 &&
++      rows[2]==rows[0]+2 && rows[3]==rows[0]+3;
++  const size_t start=cache.index(rows[0]);
++  const __m128i indices=_mm_set_epi32(int(cache.index(rows[3])),
++      int(cache.index(rows[2])),int(cache.index(rows[1])),int(start));
++  __m256d sum=_mm256_setzero_pd();
++  for(size_t d=0;d<cache.dim;++d) {
++    __m128 values=contiguous ? _mm_loadu_ps(cache.vectors.data()+start+d*4) :
++        _mm_i32gather_ps(cache.vectors.data()+d*4,indices,4);
++    __m256d delta=_mm256_sub_pd(_mm256_cvtps_pd(values),
++                              _mm256_set1_pd(double(q[d])));
++    __m256d square=_mm256_mul_pd(delta,delta);
++    sum=_mm256_add_pd(sum,square);
++  }
++  _mm256_storeu_pd(out,_mm256_sqrt_pd(sum));
++}
++#endif
++inline void distances4(const Compact& cache,const size_t* rows,
++                       const std::vector<float>& q,double* out) {
++#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
++  if(available()) {distances4_avx2(cache,rows,q,out);return;}
++#endif
++  distances4_scalar(cache,rows,q,out);
++}
++} // namespace mvdb::exact
+diff --git a/tests/test_exact_cache.cpp b/tests/test_exact_cache.cpp
+new file mode 100644
+index 0000000..600b505
+--- /dev/null
++++ b/tests/test_exact_cache.cpp
+@@ -0,0 +1,78 @@
++#include "exact_cache.hpp"
++#include <cmath>
++#include <array>
++#include <cstring>
++#include <iostream>
++#include <limits>
++#include <stdexcept>
++using namespace mvdb;
++void require(bool ok) { if(!ok) throw std::runtime_error("exact cache check failed"); }
++int main() {
++  for(size_t n: {size_t(0),size_t(1),size_t(3),size_t(4),size_t(5),size_t(9)})
++    for(size_t dim: {size_t(1),size_t(3),size_t(128)}) {
++      exact::Plan plan({Type::BigInt,Type::Varchar,Type::Vector},2,dim);
++      std::vector<std::vector<Cell>> rows;
++      for(size_t i=0;i<n;++i) {
++        std::vector<float> v(dim);
++        for(size_t d=0;d<dim;++d) v[d]=float(i)-float(d)/4;
++        rows.push_back({int64_t(i)-5,std::string(i%2?"中🙂":""),v});
++        plan.observe(rows.back());
++      }
++      require(plan.fits());
++      exact::Compact cache(plan);
++      for(size_t i=0;i<n;++i) cache.fill(i,int64_t(i)-5,rows[i]);
++      require(cache.allocated_bytes()<=exact::budget);
++      std::vector<float> q(dim,0.5f);
++      for(size_t i=0;i<n;++i) {
++        double sum=0; const auto& v=std::get<std::vector<float>>(rows[i][2]);
++        for(size_t d=0;d<dim;++d) {double x=double(v[d])-double(q[d]);sum+=x*x;}
++        double want=std::sqrt(sum),got=cache.distance(i,q);
++        require(std::memcmp(&want,&got,sizeof(double))==0);
++        require(cache.compare_scalar(0,i,Cell(int64_t(i)-5))==0);
++        require(cache.compare_scalar(1,i,rows[i][1])==0);
++        require(cache.keys[i]==int64_t(i)-5);
++      }
++    }
++  // C2: SIMD lanes must preserve every scalar bit for contiguous and gathered
++  // records, finite FP32 extrema/subnormals and dimensional boundaries.
++  for(size_t dim: {size_t(1),size_t(3),size_t(5),size_t(31),size_t(128),size_t(129)}) {
++    exact::Plan plan({Type::BigInt,Type::Vector},1,dim);
++    const float values[]={0.0f,-0.0f,std::numeric_limits<float>::max(),
++      -std::numeric_limits<float>::max(),std::numeric_limits<float>::denorm_min(),
++      -std::numeric_limits<float>::denorm_min(),1.0f,std::nextafter(1.0f,2.0f),1e-20f,1e20f};
++    std::vector<std::vector<Cell>> rows;
++    for(size_t i=0;i<12;++i) {
++      std::vector<float> v(dim);
++      for(size_t d=0;d<dim;++d) v[d]=values[(i*7+d)%10];
++      rows.push_back({int64_t(i),v});plan.observe(rows.back());
++    }
++    exact::Compact cache(plan);
++    for(size_t i=0;i<rows.size();++i) cache.fill(i,int64_t(i),rows[i]);
++    for(size_t iteration=0;iteration<100;++iteration) {
++      std::vector<float> q(dim);
++      for(size_t d=0;d<dim;++d) q[d]=values[(iteration+d*3)%10];
++      for(const auto& indices: {std::array<size_t,4>{0,1,2,3},
++          std::array<size_t,4>{4,5,6,7},std::array<size_t,4>{0,2,5,11}}) {
++        double output[4];exact::distances4(cache,indices.data(),q,output);
++        for(size_t lane=0;lane<4;++lane) {
++          double scalar=cache.distance(indices[lane],q);
++          require(std::memcmp(&scalar,&output[lane],sizeof(double))==0);
++        }
++      }
++    }
++  }
++  exact::Plan overflow({Type::BigInt,Type::Vector},1,128);
++  std::vector<Cell> row{int64_t(0),std::vector<float>(128)};
++  for(int i=0;i<32000;++i) overflow.observe(row);
++  require(!overflow.fits());
++  exact::Plan huge({Type::Vector},0,std::numeric_limits<size_t>::max());
++  require(!huge.fits());
++  exact::Plan strings({Type::Varchar,Type::Vector},1,1);
++  std::vector<Cell> large{std::string(exact::budget,'x'),std::vector<float>(1)};
++  strings.observe(large); require(!strings.fits());
++  exact::Plan boundary({Type::BigInt,Type::Vector},1,1);
++  size_t last=boundary.required_bytes();
++  while(boundary.fits()) {last=boundary.required_bytes();boundary.observe({int64_t(1),std::vector<float>(1)});}
++  require(last<=exact::budget && boundary.required_bytes()>exact::budget);
++  std::cout<<"compact scalar layout/budget/distance checks passed\n";
++}

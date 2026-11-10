@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "runs": {
+    "million-baseline": {
+      "anon_max": 40132608,
+      "memory_peak": 96739328,
+      "oom_kill_max": 0,
+      "passed": true,
+      "raw_sha256": "44cb04971908a988bdc1f5893dc8634cedefade81a8aecf242dff5fe288664e0",
+      "binary_sha256": "1d36080209fc61c2d4c5b65fdf2a0587048939b3c51e2eca34644bf848ec98b9",
+      "raw_source_manifest_sha256": null
+    },
+    "million-c2": {
+      "anon_max": 40128512,
+      "memory_peak": 96735232,
+      "oom_kill_max": 0,
+      "passed": true,
+      "raw_sha256": "bb044c9c9f0d4813eb7ad6b181b6dcaaf663a9ef5d149b184238db7979921d82",
+      "binary_sha256": "b2501504b9e0b13afe6dc35c4e24bf65efaf4351e98ae3d94fc6327f1bd9ee67",
+      "raw_source_manifest_sha256": null,
+      "anon_over_baseline": 0.9998979383547663
+    },
+    "million-vector-baseline": {
+      "anon_max": 41291776,
+      "memory_peak": 114642944,
+      "oom_kill_max": 0,
+      "passed": true,
+      "raw_sha256": "210eec06e7d1d7af1c521dbb08682fdcedc91cf1644924c013a6270c6a5bbc67",
+      "binary_sha256": "1d36080209fc61c2d4c5b65fdf2a0587048939b3c51e2eca34644bf848ec98b9",
+      "raw_source_manifest_sha256": null
+    },
+    "million-vector-c2": {
+      "anon_max": 40566784,
+      "memory_peak": 113995776,
+      "oom_kill_max": 0,
+      "passed": true,
+      "raw_sha256": "999b571ccdc270ec5df19926d88afc905aaaae578803642d7f0453609d75bd79",
+      "binary_sha256": "b2501504b9e0b13afe6dc35c4e24bf65efaf4351e98ae3d94fc6327f1bd9ee67",
+      "raw_source_manifest_sha256": null,
+      "anon_over_baseline": 0.9824422180339252
+    }
+  },
+  "scope": "One independent case per schema/version; sampled anon maxima and kernel memory.peak, not latency distribution. Raw source_manifest_sha256 stays null; source binding separately checked."
+}

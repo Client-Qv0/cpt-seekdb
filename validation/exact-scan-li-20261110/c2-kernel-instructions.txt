@@ -1,0 +1,4 @@
+    66d0:	c5 fd 59 c0          	vmulpd %ymm0,%ymm0,%ymm0
+    66d4:	c5 ed 58 d0          	vaddpd %ymm0,%ymm2,%ymm2
+    66f0:	c4 e2 49 92 04 99    	vgatherdps %xmm6,(%rcx,%xmm3,4),%xmm0
+    6704:	c5 fd 51 d2          	vsqrtpd %ymm2,%ymm2

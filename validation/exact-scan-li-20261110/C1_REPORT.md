@@ -1,0 +1,17 @@
+# C1 compact scalar cache — independent review requested
+
+Status: functional implementation complete, performance not measured. Commit 07b3a75ec2b0434105ccfa51a03a90d07c077ee3. Review diff C1_REVIEW.diff covers ef2cece..07b3a75. Requirements IMPLEMENTATION_BRIEF.md (C1 architecture/cache/correctness), scalar candidate only; C2 SIMD intentionally subsequent.
+
+- TDD: tests/test_exact_cache.cpp first compiled red, c1-red.log (absent exact_cache.hpp); then green c1-green.log. Unit checks AoSoA tile boundaries (0/1/3/4/5/9), odd dimensions, exact bitwise scalar reference, typed strings/BIGINT, oversized dimension/text and both sides of 12MiB budget boundary.
+- Cache sizes first scan while executing actual query, allocates all capacities once, fills on second scan, publishes only completed view. Separate PK/typed scalar fields and AoSoA FP32 vectors; no complete row cache retained with vector view. Overflow remembered per table/vector view. Existing mutation/transaction/failed statement invalidation preserved via Cache replacement. Generic/point lookup/unsupported CPU use original execution. Four-lane scratch reserved conservatively in 4096 metadata reserve. Table identities >1024 bytes use original path.
+- Self-review fixed bad_alloc during first scan: rethrow unless query's first scan completed, avoiding partial result. bad_alloc during optional build preserves completed query and remembers bypass.
+- c1-ctest-final.log: existing6/6 plus exact_cache1/1 PASS. c1-acceptance.log:21 tests,20pass/1explicit skip (stress flag not requested). c1-optimization.log:12 executed tests PASS plus one explicit class-level skip (large flag not requested). These are preliminary, broader final validation still required.
+- c1-stdio/result.json: baseline/candidate each8 default native protocol casesPASS, including errors/Unicode/BIGINT/large streamed output/EOF rollback/shutdown/closedstdout SIGPIPE.
+- Native binary sha256 8c391b961965834d37f5532aaed9dccd6b33e472b487cc2a16f6b61757e05d23. src/engine.cpp2741268fa7a35fe182eb00eeba36c923112d6e6b6a2d0eeca574e8a89dba56bc; exact_cache.hpp e3914b7617003cebd922664b1aa26e5eac89a6d536974fc5447d03ea61b7eedc.
+- Baseline profile diagnostic (not acceptance): profile-baseline-retry/perf-report.txt, 0 lost samples, projection69.44%, scalarcompare7.87%, TopK visitor3.25% (includes/inlines other work, not exclusively heap). First query/cache build20.951ms. Original diagnostic failed due missing --data-dir, preserved profile-baseline/stderr.log; fixed CLI then retry succeeded.
+
+Review both spec compliance and code quality. Please scrutinize capacity accounting, failure fallback completeness and original scalar semantics; no performance approval claimed.
+
+Additional completed checks (same immutable binary): c1-distance JSON:858 SQL statements, dimensions1/2/3/4/5/31/32/33/127/128/129, seeds3179/9143/27183; exact whole-response equality to baseline and independent FP32 oraclePASS. c1-formal-stdio repeats same8native checksPASS. Docker C1 built successfully (c1-docker-build.log), image mvdb-li-exact:c1-07b3a75 ID sha256:66e8270735ed4aeaba372ad1c2474608bf8791b90e74119a91edd1b4e080961b; runtime image has pinned dependency cache and default entry unchanged.
+
+Full flagged suites now completed: c1-acceptance-full.log21/21PASS (--stress), c1-optimization-full.log15/15PASS (--large), no skipped tests. Docker binary SHA256 matches native8c391b961965834d37f5532aaed9dccd6b33e472b487cc2a16f6b61757e05d23 (c1-docker-binary.sha256).

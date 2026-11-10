@@ -1,0 +1,107 @@
+{
+  "audit_id": "resource-final",
+  "source_tree_sha256": "7c09beba41c9fe64b39f66efcb5ceeb52aefb1e4f7a74410cee5126e8c33bd5e",
+  "source_manifest_sha256": "77ffa3474250b3e0837187aee4f9a1ec944f6fa0e62ed048be644a07f16c7095",
+  "image_id": "sha256:f8ccc8d89f578f5e4905827a08690161a942d041ceea06d05044528c98495bf7",
+  "binary_sha256": "b2501504b9e0b13afe6dc35c4e24bf65efaf4351e98ae3d94fc6327f1bd9ee67",
+  "tests_run": 4,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "success": true,
+  "memory_max": 134217728,
+  "memory_swap_max": 0,
+  "cpu_max": "200000 100000",
+  "network": "none",
+  "driver_RLIMIT_AS_not_used": true,
+  "official_benchmark": false,
+  "limits": [
+    "These are four resource regression cases, not the official benchmark.",
+    "io.stat values are observations from the actual container cgroup on shared host ext4 device; dedicated-device and writeback-attribution calibration are unverified.",
+    "Driver output files and parsing live outside the container, consistent with separating test-driver overhead.",
+    "For any unexpected exit, exact final cgroup counters may be unavailable; last live sample and Docker OOMKilled state are preserved explicitly."
+  ],
+  "actual_executable_binding": {
+    "binary_path": "/home/li/minivectordb-exact-scan-20261110/build-exact-c2/minivectordb",
+    "sha256_before": "b2501504b9e0b13afe6dc35c4e24bf65efaf4351e98ae3d94fc6327f1bd9ee67",
+    "sha256_after": "b2501504b9e0b13afe6dc35c4e24bf65efaf4351e98ae3d94fc6327f1bd9ee67",
+    "read_only_bind_mount": true,
+    "entrypoint": "/probe/minivectordb",
+    "runtime_image_embedded_binary_sha256_not_executed": null
+  },
+  "source_binding": {
+    "source_root": "/home/li/minivectordb-exact-scan-20261110",
+    "manifest_path": "/home/li/minivectordb-exact-scan-20261110/validation/exact-scan-li-20261110/candidate-production-manifest.json",
+    "manifest_sha256": "77ffa3474250b3e0837187aee4f9a1ec944f6fa0e62ed048be644a07f16c7095",
+    "production_tree_sha256": "7c09beba41c9fe64b39f66efcb5ceeb52aefb1e4f7a74410cee5126e8c33bd5e",
+    "verified_files": [
+      {
+        "path": "src/compact_rows.hpp",
+        "sha256": "d38624d37078886fe74231b8512163e6dc286a694ff674befbc8466327bb8d53"
+      },
+      {
+        "path": "src/engine.cpp",
+        "sha256": "064ede557b5afb030491b20745716db4ac1478cf6762cc894e7a062084b53d9f"
+      },
+      {
+        "path": "src/engine.hpp",
+        "sha256": "f8f50c391a8051b066745452f8a7a7ccbb73c43e61990ffd281fd576c93785e1"
+      },
+      {
+        "path": "src/exact_cache.hpp",
+        "sha256": "e8a690f05474b7220b333bb40b4bb40e86af382b7bd63794c52e06a8f9ae458b"
+      },
+      {
+        "path": "src/main.cpp",
+        "sha256": "0964db4be4ebb3ed33a248bff6c77cd4b52283dcc1735f8bb53835a718bae4ed"
+      },
+      {
+        "path": "src/protocol.cpp",
+        "sha256": "981a2da3a6d91b2b14206f099c5e10a3e9fba809c3f0ffb19f513b90480bfe73"
+      },
+      {
+        "path": "src/protocol.hpp",
+        "sha256": "284ef8550f910a15fb2e273993b5a10b030884c5928cbff76260f1dcfd2095e8"
+      },
+      {
+        "path": "src/spill.cpp",
+        "sha256": "fca305b940394ebb88232a14d7b4dc4f4248228b703402f7089b1e4010c054df"
+      },
+      {
+        "path": "src/spill.hpp",
+        "sha256": "70451b7dd2c76a323c8ef86d2c697f8012001b916be6c0ca3e69ecb605e38d44"
+      },
+      {
+        "path": "src/sql.cpp",
+        "sha256": "9bf66e221a8629b52b41622d5787ae41d712ad816d7e3485e3be4d2c2e0fb42d"
+      },
+      {
+        "path": "src/sql.hpp",
+        "sha256": "7e4a9a22a97a3f11f47f48e401cdb5d24218f44a4350f143b5edf8bdc8a75593"
+      },
+      {
+        "path": "src/storage.cpp",
+        "sha256": "1c1556c18a8d7bb588f3c7619587a0f75276b3df2a2b2cbfc93036f858c2c312"
+      },
+      {
+        "path": "src/storage.hpp",
+        "sha256": "c3d50060eccea2e883fa844e32bd78062a8234386bf4a73a29751d3f42780a9f"
+      },
+      {
+        "path": "CMakeLists.txt",
+        "sha256": "064938d3b67d1cb95db20f04540bc636257e474157a45e1cc1af85720cb78462"
+      },
+      {
+        "path": "Dockerfile",
+        "sha256": "6178916e2baf4b9a3b3481c1949fbbee71edca0cdae07ace94feebed19990c32"
+      },
+      {
+        "path": ".dockerignore",
+        "sha256": "b602eaa29e663fe28b895e2c349dd96eb06ce61272047a550959ff83bb0fb6d8"
+      }
+    ]
+  },
+  "source_unchanged_after": true,
+  "binary_unchanged_after": true
+}
+CONTAINER_RESOURCE_SUMMARY [{"label": "storage/setup/restart", "peak": 134217728, "rows": null, "output_bytes": null, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 137, "Error": "", "StartedAt": "2026-11-10T19:58:54.837302306Z", "FinishedAt": "2026-11-10T19:59:00.702981035Z"}}, {"label": "__main__.ContainerLargeResponses.test_distance_topk_with_large_payload_exceeds_heap_budget", "peak": 134217728, "rows": 8000, "output_bytes": 160116974, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 0, "Error": "", "StartedAt": "2026-11-10T19:59:01.027372285Z", "FinishedAt": "2026-11-10T19:59:06.463590805Z"}}, {"label": "__main__.ContainerLargeResponses.test_large_limit_multikey_order_spills_without_changing_order", "peak": 134217728, "rows": 9600, "output_bytes": 192095235, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 0, "Error": "", "StartedAt": "2026-11-10T19:59:09.002634813Z", "FinishedAt": "2026-11-10T19:59:14.224360734Z"}}, {"label": "__main__.ContainerLargeResponses.test_no_limit_select_star_streams_beyond_memory_budget", "peak": 134217728, "rows": 9600, "output_bytes": 192221839, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 0, "Error": "", "StartedAt": "2026-11-10T19:59:17.308777102Z", "FinishedAt": "2026-11-10T19:59:22.662715275Z"}}, {"label": "storage/setup/restart", "peak": 4538368, "rows": null, "output_bytes": null, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 137, "Error": "", "StartedAt": "2026-11-10T19:59:25.524555949Z", "FinishedAt": "2026-11-10T19:59:25.74856454Z"}}, {"label": "storage/setup/restart", "peak": 134217728, "rows": null, "output_bytes": null, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 137, "Error": "", "StartedAt": "2026-11-10T19:59:26.060021745Z", "FinishedAt": "2026-11-10T19:59:30.081166023Z"}}, {"label": "storage/setup/restart", "peak": 84058112, "rows": null, "output_bytes": null, "state": {"Status": "exited", "Running": false, "OOMKilled": false, "ExitCode": 137, "Error": "", "StartedAt": "2026-11-10T19:59:30.436180638Z", "FinishedAt": "2026-11-10T19:59:31.466610746Z"}}]

@@ -1,0 +1,60 @@
+{
+  "frozen_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+  "frozen_source": "/home/li/minivectordb-exact-scan-20261110/validation/perf-20261110-stdio/scripts/bench.py",
+  "adapter_sha256": "957be1db1ba19565aa5e37935f7394b17a65948706f9fdbe6b1320395837ee81",
+  "adapted_sha256": "5521388a8df74642c5a620f296b05bac0f64c9792ef7fca0fecf7c01605c4bf3",
+  "substitutions": [
+    {
+      "before": "ROOT=pathlib.Path(__file__).resolve().parents[1]",
+      "after": "ROOT=pathlib.Path('/home/li/minivectordb-exact-scan-20261110/validation/exact-scan-li-20261110/c2-c1-overflow')"
+    },
+    {
+      "before": "ENV=dict(os.environ,DOCKER_HOST='unix:///var/tmp/minivectordb-perf-20261110/docker.sock')",
+      "after": "ENV=dict(os.environ)"
+    },
+    {
+      "before": "pathlib.Path('/var/tmp/minivectordb-perf-20261110/data')",
+      "after": "pathlib.Path('/home/li/exact-scan-c2-c1-overflow-data-20261110')"
+    }
+  ],
+  "docker_host": "unix:///var/run/docker.sock",
+  "docker_context": null,
+  "output_root": "/home/li/minivectordb-exact-scan-20261110/validation/exact-scan-li-20261110/c2-c1-overflow",
+  "data_root": "/home/li/exact-scan-c2-c1-overflow-data-20261110",
+  "images": {
+    "left": {
+      "requested": "mvdb-li-exact:c1-07b3a75",
+      "id": "sha256:66e8270735ed4aeaba372ad1c2474608bf8791b90e74119a91edd1b4e080961b",
+      "architecture": "amd64"
+    },
+    "right": {
+      "requested": "mvdb-li-exact:c2-3490b49",
+      "id": "sha256:f8ccc8d89f578f5e4905827a08690161a942d041ceea06d05044528c98495bf7",
+      "architecture": "amd64"
+    }
+  },
+  "command": [
+    "/home/li/mvdb-review-venv-20261110/bin/python",
+    "/home/li/minivectordb-exact-scan-20261110/validation/exact-scan-li-20261110/c2-c1-overflow/tool/bench.adapted.py",
+    "--images",
+    "left=sha256:66e8270735ed4aeaba372ad1c2474608bf8791b90e74119a91edd1b4e080961b",
+    "right=sha256:f8ccc8d89f578f5e4905827a08690161a942d041ceea06d05044528c98495bf7",
+    "--seeds",
+    "3179",
+    "3181",
+    "3187",
+    "--rows",
+    "32000",
+    "--dim",
+    "128",
+    "--queries",
+    "100",
+    "--prefix",
+    "li-c2-c1-overflow"
+  ],
+  "preflight_only": false,
+  "limits_unchanged": true,
+  "oracle_and_timers_unchanged": true,
+  "benchmark_scope": "Local comparison only, not official scorer or result guarantee",
+  "exit_code": 0
+}

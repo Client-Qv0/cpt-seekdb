@@ -1,0 +1,19 @@
+{
+  "label": "baseline",
+  "status": "PASS",
+  "binary": "/home/li/minivectordb-review-20261110/build-server-review/minivectordb",
+  "binary_sha256": "1d36080209fc61c2d4c5b65fdf2a0587048939b3c51e2eca34644bf848ec98b9",
+  "cases": [
+    "ready emitted before input",
+    "newline framing and response flush before next request",
+    "error response then Unicode/BIGINT/object-ID continued communication",
+    "large streamed result >4MiB consumed completely without next request",
+    "explicit shutdown response flush then exit0, no extra stdout",
+    "empty EOF after ready exits0",
+    "EOF shutdown rolls back uncommitted transaction and reopens",
+    "closed stdout causes nonzero exit; committed data preserved and uncommitted discarded"
+  ],
+  "broken_stdout_exit_code": -13,
+  "trace_sha256": "3597dc9c558a611181afff75de4721aac0d9e71d4d52355171fec2860738763a",
+  "scope": "Native default formal JSONL entry, correctness only. No Docker or performance claims."
+}

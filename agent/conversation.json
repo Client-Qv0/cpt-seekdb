@@ -1,4 +1,55 @@
 {
+  "exact_scan_li_20261110": {
+    "recorded_client_date": "2026-11-11",
+    "source": "actual user decisions, agent implementation, and measured tool results; not proof of student technical understanding",
+    "user_decisions": [
+      {
+        "source": "user",
+        "content": "选1，注意在后续交接时把这些选项写进去"
+      },
+      {
+        "source": "user",
+        "content": "当前服务器（推荐）"
+      },
+      {
+        "source": "user",
+        "content": "查询至少快15%（推荐）"
+      }
+    ],
+    "agent_work": [
+      {
+        "source": "agent",
+        "content": "C1采用单一12MiB预算的完整AoSoA缓存，先核算再填充；C2跨记录四路AVX2保持原维度double累加、独立乘加与实际sqrt，运行时检测指令集，不支持时走原精确路径。未引入ANN或修改WAL/JSONL/事务语义。"
+      },
+      {
+        "source": "tool_result_summary",
+        "content": "A/A六组查询绝对变化中位1.7864%、最大4.8354%，满足3%/10%门槛。C1/基线查询中位下降5.879%，未达15%；C2/C1直接增量34.791%。最终C2/基线六组直接查询下降38.413%，6/6胜，过滤27.464%、无过滤45.653%；写入慢3.882%。"
+      },
+      {
+        "source": "tool_result_summary",
+        "content": "最终超缓存查询慢1.935%、写入慢0.675%、重启慢6.028%，均在批准门槛内。新种子65003/65011/65027查询中位下降40.643%，3/3胜。首次查询因两遍构建慢54.732%，约36.189–47.033ms对基线22.675–32.605ms，不宣称所有工作负载均更快。"
+      },
+      {
+        "source": "tool_result_summary",
+        "content": "Release CTest7/7、含压力黑盒21/21、含大输出扩展15/15；858SQL差分及独立FP32真值、8种原生流边界通过。ASan/UBSan CTest7/7，黑盒20通过+1压力跳过、扩展12通过+大输出类跳过。原版f4d4e266驱动实际Docker入口20公开例通过；128MiB默认入口强杀恢复完整10000行/1280000FP32分量及未提交回滚通过。"
+      },
+      {
+        "source": "tool_result_summary",
+        "content": "四项冻结实际128MiB资源回归4/4、0skip/0OOM（显式dev协议，和默认JSONL验证分开）；百万标量匿名峰值40132608→40128512B，百万VECTOR(4)匿名峰值41291776→40566784B，全部阶段通过，无OOM。"
+      },
+      {
+        "source": "tool_result_summary",
+        "content": "实际正式7637材料20922字节，sha256 af4b8df2a07d1f4e464f41ee8180dfe73e01bb7011734c820bddd3c16c7cfb64，严格UTF8/顶层对象/重复键/非有限数/代理项/128KiB检查均通过；平台无有效原始分的原因仍未知。"
+      }
+    ],
+    "choices_preserved": "已选精确结构优化；保守微优化收益空间有限，ANN接受性及召回/更新/恢复风险另列；旧未提交向量索引暂缓。",
+    "limitations": [
+      "没有新的正式成绩或4000分预测。2277.870638只属于7637。",
+      "相对7637同环境三组查询快36.82%、写入快34.33%，但重启慢23.29%、首次慢65.93%；不与9cea门槛混用。",
+      "非AVX2实机未执行；共享主机、首次构建和未校准物理I/O限制保留。"
+    ],
+    "official_assessment_submitted": false
+  },
   "schema_version": 1,
   "exact_query_workpackage_20261109": {
     "source": "actual user request and measured agent experiments; not proof of student understanding",

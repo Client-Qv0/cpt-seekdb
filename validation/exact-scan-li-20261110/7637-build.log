@@ -1,0 +1,78 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.13kB 0.0s done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#2 DONE 5.5s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [certs 1/2] FROM docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#4 resolve docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 0.0s done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 110.40kB done
+#5 DONE 0.0s
+
+#6 [builder 2/7] COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+#6 CACHED
+
+#7 [builder 3/7] RUN rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\n'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security main'       > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --no-install-recommends g++=4:13.2.0-7ubuntu1 cmake=3.28.3-1build7 make=4.3-4.1build2     && rm -rf /var/lib/apt/lists/*
+#7 CACHED
+
+#8 [certs 2/2] RUN rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\n' 'deb http://archive.ubuntu.com/ubuntu noble main' > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --allow-downgrades --no-install-recommends ca-certificates=20240203 openssl=3.0.13-0ubuntu3 libssl3t64=3.0.13-0ubuntu3     && printf '%s  %s\n' 6d84ab71cb726c0641b0af84303c316e3fa50db941dc8507d09045eb2fa5d238 /etc/ssl/certs/ca-certificates.crt | sha256sum -c -
+#8 CACHED
+
+#9 [builder 4/7] WORKDIR /src
+#9 CACHED
+
+#10 [builder 5/7] COPY CMakeLists.txt ./
+#10 DONE 0.0s
+
+#11 [builder 6/7] COPY src/ src/
+#11 DONE 0.1s
+
+#12 [builder 7/7] RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release     && cmake --build build --parallel 2
+#12 0.298 -- The CXX compiler identification is GNU 13.3.0
+#12 0.339 -- Detecting CXX compiler ABI info
+#12 0.538 -- Detecting CXX compiler ABI info - done
+#12 0.559 -- Check for working CXX compiler: /usr/bin/c++ - skipped
+#12 0.561 -- Detecting CXX compile features
+#12 0.562 -- Detecting CXX compile features - done
+#12 0.565 -- Configuring done (0.4s)
+#12 0.574 -- Generating done (0.0s)
+#12 0.576 -- Build files have been written to: /src/build
+#12 0.668 [ 25%] Building CXX object CMakeFiles/mvdb.dir/src/storage.cpp.o
+#12 0.668 [ 25%] Building CXX object CMakeFiles/mvdb.dir/src/sql.cpp.o
+#12 5.171 [ 37%] Building CXX object CMakeFiles/mvdb.dir/src/engine.cpp.o
+#12 5.736 [ 50%] Building CXX object CMakeFiles/mvdb.dir/src/spill.cpp.o
+#12 9.539 [ 62%] Building CXX object CMakeFiles/mvdb.dir/src/protocol.cpp.o
+#12 13.70 [ 75%] Linking CXX static library libmvdb.a
+#12 13.77 [ 75%] Built target mvdb
+#12 13.82 [ 87%] Building CXX object CMakeFiles/minivectordb.dir/src/main.cpp.o
+#12 15.04 [100%] Linking CXX executable minivectordb
+#12 15.20 [100%] Built target minivectordb
+#12 DONE 15.3s
+
+#13 [stage-2 2/3] RUN test "$(dpkg-query -W -f='${Version}' libstdc++6)" = '14.2.0-4ubuntu2~24.04.1'
+#13 CACHED
+
+#14 [stage-2 3/3] COPY --from=builder /src/build/minivectordb /app/minivectordb
+#14 DONE 0.0s
+
+#15 exporting to image
+#15 exporting layers 0.1s done
+#15 exporting manifest sha256:c8e81439deedd63c7d5410f85bcd8a6260187a891e9d9fb469301e1317b484c3
+#15 exporting manifest sha256:c8e81439deedd63c7d5410f85bcd8a6260187a891e9d9fb469301e1317b484c3 0.0s done
+#15 exporting config sha256:9be98033758dea2c93bf2f81620b7f43d7b4ffc604dee37b4dc9f7c1c63503d7 0.0s done
+#15 exporting attestation manifest sha256:c5eda524d3f4236b9e2c250bbdbb17fa2f719928fc83522886e2c394f713f261 0.0s done
+#15 exporting manifest list sha256:895c3c82ec21b64c506866b81a3e4e1954451444fb89507e99befd23720d6939 0.0s done
+#15 naming to docker.io/library/mvdb-li-exact:7637-rebuilt
+#15 naming to docker.io/library/mvdb-li-exact:7637-rebuilt done
+#15 unpacking to docker.io/library/mvdb-li-exact:7637-rebuilt 0.0s done
+#15 DONE 0.3s

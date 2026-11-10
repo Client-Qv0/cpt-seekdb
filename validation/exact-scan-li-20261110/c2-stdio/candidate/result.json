@@ -1,0 +1,19 @@
+{
+  "label": "candidate",
+  "status": "PASS",
+  "binary": "build-exact-c2/minivectordb",
+  "binary_sha256": "b2501504b9e0b13afe6dc35c4e24bf65efaf4351e98ae3d94fc6327f1bd9ee67",
+  "cases": [
+    "ready emitted before input",
+    "newline framing and response flush before next request",
+    "error response then Unicode/BIGINT/object-ID continued communication",
+    "large streamed result >4MiB consumed completely without next request",
+    "explicit shutdown response flush then exit0, no extra stdout",
+    "empty EOF after ready exits0",
+    "EOF shutdown rolls back uncommitted transaction and reopens",
+    "closed stdout causes nonzero exit; committed data preserved and uncommitted discarded"
+  ],
+  "broken_stdout_exit_code": -13,
+  "trace_sha256": "05943b793a845ad201a03584d9a5adfd4d15dbe96fc9babfa3f6621f5992b3d6",
+  "scope": "Native default formal JSONL entry, correctness only. No Docker or performance claims."
+}

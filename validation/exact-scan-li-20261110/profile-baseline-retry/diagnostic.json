@@ -1,0 +1,27 @@
+{
+  "command": [
+    "perf",
+    "record",
+    "-F",
+    "199",
+    "-e",
+    "cpu-clock:u",
+    "--call-graph",
+    "dwarf",
+    "-o",
+    "/home/li/minivectordb-exact-scan-20261110/validation/exact-scan-li-20261110/profile-baseline-retry/perf.data",
+    "--",
+    "/home/li/minivectordb-review-20261110/build-server-review/minivectordb",
+    "--data-dir",
+    "/home/li/minivectordb-exact-scan-20261110/validation/exact-scan-li-20261110/profile-baseline-retry/data"
+  ],
+  "stages": [
+    {
+      "stage": "first_query_cache_build",
+      "elapsed_s": 0.020950882229954004
+    }
+  ],
+  "queries": 5000,
+  "scope": "native diagnostic sampling, no Docker, not final comparison; first-query wall time includes row scan and cache build",
+  "exit_code": 0
+}
