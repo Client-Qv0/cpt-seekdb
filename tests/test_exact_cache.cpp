@@ -85,6 +85,15 @@ int main() {
         std::array<size_t,8> group{};for(auto &row:group)row=random()%45;
         groups.push_back(group);
       }
+      if(exact::available()) {
+        for(size_t start=0;start+8<=cache.count;start+=8) {
+          double output[8];exact::distances8_contiguous(cache,start,q,output);
+          for(size_t lane=0;lane<8;++lane) {
+            double scalar=cache.distance(start+lane,q);
+            require(std::memcmp(&scalar,output+lane,sizeof(double))==0);
+          }
+        }
+      }
       for(const auto& ids:groups) {
         double output[8];exact::distances8(cache,ids.data(),q,output);
         for(size_t lane=0;lane<8;++lane) {

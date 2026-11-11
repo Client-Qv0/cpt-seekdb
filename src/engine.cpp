@@ -759,38 +759,58 @@ Result Engine::execute_statement(const Statement &st) {
       }
       if (cache_->exact_view) {
         const auto &view = *cache_->exact_view;
-        size_t pending[8], pending_count = 0;
-        auto flush = [&] {
-          double distances[8];
-          exact::distances8(view, pending, projection.query, distances);
-          for (size_t lane = 0; lane < 8; ++lane)
-            consider(view.keys[pending[lane]], distances[lane]);
-          pending_count = 0;
-        };
-        for (size_t i = 0; i < view.count; ++i) {
-          bool eligible = true;
-          for (const auto &f : fs) {
-            const int cmp = view.compare_scalar(f.column, i, f.value);
-            const bool yes = f.op == "=" ? cmp == 0 : f.op == "<" ? cmp < 0 :
-                f.op == "<=" ? cmp <= 0 : f.op == ">" ? cmp > 0 :
-                f.op == ">=" ? cmp >= 0 : false;
-            if (!yes) { eligible = false; break; }
+        if (fs.empty()) {
+          size_t i = 0;
+          for (; i + 8 <= view.count; i += 8) {
+            double distances[8];
+            exact::distances8_contiguous(view, i, projection.query, distances);
+            for (size_t lane = 0; lane < 8; ++lane)
+              consider(view.keys[i + lane], distances[lane]);
           }
-          if (eligible) {
-            pending[pending_count++] = i;
-            if (pending_count == 8) flush();
+          if (i + 4 <= view.count) {
+            const size_t rows[4] = {i, i + 1, i + 2, i + 3};
+            double distances[4];
+            exact::distances4(view, rows, projection.query, distances);
+            for (size_t lane = 0; lane < 4; ++lane)
+              consider(view.keys[i + lane], distances[lane]);
+            i += 4;
           }
+          for (; i < view.count; ++i)
+            consider(view.keys[i], view.distance(i, projection.query));
+        } else {
+          size_t pending[8], pending_count = 0;
+          auto flush = [&] {
+            double distances[8];
+            exact::distances8(view, pending, projection.query, distances);
+            for (size_t lane = 0; lane < 8; ++lane)
+              consider(view.keys[pending[lane]], distances[lane]);
+            pending_count = 0;
+          };
+          for (size_t i = 0; i < view.count; ++i) {
+            bool eligible = true;
+            for (const auto &f : fs) {
+              const int cmp = view.compare_scalar(f.column, i, f.value);
+              const bool yes = f.op == "=" ? cmp == 0 : f.op == "<" ? cmp < 0 :
+                  f.op == "<=" ? cmp <= 0 : f.op == ">" ? cmp > 0 :
+                  f.op == ">=" ? cmp >= 0 : false;
+              if (!yes) { eligible = false; break; }
+            }
+            if (eligible) {
+              pending[pending_count++] = i;
+              if (pending_count == 8) flush();
+            }
+          }
+          size_t tail = 0;
+          if (pending_count >= 4) {
+            double distances[4];
+            exact::distances4(view, pending, projection.query, distances);
+            for (size_t lane = 0; lane < 4; ++lane)
+              consider(view.keys[pending[lane]], distances[lane]);
+            tail = 4;
+          }
+          for (size_t lane = tail; lane < pending_count; ++lane)
+            consider(view.keys[pending[lane]], view.distance(pending[lane], projection.query));
         }
-        size_t tail = 0;
-        if (pending_count >= 4) {
-          double distances[4];
-          exact::distances4(view, pending, projection.query, distances);
-          for (size_t lane = 0; lane < 4; ++lane)
-            consider(view.keys[pending[lane]], distances[lane]);
-          tail = 4;
-        }
-        for (size_t lane = tail; lane < pending_count; ++lane)
-          consider(view.keys[pending[lane]], view.distance(pending[lane], projection.query));
       } else if (cache_->exact_bypass) {
         // Remember this view's budget bypass until existing invalidation clears it.
         scan_rows(original_visit);

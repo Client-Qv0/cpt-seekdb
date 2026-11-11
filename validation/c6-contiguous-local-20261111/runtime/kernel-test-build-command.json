@@ -1,0 +1,18 @@
+[
+  "docker",
+  "run",
+  "--rm",
+  "--network",
+  "none",
+  "--mount",
+  "type=bind,src=/var/tmp/minivectordb-c6-contiguous-20261111,dst=/c5",
+  "minivectordb:c4-builder",
+  "g++",
+  "-std=c++17",
+  "-O3",
+  "-DNDEBUG",
+  "-I/c5/source/src",
+  "/c5/source/tests/test_exact_cache.cpp",
+  "-o",
+  "/c5/test_exact_cache"
+]

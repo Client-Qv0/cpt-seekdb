@@ -1,0 +1,150 @@
+--- a/src/exact_cache.hpp
++++ b/src/exact_cache.hpp
+@@ -178,6 +178,25 @@
+   _mm256_storeu_pd(out+4,_mm256_sqrt_pd(sum1));
+ }
+ 
++// Unfiltered scan: row is aligned to four and eight consecutive rows exist.
++// The caller has already checked AVX2 once for the whole query.
++__attribute__((target("avx2,no-fma"),noinline))
++inline void distances8_contiguous_avx2(const Compact& cache,size_t row,
++                                      const std::vector<float>& q,double* out) {
++  const float* block0=cache.vectors.data()+(row/4)*cache.dim*4;
++  const float* block1=block0+cache.dim*4;
++  __m256d sum0=_mm256_setzero_pd(),sum1=_mm256_setzero_pd();
++  for(size_t d=0;d<cache.dim;++d) {
++    const __m256d query=_mm256_set1_pd(double(q[d]));
++    const __m256d delta0=_mm256_sub_pd(_mm256_cvtps_pd(_mm_loadu_ps(block0+d*4)),query);
++    const __m256d delta1=_mm256_sub_pd(_mm256_cvtps_pd(_mm_loadu_ps(block1+d*4)),query);
++    sum0=_mm256_add_pd(sum0,_mm256_mul_pd(delta0,delta0));
++    sum1=_mm256_add_pd(sum1,_mm256_mul_pd(delta1,delta1));
++  }
++  _mm256_storeu_pd(out,_mm256_sqrt_pd(sum0));
++  _mm256_storeu_pd(out+4,_mm256_sqrt_pd(sum1));
++}
++
+ #endif
+ inline void distances4(const Compact& cache,const size_t* rows,
+                        const std::vector<float>& q,double* out) {
+@@ -193,4 +212,13 @@
+ #endif
+   for(size_t lane=0;lane<8;++lane) out[lane]=cache.distance(rows[lane],q);
+ }
++// Precondition: available() has been checked by the query dispatcher.
++inline void distances8_contiguous(const Compact& cache,size_t row,
++                                 const std::vector<float>& q,double* out) {
++#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
++  distances8_contiguous_avx2(cache,row,q,out);
++#else
++  for(size_t lane=0;lane<8;++lane) out[lane]=cache.distance(row+lane,q);
++#endif
++}
+ } // namespace mvdb::exact
+--- a/src/engine.cpp
++++ b/src/engine.cpp
+@@ -759,38 +759,58 @@
+       }
+       if (cache_->exact_view) {
+         const auto &view = *cache_->exact_view;
+-        size_t pending[8], pending_count = 0;
+-        auto flush = [&] {
+-          double distances[8];
+-          exact::distances8(view, pending, projection.query, distances);
+-          for (size_t lane = 0; lane < 8; ++lane)
+-            consider(view.keys[pending[lane]], distances[lane]);
+-          pending_count = 0;
+-        };
+-        for (size_t i = 0; i < view.count; ++i) {
+-          bool eligible = true;
+-          for (const auto &f : fs) {
+-            const int cmp = view.compare_scalar(f.column, i, f.value);
+-            const bool yes = f.op == "=" ? cmp == 0 : f.op == "<" ? cmp < 0 :
+-                f.op == "<=" ? cmp <= 0 : f.op == ">" ? cmp > 0 :
+-                f.op == ">=" ? cmp >= 0 : false;
+-            if (!yes) { eligible = false; break; }
++        if (fs.empty()) {
++          size_t i = 0;
++          for (; i + 8 <= view.count; i += 8) {
++            double distances[8];
++            exact::distances8_contiguous(view, i, projection.query, distances);
++            for (size_t lane = 0; lane < 8; ++lane)
++              consider(view.keys[i + lane], distances[lane]);
+           }
+-          if (eligible) {
+-            pending[pending_count++] = i;
+-            if (pending_count == 8) flush();
++          if (i + 4 <= view.count) {
++            const size_t rows[4] = {i, i + 1, i + 2, i + 3};
++            double distances[4];
++            exact::distances4(view, rows, projection.query, distances);
++            for (size_t lane = 0; lane < 4; ++lane)
++              consider(view.keys[i + lane], distances[lane]);
++            i += 4;
+           }
++          for (; i < view.count; ++i)
++            consider(view.keys[i], view.distance(i, projection.query));
++        } else {
++          size_t pending[8], pending_count = 0;
++          auto flush = [&] {
++            double distances[8];
++            exact::distances8(view, pending, projection.query, distances);
++            for (size_t lane = 0; lane < 8; ++lane)
++              consider(view.keys[pending[lane]], distances[lane]);
++            pending_count = 0;
++          };
++          for (size_t i = 0; i < view.count; ++i) {
++            bool eligible = true;
++            for (const auto &f : fs) {
++              const int cmp = view.compare_scalar(f.column, i, f.value);
++              const bool yes = f.op == "=" ? cmp == 0 : f.op == "<" ? cmp < 0 :
++                  f.op == "<=" ? cmp <= 0 : f.op == ">" ? cmp > 0 :
++                  f.op == ">=" ? cmp >= 0 : false;
++              if (!yes) { eligible = false; break; }
++            }
++            if (eligible) {
++              pending[pending_count++] = i;
++              if (pending_count == 8) flush();
++            }
++          }
++          size_t tail = 0;
++          if (pending_count >= 4) {
++            double distances[4];
++            exact::distances4(view, pending, projection.query, distances);
++            for (size_t lane = 0; lane < 4; ++lane)
++              consider(view.keys[pending[lane]], distances[lane]);
++            tail = 4;
++          }
++          for (size_t lane = tail; lane < pending_count; ++lane)
++            consider(view.keys[pending[lane]], view.distance(pending[lane], projection.query));
+         }
+-        size_t tail = 0;
+-        if (pending_count >= 4) {
+-          double distances[4];
+-          exact::distances4(view, pending, projection.query, distances);
+-          for (size_t lane = 0; lane < 4; ++lane)
+-            consider(view.keys[pending[lane]], distances[lane]);
+-          tail = 4;
+-        }
+-        for (size_t lane = tail; lane < pending_count; ++lane)
+-          consider(view.keys[pending[lane]], view.distance(pending[lane], projection.query));
+       } else if (cache_->exact_bypass) {
+         // Remember this view's budget bypass until existing invalidation clears it.
+         scan_rows(original_visit);
+--- a/tests/test_exact_cache.cpp
++++ b/tests/test_exact_cache.cpp
+@@ -85,6 +85,15 @@
+         std::array<size_t,8> group{};for(auto &row:group)row=random()%45;
+         groups.push_back(group);
+       }
++      if(exact::available()) {
++        for(size_t start=0;start+8<=cache.count;start+=8) {
++          double output[8];exact::distances8_contiguous(cache,start,q,output);
++          for(size_t lane=0;lane<8;++lane) {
++            double scalar=cache.distance(start+lane,q);
++            require(std::memcmp(&scalar,output+lane,sizeof(double))==0);
++          }
++        }
++      }
+       for(const auto& ids:groups) {
+         double output[8];exact::distances8(cache,ids.data(),q,output);
+         for(size_t lane=0;lane<8;++lane) {

@@ -1,0 +1,60 @@
+{
+  "frozen_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+  "frozen_source": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c6-contiguous-20261111/benchmark-tools/bench.py",
+  "adapter_sha256": "957be1db1ba19565aa5e37935f7394b17a65948706f9fdbe6b1320395837ee81",
+  "adapted_sha256": "10e067d93f2d8a24b3a4e960ddbf01965bebf395598e2cb38fa3cc2cb4a47baa",
+  "substitutions": [
+    {
+      "before": "ROOT=pathlib.Path(__file__).resolve().parents[1]",
+      "after": "ROOT=pathlib.Path('/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c6-contiguous-20261111/screen-main')"
+    },
+    {
+      "before": "ENV=dict(os.environ,DOCKER_HOST='unix:///var/tmp/minivectordb-perf-20261110/docker.sock')",
+      "after": "ENV=dict(os.environ)"
+    },
+    {
+      "before": "pathlib.Path('/var/tmp/minivectordb-perf-20261110/data')",
+      "after": "pathlib.Path('/var/tmp/minivectordb-c6-contiguous-20261111/screen-main-data')"
+    }
+  ],
+  "docker_host": "unix:///var/tmp/minivectordb-c3-20261111/docker.sock",
+  "docker_context": null,
+  "output_root": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c6-contiguous-20261111/screen-main",
+  "data_root": "/var/tmp/minivectordb-c6-contiguous-20261111/screen-main-data",
+  "images": {
+    "A": {
+      "requested": "sha256:40fd25b2428a1237f9a186fab9de6a596dd701893744c5f4ad318a0a2fabacb2",
+      "id": "sha256:40fd25b2428a1237f9a186fab9de6a596dd701893744c5f4ad318a0a2fabacb2",
+      "architecture": "amd64"
+    },
+    "B": {
+      "requested": "sha256:aae85e97de6215dad0c4fb6ad50a9b5b84c5db441b21cfbfc2e8ee00c9713a6e",
+      "id": "sha256:aae85e97de6215dad0c4fb6ad50a9b5b84c5db441b21cfbfc2e8ee00c9713a6e",
+      "architecture": "amd64"
+    }
+  },
+  "command": [
+    "/var/tmp/minivectordb-paired-venv/bin/python",
+    "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c6-contiguous-20261111/screen-main/tool/bench.adapted.py",
+    "--images",
+    "A=sha256:40fd25b2428a1237f9a186fab9de6a596dd701893744c5f4ad318a0a2fabacb2",
+    "B=sha256:aae85e97de6215dad0c4fb6ad50a9b5b84c5db441b21cfbfc2e8ee00c9713a6e",
+    "--seeds",
+    "66007",
+    "66029",
+    "66041",
+    "--rows",
+    "10000",
+    "--dim",
+    "128",
+    "--queries",
+    "1000",
+    "--prefix",
+    "c6screen-main"
+  ],
+  "preflight_only": false,
+  "limits_unchanged": true,
+  "oracle_and_timers_unchanged": true,
+  "benchmark_scope": "Local comparison only, not official scorer or result guarantee",
+  "exit_code": 0
+}

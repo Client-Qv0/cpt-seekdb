@@ -1,0 +1,26 @@
+C6: direct unfiltered contiguous eight-row exact-distance path
+
+An empty filter list now traverses consecutive rows in steps ofeight. The dedicatedAVX2 kernel has no rowgather index setup or contiguous tests;the outerquery checksCPU once. Two4lane FP64 accumulator chains preserve dimensional order,noFMA andsqrt. Four-lane plus scalar tail stays unchanged. FilteredC5path,12MiB layout/budget,storage andprotocol unchanged.
+
+Parent:17092b6a2e8920cbf699263a1828c22f6628e7b8
+Baseline binary:d89eb85d97764be0239b6a6c9de56182f3f42659d682001681ccf6a8ec053a31
+Candidate binary:ca8b6511a2c806f0e953590d233aa9ce1c8f2874bead36a918775ba0af609f7c
+Candidate image:sha256:aae85e97de6215dad0c4fb6ad50a9b5b84c5db441b21cfbfc2e8ee00c9713a6e
+Production/build hashes:production-manifest.json. Remote commit adds this exact tested source.
+
+Local only:same pinned DockerRelease,defaultJSONL,readonlyroot,networknone,separateext4data,2CPU cpuset0,1,128MiB cgroup,zeroSwap.100-row writebatches. Three alternating10000x128/1000Top10pairs plus one32000x128/100queryoverflowpair. Seeds incommand/rawresults. Fullyconsumeoutputs. Oracle outside measuredtime/cgroup. Firstquery,10warmups,warmmeasurements andcleanrestart separated. OS/devicecaches not globallyflushed.
+
+Paired elapsed reductions:positive faster;negative slower. Median ofpairratios.
+phase | total query | filtered | unfiltered | write | first query | restart ready | restart query
+screen-main | +5.2317% | +1.9278% | +7.7437% | -3.2486% | +1.3915% | +8.1957% | +4.1432%
+screen-overflow | -0.1380% | +0.4138% | -0.6514% | +0.0503% | -3.4778% | -7.8258% | +1.3704%
+
+Per-pair baseline/candidate times and all ratios are preserved in runner logs and result JSON;overflow is only ONE observation,not a stability claim.
+
+Actual performance-workload independentoracle:6296 checks,Recall1,ID/types/filter/order/duplicates verified. NoOOM. Realcgroup memory.peak/anon/file/events/pressure andio.stat preserved;RSS is auxiliary only. Sampledanon/file maxima neednot coincide withpeak. io.stat onsharedWSL cannot be treated as completephysicalIO;filelength is not physicalIO. Samplingstops before containerexit/writeback.
+Focused checks:Releasebuild;exact-cache scalar-bit comparison includingcontinuous8,gathered8,dimensions/tails;native defaultJSONL9360queries/48520distancechecks perversion coveringBIGINT>2^53,filters,ties,updates,transactions andcleanrestart. Actualbenchmarkuses defaultDockerentrypoint. Additional checks,if any,listedbelow.
+No additional checks this phase.
+
+Not rerun:fullCTest/sanitizers/officialpublicdriver/forcedkill-powerloss/largecardinality/unsupportedCPU. Noautomaticformalassessment. Localimprovement doesnot predict officialrawscore or promise hiddenacceptance. CREATEINDEX/ANN andO(N)PK bound are separate issues.
+Retained decision:Keep the directunfilteredpath:all3targetpairs andall3totalquerypairs improve. Reportwrite/cold/restart andoverflow negatives;do not infer officialscore.
+Reproduce:checkoutpublishedcommit,build unchangedDockerfile;commands/tools/snapshothashes included. UsefreshLinuxdata/outputpaths;hostpaths/socket can be adaptedandrecorded. Largeexecutables/rawtraces retained locally;binding.json andtestreports givehashes. Agentlearningmaterial inherited unless explicitly listed inhandoff;no historicallearning fabricated.

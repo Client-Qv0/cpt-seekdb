@@ -178,6 +178,25 @@ inline void distances8_avx2(const Compact& cache,const size_t* rows,
   _mm256_storeu_pd(out+4,_mm256_sqrt_pd(sum1));
 }
 
+// Unfiltered scan: row is aligned to four and eight consecutive rows exist.
+// The caller has already checked AVX2 once for the whole query.
+__attribute__((target("avx2,no-fma"),noinline))
+inline void distances8_contiguous_avx2(const Compact& cache,size_t row,
+                                      const std::vector<float>& q,double* out) {
+  const float* block0=cache.vectors.data()+(row/4)*cache.dim*4;
+  const float* block1=block0+cache.dim*4;
+  __m256d sum0=_mm256_setzero_pd(),sum1=_mm256_setzero_pd();
+  for(size_t d=0;d<cache.dim;++d) {
+    const __m256d query=_mm256_set1_pd(double(q[d]));
+    const __m256d delta0=_mm256_sub_pd(_mm256_cvtps_pd(_mm_loadu_ps(block0+d*4)),query);
+    const __m256d delta1=_mm256_sub_pd(_mm256_cvtps_pd(_mm_loadu_ps(block1+d*4)),query);
+    sum0=_mm256_add_pd(sum0,_mm256_mul_pd(delta0,delta0));
+    sum1=_mm256_add_pd(sum1,_mm256_mul_pd(delta1,delta1));
+  }
+  _mm256_storeu_pd(out,_mm256_sqrt_pd(sum0));
+  _mm256_storeu_pd(out+4,_mm256_sqrt_pd(sum1));
+}
+
 #endif
 inline void distances4(const Compact& cache,const size_t* rows,
                        const std::vector<float>& q,double* out) {
@@ -192,5 +211,14 @@ inline void distances8(const Compact& cache,const size_t* rows,
   if(available()) {distances8_avx2(cache,rows,q,out);return;}
 #endif
   for(size_t lane=0;lane<8;++lane) out[lane]=cache.distance(rows[lane],q);
+}
+// Precondition: available() has been checked by the query dispatcher.
+inline void distances8_contiguous(const Compact& cache,size_t row,
+                                 const std::vector<float>& q,double* out) {
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  distances8_contiguous_avx2(cache,row,q,out);
+#else
+  for(size_t lane=0;lane<8;++lane) out[lane]=cache.distance(row+lane,q);
+#endif
 }
 } // namespace mvdb::exact

@@ -1,0 +1,66 @@
+Sending build context to Docker daemon  141.3kB
+Step 1/15 : FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS certs
+ ---> d9b8c34d61a9
+Step 2/15 : RUN rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\n' 'deb http://archive.ubuntu.com/ubuntu noble main' > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --allow-downgrades --no-install-recommends ca-certificates=20240203 openssl=3.0.13-0ubuntu3 libssl3t64=3.0.13-0ubuntu3     && printf '%s  %s\n' 6d84ab71cb726c0641b0af84303c316e3fa50db941dc8507d09045eb2fa5d238 /etc/ssl/certs/ca-certificates.crt | sha256sum -c -
+ ---> Using cache
+ ---> 10814b19e287
+Step 3/15 : FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 AS builder
+ ---> d9b8c34d61a9
+Step 4/15 : COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+ ---> Using cache
+ ---> fef7d61bd283
+Step 5/15 : RUN rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\n'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security main'       > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --no-install-recommends g++=4:13.2.0-7ubuntu1 cmake=3.28.3-1build7 make=4.3-4.1build2     && rm -rf /var/lib/apt/lists/*
+ ---> Using cache
+ ---> 1660f64759d9
+Step 6/15 : WORKDIR /src
+ ---> Using cache
+ ---> e3f867e07897
+Step 7/15 : COPY CMakeLists.txt ./
+ ---> Using cache
+ ---> 99067b8bdc8e
+Step 8/15 : COPY src/ src/
+ ---> 367cb66fb8c4
+Step 9/15 : RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release     && cmake --build build --parallel 2
+ ---> Running in 94e59dd6d4b8
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /src/build
+[ 12%] Building CXX object CMakeFiles/mvdb.dir/src/sql.cpp.o
+[ 25%] Building CXX object CMakeFiles/mvdb.dir/src/storage.cpp.o
+[ 37%] Building CXX object CMakeFiles/mvdb.dir/src/engine.cpp.o
+[ 50%] Building CXX object CMakeFiles/mvdb.dir/src/spill.cpp.o
+[ 62%] Building CXX object CMakeFiles/mvdb.dir/src/protocol.cpp.o
+[ 75%] Linking CXX static library libmvdb.a
+[ 75%] Built target mvdb
+[ 87%] Building CXX object CMakeFiles/minivectordb.dir/src/main.cpp.o
+[100%] Linking CXX executable minivectordb
+[100%] Built target minivectordb
+ ---> Removed intermediate container 94e59dd6d4b8
+ ---> b86b125ac769
+Step 10/15 : FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+ ---> d9b8c34d61a9
+Step 11/15 : RUN test "$(dpkg-query -W -f='${Version}' libstdc++6)" = '14.2.0-4ubuntu2~24.04.1'
+ ---> Using cache
+ ---> b69b8d15c5d8
+Step 12/15 : COPY --from=builder /src/build/minivectordb /app/minivectordb
+ ---> 10b06c0cc248
+Step 13/15 : VOLUME ["/data"]
+ ---> Running in 05f7e69dbc91
+ ---> Removed intermediate container 05f7e69dbc91
+ ---> 39a716bbd184
+Step 14/15 : ENTRYPOINT ["/app/minivectordb"]
+ ---> Running in 2db93cec18b7
+ ---> Removed intermediate container 2db93cec18b7
+ ---> 63c02d59038e
+Step 15/15 : CMD ["--data-dir", "/data"]
+ ---> Running in 98b4187f93a8
+ ---> Removed intermediate container 98b4187f93a8
+ ---> aae85e97de62
+Successfully built aae85e97de62
+Successfully tagged minivectordb:c6-contiguous
