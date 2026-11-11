@@ -15,8 +15,8 @@ Use a new Linux data directory T (this run used /var/tmp/minivectordb-c3-2026111
 Copy baseline production inputs into T/baseline-source, as setup_local.py does.
 
 setup_local.py shows the exact Docker daemon isolation used here. Do not start a second daemon
-against an already occupied data-root. Its first build deliberately records the observed failure
-with the default network; the successful retry was:
+against an already occupied data-root. The first historical build failed with the default network. Do not deliberately repeat
+that failure; reproduce directly using the already successful build-only network command:
   docker build --network host -t minivectordb:c3-baseline-87c2 T/baseline-source
 Production Dockerfile and pinned package versions were unchanged. Host networking is build-only.
 Keep the retry log in T/baseline-build-host.log as run_diagnostic.py expects.
@@ -40,7 +40,7 @@ read-only root, default JSONL entrypoint. Data/oracle is prepared before measure
 The recorded command, image IDs and hashes are included. No formal scorer is called.
 Run analyze_diagnostic.py after all twelve runs finish. It joins diagnostic sequence numbers to
 the 1,000 measured hot-query IDs, excludes cold/ten warmup queries, and checks no missing records.
-The mandatory statistic is sum(winner_ns)/sum(query_seconds) per round, then the six medians.
+The mandatory statistic is sum(winner_ns)/sum(query_seconds) per round, then take the median of the six per-round fractions.
 No substage addition is used to synthesize the total; stdout serialization/flush stays in denominator.
 
 All actual raw counts are listed in ARTIFACTS.json. Compressed workload and request/stdout traces
