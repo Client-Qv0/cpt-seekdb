@@ -1,0 +1,58 @@
+{
+  "frozen_sha256": "1f54525f1948064629d758966654aa6e471352161f0cec08e104a616f885e8b4",
+  "frozen_source": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c7-equality-20261111/benchmark-tools/bench.py",
+  "adapter_sha256": "74ae01d83b7ce4ba739eee638cfa58306daac7b89c2a9b51fc1df61484419880",
+  "adapted_sha256": "17465843fb9628067806a770a9d3a4cedab7e393b44810fdb9e1d06488298699",
+  "substitutions": [
+    {
+      "before": "ROOT=pathlib.Path(__file__).resolve().parents[1]",
+      "after": "ROOT=pathlib.Path('/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c7-equality-20261111/screen-overflow')"
+    },
+    {
+      "before": "ENV=dict(os.environ,DOCKER_HOST='unix:///var/tmp/minivectordb-perf-20261110/docker.sock')",
+      "after": "ENV=dict(os.environ)"
+    },
+    {
+      "before": "pathlib.Path('/var/tmp/minivectordb-perf-20261110/data')",
+      "after": "pathlib.Path('/var/tmp/minivectordb-c7-equality-20261111/screen-overflow-data')"
+    }
+  ],
+  "docker_host": "unix:///var/tmp/minivectordb-c3-20261111/docker.sock",
+  "docker_context": null,
+  "output_root": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c7-equality-20261111/screen-overflow",
+  "data_root": "/var/tmp/minivectordb-c7-equality-20261111/screen-overflow-data",
+  "images": {
+    "A": {
+      "requested": "sha256:aae85e97de6215dad0c4fb6ad50a9b5b84c5db441b21cfbfc2e8ee00c9713a6e",
+      "id": "sha256:aae85e97de6215dad0c4fb6ad50a9b5b84c5db441b21cfbfc2e8ee00c9713a6e",
+      "architecture": "amd64"
+    },
+    "B": {
+      "requested": "sha256:d36db27a9ac43036331c0a78e4256109df04e4e4738ef4a528e321422e81fd47",
+      "id": "sha256:d36db27a9ac43036331c0a78e4256109df04e4e4738ef4a528e321422e81fd47",
+      "architecture": "amd64"
+    }
+  },
+  "command": [
+    "/var/tmp/minivectordb-paired-venv/bin/python",
+    "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c7-equality-20261111/screen-overflow/tool/bench.adapted.py",
+    "--images",
+    "A=sha256:aae85e97de6215dad0c4fb6ad50a9b5b84c5db441b21cfbfc2e8ee00c9713a6e",
+    "B=sha256:d36db27a9ac43036331c0a78e4256109df04e4e4738ef4a528e321422e81fd47",
+    "--seeds",
+    "66007",
+    "--rows",
+    "32000",
+    "--dim",
+    "128",
+    "--queries",
+    "100",
+    "--prefix",
+    "c7screen-overflow"
+  ],
+  "preflight_only": false,
+  "limits_unchanged": true,
+  "oracle_and_timers_unchanged": true,
+  "benchmark_scope": "Local comparison only, not official scorer or result guarantee",
+  "exit_code": 0
+}

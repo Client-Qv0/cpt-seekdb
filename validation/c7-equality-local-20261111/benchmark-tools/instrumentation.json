@@ -1,0 +1,6 @@
+{
+  "baseline_tool_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+  "instrumented_tool_sha256": "1f54525f1948064629d758966654aa6e471352161f0cec08e104a616f885e8b4",
+  "change": "Record existing10warmup response durations and firstfiltered warmup(index1). No request/data/order/oracle/timing-boundary changes. Same instrumentedtool forbaselineandcandidate.",
+  "purpose": "Expose O(NlogN)lazyindex construction cost instead of hiding it inwarmup."
+}

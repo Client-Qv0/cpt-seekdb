@@ -8,7 +8,59 @@
 #include <random>
 using namespace mvdb;
 void require(bool ok) { if(!ok) throw std::runtime_error("exact cache check failed"); }
+void check_posting_range(exact::Compact& view,size_t col,const Cell& value,bool indexed=true) {
+  auto range=view.equality_range(col,value);
+  require(range.indexed==indexed);
+  if(!indexed) return;
+  size_t found=0;
+  for(size_t i=0;i<view.count;++i) if(view.compare_scalar(col,i,value)==0) {
+    require(found<range.size && range.rows[found]==i);++found;
+  }
+  require(found==range.size);
+}
+void test_equality_postings() {
+  for(bool text_column: {false,true}) {
+    exact::Plan plan({Type::BigInt,Type::BigInt,Type::Varchar,Type::Vector},3,3);
+    std::vector<std::vector<Cell>> rows;
+    const std::string text[]={"", "x", "a", "x", "中🙂", std::string("a\0z",3)};
+    for(int64_t i=0;i<51;++i) {
+      rows.push_back({i+9007199254740993LL, (i%7)-3, text[i%6],std::vector<float>{float(i),0,1}});
+      plan.observe(rows.back());
+    }
+    exact::Compact view(plan);
+    for(size_t i=0;i<rows.size();++i)view.fill(i,std::get<int64_t>(rows[i][0]),rows[i]);
+    size_t before=view.allocated_bytes();
+    if(text_column) {
+      for(const auto& value:text)check_posting_range(view,2,Cell(value));
+      check_posting_range(view,2,Cell(std::string("missing")));
+      check_posting_range(view,1,Cell(int64_t(1)),false);
+    } else {
+      for(int64_t v=-4;v<=4;++v)check_posting_range(view,1,Cell(v));
+      check_posting_range(view,1,Cell(std::numeric_limits<int64_t>::min()));
+      check_posting_range(view,1,Cell(std::numeric_limits<int64_t>::max()));
+      check_posting_range(view,2,Cell(std::string("x")),false);
+    }
+    require(view.equality_attempted && view.equality_rows);
+    require(view.allocated_bytes()==before+view.count*sizeof(uint32_t));
+    require(view.allocated_bytes()+view.equality_sort_scratch<=exact::budget);
+  }
+  exact::Plan empty({Type::BigInt,Type::Vector},1,1);
+  exact::Compact zero(empty);check_posting_range(zero,0,Cell(int64_t(0)));
+  require(!zero.equality_rows);
+  exact::Plan boundary({Type::BigInt,Type::BigInt,Type::Vector},2,128);
+  boundary.count=22000;
+  while(boundary.required_bytes()+boundary.count*sizeof(uint32_t)+exact::Compact::equality_sort_scratch<=exact::budget)++boundary.count;
+  require(boundary.fits());
+  exact::Compact full(boundary);size_t before=full.allocated_bytes();
+  check_posting_range(full,1,Cell(int64_t(0)),false);
+  check_posting_range(full,1,Cell(int64_t(1)),false);
+  require(full.equality_attempted && !full.equality_rows && full.allocated_bytes()==before);
+  require(full.compare_scalar(1,0,Cell(int64_t(0)))==0);
+  std::cout<<"equality posting ordering, strings, one-index policy and budget checks passed\n";
+}
+
 int main() {
+  test_equality_postings();
   for(size_t n: {size_t(0),size_t(1),size_t(3),size_t(4),size_t(5),size_t(9)})
     for(size_t dim: {size_t(1),size_t(3),size_t(128)}) {
       exact::Plan plan({Type::BigInt,Type::Varchar,Type::Vector},2,dim);

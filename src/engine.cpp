@@ -758,7 +758,7 @@ Result Engine::execute_statement(const Statement &st) {
         cache_->exact_column = projection.col;
       }
       if (cache_->exact_view) {
-        const auto &view = *cache_->exact_view;
+        auto &view = *cache_->exact_view;
         if (fs.empty()) {
           size_t i = 0;
           for (; i + 8 <= view.count; i += 8) {
@@ -786,19 +786,41 @@ Result Engine::execute_statement(const Statement &st) {
               consider(view.keys[pending[lane]], distances[lane]);
             pending_count = 0;
           };
-          for (size_t i = 0; i < view.count; ++i) {
-            bool eligible = true;
+          auto enqueue = [&](size_t i) {
+            pending[pending_count++] = i;
+            if (pending_count == 8) flush();
+          };
+          auto eligible = [&](size_t i, const Filter* satisfied) {
             for (const auto &f : fs) {
+              if (&f == satisfied) continue;
               const int cmp = view.compare_scalar(f.column, i, f.value);
               const bool yes = f.op == "=" ? cmp == 0 : f.op == "<" ? cmp < 0 :
                   f.op == "<=" ? cmp <= 0 : f.op == ">" ? cmp > 0 :
                   f.op == ">=" ? cmp >= 0 : false;
-              if (!yes) { eligible = false; break; }
+              if (!yes) return false;
             }
-            if (eligible) {
-              pending[pending_count++] = i;
-              if (pending_count == 8) flush();
+            return true;
+          };
+          exact::Compact::EqualityRange candidates;
+          const Filter* indexed_filter = nullptr;
+          for (const auto &f : fs) {
+            if (f.op == "=" && f.column != pk) {
+              auto range = view.equality_range(f.column, f.value);
+              if (range.indexed) { candidates = range; indexed_filter = &f; break; }
             }
+          }
+          if (indexed_filter) {
+            if (fs.size() == 1) {
+              for (size_t n = 0; n < candidates.size; ++n) enqueue(candidates.rows[n]);
+            } else {
+              for (size_t n = 0; n < candidates.size; ++n) {
+                const size_t i = candidates.rows[n];
+                if (eligible(i, indexed_filter)) enqueue(i);
+              }
+            }
+          } else {
+            for (size_t i = 0; i < view.count; ++i)
+              if (eligible(i, nullptr)) enqueue(i);
           }
           size_t tail = 0;
           if (pending_count >= 4) {

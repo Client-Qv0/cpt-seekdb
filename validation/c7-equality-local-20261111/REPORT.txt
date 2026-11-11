@@ -1,0 +1,37 @@
+C7: one bounded ordinary-column equality posting per exact view
+
+On the first nonPK scalar equality filter,try oneuint32 rowarray sortedinplace by(actualcolumnvalue,row). Binaryequalrange yields ascendingoriginalrowindices for existing8lane gather. Otherpredicates stillchecked;differentcolumns fallbackscan. No copiedstrings/map/queryanswers. Payload4N and4096sortscratch checked within existing12MiB;allocationfailure/indexbudgetfailure onlyskipindex. SameCompact invalidation clearsindex. Firstindex construction isO(NlogN) and separatelyrecorded inexistingwarmup timing.
+
+Parent:6da17cd7983b183f6a4b6d853357948e096623f1
+Baseline binary:ca8b6511a2c806f0e953590d233aa9ce1c8f2874bead36a918775ba0af609f7c
+Candidate binary:3b4e7b5c5440719f11fbc4a0593b361b2676498ad3c732d8d84d1fc43b42ac06
+Candidate image:sha256:d36db27a9ac43036331c0a78e4256109df04e4e4738ef4a528e321422e81fd47
+Production/build hashes:production-manifest.json. Remote commit adds this exact tested source.
+
+Local only:same pinned DockerRelease,defaultJSONL,readonlyroot,networknone,separateext4data,2CPU cpuset0,1,128MiB cgroup,zeroSwap.100-row writebatches. Three alternating10000x128/1000Top10pairs plus one32000x128/100queryoverflowpair. Seeds incommand/rawresults. Fullyconsumeoutputs. Oracle outside measuredtime/cgroup. Firstquery,10warmups,warmmeasurements andcleanrestart separated. OS/devicecaches not globallyflushed.
+
+Paired elapsed reductions:positive faster;negative slower. Median ofpairratios.
+phase | total query | filtered | unfiltered | write | first query | restart ready | restart query
+screen-main | +4.6988% | +9.2167% | +0.2129% | -0.0006% | +1.2069% | -2.1621% | +2.0318%
+screen-overflow | +2.2979% | +2.6704% | +1.9523% | +10.1875% | +0.9693% | -8.9040% | -4.0160%
+
+First equality query includes lazyindexconstruction. Perphase paired median elapsedreduction:
+screen-main: firstequality -163.9994%, all10warmups -13.5148%
+screen-overflow: firstequality +0.5367%, all10warmups +2.0425%
+
+Per-pair baseline/candidate times and all ratios are preserved in runner logs and result JSON;overflow is only ONE observation,not a stability claim.
+
+
+Perpair firstequality milliseconds and total(firstquery+10warmups+measuredqueries) seconds. B0/C7; includes setup cost:
+c7screen-main-1-seed66007: firstequality 0.536593/1.595214ms; total 0.502202889/0.480530620s; elapsedreduction +4.315441%
+c7screen-main-2-seed66029: firstequality 0.607947/1.409900ms; total 0.500535905/0.477389380s; elapsedreduction +4.624349%
+c7screen-main-3-seed66041: firstequality 0.555369/1.466171ms; total 0.503836760/0.478037321s; elapsedreduction +5.120595%
+c7screen-overflow-1-seed66007: firstequality 14.065535/13.990041ms; total 1.643724307/1.606540328s; elapsedreduction +2.262179%
+Actual performance-workload independentoracle:6296 checks,Recall1,ID/types/filter/order/duplicates verified. NoOOM. Realcgroup memory.peak/anon/file/events/pressure andio.stat preserved;RSS is auxiliary only. Sampledanon/file maxima neednot coincide withpeak. io.stat onsharedWSL cannot be treated as completephysicalIO;filelength is not physicalIO. Samplingstops before containerexit/writeback.
+Focused checks:Releasebuild;exact-cache scalar-bit comparison includingcontinuous8,gathered8,dimensions/tails;native defaultJSONL9360queries/48520distancechecks perversion coveringBIGINT>2^53,filters,ties,updates,transactions andcleanrestart. Actualbenchmarkuses defaultDockerentrypoint. Additional checks,if any,listedbelow.
+Exact-cache unit now includes BIGINT extrema,VARCHAR Unicode/NUL/empty,ascendingequalrange,one-index policy,emptyhits andnear-budget indexfallback. Same native defaultJSONL oracle coversupdates/rollback/commit/restart.
+
+Not rerun:fullCTest/sanitizers/officialpublicdriver/forcedkill-powerloss/largecardinality/unsupportedCPU. Noautomaticformalassessment. Localimprovement doesnot predict officialrawscore or promise hiddenacceptance. CREATEINDEX/ANN andO(N)PK bound are separate issues.
+Retained decision:Keep C7 overC6:all3filteredpairs improve(8.81%-10.44%),median9.2167%;all3totalquerypairs improve,median4.6988%. Oneoverflowpair improves2.2979%,notstableevidence. Explicitcost:firstindexedquery medianelapsed+163.9994%(2.64x),tenwarmupstotal+13.5148%;indexpayload4N. Cleanrestartready median+2.1621%;overflowready+8.9040%,restartquery+4.0160%. Broadregressionsnotrerun. NoarithmeticallycombinedC6/C7improvementclaim.
+Agent material:this commit also carries the independently prepared C5 feedback append,125481bytes,SHA256 edb40f36d74a8fcc571097d4ec4df6f753db55e3f6d2c7ed2bcafb531deaabf6. It preserves earlier material and refers only toC5/17092b6;it is not evidence of C6/C7 officialscore or student-authoredAgentwork.
+Reproduce:checkoutpublishedcommit,build unchangedDockerfile;commands/tools/snapshothashes included. UsefreshLinuxdata/outputpaths;hostpaths/socket can be adaptedandrecorded. Largeexecutables/rawtraces retained locally;binding.json andtestreports givehashes. Agentlearningmaterial inherited unless explicitly listed inhandoff;no historicallearning fabricated.

@@ -1,0 +1,48 @@
+[
+  {
+    "Architecture": "amd64",
+    "Config": {
+      "Cmd": [
+        "--data-dir",
+        "/data"
+      ],
+      "Entrypoint": [
+        "/app/minivectordb"
+      ],
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      ],
+      "Labels": {
+        "org.opencontainers.image.version": "24.04"
+      },
+      "Volumes": {
+        "/data": {}
+      }
+    },
+    "Created": "2026-11-11T11:47:13.502336102Z",
+    "GraphDriver": {
+      "Data": {
+        "SourceDir": "/var/tmp/minivectordb-docker/data/vfs/dir/0943141fe80aef79c52e74fd0cb1f7d17ad3365c481727b48c1377401cf47e6b"
+      },
+      "Name": "vfs"
+    },
+    "Id": "sha256:d36db27a9ac43036331c0a78e4256109df04e4e4738ef4a528e321422e81fd47",
+    "Metadata": {
+      "LastTagTime": "2026-11-11T19:47:14.065365754+08:00"
+    },
+    "Os": "linux",
+    "Parent": "sha256:dfbd18da624a09fbf1f11aa3a7a76aa9266a8b7e3de2b4e9b044eb2016627599",
+    "RepoDigests": [],
+    "RepoTags": [
+      "minivectordb:c7-equality"
+    ],
+    "RootFS": {
+      "Layers": [
+        "sha256:bec87777bc2fb2edcdf9af11df1531469e7df911309c1413082b18fcb8610278",
+        "sha256:ed667ff8da7204852c78d170c7c6d3fa33cb5830c82b23c80fe34094c84bc90d"
+      ],
+      "Type": "layers"
+    },
+    "Size": 78634247
+  }
+]

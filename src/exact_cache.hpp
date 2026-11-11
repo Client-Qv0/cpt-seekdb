@@ -2,6 +2,9 @@
 // Transient exact-search view. No disk/protocol representation depends on this.
 #include "engine.hpp"
 #include <cmath>
+#include <algorithm>
+#include <cstdint>
+#include <memory>
 #include <cstring>
 #include <limits>
 #include <string_view>
@@ -66,6 +69,17 @@ struct Compact {
   std::vector<int64_t> keys;
   std::vector<float> vectors;
   std::vector<ScalarColumn> columns;
+  // One optional posting index per view. New object/allocator bookkeeping fits
+  // in the existing 4096-byte fixed reserve; payload is accounted separately.
+  std::unique_ptr<uint32_t[]> equality_rows;
+  size_t equality_column = std::numeric_limits<size_t>::max();
+  bool equality_attempted = false;
+  struct EqualityRange {
+    const uint32_t* rows = nullptr;
+    size_t size = 0;
+    bool indexed = false;
+  };
+  static constexpr size_t equality_sort_scratch = 4096;
   explicit Compact(const Plan& p):dim(p.dim),count(p.count),vector_column(p.vector_column) {
     if(!p.fits()) throw Error("RESOURCE","exact cache plan exceeds budget");
     keys.resize(count);
@@ -83,6 +97,7 @@ struct Compact {
     size_t bytes=4096+columns.capacity()*(sizeof(ScalarColumn)+sizeof(Type)+sizeof(size_t)+96);
     bytes+=keys.capacity()*sizeof(int64_t)+vectors.capacity()*sizeof(float);
     for(const auto& c:columns) bytes+=c.integers.capacity()*sizeof(int64_t)+c.offsets.capacity()*sizeof(size_t)+c.text.capacity();
+    if(equality_rows) bytes+=count*sizeof(uint32_t);
     return bytes;
   }
   size_t index(size_t row,size_t dimension=0) const {
@@ -113,12 +128,60 @@ struct Compact {
     std::string_view b=std::get<std::string>(value);
     int cmp=a.compare(b);return (cmp>0)-(cmp<0);
   }
+  EqualityRange equality_range(size_t c,const Cell& value) {
+    if(columns[c].type!=Type::BigInt && columns[c].type!=Type::Varchar) return {};
+    if(!count) return {nullptr,0,true};
+    if(!equality_attempted) {
+      equality_attempted=true;
+      // count is already bounded by the 12MiB view plan. Keep the final array
+      // itself as construction storage; sorting needs no second array. Reserve
+      // scratch for the fixed toolchain's in-place introsort stack as well.
+      const size_t needed=mul(count,sizeof(uint32_t));
+      if(add(add(allocated_bytes(),needed),equality_sort_scratch)>budget) return {};
+      try {
+        std::unique_ptr<uint32_t[]> rows(new uint32_t[count]);
+        for(size_t i=0;i<count;++i) rows[i]=static_cast<uint32_t>(i);
+        const auto& col=columns[c];
+        if(col.type==Type::BigInt) {
+          std::sort(rows.get(),rows.get()+count,[&](uint32_t a,uint32_t b) {
+            const auto x=col.integers[a],y=col.integers[b];
+            return x<y || (x==y && a<b);
+          });
+        } else {
+          auto text=[&](uint32_t row) {
+            const size_t begin=col.offsets[row],length=col.offsets[row+1]-begin;
+            return std::string_view(length?col.text.data()+begin:"",length);
+          };
+          std::sort(rows.get(),rows.get()+count,[&](uint32_t a,uint32_t b) {
+            const int cmp=text(a).compare(text(b));
+            return cmp<0 || (cmp==0 && a<b);
+          });
+        }
+        equality_column=c;
+        equality_rows=std::move(rows); // publish only a complete sorted index
+      } catch(const std::bad_alloc&) {
+        // This optional index never invalidates or bypasses the existing view.
+        return {};
+      }
+    }
+    if(!equality_rows || equality_column!=c) return {};
+    const uint32_t* first=equality_rows.get();
+    const uint32_t* last=first+count;
+    const uint32_t* begin=std::lower_bound(first,last,value,
+      [&](uint32_t row,const Cell& v){return compare_scalar(c,row,v)<0;});
+    const uint32_t* end=std::upper_bound(begin,last,value,
+      [&](const Cell& v,uint32_t row){return compare_scalar(c,row,v)>0;});
+    // The secondary sort key is row number, so equal-value candidates retain
+    // the original ascending scan order without an additional sort or buffer.
+    return {begin,static_cast<size_t>(end-begin),true};
+  }
   double distance(size_t row,const std::vector<float>& q) const {
     double sum=0;
     for(size_t d=0;d<dim;++d) {double x=double(vectors[index(row,d)])-double(q[d]);sum+=x*x;}
     return std::sqrt(sum);
   }
 };
+static_assert(sizeof(Compact)<512,"exact view object exceeds fixed reserve");
 inline void distances4_scalar(const Compact& cache,const size_t* rows,
                               const std::vector<float>& q,double* out) {
   for(size_t lane=0;lane<4;++lane) out[lane]=cache.distance(rows[lane],q);
