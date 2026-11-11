@@ -1,0 +1,133 @@
+{
+  "audit_scope": "Read-only recovery audit; no conversation.json edits; contexts below are not new student evidence.",
+  "material_commit": "6f0cbb16949f415a681b1e97cf34ca98cb6e04f2",
+  "material_sha256": "b43ab3f760571ff50bc74ad1dfa5762bc38384a101d102668cebdb3a90e72f6f",
+  "exact_original_question_or_message_id_recovered": false,
+  "sources": [
+    {
+      "local_path": "C:\\Users\\sunyilun\\Documents\\Codex\\2026-10-26\\https-open-oceanbase-com-train-detail\\work\\minivectordb-c3-material-20261111\\baseline\\validation\\cache-amortization-li-20261111\\USER_EVIDENCE.md",
+      "repository_path": "validation/cache-amortization-li-20261111/USER_EVIDENCE.md",
+      "source_commit": "87c2778ed0688e6e56152baf02bc4f4355667458",
+      "sha256": "d32fdb360c35afdc7af0c443afbc52f804856286961c249c2d5e7637f8c1a060",
+      "source_type": "agent_authored_record_in_frozen_repository",
+      "raw_original_chat": false,
+      "text": "# Actual user inputs and chronology\n\nBefore any measured run, the user was asked whether 10 continuous queries would amortize C2 cache construction, with an option not to predict. The exact user response was:\n\n> 不确定，先测\n\nThis is an explicit choice to measure before judging, not a prediction or a technical explanation.\n\nThe first preflight aborted before load/query timing: cgroup returned `0-1\\n`, but the wrapper compared it without stripping whitespace. The failure artifacts and separate data directory are retained. The only resource-check change was stripping the newline before the same `0-1` assertion.\n\nAfter receiving the six-pair cold-prefix results and the unresolved stable crossover, the user responded exactly:\n\n> 你做决定，在做出决定前须经过独立思考\n\nThis delegates the decision. It is not a student technical explanation, correction, or test result. The Agent's subsequent decision is labelled separately.\n",
+      "manifest_git_blob": "11c1193116a51768a7f4efbf9b7c21aba947f32f",
+      "local_content_matches_saved_fixed_commit_manifest": true
+    },
+    {
+      "local_path": "C:\\Users\\sunyilun\\Documents\\Codex\\2026-10-26\\https-open-oceanbase-com-train-detail\\work\\minivectordb-c3-material-20261111\\baseline\\validation\\exact-scan-li-20261110\\IMPLEMENTATION_BRIEF.md",
+      "repository_path": "validation/exact-scan-li-20261110/IMPLEMENTATION_BRIEF.md",
+      "source_commit": "87c2778ed0688e6e56152baf02bc4f4355667458",
+      "sha256": "894f8217036de1e4581d7f00ebe567a7f5877a388cbdd7ec0742e39196100ba3",
+      "source_type": "agent_authored_record_in_frozen_repository",
+      "raw_original_chat": false,
+      "manifest_git_blob": "b41588851bcc4e45254785f9b92d2831b7c9dedc",
+      "local_content_matches_saved_fixed_commit_manifest": true
+    }
+  ],
+  "records": [
+    {
+      "material_user_pointer": "/exact_scan_li_20261110/user_decisions/0/content",
+      "material_user_content": "选1，注意在后续交接时把这些选项写进去",
+      "original_question_text": null,
+      "original_message_id": null,
+      "original_thread_id": null,
+      "context_source_index": 1,
+      "context_excerpts": [
+        {
+          "line_start": 3,
+          "line_end": 3,
+          "content": "User approved execution of structural EXACT optimization, CURRENT SERVER ONLY, >=15% query benefit gate. Repository /home/li/minivectordb-exact-scan-20261110; branch perf/exact-scan-li-20261110; starting commit ef2cece289850201576c6dc7da1db58ef5a99bad, production baseline 9cea05e182875ae16f3f3c9c8e9cc688a65d653c (same src as6576). Do NOT modify /opt/minivectordb-v2: its uncommitted vector index stays aside. All work via SSH MCP A-li. New evidence only validation/exact-scan-li-20261110; never overwrite historic evidence. Do not merge PR1/shared branch, force push, or submit formal assessment."
+        },
+        {
+          "line_start": 24,
+          "content": "Update TEAM_HANDOFF.md with ALL THREE OPTIONS and user's choice: selected structural exact; unselected conservative micro-optimization (limited gains); unselected ANN (unverified official mode + recall/update/recovery risk). Record current server,15%gate, historical failed early pruning and dimension-SSE2 (do not repeat). Genuine agent material only, strict<128KiB; original9cea119555bytes, originalofficial7637 material20922bytes (not oversize); no invented student understanding or cause of invalidgrade. Source/tool/image/binary/evidence hashes and every round/skip/failure. Commit normal personal branch, push new branch with existing deploy identity (root key), no formal submission. Independent spec+quality review before final completion. Durable progress ledger and IMPLEMENTATION_REPORT.md in this directory. Return fullSHA/test evidence/remaining problems. IfAAfails, still deliver evidence+handoff choices; no production optimization claim."
+        }
+      ],
+      "attribution": "Context is an Agent-authored implementation brief. It corroborates a structural-EXACT/current-server/15-percent choice, but does not recover the exact question, options text, or independent student reasoning."
+    },
+    {
+      "material_user_pointer": "/exact_scan_li_20261110/user_decisions/1/content",
+      "material_user_content": "当前服务器（推荐）",
+      "original_question_text": null,
+      "original_message_id": null,
+      "original_thread_id": null,
+      "context_source_index": 1,
+      "context_excerpts": [
+        {
+          "line_start": 3,
+          "line_end": 3,
+          "content": "User approved execution of structural EXACT optimization, CURRENT SERVER ONLY, >=15% query benefit gate. Repository /home/li/minivectordb-exact-scan-20261110; branch perf/exact-scan-li-20261110; starting commit ef2cece289850201576c6dc7da1db58ef5a99bad, production baseline 9cea05e182875ae16f3f3c9c8e9cc688a65d653c (same src as6576). Do NOT modify /opt/minivectordb-v2: its uncommitted vector index stays aside. All work via SSH MCP A-li. New evidence only validation/exact-scan-li-20261110; never overwrite historic evidence. Do not merge PR1/shared branch, force push, or submit formal assessment."
+        },
+        {
+          "line_start": 24,
+          "content": "Update TEAM_HANDOFF.md with ALL THREE OPTIONS and user's choice: selected structural exact; unselected conservative micro-optimization (limited gains); unselected ANN (unverified official mode + recall/update/recovery risk). Record current server,15%gate, historical failed early pruning and dimension-SSE2 (do not repeat). Genuine agent material only, strict<128KiB; original9cea119555bytes, originalofficial7637 material20922bytes (not oversize); no invented student understanding or cause of invalidgrade. Source/tool/image/binary/evidence hashes and every round/skip/failure. Commit normal personal branch, push new branch with existing deploy identity (root key), no formal submission. Independent spec+quality review before final completion. Durable progress ledger and IMPLEMENTATION_REPORT.md in this directory. Return fullSHA/test evidence/remaining problems. IfAAfails, still deliver evidence+handoff choices; no production optimization claim."
+        }
+      ],
+      "attribution": "Context is an Agent-authored implementation brief. It corroborates a structural-EXACT/current-server/15-percent choice, but does not recover the exact question, options text, or independent student reasoning."
+    },
+    {
+      "material_user_pointer": "/exact_scan_li_20261110/user_decisions/2/content",
+      "material_user_content": "查询至少快15%（推荐）",
+      "original_question_text": null,
+      "original_message_id": null,
+      "original_thread_id": null,
+      "context_source_index": 1,
+      "context_excerpts": [
+        {
+          "line_start": 3,
+          "line_end": 3,
+          "content": "User approved execution of structural EXACT optimization, CURRENT SERVER ONLY, >=15% query benefit gate. Repository /home/li/minivectordb-exact-scan-20261110; branch perf/exact-scan-li-20261110; starting commit ef2cece289850201576c6dc7da1db58ef5a99bad, production baseline 9cea05e182875ae16f3f3c9c8e9cc688a65d653c (same src as6576). Do NOT modify /opt/minivectordb-v2: its uncommitted vector index stays aside. All work via SSH MCP A-li. New evidence only validation/exact-scan-li-20261110; never overwrite historic evidence. Do not merge PR1/shared branch, force push, or submit formal assessment."
+        },
+        {
+          "line_start": 24,
+          "content": "Update TEAM_HANDOFF.md with ALL THREE OPTIONS and user's choice: selected structural exact; unselected conservative micro-optimization (limited gains); unselected ANN (unverified official mode + recall/update/recovery risk). Record current server,15%gate, historical failed early pruning and dimension-SSE2 (do not repeat). Genuine agent material only, strict<128KiB; original9cea119555bytes, originalofficial7637 material20922bytes (not oversize); no invented student understanding or cause of invalidgrade. Source/tool/image/binary/evidence hashes and every round/skip/failure. Commit normal personal branch, push new branch with existing deploy identity (root key), no formal submission. Independent spec+quality review before final completion. Durable progress ledger and IMPLEMENTATION_REPORT.md in this directory. Return fullSHA/test evidence/remaining problems. IfAAfails, still deliver evidence+handoff choices; no production optimization claim."
+        }
+      ],
+      "attribution": "Context is an Agent-authored implementation brief. It corroborates a structural-EXACT/current-server/15-percent choice, but does not recover the exact question, options text, or independent student reasoning."
+    },
+    {
+      "material_user_pointer": "/cache_amortization_li_20261111/before/content",
+      "material_user_content": "不确定，先测",
+      "original_question_text": null,
+      "original_message_id": null,
+      "original_thread_id": null,
+      "context_source_index": 0,
+      "context_excerpts": [
+        {
+          "line_start": 3,
+          "line_end": 7,
+          "content": "Before any measured run, the user was asked whether 10 continuous queries would amortize C2 cache construction, with an option not to predict. The exact user response was:\n\n> 不确定，先测\n\nThis is an explicit choice to measure before judging, not a prediction or a technical explanation."
+        }
+      ],
+      "attribution": "Agent-authored chronology reports a question about whether 10 consecutive queries amortize C2 cache construction, including a no-prediction option. Exact original question text and tool-option wrapper were not found in the inspected sources."
+    },
+    {
+      "material_user_pointer": "/cache_amortization_li_20261111/after_short/content",
+      "material_user_content": "你做决定，在做出决定前须经过独立思考",
+      "original_question_text": null,
+      "original_message_id": null,
+      "original_thread_id": null,
+      "context_source_index": 0,
+      "context_excerpts": [
+        {
+          "line_start": 11,
+          "line_end": 15,
+          "content": "After receiving the six-pair cold-prefix results and the unresolved stable crossover, the user responded exactly:\n\n> 你做决定，在做出决定前须经过独立思考\n\nThis delegates the decision. It is not a student technical explanation, correction, or test result. The Agent's subsequent decision is labelled separately."
+        }
+      ],
+      "attribution": "Agent-authored chronology places this response after six-pair cold-prefix results and an unresolved stable crossover. It is delegation, not an independently authored technical conclusion."
+    }
+  ],
+  "search_limits": [
+    "Inspected the 87c2 frozen validation documents and current material.",
+    "Inspected the local OceanBase recent thread; the local continuation receives the teammate 87c2 material after these experiments. No matching original question/reply records were recovered.",
+    "The available repository summaries must not be labelled as verbatim original chat or used to invent message identifiers."
+  ],
+  "safe_repairs": [
+    "Embed the existing brief or chronology excerpt with Agent/source attribution and fixed commit plus hash.",
+    "Leave original question/message ID absent or explicitly unavailable; do not derive them from the response.",
+    "If a real teammate chat export later becomes available, match each response verbatim to its actual preceding question and preserve the real options, role, time, and IDs."
+  ]
+}

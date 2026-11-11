@@ -1,0 +1,211 @@
+{
+  "audit_date": "2026-11-11",
+  "audit_kind": "read-only provenance tracing; no new experiment, official score, or fabricated learner explanation",
+  "source_thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+  "verified_origins": [
+    {
+      "material_pointer": "/official_protocol_repair_20261110/user_records/1/content",
+      "record_id": "user-no-bridge-proof",
+      "content": "重点核对目前 --dev-protocol 开发接口\n   是否与正式驱动一致，不能用自制公开样例桥通过证明正式协议兼容。",
+      "origin": {
+        "thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+        "message_id": "msg_09a0cb306fcad978016af289901a6887d0acee43fb57229e58",
+        "role": "assistant",
+        "type": "assistant_authored_execution_prompt",
+        "exact_substring_verified": true
+      },
+      "forwarded_execution_record": {
+        "thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id": "01a1c36a-e2a1-70c1-94fe-afaa3edc70d4",
+        "binding_source": "existing submitted material; execution-side message not re-read in this audit"
+      },
+      "attribution": "用户在执行对话提供/采用此文字；本次已定位到更早的建议方 Agent 原文，不作为用户独立撰写技术解释的证据。"
+    },
+    {
+      "material_pointer": "/official_protocol_repair_20261110/user_records/2/content",
+      "record_id": "user-official-protocol",
+      "content": "以实际被测提交 d85b5061d2e6aa12fd0d7bcedf7b493a695c40c0\n为对照，先用官方原版工具运行旧镜像的 --handshake-only，\n保存修复前失败证据，不修改工具来迁就程序。",
+      "origin": {
+        "thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+        "message_id": "msg_09a0cb306fcad978016af294e897c887d0a6edb919050c63ae",
+        "role": "assistant",
+        "type": "assistant_authored_execution_prompt",
+        "exact_substring_verified": true
+      },
+      "forwarded_execution_record": {
+        "thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id": "01a1c396-f7bc-7162-8286-b90c17c41e75",
+        "binding_source": "existing submitted material; execution-side message not re-read in this audit"
+      },
+      "attribution": "用户在执行对话提供/采用此文字；本次已定位到更早的建议方 Agent 原文，不作为用户独立撰写技术解释的证据。"
+    },
+    {
+      "material_pointer": "/official_protocol_repair_20261110/user_records/3/content",
+      "record_id": "user-jsonl-values",
+      "content": "- 解析 execute/shutdown 请求，原样保留请求 id 的值和类型。\n- 按规范返回 columns/rows、affected_rows、嵌套 error 对象。\n- 每条响应换行并 flush；stdout 只能有协议报文。\n- shutdown 回滚未提交事务，完成清理，返回响应后退出0。\n- 正确处理 search_mode，不再由测试桥吞掉模式切换。\n- BIGINT 不经浮点转换，正确处理 JSON 转义和 Unicode。",
+      "origin": {
+        "thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+        "message_id": "msg_09a0cb306fcad978016af294e897c887d0a6edb919050c63ae",
+        "role": "assistant",
+        "type": "assistant_authored_execution_prompt",
+        "exact_substring_verified": true
+      },
+      "forwarded_execution_record": {
+        "thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id": "01a1c396-f7bc-7162-8286-b90c17c41e75",
+        "binding_source": "existing submitted material; execution-side message not re-read in this audit"
+      },
+      "attribution": "用户在执行对话提供/采用此文字；本次已定位到更早的建议方 Agent 原文，不作为用户独立撰写技术解释的证据。"
+    },
+    {
+      "material_pointer": "/official_protocol_repair_20261110/user_records/4/content",
+      "record_id": "user-fix-validation-order",
+      "content": "验证顺序：\n1. 官方 handshake-only；\n2. 官方 sql_crud；\n3. 官方全部公开用例；\n4. 经正式协议执行事务、错误后继续、重启和强杀恢复回归；\n5. 实际 Docker 默认入口、只读根文件系统、/data 持久化及资源验证。",
+      "origin": {
+        "thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+        "message_id": "msg_09a0cb306fcad978016af294e897c887d0a6edb919050c63ae",
+        "role": "assistant",
+        "type": "assistant_authored_execution_prompt",
+        "exact_substring_verified": true
+      },
+      "forwarded_execution_record": {
+        "thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id": "01a1c396-f7bc-7162-8286-b90c17c41e75",
+        "binding_source": "existing submitted material; execution-side message not re-read in this audit"
+      },
+      "attribution": "用户在执行对话提供/采用此文字；本次已定位到更早的建议方 Agent 原文，不作为用户独立撰写技术解释的证据。"
+    },
+    {
+      "material_pointer": "/official_protocol_repair_20261110/user_records/5/content",
+      "record_id": "user-no-score-promise",
+      "content": "交付可复核的修复及验证结果，不以只修好 ready 作为完成，\n不以公开用例通过承诺正式全部通过，不自动提交正式评测。",
+      "origin": {
+        "thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+        "message_id": "msg_09a0cb306fcad978016af294e897c887d0a6edb919050c63ae",
+        "role": "assistant",
+        "type": "assistant_authored_execution_prompt",
+        "exact_substring_verified": true
+      },
+      "forwarded_execution_record": {
+        "thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id": "01a1c396-f7bc-7162-8286-b90c17c41e75",
+        "binding_source": "existing submitted material; execution-side message not re-read in this audit"
+      },
+      "attribution": "用户在执行对话提供/采用此文字；本次已定位到更早的建议方 Agent 原文，不作为用户独立撰写技术解释的证据。"
+    },
+    {
+      "material_pointer": "/official_protocol_repair_20261110/user_records/6/content",
+      "record_id": "user-result-feedback",
+      "content": "最新正式评测结果：\nMySQL 正式用例通过，性能原始分为 2277.870638；\nAgent Prompt 显示“本项没有有效原始分”。",
+      "origin": {
+        "thread_id": "01a1be8b-fe83-7313-be60-432c077de2b4",
+        "message_id": "msg_09a0cb306fcad978016af2c207f5ac87d0ba0f32e500118704",
+        "role": "assistant",
+        "type": "assistant_text_summary_of_user_provided_platform_screenshot",
+        "exact_substring_verified": true
+      },
+      "forwarded_execution_record": {
+        "thread_id": "01a176ce-149e-7cd0-8610-26d63b5f6699",
+        "message_id": "01a1c446-613e-74e0-aa8e-1413dc14a287",
+        "binding_source": "existing submitted material; execution-side message not re-read in this audit"
+      },
+      "attribution": "用户在执行对话提供/采用此文字；本次已定位到更早的建议方 Agent 原文，不作为用户独立撰写技术解释的证据。"
+    }
+  ],
+  "unresolved_origins": [
+    {
+      "material_pointer": "/official_protocol_repair_20261110/user_records/0/content",
+      "record_id": "user-evidence-standard",
+      "content": "不要将进程 RSS 当成 cgroup 内存峰值，也不要将文件大小当成物理 I/O。",
+      "execution_message_id": "01a1be8b-32a7-7422-bd4d-73b0351377f3",
+      "origin_status": "未在本次读取的建议方对话中找到更早相同文字；没有据此推断作者。"
+    },
+    {
+      "material_pointer": "/official_protocol_repair_20261110/user_records/7/content",
+      "record_id": "user-version-confirmation",
+      "content": "是，使用上述 commit 和分支",
+      "execution_message_id": "01a1c447-94cf-7230-ab3f-9be1ac9c5d06",
+      "origin_status": "未在本次读取的建议方对话中找到更早相同文字；没有据此推断作者。"
+    }
+  ],
+  "authentic_correction_episodes": [
+    {
+      "episode_id": "handoff-commit-inspection-and-integration",
+      "scope": "用户纠正 Agent 过早停止并要求利用截图 commit 继续检查；一条连续版本交接链，不是多个独立评分实例。",
+      "messages": [
+        {
+          "message_id": "01a1c5e7-0fff-7143-bf17-25e2d80db6c6",
+          "role": "user",
+          "content": "你在说什么，我队友的那个内容是还没有推送的\n"
+        },
+        {
+          "message_id": "msg_09a0cb306fcad978016af32cf0108c87d0ba482dd4e65fce90",
+          "role": "assistant",
+          "content": "是我理解错了，抱歉。**队友尚未推送的改动，不能算进当前整合版本。** 我之前只核实了远端已有提交，却把它说成了队友最新内容已推送。\n\n目前我们此前推送的版本是：\n\n```text\nBranch: 2026-competition-round2\nCommit: df451b5dd6f3653eb3d0a1ed16e20a527252c6f9\n```\n\n它不代表已经整合队友最新改动。\n\n**队友的新代码现在仅在他电脑上，还是已经传到你电脑上？** 如果已传过来，给我文件夹或压缩包路径，我才能检查、整合并推送，随后给你最终的 Branch 和 Commit。"
+        },
+        {
+          "message_id": "01a1c5e8-0e7b-7881-a0d3-fd0cb8f67da8",
+          "role": "user",
+          "content": "你根据他截图里的信息不能查出来推送么\n"
+        },
+        {
+          "message_id": "msg_09a0cb306fcad978016af32d14bb5887d0a4796abcf3115b91",
+          "role": "assistant",
+          "content": "可以，截图中的完整 Commit 足够用来查找对应代码。我之前没有继续检查这个提交的内容和历史，就让你提供文件，处理得不对。我现在核对它与当前答题分支的差异，确认能否整合推送。\n"
+        },
+        {
+          "message_id": "msg_09a0cb306fcad978016af32d41df7087d0b3a882328a7ab803",
+          "role": "assistant",
+          "content": "查到了：截图提交确实包含此前的交接版本，以及队友新增的依赖固定、Agent 材料和服务器复核记录；答题主分支还停在旧提交，所以之前没有完成整合。\n\n这段历史可以直接快进合并，不会覆盖已有提交。我会核对文件与复核记录后，将答题主分支推进到截图提交。\n"
+        }
+      ],
+      "tool_results": [
+        {
+          "tool_event_id": "exec-6f755309-4206-4169-b3f8-60a8d8fa89f4",
+          "role": "tool",
+          "exit_code": 0,
+          "content": "To https://github.com/Client-Qv0/cpt-seekdb.git\n   df451b5..ef2cece  ef2cece289850201576c6dc7da1db58ef5a99bad -> 2026-competition-round2\n",
+          "complete_tool_output": true
+        },
+        {
+          "tool_event_id": "exec-ac4fd3e7-2227-4ba2-a57b-aa2242b2a114",
+          "role": "tool",
+          "exit_code": 0,
+          "content": "ef2cece289850201576c6dc7da1db58ef5a99bad\trefs/heads/2026-competition-round2\nef2cece289850201576c6dc7da1db58ef5a99bad\trefs/heads/verify/handoff-li-20261110\n",
+          "complete_tool_output": true
+        }
+      ],
+      "final_reply": {
+        "message_id": "msg_09a0cb306fcad978016af32d64990887d0833b7687794228e6",
+        "role": "assistant",
+        "content": "可以，已经根据截图找到提交，**整合推送到答题主分支，并核实远端一致**。之前没有查完整，是我的问题。\n\n现在使用这一组：\n\n```text\nBranch: 2026-competition-round2\nCommit: ef2cece289850201576c6dc7da1db58ef5a99bad\n```\n\n包含此前版本及截图提交中的队友改动。本次核对了文件哈希、Agent 格式和已有测试记录，未重新运行完整测试或提交正式评测。"
+      },
+      "limitations": [
+        "原句“队友的那个内容是还没有推送的”保留为用户当时的纠正，不将它认证为队友远端分支完全不存在；实际复核发现目标提交已在队友分支，而答题分支尚未包含它。",
+        "Agent 执行了祖先关系、文件检查和推送；没有用户亲自执行 Git 或解释其机制的证据。",
+        "只摘录完成判断所需的相邻用户发言、Agent 回应及两份完整工具输出，不称为完整聊天导出。"
+      ]
+    },
+    {
+      "episode_id": "resume-from-existing-branch-without-ssh-identity",
+      "scope": "真实用户对接手范围的选择；仅证明要求使用已有 commit/branch，不证明其设计性能实验或理解优化机制。",
+      "user_reply": {
+        "message_id": "01a1c9ef-e401-7650-aa6d-6ff01441a558",
+        "role": "user",
+        "content": "你就查看原来的commit和branch",
+        "extraction": "Exact answer field from the user async reply; omitted transport wrapper and unnecessary server address."
+      },
+      "result": {
+        "message_id": "msg_07bb6b9f118d1bd5016af43c5c2f4487d0a7f340a3685e7edf",
+        "role": "assistant",
+        "content": "已按原分支 `perf/exact-scan-li-20261110`、提交 `87c2778…` 接手并完成这一轮。\n\n- **Prompt 材料已无损精简并推送**：124,487 → **107,059 字节**，全部原话、结果和引用位置保留，五项检查通过。  \n  Branch：`chore/agent-material-lossless-20261111`  \n  Commit：`a791ff8859b27aa9a43af2de8084279718f31691`  \n  这解决了容量余量问题，**尚不能证明官方评分问题已修复**。\n\n- **C3 已完成六轮诊断，决定不实施**：目标阶段耗时占比中位数仅 **3.147%**，低于 5% 门槛；12,144 次结果核验通过，无 OOM。  \n  [查看诊断报告](https://github.com/Client-Qv0/cpt-seekdb/blob/d68e4dd647b23cdd43106cfa7b913df4e95a505a/validation/c3-diagnostic-local-20261111/C3_REPORT.txt)\n\n下一步优先测量**过滤筛选和不连续向量读取**的成本。本轮没有新增生产性能改动，答题主分支未更新，也未重新提测。"
+      },
+      "limitations": [
+        "结果字段是 Agent 当时的最终回复，不是原始测试日志；不把该回复自身作为所有测试实际通过的唯一证明。",
+        "用户选择、代码查找、材料整理、C3诊断属于不同角色的贡献，未把 Agent 行为归给用户。"
+      ],
+      "question_context": "Agent 说明当前电脑缺少服务器登录身份，请求已有 SSH 配置名或私钥文件路径；用户选择改查原 commit/branch。此处为 Agent 摘要，不是用户原话。"
+    }
+  ],
+  "author_limit": "本文件不请求任何分数，不提供评分器执行指令，不把转发提示词或委托执行当成学生自主机制解释。"
+}

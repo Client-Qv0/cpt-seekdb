@@ -1,0 +1,137 @@
+{
+  "audit_version": 1,
+  "audit_date": "2026-11-11",
+  "auditor": "independent read-only package reviewer",
+  "scope": "Official public repository and task rules; local evidence provenance. No platform internal source, hidden evaluator, private API, performance test, repository mutation or formal submission was accessed or executed.",
+  "official_repository": {
+    "url": "https://github.com/oceanbase/seekdb",
+    "branch": "2026-competition-round2",
+    "ref": "refs/heads/2026-competition-round2",
+    "head_observed_in_this_audit": "f4d4e26653af823a7601668802f80e374ad6643c",
+    "query_method": "git ls-remote https://github.com/oceanbase/seekdb.git refs/heads/2026-competition-round2",
+    "query_result": "f4d4e26653af823a7601668802f80e374ad6643c\trefs/heads/2026-competition-round2",
+    "query_status": "SUCCESS; initial sandbox DNS failure was followed by a successful approved read-only network query.",
+    "not_assumed_from_historical_head": true
+  },
+  "fresh_archive": {
+    "url": "https://codeload.github.com/oceanbase/seekdb/tar.gz/f4d4e26653af823a7601668802f80e374ad6643c",
+    "method": "Fresh HTTPS GET via Python urllib, archive decoded and searched in memory only; no package code executed.",
+    "sha256": "6679f0bcb9097ffad3b7c4701066a0673c2904636a676211c5e37f00cfa6811e",
+    "regular_file_count": 84,
+    "matches_historical_sealed_archive_sha256": true,
+    "historical_complete_git_tree_blob_count": 86,
+    "historical_complete_git_tree_truncated": false,
+    "historical_complete_git_tree_sha": "f4d4e26653af823a7601668802f80e374ad6643c",
+    "archive_omissions_from_git_tree": [".gitattributes", ".gitignore"],
+    "inventory_provenance": "The 84-file archive was freshly downloaded. The complete 86-blob tree and the two archive omissions were independently read from existing frozen inventories at this same immutable commit; the full GitHub tree API was not newly fetched in this audit.",
+    "historical_tree_file": "C:/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-agent-repair-20261110/official-check/tree.json",
+    "historical_manifest_file": "C:/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-protocol-20261110-f4d4e266/official-source-manifest.json",
+    "fresh_search_pattern": "conversation\\.json|agent[_ -]prompt|agent-learning|student_evidence|result_evidence|NEEDS_REVIEW|0[–-]100|材料摘要",
+    "fresh_search_scope": "All 84 regular archive files, including dotfiles, decoding each UTF-8 file and searching line by line. Non-UTF-8 content would be skipped. No matching content was found.",
+    "fresh_content_matches": [],
+    "agent_prompt_conversation_or_schema_named_paths": [
+      ".agents/skills/code-review/SKILL.md",
+      "conversation.json"
+    ]
+  },
+  "public_tool_capabilities": {
+    "entry": "protocol_check/run.py",
+    "url": "https://github.com/oceanbase/seekdb/blob/f4d4e26653af823a7601668802f80e374ad6643c/protocol_check/run.py",
+    "raw_url": "https://raw.githubusercontent.com/oceanbase/seekdb/f4d4e26653af823a7601668802f80e374ad6643c/protocol_check/run.py",
+    "fresh_archive_sha256": "4e8c6ead177da7f9222b36bc04e819c777507e21f6adbe24eb679e238f02f513",
+    "inspection": "Fresh web read of pinned raw run.py and _transport.py, plus current archive inspection. No database process or test was launched.",
+    "local_reference": "C:/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-agent-repair-20261110/official-check/repository/protocol_check/run.py",
+    "local_key_lines": [2, 54, 55, 56, 57, 58, 59, 60, 93, 95, 96, 117, 118],
+    "arguments": ["--image", "--command", "--handshake-only", "--case", "--package", "--config", "--output"],
+    "checks": [
+      "Database JSONL ready/execute/shutdown protocol",
+      "Public SQL case results against the mysqltest package",
+      "Local process/container timeouts and protocol responses"
+    ],
+    "explicit_report_note": "Local diagnostic only; no performance/Agent scores or platform callbacks.",
+    "does_not_provide": [
+      "An Agent material submission or scoring endpoint",
+      "An Agent material semantic evaluator",
+      "An official Agent report schema or evaluation-prompt template",
+      "The official evaluator model/version/sampling configuration",
+      "A platform acceptance result for conversation.json"
+    ],
+    "strict_json_helper": {
+      "url": "https://raw.githubusercontent.com/oceanbase/seekdb/f4d4e26653af823a7601668802f80e374ad6643c/protocol_check/_transport.py",
+      "local_reference_lines": [19, 29],
+      "checks": ["JSON syntax", "duplicate object keys", "NaN/Infinity/-Infinity tokens"],
+      "does_not_check_as_a_standalone_helper": [
+        "UTF-8 input file bytes",
+        "128 KiB material limit",
+        "Top-level material object",
+        "Overflowing standard numeric exponents such as 1e9999",
+        "Learning evidence, attribution or score"
+      ],
+      "distinction": "Session separately validates UTF-8 and object-shaped database responses; these transport checks are not a Prompt-material validator. Importing strict_json does not establish official Agent acceptance."
+    },
+    "local_tests_test_agent_material_py": "Team-authored structural tests, explicitly labelled local checks rather than official scoring. Their PASS result cannot certify evaluator completion or learning evidence quality."
+  },
+  "official_empty_placeholder": {
+    "path": "conversation.json",
+    "url": "https://github.com/oceanbase/seekdb/blob/f4d4e26653af823a7601668802f80e374ad6643c/conversation.json",
+    "bytes_in_fresh_archive": 0,
+    "interpretation": "An empty root placeholder, not a usable material example or schema. It does not prove the platform reads the root path and is not a reason to move or duplicate the submitted material."
+  },
+  "current_task_rules": {
+    "url": "https://oceanbase.yuque.com/org-wiki-obtech-vh7w9r/hc3pio/lg8enxlmwg69unt6",
+    "public_markdown_url": "https://oceanbase.yuque.com/org-wiki-obtech-vh7w9r/hc3pio/lg8enxlmwg69unt6/markdown?plain=true",
+    "shared_fresh_local_file": "C:/Users/sunyilun/Desktop/1/课程内容/大二上/数据结构课程实践/oceanbase-prompt-repair-20261111/official/task-rules.txt",
+    "fetch_provenance": "Fetched in the current parent task; independently reread relevant sections here. Fetch details are recorded in adjacent manifest.json.",
+    "rules_version": "agent-learning-evidence-v3-unbounded",
+    "raw_score_has_fixed_upper_bound": false,
+    "raw_score_reference_lines": [115, 253],
+    "default_material_path": "agent/conversation.json",
+    "path_reference_line": 403,
+    "input_constraints": {
+      "encoding": "UTF-8",
+      "format": "JSON",
+      "top_level": "object",
+      "max_bytes": 131072,
+      "duplicate_keys_allowed": false,
+      "nonstandard_nan_infinity_allowed": false,
+      "business_fields_mandatory": false,
+      "reference_lines": [405, 414]
+    },
+    "report_input_distinction": {
+      "student_evidence_and_result_evidence": "Fields required of review evidence/report instances by section 3.4.3; not mandatory business fields of the submitted input JSON.",
+      "json_pointer_and_max_240_character_exact_excerpt": "Review-reference constraints; relevant evidence must be stored as strings in the material. They do not define a fixed material business schema.",
+      "reference_lines": [287, 289, 290, 292, 294, 414]
+    },
+    "needs_review": {
+      "raw_score": null,
+      "reference_lines": [307, 309, 310, 311],
+      "report_validation_failure_reference_line": 313,
+      "interpretation": "Report citation/schema validation failure is evaluator-output failure, not automatically a student zero score. A generic UI absence-of-valid-score message does not identify which state occurred."
+    },
+    "truthful_evidence_requirements_reference_lines": [256, 267, 280, 333, 409, 410, 411, 412, 416, 418],
+    "submission_binding_reference_lines": [340, 354, 403],
+    "submission_binding": "Code, Dockerfile and material belong to the same full commit; the documented branch is 2026-competition-round2. No separate public Agent submission endpoint was found."
+  },
+  "zero_to_100_and_material_summary_provenance": {
+    "status": "Unverified second-hand teammate description; not established as an official scoring cap or input requirement.",
+    "exact_teammate_quote": "当前平台提示合并了“无效、待复核、超出 0–100、缺少材料摘要”四种可能，不能从该句定位具体状态，也不能直接称为“评分为 0”。",
+    "quote_file": "C:/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c3-material-20261111/inputs/teammate-handoff.md",
+    "quote_line": 29,
+    "additional_teammate_reference_lines": [33, 42],
+    "plan_reference": "C:/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c3-material-20261111/inputs/plan.md:11",
+    "search_scope": "Read-only rg of existing work-directory md/txt/json/js/html files for exact Chinese material-summary and invalid-score strings; focused searches of minivectordb directories for 0–100 and related terms. Conversation material copies were excluded from the broad provenance search to avoid treating repeated submitted text as an independent source.",
+    "independent_primary_error_artifact_found": false,
+    "known_older_error_text": "本项没有有效原始分",
+    "known_older_error_binding_file": "C:/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-agent-audit-20261110-7637a037/official-result-binding.json",
+    "limitations": "No original screenshot/API payload/frontend source containing the combined 0–100/material-summary wording was found in the inspected files. This is a bounded search result, not a claim that the wording never appeared anywhere. No current private platform response was accessed."
+  },
+  "actionable_boundaries": [
+    "Keep agent/conversation.json at the documented path and same locked commit; do not infer a root-path repair from the empty placeholder.",
+    "Validate strict file encoding/JSON/size and embedded evidence attribution, while labelling local structural results accurately.",
+    "Preserve technical prompts forwarded by a user as real user instructions but identify their actual Agent authorship; do not score them as independently authored student reasoning.",
+    "Restore the actual question context for existing multiple-choice answers where the original context is available, without inventing a student explanation.",
+    "Record newly observed user version corrections and real verification outcomes as new events, with correct student/Agent/tool sources and actual limitations.",
+    "Do not add invented scores, a supposed mandatory material-summary field, fabricated learning statements, or an instruction telling the evaluator how to score.",
+    "The exact cause of the platform invalid-score state remains unconfirmed; concrete material repairs may be justified independently without claiming that a public structural PASS guarantees official scoring."
+  ]
+}

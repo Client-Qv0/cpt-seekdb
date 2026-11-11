@@ -1,0 +1,77 @@
+Agent Prompt material: verified sources and context repair, 2026-11-11
+
+Outcome
+This revision fixes concrete ambiguity and missing context in the submitted material.
+It does not establish the cause of the platform's previous "no valid raw score" message,
+and it does not claim an official semantic grade or successful formal assessment.
+Production source and Dockerfile remain those of 87c2778ed0688e6e56152baf02bc4f4355667458.
+Parent material: 6f0cbb16949f415a681b1e97cf34ca98cb6e04f2.
+
+Official sources re-read on 2026-11-11
+Task, especially sections 3.4 and 4.4:
+https://oceanbase.yuque.com/org-wiki-obtech-vh7w9r/hc3pio/lg8enxlmwg69unt6
+Overall ranking rules:
+https://oceanbase.yuque.com/org-wiki-obtech-vh7w9r/hc3pio/dbf6uzmwsuupp7hn
+Current official package branch:
+https://github.com/oceanbase/seekdb/tree/2026-competition-round2
+Fresh ls-remote resolves that branch to f4d4e26653af823a7601668802f80e374ad6643c.
+Fresh package hash matches the frozen package. Its public checker tests database I/O,
+not Agent material grading. Its root conversation.json is an empty placeholder.
+No public Agent semantic grader or mandatory business-field schema was found there.
+Source URLs, hashes, retrieval scope and limitations are in official/*.json.
+
+The default material path is agent/conversation.json. The documented input constraints
+remain UTF-8, valid JSON object, at most 128 KiB, no duplicate keys or non-standard numbers.
+The evaluator considers only that file's contents. Student and Agent work must be
+distinguished. Report citation fields are not mandatory participant input fields.
+No newly published summary requirement was found. The handoff's "0-100/material summary"
+combination is a second-hand description, not a captured platform report or input contract.
+Task text changed its performance-query wording to default exact; Prompt sections did not change.
+
+Changes actually made
+1. Six existing user-forwarded technical excerpts or result summaries now identify the
+   advisory Agent as wording author, with the original advisory message IDs. Existing
+   execution-message source metadata and exact content are preserved. Two unproven origins
+   remain unresolved; lack of a match is not treated as proof of student authorship.
+2. Three C1/C2 choices and two cache-amortization answers gained context drawn from two
+   frozen 87c2 repository records. The added text is explicitly an Agent-authored record,
+   not the original question. Original question text and original message IDs were not recovered.
+3. Previously omitted historical user feedback is embedded with adjacent Agent replies and
+   actual push/ls-remote output. The user asked the Agent to inspect the screenshot commit
+   after an incomplete handoff conclusion; the shared branch was then fast-forwarded from
+   df451b5 to ef2cece. Another episode preserves the user's choice to use the existing branch.
+   These are historical events, not new execution or student-authored technical explanations.
+4. Seven historical JSON pointers now explicitly identify their scope as source-artifact
+   pointers. Their already embedded result strings remain unchanged.
+5. A current material revision record distinguishes production, historical context and
+   the limits of this repair. It does not claim a complete chat export.
+
+Validation
+Final material: 123276 bytes; 7796 bytes below the 131072-byte cap.
+SHA256: 6fda8b6ebd8a5b57a14ec779f0ee93c8648576eaf91e732a2a94df5f9bb5668e
+All 1142 old scalar leaves and 934 old string leaves from 6f0cbb remain at their original
+JSON pointers with identical values and types. The count includes the prior navigation addition.
+Strict parsing, nine malformed-input fixtures, pointer escaping, common credential patterns,
+six captured wording origins, two feedback episodes, five context records, two frozen source
+hashes and seven source-artifact pointer labels passed the local validator.
+Independent reviewer ran the existing five material tests against the final candidate:
+5 passed, 0 failures, 0 errors; test code was not changed.
+Another source audit matched 27 original protocol fragments to their historical artifacts.
+These are local structural/provenance checks, not official learning-evidence scores.
+Database performance, sanitizer and formal hidden tests were not rerun for this material-only change.
+
+Remaining limits
+The exact original C1/C2/cache question text is still unavailable. The material remains an
+explicitly scoped selection. Agent-created explanations and user delegation do not become
+student mechanism understanding. No material type, numeric score or grading outcome is fabricated.
+The official input contract gives no basis to fix this by adding a self-reported score,
+duplicating material into the empty root placeholder, or issuing instructions to the evaluator.
+No shared branch update, organizer contact or formal submission is part of this revision.
+
+Reproduction
+The checked-in validate_material.py accepts explicit --material, --base-material,
+--context-source-root and --output paths. Supply the old agent/conversation.json from
+6f0cbb as --base-material and a checkout/archive of 87c2778 as --context-source-root.
+Its provenance/ directory must remain beside the script. build_candidate.py accepts
+--base-material and --output-material and regenerates the same candidate from those records.
+This validation intentionally does not contact an official scoring service.
