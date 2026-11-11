@@ -1,0 +1,63 @@
+{
+  "frozen_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+  "frozen_source": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c3-material-20261111/baseline/validation/perf-20261110-stdio/scripts/bench.py",
+  "adapter_sha256": "957be1db1ba19565aa5e37935f7394b17a65948706f9fdbe6b1320395837ee81",
+  "adapted_sha256": "91ba51ea509b86fb214f42d626cea07cea9b5ba0d9312b68a1dfaa9f17cab667",
+  "substitutions": [
+    {
+      "before": "ROOT=pathlib.Path(__file__).resolve().parents[1]",
+      "after": "ROOT=pathlib.Path('/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c3-material-20261111/diagnostic-runs')"
+    },
+    {
+      "before": "ENV=dict(os.environ,DOCKER_HOST='unix:///var/tmp/minivectordb-perf-20261110/docker.sock')",
+      "after": "ENV=dict(os.environ)"
+    },
+    {
+      "before": "pathlib.Path('/var/tmp/minivectordb-perf-20261110/data')",
+      "after": "pathlib.Path('/var/tmp/minivectordb-c3-20261111/diagnostic-data')"
+    }
+  ],
+  "docker_host": "unix:///var/tmp/minivectordb-c3-20261111/docker.sock",
+  "docker_context": null,
+  "output_root": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c3-material-20261111/diagnostic-runs",
+  "data_root": "/var/tmp/minivectordb-c3-20261111/diagnostic-data",
+  "images": {
+    "baseline": {
+      "requested": "sha256:4dcb69128fbea4448e1dc4b0b37c5412ce788290a4fa410b1d976c1fc002de74",
+      "id": "sha256:4dcb69128fbea4448e1dc4b0b37c5412ce788290a4fa410b1d976c1fc002de74",
+      "architecture": "amd64"
+    },
+    "instrumented": {
+      "requested": "sha256:54a07a217fe0ad8f76393ed6065f183561452f5ff6b34e8ebcd0c1d8fb4a11e8",
+      "id": "sha256:54a07a217fe0ad8f76393ed6065f183561452f5ff6b34e8ebcd0c1d8fb4a11e8",
+      "architecture": "amd64"
+    }
+  },
+  "command": [
+    "/var/tmp/minivectordb-paired-venv/bin/python",
+    "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c3-material-20261111/diagnostic-runs/tool/bench.adapted.py",
+    "--images",
+    "baseline=sha256:4dcb69128fbea4448e1dc4b0b37c5412ce788290a4fa410b1d976c1fc002de74",
+    "instrumented=sha256:54a07a217fe0ad8f76393ed6065f183561452f5ff6b34e8ebcd0c1d8fb4a11e8",
+    "--seeds",
+    "3179",
+    "3181",
+    "3187",
+    "3179",
+    "3181",
+    "3187",
+    "--rows",
+    "10000",
+    "--dim",
+    "128",
+    "--queries",
+    "1000",
+    "--prefix",
+    "c3stage"
+  ],
+  "preflight_only": false,
+  "limits_unchanged": true,
+  "oracle_and_timers_unchanged": true,
+  "benchmark_scope": "Local comparison only, not official scorer or result guarantee",
+  "exit_code": 0
+}

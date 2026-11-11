@@ -1,0 +1,84 @@
+--- a/src/engine.cpp
++++ b/src/engine.cpp
+@@ -1,4 +1,5 @@
+ #include "engine.hpp"
++#include "c3diag.hpp"
+ #include "exact_cache.hpp"
+ #include "spill.hpp"
+ #include <algorithm>
+@@ -758,6 +759,7 @@
+         cache_->exact_column = projection.col;
+       }
+       if (cache_->exact_view) {
++        c3diag::current.hot = true;
+         const auto &view = *cache_->exact_view;
+         size_t pending[4], pending_count = 0;
+         auto flush = [&] {
+@@ -830,16 +832,32 @@
+       nearest.pop();
+     }
+     std::sort(winners.begin(), winners.end(), better_neighbor);
++    const auto diagnostic_winners_start = c3diag::now();
+     for (const auto &n : winners) {
++      auto before = c3diag::now();
+       auto data = store_.get(st.table, n.key);
++      c3diag::current.get += c3diag::now()-before;
+       if (!data)
+         throw Error("CORRUPTION", "missing visible search result");
++      before = c3diag::now();
+       auto row = unpack_row(*data, schema);
++      c3diag::current.unpack += c3diag::now()-before;
++      before = c3diag::now();
+       std::vector<Cell> output;
+-      for (auto &p : ps)
+-        output.push_back(project(p, row));
++      c3diag::current.construct += c3diag::now()-before;
++      for (auto &p : ps) {
++        before = c3diag::now();
++        auto value = project(p,row);
++        c3diag::current.project += c3diag::now()-before;
++        before = c3diag::now();
++        output.push_back(std::move(value));
++        c3diag::current.construct += c3diag::now()-before;
++      }
++      before = c3diag::now();
+       result.rows.push_back(std::move(output));
+-    }
++      c3diag::current.construct += c3diag::now()-before;
++    }
++    c3diag::current.total += c3diag::now()-diagnostic_winners_start;
+     return result;
+   }
+   struct Candidate {
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -1,4 +1,5 @@
+ #include "engine.hpp"
++#include "c3diag.hpp"
+ #include "protocol.hpp"
+ #include <iostream>
+ #include <memory>
+@@ -29,6 +30,7 @@
+       std::cout << "{\"type\":\"ready\"}\n" << std::flush;
+     std::string line;
+     while (std::getline(std::cin, line)) {
++      c3diag::begin();
+       mvdb::Request request;
+       bool emitting = false, closing = false;
+       try {
+@@ -41,6 +43,7 @@
+             emitting = true;
+             std::cout << "{\"id\":" << request.id_json << ",\"ok\":true}\n"
+                       << std::flush;
++            c3diag::emit();
+             return 0;
+           }
+         }
+@@ -52,6 +55,7 @@
+         else
+           mvdb::write_protocol_result_json(std::cout, result, request.id_json);
+         std::cout << '\n' << std::flush;
++        c3diag::finish();
+       } catch (const mvdb::Error &e) {
+         if (emitting) {
+           // Streaming may fail after part of a JSON response has been written.

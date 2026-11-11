@@ -1,0 +1,50 @@
+Reproducing this diagnostic (not an optimization candidate)
+
+Base commit: 87c2778ed0688e6e56152baf02bc4f4355667458.
+No production src, Dockerfile or Agent material is changed by this evidence commit.
+Stop gate: six-round median winner stage / hot-query e2e = 3.1473%, below 5%.
+
+Linux x86_64 with local Docker Engine, cgroup v2, AVX2, CPUs 0 and 1 available.
+This run used Windows-host WSL2 Ubuntu 24.04; original teammate host was not used.
+
+Use a NEW task directory R and copy these tools/evidence there. Keep historical evidence immutable.
+Extract the fixed BASE commit's src, tests, CMakeLists.txt, Dockerfile, .dockerignore,
+and validation/perf-20261110-stdio/scripts/{bench.py,bench_portable.py} to R/baseline.
+Verify every extracted byte against inputs/source-manifest.json.
+Use a new Linux data directory T (this run used /var/tmp/minivectordb-c3-20261111).
+Copy baseline production inputs into T/baseline-source, as setup_local.py does.
+
+setup_local.py shows the exact Docker daemon isolation used here. Do not start a second daemon
+against an already occupied data-root. Its first build deliberately records the observed failure
+with the default network; the successful retry was:
+  docker build --network host -t minivectordb:c3-baseline-87c2 T/baseline-source
+Production Dockerfile and pinned package versions were unchanged. Host networking is build-only.
+Keep the retry log in T/baseline-build-host.log as run_diagnostic.py expects.
+
+create_diagnostic.py creates a separate T/diagnostic-source from that baseline and builds the
+instrumented image using the same flags. Only the diagnostic header and timers differ; the source
+copy and diagnostic.patch are included here for byte comparison. Never install these timers as
+a production performance change. stdout remains protocol-only, diagnostic records are flushed to
+stderr only at shutdown; total stage is measured independently of nested stage counters.
+
+Install NumPy into an isolated Linux Python environment. Adjust run_diagnostic.py's venv path
+only if necessary and record that tool change. The frozen bench.py SHA256 must remain
+2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed.
+bench_portable.py changes only root path, Docker environment and data-root; its generated-tool
+and substitutions manifest is saved. Do not use Python -O. It verifies actual cgroup limits.
+
+Run run_diagnostic.py with no other benchmark containers; it takes an exclusive host lock.
+It runs six alternating baseline/instrumented pairs, seeds 3179/3181/3187 repeated,
+10,000x128, 1,000 Top10 queries, separate data directories, 128MiB, 0swap, 2CPU (0,1),
+read-only root, default JSONL entrypoint. Data/oracle is prepared before measured containers.
+The recorded command, image IDs and hashes are included. No formal scorer is called.
+Run analyze_diagnostic.py after all twelve runs finish. It joins diagnostic sequence numbers to
+the 1,000 measured hot-query IDs, excludes cold/ten warmup queries, and checks no missing records.
+The mandatory statistic is sum(winner_ns)/sum(query_seconds) per round, then the six medians.
+No substage addition is used to synthesize the total; stdout serialization/flush stays in denominator.
+
+All actual raw counts are listed in ARTIFACTS.json. Compressed workload and request/stdout traces
+are retained in the local evidence folder, not all in Git; reruns generate independent traces.
+RSS is auxiliary, cgroup memory.peak is used; file sizes are not physical I/O.
+Public hidden-case guarantees, original teammate timing equivalence and official score prediction
+are outside scope. A/A and candidate acceptance matrices were not started because the gate failed.
