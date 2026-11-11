@@ -145,6 +145,39 @@ inline void distances4_avx2(const Compact& cache,const size_t* rows,
   }
   _mm256_storeu_pd(out,_mm256_sqrt_pd(sum));
 }
+// Two independent four-record accumulation chains share each query broadcast.
+// A record still visits dimensions in exactly the scalar order, without FMA.
+__attribute__((target("avx2,no-fma"),noinline))
+inline void distances8_avx2(const Compact& cache,const size_t* rows,
+                           const std::vector<float>& q,double* out) {
+  const bool contiguous0=rows[0]%4==0 && rows[1]==rows[0]+1 &&
+      rows[2]==rows[0]+2 && rows[3]==rows[0]+3;
+  const bool contiguous1=rows[4]%4==0 && rows[5]==rows[4]+1 &&
+      rows[6]==rows[4]+2 && rows[7]==rows[4]+3;
+  const size_t start0=cache.index(rows[0]),start1=cache.index(rows[4]);
+  const __m128i indices0=_mm_set_epi32(int(cache.index(rows[3])),
+      int(cache.index(rows[2])),int(cache.index(rows[1])),int(start0));
+  const __m128i indices1=_mm_set_epi32(int(cache.index(rows[7])),
+      int(cache.index(rows[6])),int(cache.index(rows[5])),int(start1));
+  __m256d sum0=_mm256_setzero_pd(),sum1=_mm256_setzero_pd();
+  for(size_t d=0;d<cache.dim;++d) {
+    const float* column=cache.vectors.data()+d*4;
+    const __m256d query=_mm256_set1_pd(double(q[d]));
+    const __m128 values0=contiguous0 ? _mm_loadu_ps(column+start0) :
+        _mm_i32gather_ps(column,indices0,4);
+    const __m128 values1=contiguous1 ? _mm_loadu_ps(column+start1) :
+        _mm_i32gather_ps(column,indices1,4);
+    const __m256d delta0=_mm256_sub_pd(_mm256_cvtps_pd(values0),query);
+    const __m256d delta1=_mm256_sub_pd(_mm256_cvtps_pd(values1),query);
+    const __m256d square0=_mm256_mul_pd(delta0,delta0);
+    const __m256d square1=_mm256_mul_pd(delta1,delta1);
+    sum0=_mm256_add_pd(sum0,square0);
+    sum1=_mm256_add_pd(sum1,square1);
+  }
+  _mm256_storeu_pd(out,_mm256_sqrt_pd(sum0));
+  _mm256_storeu_pd(out+4,_mm256_sqrt_pd(sum1));
+}
+
 #endif
 inline void distances4(const Compact& cache,const size_t* rows,
                        const std::vector<float>& q,double* out) {
@@ -152,5 +185,12 @@ inline void distances4(const Compact& cache,const size_t* rows,
   if(available()) {distances4_avx2(cache,rows,q,out);return;}
 #endif
   distances4_scalar(cache,rows,q,out);
+}
+inline void distances8(const Compact& cache,const size_t* rows,
+                       const std::vector<float>& q,double* out) {
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  if(available()) {distances8_avx2(cache,rows,q,out);return;}
+#endif
+  for(size_t lane=0;lane<8;++lane) out[lane]=cache.distance(rows[lane],q);
 }
 } // namespace mvdb::exact

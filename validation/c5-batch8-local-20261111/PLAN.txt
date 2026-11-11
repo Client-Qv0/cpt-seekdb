@@ -1,0 +1,22 @@
+C5 batch8 direct implementation — 2026-11-11 Asia/Shanghai
+Frozen production:88c7665b34f004586470de19e87b1072f36b8984(equal87c2 production).
+Replace four-eligible-row flush with eight:two4lane AVX2 accumulator chains,
+shared per-dimension query broadcast,original gathers for noncontiguous rows,
+unchanged contiguous loadu. Tail>=4 uses original4lane,remaining scalar.
+Keep FP32 inputs,ordered per-row FP64 operations,noFMA,actualsqrt,PK ties,
+12MiB cache layout/budget,transaction/storage/protocol semantics unchanged.
+
+One initial implementation,at most one evidence-driven iteration if no gain.
+No layout-isolation prerequisite and no random alignment search.
+First:Release build,focused bitwise8lane/scalar and defaultJSONL0..9eligible
+tails/mod5 filters/transactions with independent reference.
+Then shortscreen:3 alternating B0/C main pairs10000x128/1000Top10,
+seeds3179/3181/3187;one B0/C overflow32000x128/100queries seed3179.
+DefaultJSONL Docker128MiB,zero swap,2CPU cpuset0,1,readonlyroot,separateext4data.
+Fulloutput/oracle outside timer and cgroup;recordcold/warm/write/restart/resources.
+This is a screen,not final retention proof or officialscore prediction.
+Main target>=5%median and>=2/3wins;flag anytotal/filtered/unfiltered/write
+regression>5%,restartready>10%,OOM or correctnessfailure. No hiding coldregression.
+Only clear gain justifies finite retentionregressions;no fullmatrix forloser.
+No sharedbranch modification or formalassessment. Candidatepaths/hashes always
+bound toactualtestedbuild. C4 rejectedcandidate stays rejected.

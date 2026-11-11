@@ -1,0 +1,372 @@
+{
+  "scope": "pure-Python model/AST check only; no database binary executed",
+  "syntax": "pass",
+  "initial_rows": 45,
+  "dimensions": [
+    1,
+    3,
+    5,
+    33,
+    129
+  ],
+  "initial_0_to_9_count_check": "pass both BIGINT and VARCHAR across all five dimensions",
+  "cross_eight_check": "pass",
+  "new_commit_insert_key_not_preexisting": true,
+  "queries_per_binary": 9360,
+  "script_sha256": "4ecca1e851b7f881320ff93de260d34ce40c4c546e05a2144923b53725371cf2",
+  "cases": [
+    {
+      "name": "BIGINT-initial-0-eligible",
+      "where": " WHERE grp=0 AND seq<=-5",
+      "eligible_seq": [],
+      "count": 0
+    },
+    {
+      "name": "VARCHAR-initial-0-eligible",
+      "where": " WHERE label='g0' AND seq<=-5",
+      "eligible_seq": [],
+      "count": 0
+    },
+    {
+      "name": "BIGINT-initial-1-eligible",
+      "where": " WHERE grp=0 AND seq<=0",
+      "eligible_seq": [
+        0
+      ],
+      "count": 1
+    },
+    {
+      "name": "VARCHAR-initial-1-eligible",
+      "where": " WHERE label='g0' AND seq<=0",
+      "eligible_seq": [
+        0
+      ],
+      "count": 1
+    },
+    {
+      "name": "BIGINT-initial-2-eligible",
+      "where": " WHERE grp=0 AND seq<=5",
+      "eligible_seq": [
+        0,
+        5
+      ],
+      "count": 2
+    },
+    {
+      "name": "VARCHAR-initial-2-eligible",
+      "where": " WHERE label='g0' AND seq<=5",
+      "eligible_seq": [
+        0,
+        5
+      ],
+      "count": 2
+    },
+    {
+      "name": "BIGINT-initial-3-eligible",
+      "where": " WHERE grp=0 AND seq<=10",
+      "eligible_seq": [
+        0,
+        5,
+        10
+      ],
+      "count": 3
+    },
+    {
+      "name": "VARCHAR-initial-3-eligible",
+      "where": " WHERE label='g0' AND seq<=10",
+      "eligible_seq": [
+        0,
+        5,
+        10
+      ],
+      "count": 3
+    },
+    {
+      "name": "BIGINT-initial-4-eligible",
+      "where": " WHERE grp=0 AND seq<=15",
+      "eligible_seq": [
+        0,
+        5,
+        10,
+        15
+      ],
+      "count": 4
+    },
+    {
+      "name": "VARCHAR-initial-4-eligible",
+      "where": " WHERE label='g0' AND seq<=15",
+      "eligible_seq": [
+        0,
+        5,
+        10,
+        15
+      ],
+      "count": 4
+    },
+    {
+      "name": "BIGINT-initial-5-eligible",
+      "where": " WHERE grp=0 AND seq<=20",
+      "eligible_seq": [
+        0,
+        5,
+        10,
+        15,
+        20
+      ],
+      "count": 5
+    },
+    {
+      "name": "VARCHAR-initial-5-eligible",
+      "where": " WHERE label='g0' AND seq<=20",
+      "eligible_seq": [
+        0,
+        5,
+        10,
+        15,
+        20
+      ],
+      "count": 5
+    },
+    {
+      "name": "BIGINT-initial-6-eligible",
+      "where": " WHERE grp=0 AND seq<=25",
+      "eligible_seq": [
+        0,
+        5,
+        10,
+        15,
+        20,
+        25
+      ],
+      "count": 6
+    },
+    {
+      "name": "VARCHAR-initial-6-eligible",
+      "where": " WHERE label='g0' AND seq<=25",
+      "eligible_seq": [
+        0,
+        5,
+        10,
+        15,
+        20,
+        25
+      ],
+      "count": 6
+    },
+    {
+      "name": "BIGINT-initial-7-eligible",
+      "where": " WHERE grp=0 AND seq<=30",
+      "eligible_seq": [
+        0,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30
+      ],
+      "count": 7
+    },
+    {
+      "name": "VARCHAR-initial-7-eligible",
+      "where": " WHERE label='g0' AND seq<=30",
+      "eligible_seq": [
+        0,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30
+      ],
+      "count": 7
+    },
+    {
+      "name": "BIGINT-initial-8-eligible",
+      "where": " WHERE grp=0 AND seq<=35",
+      "eligible_seq": [
+        0,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35
+      ],
+      "count": 8
+    },
+    {
+      "name": "VARCHAR-initial-8-eligible",
+      "where": " WHERE label='g0' AND seq<=35",
+      "eligible_seq": [
+        0,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35
+      ],
+      "count": 8
+    },
+    {
+      "name": "BIGINT-initial-9-eligible",
+      "where": " WHERE grp=0 AND seq<=40",
+      "eligible_seq": [
+        0,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35,
+        40
+      ],
+      "count": 9
+    },
+    {
+      "name": "VARCHAR-initial-9-eligible",
+      "where": " WHERE label='g0' AND seq<=40",
+      "eligible_seq": [
+        0,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35,
+        40
+      ],
+      "count": 9
+    },
+    {
+      "name": "mod5-bigint-all",
+      "where": " WHERE grp=1",
+      "eligible_seq": [
+        1,
+        6,
+        11,
+        16,
+        21,
+        26,
+        31,
+        36,
+        41
+      ],
+      "count": 9
+    },
+    {
+      "name": "mod5-varchar-all",
+      "where": " WHERE label='g1'",
+      "eligible_seq": [
+        1,
+        6,
+        11,
+        16,
+        21,
+        26,
+        31,
+        36,
+        41
+      ],
+      "count": 9
+    },
+    {
+      "name": "cross-adjacent-four",
+      "where": " WHERE seq>=1 AND seq<=4",
+      "eligible_seq": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "count": 4
+    },
+    {
+      "name": "cross-adjacent-eight",
+      "where": " WHERE seq>=1 AND seq<=8",
+      "eligible_seq": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "count": 8
+    },
+    {
+      "name": "cross-noncontiguous-eight",
+      "where": " WHERE mark='cross'",
+      "eligible_seq": [
+        3,
+        4,
+        7,
+        8,
+        15,
+        16,
+        23,
+        24
+      ],
+      "count": 8
+    },
+    {
+      "name": "unfiltered",
+      "where": "",
+      "eligible_seq": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "count": 45
+    }
+  ]
+}

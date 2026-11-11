@@ -1,0 +1,39 @@
+C5: eight-record exact L2 accumulation (retained local candidate)
+
+Parent and preserved Agent material:88c7665b34f004586470de19e87b1072f36b8984. Shared answer branch is not changed. No official submission.
+Production base equals87c2778ed0688e6e56152baf02bc4f4355667458 byte-for-byte. The reused baseline image was built from that equivalent production source, not originally built from88c7665.
+Baseline binary SHA256:b2501504b9e0b13afe6dc35c4e24bf65efaf4351e98ae3d94fc6327f1bd9ee67
+Baseline image:sha256:4dcb69128fbea4448e1dc4b0b37c5412ce788290a4fa410b1d976c1fc002de74
+Candidate binary SHA256:d89eb85d97764be0239b6a6c9de56182f3f42659d682001681ccf6a8ec053a31
+Candidate image:sha256:40fd25b2428a1237f9a186fab9de6a596dd701893744c5f4ad318a0a2fabacb2
+Candidate production inputs:16 files in production-manifest.json; exact tested snapshot, not the unchanged parent commit.
+
+Implementation:process eight eligible rows per batch with two independent four-lane AVX2 accumulation chains sharing the per-dimension query broadcast. Retain original gather for noncontiguous rows,loadu for each contiguous group,the four-lane tail and scalar remainder. FP32 inputs,ordered per-row FP64 operations,separate multiply/add,actual sqrt,PK ties and12MiB cache budget remain unchanged. No disk/protocol/WAL/ANN change.
+Reason for retention:all three measured main-query pairs improve by8.00% to13.04%; median elapsed reduction12.96%. This is useful local evidence,not an official-score prediction or a comprehensive regression claim.
+
+Method:local WSL2 Ubuntu24.04; same pinned Docker Release; actual default JSONL entrypoint; read-only root; network none; separate Linux ext4 data directories;2CPU cpuset0,1;real cgroup128MiB;zero swap;100-row write batches. Main3 alternating pairs:10000x128,1000 Top10 queries,seeds3179/3181/3187. Overflow1 pair:32000x128,100 queries,seed3179. Outputs fully consumed. Reference computation outside timers/cgroups. First-query view creation,10 warmups,warm measurement and clean restart are separated. Host/device caches were not globally flushed.
+
+Paired elapsed-time reductions:positive=faster,negative=slower. Medians of paired ratios.
+phase | query | filtered | unfiltered | write | first query | restart ready | restart query
+screen-main | +12.9603% | +19.7862% | +4.5610% | -0.9705% | -0.3301% | -1.9957% | -3.0088%
+screen-overflow | -1.8311% | -3.5485% | -0.2834% | +3.3931% | -1.0464% | +1.6887% | +6.9560%
+
+Per-round total-query seconds (baseline,candidate,elapsed reduction):
+c5screen-main-1-seed3179: 0.609569236, 0.530567346, +12.960282%
+c5screen-main-2-seed3181: 0.593420382, 0.545950655, +7.999342%
+c5screen-main-3-seed3187: 0.595891436, 0.518191980, +13.039197%
+c5screen-overflow-1-seed3179: 1.461591576, 1.488355211, -1.831130%
+
+Negative observations:main write median0.9705%slower,first query0.3301%slower,restart ready1.9957%slower,restart query3.0088%slower. Overflow total query1.8311%slower,filtered3.5485%slower,unfiltered0.2834%slower. Only one overflow pair was run; it is not a stable estimate. Full per-round ranges are in summary JSON.
+
+Executed checks:actual Docker Release build; standalone Release exact-cache unit including8-lane contiguous/noncontiguous/mixed/repeated/random lane groups,12 dimensions and bitwise scalar agreement;actual ELF retains gathers,noFMA,mul/add/sqrt.
+Default native formal JSONL supplemental test:9360 queries and48520 bitwise scalar distance checks PER VERSION. Covers0..9matches,8-lane boundaries,tails,BIGINT keys above2^53,BIGINT/VARCHAR filters,PK ties,update,rollback,commit and clean restart. No development bridge.
+Actual performance workloads:6296 independent-oracle checks,Recall1,IDs/types/order/filter/duplicate checks passed;FP32-input reference prepared outside timing and cgroup. All sampled memory.events includingmax/oom/oom_kill and pgscan/pgsteal are zero.
+Resources:raw actualcgroup memory.peak,memory.stat (anon,file),memory.events,memory.pressure andio.stat are included perrun/stage. RSS is auxiliary only. io.stat device/writeback attribution under sharedWSL is not calibrated;file sizes are not physicalIO. No official score estimate.
+
+Not run this iteration:full CTest matrix,sanitizers,official public driver,forced-kill/power-loss recovery,large/high-cardinality short-record stress,newCPU/platform fallback tests,holdout or additionaloverflow pairs. User explicitly prioritized targeted engineering and the shortscreen after focused checks;the earlier broader plan was narrowed. ExistingCREATEINDEX/ANN gaps and O(N)primary-key boundary remain independent.
+Waiting for official evaluation:hidden workload applicability,hidden correctness cases and official performance score. Passing these local checks does not promise formal acceptance.
+
+Next engineering target:first-query view construction/cache-bypass path,which receives no8-lane gain;profiling should precede further changes. Keep currentbatch8 candidate onpersonalbranch;do not overwrite sharedformalbranch.
+Reproduce from the published personalcommit with its unchanged Dockerfile,tests/test_exact_cache.cpp andtests/sql_batch8_edges.py. build_check.py andrun_screen.py record exactcommands;adapt hostpaths/socket/output directories only,recordadaptations andusefreshLinuxdata. benchmark-tools and adapter manifests bindactualtools. Large rawtraces,binaries andfullassembly remainlocal withhashes inLOCAL_ARTIFACTS.json.
+Learning provenance:this is anAgent engineering record of actualcode,tools andfeedback. No student contribution/history was invented;Agent material inherited unchanged.

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <random>
 using namespace mvdb;
 void require(bool ok) { if(!ok) throw std::runtime_error("exact cache check failed"); }
 int main() {
@@ -57,6 +58,38 @@ int main() {
         for(size_t lane=0;lane<4;++lane) {
           double scalar=cache.distance(indices[lane],q);
           require(std::memcmp(&scalar,&output[lane],sizeof(double))==0);
+        }
+      }
+    }
+  }
+  // Eight-record batches, both contiguous and gathered, preserve scalar bits.
+  std::mt19937 random(81629);
+  for(size_t dim: {size_t(1),size_t(2),size_t(3),size_t(4),size_t(5),
+      size_t(7),size_t(31),size_t(32),size_t(33),size_t(127),size_t(128),size_t(129)}) {
+    exact::Plan plan({Type::BigInt,Type::Vector},1,dim);
+    std::vector<std::vector<Cell>> values;
+    for(size_t i=0;i<45;++i) {
+      std::vector<float> vector(dim);
+      for(auto &x:vector)x=float(int(random()%200001)-100000)/131.0f;
+      values.push_back({int64_t(i),std::move(vector)});plan.observe(values.back());
+    }
+    exact::Compact cache(plan);
+    for(size_t i=0;i<values.size();++i)cache.fill(i,int64_t(i),values[i]);
+    for(size_t iteration=0;iteration<100;++iteration) {
+      std::vector<float> q(dim);
+      for(auto &x:q)x=float(int(random()%200001)-100000)/73.0f;
+      std::vector<std::array<size_t,8>> groups{{0,1,2,3,4,5,6,7},
+        {1,2,3,4,5,6,7,8},{0,5,10,15,20,25,30,35},{0,1,2,3,7,11,19,43},
+        {1,5,9,13,20,21,22,23},{44,0,43,17,16,31,29,8},{44,44,0,0,1,1,2,2}};
+      for(size_t k=0;k<8;++k) {
+        std::array<size_t,8> group{};for(auto &row:group)row=random()%45;
+        groups.push_back(group);
+      }
+      for(const auto& ids:groups) {
+        double output[8];exact::distances8(cache,ids.data(),q,output);
+        for(size_t lane=0;lane<8;++lane) {
+          double scalar=cache.distance(ids[lane],q);
+          require(std::memcmp(&scalar,output+lane,sizeof(double))==0);
         }
       }
     }

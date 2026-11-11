@@ -759,11 +759,11 @@ Result Engine::execute_statement(const Statement &st) {
       }
       if (cache_->exact_view) {
         const auto &view = *cache_->exact_view;
-        size_t pending[4], pending_count = 0;
+        size_t pending[8], pending_count = 0;
         auto flush = [&] {
-          double distances[4];
-          exact::distances4(view, pending, projection.query, distances);
-          for (size_t lane = 0; lane < 4; ++lane)
+          double distances[8];
+          exact::distances8(view, pending, projection.query, distances);
+          for (size_t lane = 0; lane < 8; ++lane)
             consider(view.keys[pending[lane]], distances[lane]);
           pending_count = 0;
         };
@@ -778,10 +778,18 @@ Result Engine::execute_statement(const Statement &st) {
           }
           if (eligible) {
             pending[pending_count++] = i;
-            if (pending_count == 4) flush();
+            if (pending_count == 8) flush();
           }
         }
-        for (size_t lane = 0; lane < pending_count; ++lane)
+        size_t tail = 0;
+        if (pending_count >= 4) {
+          double distances[4];
+          exact::distances4(view, pending, projection.query, distances);
+          for (size_t lane = 0; lane < 4; ++lane)
+            consider(view.keys[pending[lane]], distances[lane]);
+          tail = 4;
+        }
+        for (size_t lane = tail; lane < pending_count; ++lane)
           consider(view.keys[pending[lane]], view.distance(pending[lane], projection.query));
       } else if (cache_->exact_bypass) {
         // Remember this view's budget bypass until existing invalidation clears it.

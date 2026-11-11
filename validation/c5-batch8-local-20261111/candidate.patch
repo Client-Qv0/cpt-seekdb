@@ -1,0 +1,93 @@
+--- a/src/exact_cache.hpp
++++ b/src/exact_cache.hpp
+@@ -145,6 +145,39 @@
+   }
+   _mm256_storeu_pd(out,_mm256_sqrt_pd(sum));
+ }
++// Two independent four-record accumulation chains share each query broadcast.
++// A record still visits dimensions in exactly the scalar order, without FMA.
++__attribute__((target("avx2,no-fma"),noinline))
++inline void distances8_avx2(const Compact& cache,const size_t* rows,
++                           const std::vector<float>& q,double* out) {
++  const bool contiguous0=rows[0]%4==0 && rows[1]==rows[0]+1 &&
++      rows[2]==rows[0]+2 && rows[3]==rows[0]+3;
++  const bool contiguous1=rows[4]%4==0 && rows[5]==rows[4]+1 &&
++      rows[6]==rows[4]+2 && rows[7]==rows[4]+3;
++  const size_t start0=cache.index(rows[0]),start1=cache.index(rows[4]);
++  const __m128i indices0=_mm_set_epi32(int(cache.index(rows[3])),
++      int(cache.index(rows[2])),int(cache.index(rows[1])),int(start0));
++  const __m128i indices1=_mm_set_epi32(int(cache.index(rows[7])),
++      int(cache.index(rows[6])),int(cache.index(rows[5])),int(start1));
++  __m256d sum0=_mm256_setzero_pd(),sum1=_mm256_setzero_pd();
++  for(size_t d=0;d<cache.dim;++d) {
++    const float* column=cache.vectors.data()+d*4;
++    const __m256d query=_mm256_set1_pd(double(q[d]));
++    const __m128 values0=contiguous0 ? _mm_loadu_ps(column+start0) :
++        _mm_i32gather_ps(column,indices0,4);
++    const __m128 values1=contiguous1 ? _mm_loadu_ps(column+start1) :
++        _mm_i32gather_ps(column,indices1,4);
++    const __m256d delta0=_mm256_sub_pd(_mm256_cvtps_pd(values0),query);
++    const __m256d delta1=_mm256_sub_pd(_mm256_cvtps_pd(values1),query);
++    const __m256d square0=_mm256_mul_pd(delta0,delta0);
++    const __m256d square1=_mm256_mul_pd(delta1,delta1);
++    sum0=_mm256_add_pd(sum0,square0);
++    sum1=_mm256_add_pd(sum1,square1);
++  }
++  _mm256_storeu_pd(out,_mm256_sqrt_pd(sum0));
++  _mm256_storeu_pd(out+4,_mm256_sqrt_pd(sum1));
++}
++
+ #endif
+ inline void distances4(const Compact& cache,const size_t* rows,
+                        const std::vector<float>& q,double* out) {
+@@ -153,4 +186,11 @@
+ #endif
+   distances4_scalar(cache,rows,q,out);
+ }
++inline void distances8(const Compact& cache,const size_t* rows,
++                       const std::vector<float>& q,double* out) {
++#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
++  if(available()) {distances8_avx2(cache,rows,q,out);return;}
++#endif
++  for(size_t lane=0;lane<8;++lane) out[lane]=cache.distance(rows[lane],q);
++}
+ } // namespace mvdb::exact
+--- a/src/engine.cpp
++++ b/src/engine.cpp
+@@ -759,11 +759,11 @@
+       }
+       if (cache_->exact_view) {
+         const auto &view = *cache_->exact_view;
+-        size_t pending[4], pending_count = 0;
++        size_t pending[8], pending_count = 0;
+         auto flush = [&] {
+-          double distances[4];
+-          exact::distances4(view, pending, projection.query, distances);
+-          for (size_t lane = 0; lane < 4; ++lane)
++          double distances[8];
++          exact::distances8(view, pending, projection.query, distances);
++          for (size_t lane = 0; lane < 8; ++lane)
+             consider(view.keys[pending[lane]], distances[lane]);
+           pending_count = 0;
+         };
+@@ -778,10 +778,18 @@
+           }
+           if (eligible) {
+             pending[pending_count++] = i;
+-            if (pending_count == 4) flush();
++            if (pending_count == 8) flush();
+           }
+         }
+-        for (size_t lane = 0; lane < pending_count; ++lane)
++        size_t tail = 0;
++        if (pending_count >= 4) {
++          double distances[4];
++          exact::distances4(view, pending, projection.query, distances);
++          for (size_t lane = 0; lane < 4; ++lane)
++            consider(view.keys[pending[lane]], distances[lane]);
++          tail = 4;
++        }
++        for (size_t lane = tail; lane < pending_count; ++lane)
+           consider(view.keys[pending[lane]], view.distance(pending[lane], projection.query));
+       } else if (cache_->exact_bypass) {
+         // Remember this view's budget bypass until existing invalidation clears it.
