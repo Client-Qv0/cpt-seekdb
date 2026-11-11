@@ -1,0 +1,63 @@
+{
+  "frozen_sha256": "1f54525f1948064629d758966654aa6e471352161f0cec08e104a616f885e8b4",
+  "frozen_source": "/mnt/f/OceanBase/seekdb/minivectordb-hmy-c14-20261111/validation/c14-hmy-20261111/teammate-handoff/evidence/benchmark-tools/bench.py",
+  "adapter_sha256": "74ae01d83b7ce4ba739eee638cfa58306daac7b89c2a9b51fc1df61484419880",
+  "adapted_sha256": "d2002e496b82260cd9dbc43b269444aed4fb763ce97082d33065ec402e913fa9",
+  "substitutions": [
+    {
+      "before": "ROOT=pathlib.Path(__file__).resolve().parents[1]",
+      "after": "ROOT=pathlib.Path('/mnt/f/OceanBase/seekdb/minivectordb-hmy-c14-20261111/validation/c14-hmy-20261111/four-main')"
+    },
+    {
+      "before": "ENV=dict(os.environ,DOCKER_HOST='unix:///var/tmp/minivectordb-perf-20261110/docker.sock')",
+      "after": "ENV=dict(os.environ)"
+    },
+    {
+      "before": "pathlib.Path('/var/tmp/minivectordb-perf-20261110/data')",
+      "after": "pathlib.Path('/var/tmp/mvdb-hmy-c14-four-main-20261111')"
+    }
+  ],
+  "docker_host": null,
+  "docker_context": null,
+  "output_root": "/mnt/f/OceanBase/seekdb/minivectordb-hmy-c14-20261111/validation/c14-hmy-20261111/four-main",
+  "data_root": "/var/tmp/mvdb-hmy-c14-four-main-20261111",
+  "images": {
+    "base": {
+      "requested": "codex-hmy-c14-team:20261111",
+      "id": "sha256:a573b95962c08fbf70c032e0fa7459d3034b3c4340a60aa5e3fc1dd67319141c",
+      "architecture": "amd64"
+    },
+    "candidate": {
+      "requested": "codex-hmy-c14-four:20261111",
+      "id": "sha256:e5213825ffa58166ae9eed4fe2d14d9797b1ca0c2337ccdf162b012760a81346",
+      "architecture": "amd64"
+    }
+  },
+  "command": [
+    "/usr/bin/python3",
+    "/mnt/f/OceanBase/seekdb/minivectordb-hmy-c14-20261111/validation/c14-hmy-20261111/four-main/tool/bench.adapted.py",
+    "--images",
+    "base=sha256:a573b95962c08fbf70c032e0fa7459d3034b3c4340a60aa5e3fc1dd67319141c",
+    "candidate=sha256:e5213825ffa58166ae9eed4fe2d14d9797b1ca0c2337ccdf162b012760a81346",
+    "--seeds",
+    "71003",
+    "71011",
+    "71023",
+    "71003",
+    "71011",
+    "71023",
+    "--rows",
+    "10000",
+    "--dim",
+    "128",
+    "--queries",
+    "1000",
+    "--prefix",
+    "hmy-four-main"
+  ],
+  "preflight_only": false,
+  "limits_unchanged": true,
+  "oracle_and_timers_unchanged": true,
+  "benchmark_scope": "Local comparison only, not official scorer or result guarantee",
+  "exit_code": 0
+}

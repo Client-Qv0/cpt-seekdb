@@ -59,8 +59,220 @@ void test_equality_postings() {
   std::cout<<"equality posting ordering, strings, one-index policy and budget checks passed\n";
 }
 
+void test_fp32_screen() {
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  if(!exact::available()) {
+    require(!exact::fp32_screen_available(128));
+    std::cout<<"FP32 screen AVX2 checks skipped: AVX2 unavailable\n";
+    return;
+  }
+  struct RestoreMxcsr {
+    unsigned value=_mm_getcsr();
+    ~RestoreMxcsr() { _mm_setcsr(value); }
+  } restore;
+  const unsigned safe=(restore.value|0x1f80u)&~(0x6000u|0x8000u|0x0040u|0x003fu);
+  _mm_setcsr(safe);
+  require(exact::fp32_screen_available(1) && exact::fp32_screen_available(8192));
+  require(!exact::fp32_screen_available(0) && !exact::fp32_screen_available(8193));
+  for(unsigned mode: {0x8000u,0x0040u,0x2000u,0x4000u,0x6000u}) {
+    _mm_setcsr(safe|mode);
+    bool enabled=exact::fp32_screen_available(128);
+    _mm_setcsr(safe);
+    require(!enabled);
+  }
+  for(unsigned bit=7;bit<=12;++bit) {
+    // Only inspect the control word while an exception is unmasked.
+    _mm_setcsr(safe&~(1u<<bit));
+    bool enabled=exact::fp32_screen_available(128);
+    _mm_setcsr(safe);
+    require(!enabled);
+  }
+  auto make_cache=[](const std::vector<std::vector<float>>& vectors) {
+    exact::Plan plan({Type::BigInt,Type::Vector},1,vectors.front().size());
+    std::vector<std::vector<Cell>> rows;
+    for(size_t i=0;i<vectors.size();++i) {
+      rows.push_back({int64_t(i),vectors[i]});plan.observe(rows.back());
+    }
+    require(plan.fits());
+    exact::Compact cache(plan);
+    for(size_t i=0;i<rows.size();++i)cache.fill(i,int64_t(i),rows[i]);
+    return cache;
+  };
+  const float tiny=std::numeric_limits<float>::denorm_min();
+  const float maximum=std::numeric_limits<float>::max();
+  auto edge=make_cache({{1,0},{1,0x1p-26f},{0,0},{tiny,0},
+                        {1e-23f,0},{maximum,0},{-maximum,0},{2,0}});
+  std::vector<float> zero(2,0);
+  float rough[8];
+  exact::squared_distances8_fp32_contiguous(edge,0,zero,rough);
+  const double tie=edge.distance(0,zero),near_tie=edge.distance(1,zero);
+  require(tie==1 && std::memcmp(&tie,&near_tie,sizeof(double))==0);
+  const double bound=exact::fp32_screen_threshold(tie,2);
+  require(!exact::fp32_screen_reject(rough[0],bound));
+  require(!exact::fp32_screen_reject(rough[1],bound));
+  require(exact::fp32_screen_reject(rough[7],bound));
+  require(rough[3]==0 && rough[4]==0);
+  require(!exact::fp32_screen_reject(rough[3],exact::fp32_screen_threshold(0,2)));
+  require(!exact::fp32_screen_reject(rough[4],exact::fp32_screen_threshold(0,2)));
+  require(std::isinf(rough[5]) && std::isfinite(edge.distance(5,zero)));
+  require(!exact::fp32_screen_reject(rough[5],bound));
+  std::vector<float> opposite(2,maximum);
+  exact::squared_distances8_fp32_contiguous(edge,0,opposite,rough);
+  require(std::isinf(rough[6]) && std::isfinite(edge.distance(6,opposite)));
+  require(!exact::fp32_screen_reject(rough[6],bound));
+  require(!exact::fp32_screen_reject(std::numeric_limits<float>::quiet_NaN(),bound));
+  require(std::isinf(exact::fp32_screen_threshold(1,8193)));
+
+  std::mt19937 random(20261111);
+  size_t rejected=0;
+  for(size_t dim: {size_t(1),size_t(3),size_t(128),size_t(8192)}) {
+    std::vector<std::vector<float>> vectors(40,std::vector<float>(dim));
+    for(size_t i=0;i<vectors.size();++i)
+      for(float& v:vectors[i])v=float(i)+float(int(random()%2001)-1000)/1024;
+    auto cache=make_cache(vectors);
+    for(unsigned attempt=0;attempt<3;++attempt) {
+      std::vector<float> query(dim);
+      for(float& v:query)v=float(int(random()%4001)-2000)/1024;
+      std::array<double,40> exact_distances;
+      for(size_t i=0;i<40;++i)exact_distances[i]=cache.distance(i,query);
+      auto ordered=exact_distances;
+      std::sort(ordered.begin(),ordered.end());
+      const double worst=ordered[3];
+      const double threshold=exact::fp32_screen_threshold(worst,dim);
+      std::array<float,40> all_screen_sums;
+      for(size_t row=0;row<40;) {
+        const size_t count=row+32<=40 ? 32 : 8;
+        double full[32];float screen_sums[32];
+        for(size_t offset=0;offset<count;offset+=8)
+          exact::distances8_contiguous(cache,row+offset,query,full+offset);
+        if(count==32)
+          exact::squared_distances32_fp32_contiguous(cache,row,query,screen_sums);
+        else
+          exact::squared_distances8_fp32_contiguous(cache,row,query,screen_sums);
+        for(size_t lane=0;lane<count;++lane) {
+          all_screen_sums[row+lane]=screen_sums[lane];
+          // The old scalar and SIMD results remain the bitwise oracle. Every
+          // rejected record must be strictly worse, including sqrt ties.
+          require(std::memcmp(&full[lane],&exact_distances[row+lane],sizeof(double))==0);
+          if(exact::fp32_screen_reject(screen_sums[lane],threshold)) {
+            require(exact_distances[row+lane]>worst);++rejected;
+          }
+        }
+        row+=count;
+      }
+      size_t selected[32];float gathered[32];
+      for(size_t lane=0;lane<32;++lane)selected[lane]=(lane*7+5)%40;
+      exact::squared_distances32_fp32(cache,selected,query,gathered);
+      for(size_t lane=0;lane<32;++lane) {
+        const size_t row=selected[lane];
+        require(std::memcmp(&gathered[lane],&all_screen_sums[row],sizeof(float))==0);
+        if(exact::fp32_screen_reject(gathered[lane],threshold))
+          require(exact_distances[row]>worst);
+      }
+    }
+  }
+  require(rejected>0);
+  std::cout<<"FP32 screen FP modes, sqrt ties, underflow/overflow and exact rejection checks passed\n";
+#else
+  require(!exact::fp32_screen_available(128));
+#endif
+}
+
+void test_quantized_screen() {
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  if(!exact::available() || std::fegetround()!=FE_TONEAREST) return;
+  struct RestoreMxcsr {
+    unsigned value=_mm_getcsr();
+    ~RestoreMxcsr() {_mm_setcsr(value);}
+  } restore;
+  _mm_setcsr((restore.value|0x1f80u)&~(0x6000u|0x8000u|0x0040u|0x003fu));
+  auto make_cache=[](const std::vector<std::vector<float>>& vectors) {
+    exact::Plan plan({Type::BigInt,Type::Vector},1,vectors.front().size());
+    std::vector<std::vector<Cell>> rows;
+    for(size_t i=0;i<vectors.size();++i) {
+      rows.push_back({int64_t(i),vectors[i]});plan.observe(rows.back());
+    }
+    exact::Compact cache(plan);
+    for(size_t i=0;i<rows.size();++i)cache.fill(i,int64_t(i),rows[i]);
+    require(!cache.quantized_codes);
+    cache.prepare_quantized_codes();
+    return cache;
+  };
+  std::mt19937 random(20261112);
+  size_t rejected=0;
+  for(size_t dim:{size_t(1),size_t(15),size_t(16),size_t(17),size_t(128),size_t(8192)}) {
+    std::vector<std::vector<float>> vectors(12,std::vector<float>(dim));
+    for(size_t i=0;i<vectors.size();++i)
+      for(float& value:vectors[i])value=float(i)+float(int(random()%2001)-1000)/1024;
+    auto cache=make_cache(vectors);
+    require(bool(cache.quantized_codes) && cache.allocated_bytes()<=exact::budget);
+    for(size_t i=0;i<vectors.size();++i)for(size_t d=0;d<dim;++d) {
+      const int code=int(cache.quantized_codes[i*dim+d]);
+      require(code>=-127 && code<=127);
+      require(std::abs(double(vectors[i][d])-code*cache.quantized_step)<=cache.quantized_step/2);
+    }
+    std::vector<float> query(dim,0.25f);
+    auto prepared=exact::prepare_quantized_query(cache,query,true);
+    require(bool(prepared.codes));
+    const double worst=cache.distance(2,query);
+    const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.root_dim_upper);
+    for(size_t i=0;i<vectors.size();++i) {
+      uint32_t scalar=0;
+      for(size_t d=0;d<dim;++d) {
+        const int delta=int(cache.quantized_codes[i*dim+d])-int(prepared.codes[d]);
+        scalar+=uint32_t(delta*delta);
+      }
+      const uint32_t actual=exact::quantized_squared_distance(cache,i,prepared);
+      require(actual==scalar);
+      if(double(actual)>threshold) {require(cache.distance(i,query)>worst);++rejected;}
+    }
+    require(!exact::prepare_quantized_query(cache,query,false).codes);
+    std::vector<float> outside(dim,1e10f);
+    require(!exact::prepare_quantized_query(cache,outside,true).codes);
+  }
+  require(rejected>0);
+  for(float magnitude:{std::numeric_limits<float>::denorm_min(),std::numeric_limits<float>::max()}) {
+    auto cache=make_cache({std::vector<float>(17,magnitude),std::vector<float>(17,-magnitude)});
+    require(bool(cache.quantized_codes));
+    const double expected=std::ldexp(1.0,magnitude<1 ? -155 : 122);
+    require(cache.quantized_step==expected);
+    std::vector<float> query(17,-magnitude);
+    auto prepared=exact::prepare_quantized_query(cache,query,true);
+    require(bool(prepared.codes));
+    const double threshold=exact::quantized_threshold(0,cache.quantized_step,prepared.root_dim_upper);
+    require(exact::quantized_squared_distance(cache,1,prepared)==0);
+    require(double(exact::quantized_squared_distance(cache,0,prepared))>threshold);
+    require(std::isfinite(cache.distance(0,query)));
+  }
+  {
+    auto cache=make_cache({std::vector<float>(8192,127),std::vector<float>(8192,-127)});
+    auto prepared=exact::prepare_quantized_query(cache,std::vector<float>(8192,-127),true);
+    require(cache.quantized_step==1 && bool(prepared.codes));
+    require(exact::quantized_squared_distance(cache,0,prepared)==528515072u);
+  }
+  {
+    auto cache=make_cache({{1,0},{1,0x1p-26f},{0,0}});
+    std::vector<float> query(2,0);
+    auto prepared=exact::prepare_quantized_query(cache,query,true);
+    const double worst=cache.distance(0,query);
+    require(worst==cache.distance(1,query));
+    const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.root_dim_upper);
+    require(!(double(exact::quantized_squared_distance(cache,1,prepared))>threshold));
+  }
+  exact::Plan full_plan({Type::BigInt,Type::Vector},1,128);
+  full_plan.count=22000;
+  require(full_plan.fits());
+  exact::Compact full(full_plan);
+  full.prepare_quantized_codes();
+  require(!full.quantized_codes && full.allocated_bytes()<=exact::budget);
+  std::cout<<"quantized screen code bounds, exact integer sums, rejection safety and budget fallback passed\n";
+#endif
+}
+
 int main() {
   test_equality_postings();
+  test_fp32_screen();
+  test_quantized_screen();
   for(size_t n: {size_t(0),size_t(1),size_t(3),size_t(4),size_t(5),size_t(9)})
     for(size_t dim: {size_t(1),size_t(3),size_t(128)}) {
       exact::Plan plan({Type::BigInt,Type::Varchar,Type::Vector},2,dim);

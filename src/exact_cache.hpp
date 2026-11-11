@@ -2,6 +2,7 @@
 // Transient exact-search view. No disk/protocol representation depends on this.
 #include "engine.hpp"
 #include <cmath>
+#include <cfenv>
 #include <algorithm>
 #include <cstdint>
 #include <memory>
@@ -20,6 +21,41 @@ inline bool available() {
 #else
   return false;
 #endif
+}
+// The screening bound assumes IEEE binary32/binary64 round-to-nearest with
+// gradual underflow. Check once per query, never change the caller's FP mode.
+constexpr size_t fp32_screen_max_dim = 8192;
+inline bool fp32_screen_available(size_t dim) {
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  if(!dim || dim>fp32_screen_max_dim || !available()) return false;
+  const unsigned control=_mm_getcsr();
+  constexpr unsigned rounding_ftz_daz=0x6000u|0x8000u|0x0040u;
+  constexpr unsigned exception_masks=0x1f80u;
+  return (control&rounding_ftz_daz)==0 &&
+         (control&exception_masks)==exception_masks;
+#else
+  (void)dim;
+  return false;
+#endif
+}
+// For D<=8192, a finite FP32 sequential square sum a and the original double
+// sum S obey a <= 1.01*S + 2*D*2^-149. With n=D+3, the relative factor is at
+// most 1/((1-n*2^-24)*(1-n*2^-53)) < 1.00049; 2*D*2^-149 covers FP32 square
+// underflow. A subnormal difference of two FP32 inputs is exactly representable.
+// Use nextup(d)^2, not d^2: distinct sums can round to the same sqrt distance.
+// Every operation forming the rejection threshold is expanded upward.
+inline double fp32_screen_threshold(double worst_distance,size_t dim) {
+  const double infinity=std::numeric_limits<double>::infinity();
+  if(!dim || dim>fp32_screen_max_dim ||
+     !std::isfinite(worst_distance) || worst_distance<0) return infinity;
+  const double next=std::nextafter(worst_distance,infinity);
+  const double squared_upper=std::nextafter(next*next,infinity);
+  const double scaled_upper=std::nextafter(1.01*squared_upper,infinity);
+  return std::nextafter(scaled_upper+double(dim)*0x1p-148,infinity);
+}
+inline bool fp32_screen_reject(float approximate_sum,double threshold) {
+  // Overflow/NaN must be refined, never interpreted as a distant record.
+  return std::isfinite(approximate_sum) && double(approximate_sum)>threshold;
 }
 inline size_t add(size_t a,size_t b) {
   return a>budget || b>budget-a ? budget+1 : a+b;
@@ -69,6 +105,9 @@ struct Compact {
   std::vector<int64_t> keys;
   std::vector<float> vectors;
   std::vector<ScalarColumn> columns;
+  // Optional row-major screening codes; exact vectors are always retained.
+  std::unique_ptr<int8_t[]> quantized_codes;
+  double quantized_step=1,quantized_inverse=1;
   // One optional posting index per view. New object/allocator bookkeeping fits
   // in the existing 4096-byte fixed reserve; payload is accounted separately.
   std::unique_ptr<uint32_t[]> equality_rows;
@@ -98,6 +137,8 @@ struct Compact {
     bytes+=keys.capacity()*sizeof(int64_t)+vectors.capacity()*sizeof(float);
     for(const auto& c:columns) bytes+=c.integers.capacity()*sizeof(int64_t)+c.offsets.capacity()*sizeof(size_t)+c.text.capacity();
     if(equality_rows) bytes+=count*sizeof(uint32_t);
+    // Reserve the prepared query as well, including during posting-index build.
+    if(quantized_codes) bytes+=count*dim+dim*sizeof(int16_t)+64;
     return bytes;
   }
   size_t index(size_t row,size_t dimension=0) const {
@@ -119,6 +160,40 @@ struct Compact {
         col.offsets[i+1]=offset+s.size();
       }
     }
+  }
+  // Call once after every exact row has been filled, before publishing the view.
+  // Bypassed views never pay this scan; an optional-budget failure returns before
+  // reading vectors. Only a complete code array is published.
+  void prepare_quantized_codes() {
+    if(quantized_codes || !count || !fp32_screen_available(dim) ||
+       std::fegetround()!=FE_TONEAREST) return;
+    const size_t payload=mul(count,dim);
+    const size_t scratch=add(mul(dim,sizeof(int16_t)),64);
+    if(add(add(allocated_bytes(),payload),scratch)>budget) return;
+    double max_abs=0;
+    for(float value:vectors) {
+      if(!std::isfinite(value)) return;
+      max_abs=std::max(max_abs,std::abs(double(value)));
+    }
+    double step=1,inverse=1;
+    if(max_abs>0) {
+      int exponent=0;
+      std::frexp(max_abs,&exponent);exponent-=7;
+      step=std::ldexp(1.0,exponent);
+      if(max_abs>127*step) {++exponent;step*=2;}
+      inverse=std::ldexp(1.0,-exponent);
+    }
+    try {
+      std::unique_ptr<int8_t[]> codes(new int8_t[payload]);
+      for(size_t row=0;row<count;++row)for(size_t d=0;d<dim;++d) {
+        // This binary64 power-of-two scaling is exact even for FP32 subnormals.
+        const double rounded=std::nearbyint(double(vectors[index(row,d)])*inverse);
+        if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) return;
+        codes[row*dim+d]=static_cast<int8_t>(rounded); // Never clamp a code.
+      }
+      quantized_step=step;quantized_inverse=inverse;
+      quantized_codes=std::move(codes);
+    } catch(const std::bad_alloc&) {} // Keep the complete original exact view.
   }
   int compare_scalar(size_t c,size_t row,const Cell& value) const {
     const auto& col=columns[c];
@@ -182,11 +257,71 @@ struct Compact {
   }
 };
 static_assert(sizeof(Compact)<512,"exact view object exceeds fixed reserve");
+struct QuantizedQuery {
+  std::unique_ptr<int16_t[]> codes;
+  double root_dim_upper=0;
+};
+inline QuantizedQuery prepare_quantized_query(const Compact& cache,
+                                             const std::vector<float>& query,
+                                             bool fp_mode_ok) {
+  QuantizedQuery prepared;
+  if(!fp_mode_ok || !cache.quantized_codes || query.size()!=cache.dim ||
+     std::fegetround()!=FE_TONEAREST) return prepared;
+  try {prepared.codes.reset(new int16_t[cache.dim]);}
+  catch(const std::bad_alloc&) {return prepared;}
+  for(size_t d=0;d<cache.dim;++d) {
+    const double rounded=std::nearbyint(double(query[d])*cache.quantized_inverse);
+    if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) {
+      prepared.codes.reset();return prepared;
+    }
+    prepared.codes[d]=static_cast<int16_t>(rounded);
+  }
+  prepared.root_dim_upper=std::nextafter(std::sqrt(double(cache.dim)),
+                                       std::numeric_limits<double>::infinity());
+  return prepared;
+}
+// If r is the real distance and I the exact integer square sum, quantization
+// gives step*sqrt(I) <= r+step*sqrt(D). Original double accumulation differs
+// from the real square sum by relative error <1e-12 for D<=8192. The factor 1.000001 and
+// nextup(d) cover that error and every sqrt rounding tie. Expand each operation
+// upward; only an integer sum strictly above this bound may be discarded.
+inline double quantized_threshold(double worst_distance,double step,
+                                  double root_dim_upper) {
+  const double inf=std::numeric_limits<double>::infinity();
+  if(!std::isfinite(worst_distance) || worst_distance<0 ||
+     !std::isfinite(step) || step<=0) return inf;
+  const double next=std::nextafter(worst_distance,inf);
+  const double distance_upper=std::nextafter(next*1.000001,inf);
+  const double units_upper=std::nextafter(distance_upper/step,inf);
+  const double radius_upper=std::nextafter(units_upper+root_dim_upper,inf);
+  return std::nextafter(radius_upper*radius_upper,inf);
+}
 inline void distances4_scalar(const Compact& cache,const size_t* rows,
                               const std::vector<float>& q,double* out) {
   for(size_t lane=0;lane<4;++lane) out[lane]=cache.distance(rows[lane],q);
 }
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+// Difference codes are at most 254. D<=8192 bounds the whole integer sum by
+// 528515072, so packed products, partial sums and horizontal reduction are exact.
+__attribute__((target("avx2,no-fma"),noinline))
+inline uint32_t quantized_squared_distance_avx2(const int8_t* row,
+                                              const int16_t* query,size_t dim) {
+  __m256i sum=_mm256_setzero_si256();
+  size_t d=0;
+  for(;d+16<=dim;d+=16) {
+    const __m128i bytes=_mm_loadu_si128(reinterpret_cast<const __m128i*>(row+d));
+    const __m256i values=_mm256_cvtepi8_epi16(bytes);
+    const __m256i q=_mm256_loadu_si256(reinterpret_cast<const __m256i*>(query+d));
+    const __m256i delta=_mm256_sub_epi16(values,q);
+    sum=_mm256_add_epi32(sum,_mm256_madd_epi16(delta,delta));
+  }
+  __m128i halves=_mm_add_epi32(_mm256_castsi256_si128(sum),_mm256_extracti128_si256(sum,1));
+  halves=_mm_hadd_epi32(halves,halves);
+  halves=_mm_hadd_epi32(halves,halves);
+  uint32_t result=static_cast<uint32_t>(_mm_cvtsi128_si32(halves));
+  for(;d<dim;++d) {const int delta=int(row[d])-int(query[d]);result+=uint32_t(delta*delta);}
+  return result;
+}
 // Every lane is one independent record. Never horizontally reduce dimensions;
 // no-fma prevents contraction even if a caller builds with FMA support enabled.
 __attribute__((target("avx2,no-fma"),noinline))
@@ -260,7 +395,96 @@ inline void distances8_contiguous_avx2(const Compact& cache,size_t row,
   _mm256_storeu_pd(out+4,_mm256_sqrt_pd(sum1));
 }
 
+// Screening only: no returned distance or heap entry is taken from this sum.
+// Preconditions: eight consecutive rows, row%4==0, fp32_screen_available().
+__attribute__((target("avx2,no-fma"),noinline))
+inline void squared_distances8_fp32_contiguous_avx2(
+    const Compact& cache,size_t row,const std::vector<float>& q,float* out) {
+  const float* block0=cache.vectors.data()+(row/4)*cache.dim*4;
+  const float* block1=block0+cache.dim*4;
+  __m256 sum=_mm256_setzero_ps();
+  for(size_t d=0;d<cache.dim;++d) {
+    const __m128 low=_mm_loadu_ps(block0+d*4);
+    const __m128 high=_mm_loadu_ps(block1+d*4);
+    const __m256 values=_mm256_insertf128_ps(_mm256_castps128_ps256(low),high,1);
+    const __m256 delta=_mm256_sub_ps(values,_mm256_set1_ps(q[d]));
+    sum=_mm256_add_ps(sum,_mm256_mul_ps(delta,delta));
+  }
+  _mm256_storeu_ps(out,sum);
+}
+
+// Four independent chains hide addition latency without regrouping dimensions
+// within any record. The same query broadcast serves all 32 records.
+__attribute__((target("avx2,no-fma"),noinline))
+inline void squared_distances32_fp32_contiguous_avx2(
+    const Compact& cache,size_t row,const std::vector<float>& q,float* out) {
+  const size_t stride=cache.dim*4;
+  const float* p0=cache.vectors.data()+(row/4)*stride;
+  const float* p1=p0+stride;const float* p2=p1+stride;const float* p3=p2+stride;
+  const float* p4=p3+stride;const float* p5=p4+stride;const float* p6=p5+stride;
+  const float* p7=p6+stride;
+  __m256 sum0=_mm256_setzero_ps(),sum1=_mm256_setzero_ps();
+  __m256 sum2=_mm256_setzero_ps(),sum3=_mm256_setzero_ps();
+  for(size_t d=0;d<cache.dim;++d) {
+    const __m256 query=_mm256_set1_ps(q[d]);
+    const __m256 v0=_mm256_insertf128_ps(_mm256_castps128_ps256(_mm_loadu_ps(p0+d*4)),_mm_loadu_ps(p1+d*4),1);
+    const __m256 v1=_mm256_insertf128_ps(_mm256_castps128_ps256(_mm_loadu_ps(p2+d*4)),_mm_loadu_ps(p3+d*4),1);
+    const __m256 v2=_mm256_insertf128_ps(_mm256_castps128_ps256(_mm_loadu_ps(p4+d*4)),_mm_loadu_ps(p5+d*4),1);
+    const __m256 v3=_mm256_insertf128_ps(_mm256_castps128_ps256(_mm_loadu_ps(p6+d*4)),_mm_loadu_ps(p7+d*4),1);
+    const __m256 delta0=_mm256_sub_ps(v0,query),delta1=_mm256_sub_ps(v1,query);
+    const __m256 delta2=_mm256_sub_ps(v2,query),delta3=_mm256_sub_ps(v3,query);
+    sum0=_mm256_add_ps(sum0,_mm256_mul_ps(delta0,delta0));
+    sum1=_mm256_add_ps(sum1,_mm256_mul_ps(delta1,delta1));
+    sum2=_mm256_add_ps(sum2,_mm256_mul_ps(delta2,delta2));
+    sum3=_mm256_add_ps(sum3,_mm256_mul_ps(delta3,delta3));
+  }
+  _mm256_storeu_ps(out,sum0);_mm256_storeu_ps(out+8,sum1);
+  _mm256_storeu_ps(out+16,sum2);_mm256_storeu_ps(out+24,sum3);
+}
+
+// Filtered candidates may cross arbitrary AoSoA blocks. The 12 MiB view
+// budget keeps every float-element offset safely inside signed 32-bit range.
+__attribute__((target("avx2,no-fma"),noinline))
+inline void squared_distances32_fp32_avx2(
+    const Compact& cache,const size_t* rows,const std::vector<float>& q,float* out) {
+  int32_t offsets[32];
+  for(size_t lane=0;lane<32;++lane)offsets[lane]=int32_t(cache.index(rows[lane]));
+  const __m256i indices0=_mm256_loadu_si256(reinterpret_cast<const __m256i*>(offsets));
+  const __m256i indices1=_mm256_loadu_si256(reinterpret_cast<const __m256i*>(offsets+8));
+  const __m256i indices2=_mm256_loadu_si256(reinterpret_cast<const __m256i*>(offsets+16));
+  const __m256i indices3=_mm256_loadu_si256(reinterpret_cast<const __m256i*>(offsets+24));
+  __m256 sum0=_mm256_setzero_ps(),sum1=_mm256_setzero_ps();
+  __m256 sum2=_mm256_setzero_ps(),sum3=_mm256_setzero_ps();
+  for(size_t d=0;d<cache.dim;++d) {
+    const float* column=cache.vectors.data()+d*4;
+    const __m256 query=_mm256_set1_ps(q[d]);
+    const __m256 delta0=_mm256_sub_ps(_mm256_i32gather_ps(column,indices0,4),query);
+    sum0=_mm256_add_ps(sum0,_mm256_mul_ps(delta0,delta0));
+    const __m256 delta1=_mm256_sub_ps(_mm256_i32gather_ps(column,indices1,4),query);
+    sum1=_mm256_add_ps(sum1,_mm256_mul_ps(delta1,delta1));
+    const __m256 delta2=_mm256_sub_ps(_mm256_i32gather_ps(column,indices2,4),query);
+    sum2=_mm256_add_ps(sum2,_mm256_mul_ps(delta2,delta2));
+    const __m256 delta3=_mm256_sub_ps(_mm256_i32gather_ps(column,indices3,4),query);
+    sum3=_mm256_add_ps(sum3,_mm256_mul_ps(delta3,delta3));
+  }
+  _mm256_storeu_ps(out,sum0);_mm256_storeu_ps(out+8,sum1);
+  _mm256_storeu_ps(out+16,sum2);_mm256_storeu_ps(out+24,sum3);
+}
+
 #endif
+inline uint32_t quantized_squared_distance(const Compact& cache,size_t row,
+                                          const QuantizedQuery& query) {
+  const int8_t* codes=cache.quantized_codes.get()+row*cache.dim;
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  return quantized_squared_distance_avx2(codes,query.codes.get(),cache.dim);
+#else
+  uint32_t sum=0;
+  for(size_t d=0;d<cache.dim;++d) {
+    const int delta=int(codes[d])-int(query.codes[d]);sum+=uint32_t(delta*delta);
+  }
+  return sum;
+#endif
+}
 inline void distances4(const Compact& cache,const size_t* rows,
                        const std::vector<float>& q,double* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
@@ -282,6 +506,33 @@ inline void distances8_contiguous(const Compact& cache,size_t row,
   distances8_contiguous_avx2(cache,row,q,out);
 #else
   for(size_t lane=0;lane<8;++lane) out[lane]=cache.distance(row+lane,q);
+#endif
+}
+inline void squared_distances8_fp32_contiguous(
+    const Compact& cache,size_t row,const std::vector<float>& q,float* out) {
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  squared_distances8_fp32_contiguous_avx2(cache,row,q,out);
+#else
+  (void)cache;(void)row;(void)q;
+  for(size_t lane=0;lane<8;++lane) out[lane]=std::numeric_limits<float>::infinity();
+#endif
+}
+inline void squared_distances32_fp32_contiguous(
+    const Compact& cache,size_t row,const std::vector<float>& q,float* out) {
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  squared_distances32_fp32_contiguous_avx2(cache,row,q,out);
+#else
+  (void)cache;(void)row;(void)q;
+  for(size_t lane=0;lane<32;++lane) out[lane]=std::numeric_limits<float>::infinity();
+#endif
+}
+inline void squared_distances32_fp32(
+    const Compact& cache,const size_t* rows,const std::vector<float>& q,float* out) {
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  squared_distances32_fp32_avx2(cache,rows,q,out);
+#else
+  (void)cache;(void)rows;(void)q;
+  for(size_t lane=0;lane<32;++lane) out[lane]=std::numeric_limits<float>::infinity();
 #endif
 }
 } // namespace mvdb::exact

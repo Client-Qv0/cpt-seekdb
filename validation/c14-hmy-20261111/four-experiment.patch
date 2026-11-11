@@ -1,0 +1,143 @@
+--- a/src/engine.cpp
++++ b/src/engine.cpp
+@@ -791,9 +791,14 @@
+               }
+               uint32_t survivors=0;
+               if(quantized.codes) {
+-                for(size_t lane=0;lane<batch_count;++lane)
+-                  if(!(double(exact::quantized_squared_distance(view,i+lane,quantized))>screen_threshold))
+-                    survivors|=uint32_t(1)<<lane;
++                for(size_t lane=0;lane<batch_count;lane+=4) {
++                  const size_t rows[4]={i+lane,i+lane+1,i+lane+2,i+lane+3};
++                  uint32_t distances[4];
++                  exact::quantized_squared_distances4(view,rows,quantized,distances);
++                  for(size_t k=0;k<4;++k)
++                    if(!(double(distances[k])>screen_threshold))
++                      survivors|=uint32_t(1)<<(lane+k);
++                }
+               } else {
+                 float approximate[32];
+                 if (batch_count==32)
+@@ -849,9 +854,13 @@
+               }
+               uint32_t survivors=0;
+               if(quantized.codes) {
+-                for(size_t lane=0;lane<32;++lane)
+-                  if(!(double(exact::quantized_squared_distance(view,pending[lane],quantized))>screen_threshold))
+-                    survivors|=uint32_t(1)<<lane;
++                for(size_t lane=0;lane<32;lane+=4) {
++                  uint32_t distances[4];
++                  exact::quantized_squared_distances4(view,pending+lane,quantized,distances);
++                  for(size_t k=0;k<4;++k)
++                    if(!(double(distances[k])>screen_threshold))
++                      survivors|=uint32_t(1)<<(lane+k);
++                }
+               } else {
+                 float approximate[32];
+                 exact::squared_distances32_fp32(view,pending,projection.query,approximate);
+--- a/src/exact_cache.hpp
++++ b/src/exact_cache.hpp
+@@ -322,6 +322,43 @@
+   for(;d<dim;++d) {const int delta=int(row[d])-int(query[d]);result+=uint32_t(delta*delta);}
+   return result;
+ }
++// Four rows share each loaded query block. Integer addition is exact under the
++// same 8192-dimension and [-127,127] bounds as the one-row kernel.
++__attribute__((target("avx2,no-fma"),noinline))
++inline void quantized_squared_distances4_avx2(const int8_t* codes,
++                                             const size_t* rows,
++                                             const int16_t* query,size_t dim,
++                                             uint32_t* out) {
++  const int8_t* r0=codes+rows[0]*dim;
++  const int8_t* r1=codes+rows[1]*dim;
++  const int8_t* r2=codes+rows[2]*dim;
++  const int8_t* r3=codes+rows[3]*dim;
++  __m256i s0=_mm256_setzero_si256(),s1=s0,s2=s0,s3=s0;
++  size_t d=0;
++  for(;d+16<=dim;d+=16) {
++    const __m256i q=_mm256_loadu_si256(reinterpret_cast<const __m256i*>(query+d));
++    const __m256i a=_mm256_sub_epi16(_mm256_cvtepi8_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(r0+d))),q);
++    const __m256i b=_mm256_sub_epi16(_mm256_cvtepi8_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(r1+d))),q);
++    const __m256i c=_mm256_sub_epi16(_mm256_cvtepi8_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(r2+d))),q);
++    const __m256i e=_mm256_sub_epi16(_mm256_cvtepi8_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i*>(r3+d))),q);
++    s0=_mm256_add_epi32(s0,_mm256_madd_epi16(a,a));
++    s1=_mm256_add_epi32(s1,_mm256_madd_epi16(b,b));
++    s2=_mm256_add_epi32(s2,_mm256_madd_epi16(c,c));
++    s3=_mm256_add_epi32(s3,_mm256_madd_epi16(e,e));
++  }
++  const __m256i sums[4]={s0,s1,s2,s3};
++  for(size_t lane=0;lane<4;++lane) {
++    __m128i halves=_mm_add_epi32(_mm256_castsi256_si128(sums[lane]),_mm256_extracti128_si256(sums[lane],1));
++    halves=_mm_hadd_epi32(halves,halves);
++    halves=_mm_hadd_epi32(halves,halves);
++    out[lane]=static_cast<uint32_t>(_mm_cvtsi128_si32(halves));
++  }
++  const int8_t* row[4]={r0,r1,r2,r3};
++  for(;d<dim;++d) for(size_t lane=0;lane<4;++lane) {
++    const int delta=int(row[lane][d])-int(query[d]);
++    out[lane]+=uint32_t(delta*delta);
++  }
++}
+ // Every lane is one independent record. Never horizontally reduce dimensions;
+ // no-fma prevents contraction even if a caller builds with FMA support enabled.
+ __attribute__((target("avx2,no-fma"),noinline))
+@@ -485,6 +522,23 @@
+   return sum;
+ #endif
+ }
++// Same dispatch preconditions as quantized_squared_distance: the caller has
++// checked AVX2 availability before preparing quantized query codes.
++inline void quantized_squared_distances4(const Compact& cache,const size_t* rows,
++                                         const QuantizedQuery& query,uint32_t* out) {
++#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
++  quantized_squared_distances4_avx2(cache.quantized_codes.get(),rows,query.codes.get(),cache.dim,out);
++#else
++  for(size_t lane=0;lane<4;++lane) {
++    uint32_t sum=0;
++    for(size_t d=0;d<cache.dim;++d) {
++      const int delta=int(cache.quantized_codes[rows[lane]*cache.dim+d])-int(query.codes[d]);
++      sum+=uint32_t(delta*delta);
++    }
++    out[lane]=sum;
++  }
++#endif
++}
+ inline void distances4(const Compact& cache,const size_t* rows,
+                        const std::vector<float>& q,double* out) {
+ #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+--- a/tests/test_exact_cache.cpp
++++ b/tests/test_exact_cache.cpp
+@@ -214,6 +214,22 @@
+     std::vector<float> query(dim,0.25f);
+     auto prepared=exact::prepare_quantized_query(cache,query,true);
+     require(bool(prepared.codes));
++    // Four-row screening must match an independent integer sum for gathered,
++    // reversed and repeated IDs, including short and non-multiple-of-16 tails.
++    for(const auto& group: {std::array<size_t,4>{0,1,2,3},
++                            std::array<size_t,4>{11,7,3,0},
++                            std::array<size_t,4>{4,4,1,1}}) {
++      uint32_t sums[4]{};
++      exact::quantized_squared_distances4(cache,group.data(),prepared,sums);
++      for(size_t lane=0;lane<4;++lane) {
++        uint32_t reference=0;
++        for(size_t d=0;d<dim;++d) {
++          const int delta=int(cache.quantized_codes[group[lane]*dim+d])-int(prepared.codes[d]);
++          reference+=uint32_t(delta*delta);
++        }
++        require(sums[lane]==reference);
++      }
++    }
+     const double worst=cache.distance(2,query);
+     const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.root_dim_upper);
+     for(size_t i=0;i<vectors.size();++i) {
+@@ -249,6 +265,10 @@
+     auto prepared=exact::prepare_quantized_query(cache,std::vector<float>(8192,-127),true);
+     require(cache.quantized_step==1 && bool(prepared.codes));
+     require(exact::quantized_squared_distance(cache,0,prepared)==528515072u);
++    const size_t group[4]={0,1,0,1};
++    uint32_t sums[4]{};
++    exact::quantized_squared_distances4(cache,group,prepared,sums);
++    require(sums[0]==528515072u && sums[1]==0 && sums[2]==528515072u && sums[3]==0);
+   }
+   {
+     auto cache=make_cache({{1,0},{1,0x1p-26f},{0,0}});

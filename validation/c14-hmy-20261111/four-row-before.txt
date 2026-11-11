@@ -1,0 +1,16 @@
+[ 75%] Built target mvdb
+[ 87%] Building CXX object CMakeFiles/test_exact_cache.dir/tests/test_exact_cache.cpp.o
+/mnt/f/OceanBase/seekdb/minivectordb-hmy-c14-20261111/tests/test_exact_cache.cpp: In function ‘void test_quantized_screen()’:
+/mnt/f/OceanBase/seekdb/minivectordb-hmy-c14-20261111/tests/test_exact_cache.cpp:223:14: error: ‘quantized_squared_distances4’ is not a member of ‘mvdb::exact’; did you mean ‘quantized_squared_distance’?
+  223 |       exact::quantized_squared_distances4(cache,group.data(),prepared,sums);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |              quantized_squared_distance
+/mnt/f/OceanBase/seekdb/minivectordb-hmy-c14-20261111/tests/test_exact_cache.cpp:270:12: error: ‘quantized_squared_distances4’ is not a member of ‘mvdb::exact’; did you mean ‘quantized_squared_distance’?
+  270 |     exact::quantized_squared_distances4(cache,group,prepared,sums);
+      |            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |            quantized_squared_distance
+gmake[3]: *** [CMakeFiles/test_exact_cache.dir/build.make:76: CMakeFiles/test_exact_cache.dir/tests/test_exact_cache.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:307: CMakeFiles/test_exact_cache.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:314: CMakeFiles/test_exact_cache.dir/rule] Error 2
+gmake: *** [Makefile:238: test_exact_cache] Error 2
+exit=2

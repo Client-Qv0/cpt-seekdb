@@ -1,0 +1,85 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 DONE 0.0s
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.13kB 0.1s done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#2 DONE 3.5s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 94B 0.1s done
+#3 DONE 0.1s
+
+#4 [internal] load build context
+#4 DONE 0.0s
+
+#5 [certs 1/2] FROM docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#5 resolve docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+#5 resolve docker.io/library/ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 0.0s done
+#5 DONE 0.0s
+
+#4 [internal] load build context
+#4 transferring context: 69.41kB 0.1s done
+#4 DONE 0.2s
+
+#6 [builder 3/7] RUN rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\n'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-updates main'       'deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261109T000000Z noble-security main'       > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --no-install-recommends g++=4:13.2.0-7ubuntu1 cmake=3.28.3-1build7 make=4.3-4.1build2     && rm -rf /var/lib/apt/lists/*
+#6 CACHED
+
+#7 [builder 4/7] WORKDIR /src
+#7 CACHED
+
+#8 [certs 2/2] RUN rm -f /etc/apt/sources.list.d/ubuntu.sources     && printf '%s\n' 'deb http://archive.ubuntu.com/ubuntu noble main' > /etc/apt/sources.list     && apt-get update -o APT::Update::Error-Mode=any     && apt-get install -y --allow-downgrades --no-install-recommends ca-certificates=20240203 openssl=3.0.13-0ubuntu3 libssl3t64=3.0.13-0ubuntu3     && printf '%s  %s\n' 6d84ab71cb726c0641b0af84303c316e3fa50db941dc8507d09045eb2fa5d238 /etc/ssl/certs/ca-certificates.crt | sha256sum -c -
+#8 CACHED
+
+#9 [builder 2/7] COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+#9 CACHED
+
+#10 [builder 5/7] COPY CMakeLists.txt ./
+#10 CACHED
+
+#11 [builder 6/7] COPY src/ src/
+#11 DONE 0.0s
+
+#12 [builder 7/7] RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release     && cmake --build build --parallel 2
+#12 0.338 -- The CXX compiler identification is GNU 13.3.0
+#12 0.356 -- Detecting CXX compiler ABI info
+#12 0.469 -- Detecting CXX compiler ABI info - done
+#12 0.478 -- Check for working CXX compiler: /usr/bin/c++ - skipped
+#12 0.479 -- Detecting CXX compile features
+#12 0.479 -- Detecting CXX compile features - done
+#12 0.480 -- Configuring done (0.2s)
+#12 0.485 -- Generating done (0.0s)
+#12 0.486 -- Build files have been written to: /src/build
+#12 0.531 [ 12%] Building CXX object CMakeFiles/mvdb.dir/src/storage.cpp.o
+#12 0.532 [ 25%] Building CXX object CMakeFiles/mvdb.dir/src/sql.cpp.o
+#12 3.237 [ 37%] Building CXX object CMakeFiles/mvdb.dir/src/engine.cpp.o
+#12 3.641 [ 50%] Building CXX object CMakeFiles/mvdb.dir/src/spill.cpp.o
+#12 6.026 [ 62%] Building CXX object CMakeFiles/mvdb.dir/src/protocol.cpp.o
+#12 11.56 [ 75%] Linking CXX static library libmvdb.a
+#12 11.60 [ 75%] Built target mvdb
+#12 11.64 [ 87%] Building CXX object CMakeFiles/minivectordb.dir/src/main.cpp.o
+#12 12.55 [100%] Linking CXX executable minivectordb
+#12 12.65 [100%] Built target minivectordb
+#12 DONE 12.7s
+
+#13 [stage-2 2/3] RUN test "$(dpkg-query -W -f='${Version}' libstdc++6)" = '14.2.0-4ubuntu2~24.04.1'
+#13 CACHED
+
+#14 [stage-2 3/3] COPY --from=builder /src/build/minivectordb /app/minivectordb
+#14 DONE 0.1s
+
+#15 exporting to image
+#15 exporting layers 0.1s done
+#15 exporting manifest sha256:cf00839d6312d41ea2e36f76577cef47aa9a9ecfc570704ac5a338b354a4a3eb 0.0s done
+#15 exporting config sha256:d468fb7b8d51a50449f5712ee4eb1725fa17258159796794e21802a9bf99c12a 0.0s done
+#15 exporting attestation manifest sha256:80268a58acb9c1811c33f6359c3af205aef762ee0b41c23ffd6d3fc8b96ff3ef 0.0s done
+#15 exporting manifest list sha256:e5213825ffa58166ae9eed4fe2d14d9797b1ca0c2337ccdf162b012760a81346 0.0s done
+#15 naming to docker.io/library/codex-hmy-c14-four:20261111
+#15 naming to docker.io/library/codex-hmy-c14-four:20261111 done
+#15 unpacking to docker.io/library/codex-hmy-c14-four:20261111 0.0s done
+#15 DONE 0.3s
+exit=0

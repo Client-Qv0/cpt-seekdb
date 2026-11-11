@@ -198,10 +198,24 @@ std::vector<float> vector_literal(const Literal &l, uint32_t dim) {
         if (p == e)
           throw Error("TYPE", "invalid exponent");
       }
-      auto token = s.substr(start, p - start);
-      char *end = nullptr;
-      float f = std::strtof(token.c_str(), &end);
-      if (end != token.c_str() + token.size() || !std::isfinite(f))
+      const char *begin = s.data() + start;
+      const char *last = s.data() + p;
+      // Floating from_chars does not accept a leading '+'. The unchanged
+      // scanner above has already validated the complete decimal token.
+      if (*begin == '+')
+        ++begin;
+      float f = 0;
+      const auto parsed = std::from_chars(begin, last, f, std::chars_format::general);
+      if (parsed.ec != std::errc() || parsed.ptr != last) {
+        // Preserve strtof's existing acceptance and rounding of finite
+        // underflows (including signed zero), and its overflow diagnostics.
+        auto token = s.substr(start, p - start);
+        char *end = nullptr;
+        f = std::strtof(token.c_str(), &end);
+        if (end != token.c_str() + token.size())
+          throw Error("TYPE", "vector component overflows finite float32");
+      }
+      if (!std::isfinite(f))
         throw Error("TYPE", "vector component overflows finite float32");
       v.push_back(f);
       if (v.size() > dim)
@@ -759,13 +773,57 @@ Result Engine::execute_statement(const Statement &st) {
       }
       if (cache_->exact_view) {
         auto &view = *cache_->exact_view;
+        const bool screen=exact::fp32_screen_available(view.dim);
+        auto quantized=exact::prepare_quantized_query(view,projection.query,screen);
         if (fs.empty()) {
+          double screened_worst=-1,screen_threshold=0;
           size_t i = 0;
-          for (; i + 8 <= view.count; i += 8) {
-            double distances[8];
-            exact::distances8_contiguous(view, i, projection.query, distances);
-            for (size_t lane = 0; lane < 8; ++lane)
-              consider(view.keys[i + lane], distances[lane]);
+          for (; i + 8 <= view.count;) {
+            size_t batch_count=8;
+            if (screen && nearest.size() == *st.limit) {
+              if (i + 32 <= view.count) batch_count=32;
+              const double worst=nearest.top().distance;
+              if (worst != screened_worst) {
+                screen_threshold=quantized.codes ?
+                    exact::quantized_threshold(worst,view.quantized_step,quantized.root_dim_upper) :
+                    exact::fp32_screen_threshold(worst,view.dim);
+                screened_worst=worst;
+              }
+              uint32_t survivors=0;
+              if(quantized.codes) {
+                for(size_t lane=0;lane<batch_count;++lane)
+                  if(!(double(exact::quantized_squared_distance(view,i+lane,quantized))>screen_threshold))
+                    survivors|=uint32_t(1)<<lane;
+              } else {
+                float approximate[32];
+                if (batch_count==32)
+                  exact::squared_distances32_fp32_contiguous(view,i,projection.query,approximate);
+                else
+                  exact::squared_distances8_fp32_contiguous(view,i,projection.query,approximate);
+                for (size_t lane=0;lane<batch_count;++lane)
+                  if (!exact::fp32_screen_reject(approximate[lane],screen_threshold))
+                    survivors|=uint32_t(1)<<lane;
+              }
+              const uint32_t all=batch_count==32 ? uint32_t(0xffffffffu) : uint32_t(0xffu);
+              if (survivors != all) {
+                for (size_t lane=0;lane<batch_count;++lane)
+                  if (survivors&(uint32_t(1)<<lane))
+                    consider(view.keys[i+lane],view.distance(i+lane,projection.query));
+                // A threshold captured before this batch is conservative even
+                // if refinement improves the heap; refresh it for the next batch.
+                i+=batch_count;
+                continue;
+              }
+            }
+            // Heap initialization, unsupported FP modes, and all-surviving
+            // batches retain the original eight-record double computation.
+            for (size_t offset=0;offset<batch_count;offset+=8) {
+              double distances[8];
+              exact::distances8_contiguous(view, i+offset, projection.query, distances);
+              for (size_t lane = 0; lane < 8; ++lane)
+                consider(view.keys[i + offset + lane], distances[lane]);
+            }
+            i+=batch_count;
           }
           if (i + 4 <= view.count) {
             const size_t rows[4] = {i, i + 1, i + 2, i + 3};
@@ -778,17 +836,48 @@ Result Engine::execute_statement(const Statement &st) {
           for (; i < view.count; ++i)
             consider(view.keys[i], view.distance(i, projection.query));
         } else {
-          size_t pending[8], pending_count = 0;
+          double screened_worst=-1,screen_threshold=0;
+          size_t pending[32], pending_count = 0;
           auto flush = [&] {
-            double distances[8];
-            exact::distances8(view, pending, projection.query, distances);
-            for (size_t lane = 0; lane < 8; ++lane)
-              consider(view.keys[pending[lane]], distances[lane]);
+            if (screen && nearest.size() == *st.limit) {
+              const double worst=nearest.top().distance;
+              if (worst != screened_worst) {
+                screen_threshold=quantized.codes ?
+                    exact::quantized_threshold(worst,view.quantized_step,quantized.root_dim_upper) :
+                    exact::fp32_screen_threshold(worst,view.dim);
+                screened_worst=worst;
+              }
+              uint32_t survivors=0;
+              if(quantized.codes) {
+                for(size_t lane=0;lane<32;++lane)
+                  if(!(double(exact::quantized_squared_distance(view,pending[lane],quantized))>screen_threshold))
+                    survivors|=uint32_t(1)<<lane;
+              } else {
+                float approximate[32];
+                exact::squared_distances32_fp32(view,pending,projection.query,approximate);
+                for (size_t lane=0;lane<32;++lane)
+                  if (!exact::fp32_screen_reject(approximate[lane],screen_threshold))
+                    survivors|=uint32_t(1)<<lane;
+              }
+              if (survivors != uint32_t(0xffffffffu)) {
+                for (size_t lane=0;lane<32;++lane)
+                  if (survivors&(uint32_t(1)<<lane))
+                    consider(view.keys[pending[lane]],view.distance(pending[lane],projection.query));
+                pending_count=0;
+                return;
+              }
+            }
+            for (size_t offset=0;offset<32;offset+=8) {
+              double distances[8];
+              exact::distances8(view, pending+offset, projection.query, distances);
+              for (size_t lane = 0; lane < 8; ++lane)
+                consider(view.keys[pending[offset+lane]], distances[lane]);
+            }
             pending_count = 0;
           };
           auto enqueue = [&](size_t i) {
             pending[pending_count++] = i;
-            if (pending_count == 8) flush();
+            if (pending_count == 32) flush();
           };
           auto eligible = [&](size_t i, const Filter* satisfied) {
             for (const auto &f : fs) {
@@ -823,12 +912,18 @@ Result Engine::execute_statement(const Statement &st) {
               if (eligible(i, nullptr)) enqueue(i);
           }
           size_t tail = 0;
-          if (pending_count >= 4) {
+          for (;tail+8<=pending_count;tail+=8) {
+            double distances[8];
+            exact::distances8(view, pending+tail, projection.query, distances);
+            for (size_t lane=0;lane<8;++lane)
+              consider(view.keys[pending[tail+lane]],distances[lane]);
+          }
+          if (tail+4<=pending_count) {
             double distances[4];
-            exact::distances4(view, pending, projection.query, distances);
+            exact::distances4(view, pending+tail, projection.query, distances);
             for (size_t lane = 0; lane < 4; ++lane)
-              consider(view.keys[pending[lane]], distances[lane]);
-            tail = 4;
+              consider(view.keys[pending[tail+lane]], distances[lane]);
+            tail += 4;
           }
           for (size_t lane = tail; lane < pending_count; ++lane)
             consider(view.keys[pending[lane]], view.distance(pending[lane], projection.query));
@@ -858,6 +953,7 @@ Result Engine::execute_statement(const Statement &st) {
             });
             if (count != plan.count)
               throw Error("CORRUPTION", "exact cache row count changed");
+            view->prepare_quantized_codes();
             cache_->exact_view = std::move(view); // publish only after full fill
           } else {
             cache_->exact_bypass = true;
