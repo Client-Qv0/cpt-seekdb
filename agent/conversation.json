@@ -1,4 +1,28 @@
 {
+  "cache_amortization_li_20261111": {
+    "source": "actual user responses, tool results, and agent decision; no inferred student explanation",
+    "before": {
+      "source": "user",
+      "content": "不确定，先测"
+    },
+    "short_batch": {
+      "source": "tool_result_summary",
+      "content": "1次 -69.50%（1/6 更快，A/A 最大 458.51%）; 5次 -32.28%（2/6 更快，A/A 最大 329.32%）; 10次 -8.16%（2/6 更快，A/A 最大 259.80%）; 20次 +9.71%（5/6 更快，A/A 最大 183.07%）; 100次 +30.46%（6/6 更快，A/A 最大 58.42%）；未确认稳定回本点。"
+    },
+    "after_short": {
+      "source": "user",
+      "content": "你做决定，在做出决定前须经过独立思考"
+    },
+    "write_read": {
+      "source": "tool_result_summary",
+      "content": "每5查更新一次：查询 -28.34%（0/6 更快，A/A 最大 6.74%）、更新 +42.29%（6/6 更快，A/A 最大 26.58%）、合计 -17.74%（1/6 更快，A/A 最大 8.68%）; 每20查更新一次：查询 +9.70%（5/6 更快，A/A 最大 20.14%）、更新 +51.14%（6/6 更快，A/A 最大 22.83%）、合计 +12.12%（5/6 更快，A/A 最大 20.25%）。7200条查询独立核验通过。"
+    },
+    "decision": {
+      "source": "agent",
+      "content": "本轮最早稳定回本采样点：无法确认。每 5 查写一次：基线在这个实测写读条件下稳定更快；每 20 查写一次：无法确认哪版稳定更快。保留已经验证的长读批次结论；不根据本轮未跨过校准噪声的观察设置查询次数切换规则。"
+    },
+    "scope": "无用户技术解释或复盘记录；无正式评分。上次无有效原始分的原因未确认。"
+  },
   "exact_scan_li_20261110": {
     "recorded_client_date": "2026-11-11",
     "source": "actual user decisions, agent implementation, and measured tool results; not proof of student technical understanding",

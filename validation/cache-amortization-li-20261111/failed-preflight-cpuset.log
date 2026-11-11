@@ -1,0 +1,12 @@
+start 0-aa-1-left
+Traceback (most recent call last):
+  File "/home/li/minivectordb-exact-scan-20261110/validation/cache-amortization-li-20261111/experiment.py", line 115, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/home/li/minivectordb-exact-scan-20261110/validation/cache-amortization-li-20261111/experiment.py", line 105, in main
+    r=run(dest/name,data/name,ident[tag]['image'],w,modified,k)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/li/minivectordb-exact-scan-20261110/validation/cache-amortization-li-20261111/experiment.py", line 52, in run
+    assert s.snapshots[0]['files']['cpuset.cpus.effective']=='0-1'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
