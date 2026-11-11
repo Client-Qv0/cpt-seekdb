@@ -1,0 +1,60 @@
+{
+  "frozen_sha256": "2bf78d1307197b23f08e02f842594e0d8c271b706cd9ac8c303673db0b5bf5ed",
+  "frozen_source": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c4-gather-20261111/baseline/validation/perf-20261110-stdio/scripts/bench.py",
+  "adapter_sha256": "957be1db1ba19565aa5e37935f7394b17a65948706f9fdbe6b1320395837ee81",
+  "adapted_sha256": "936c331fedb19e4ba08b1cf75333e82fc3ce0b06c7f2386749ed07300c70a0e8",
+  "substitutions": [
+    {
+      "before": "ROOT=pathlib.Path(__file__).resolve().parents[1]",
+      "after": "ROOT=pathlib.Path('/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c4-gather-20261111/holdout')"
+    },
+    {
+      "before": "ENV=dict(os.environ,DOCKER_HOST='unix:///var/tmp/minivectordb-perf-20261110/docker.sock')",
+      "after": "ENV=dict(os.environ)"
+    },
+    {
+      "before": "pathlib.Path('/var/tmp/minivectordb-perf-20261110/data')",
+      "after": "pathlib.Path('/var/tmp/minivectordb-c4-20261111/holdout-data')"
+    }
+  ],
+  "docker_host": "unix:///var/tmp/minivectordb-c3-20261111/docker.sock",
+  "docker_context": null,
+  "output_root": "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c4-gather-20261111/holdout",
+  "data_root": "/var/tmp/minivectordb-c4-20261111/holdout-data",
+  "images": {
+    "A": {
+      "requested": "sha256:4dcb69128fbea4448e1dc4b0b37c5412ce788290a4fa410b1d976c1fc002de74",
+      "id": "sha256:4dcb69128fbea4448e1dc4b0b37c5412ce788290a4fa410b1d976c1fc002de74",
+      "architecture": "amd64"
+    },
+    "B": {
+      "requested": "sha256:a5e3467190512cd8cfcd263b5f1431bec4e7c9a1921047afe5e2bad6578be788",
+      "id": "sha256:a5e3467190512cd8cfcd263b5f1431bec4e7c9a1921047afe5e2bad6578be788",
+      "architecture": "amd64"
+    }
+  },
+  "command": [
+    "/var/tmp/minivectordb-paired-venv/bin/python",
+    "/mnt/c/Users/sunyilun/Documents/Codex/2026-10-26/https-open-oceanbase-com-train-detail/work/minivectordb-c4-gather-20261111/holdout/tool/bench.adapted.py",
+    "--images",
+    "A=sha256:4dcb69128fbea4448e1dc4b0b37c5412ce788290a4fa410b1d976c1fc002de74",
+    "B=sha256:a5e3467190512cd8cfcd263b5f1431bec4e7c9a1921047afe5e2bad6578be788",
+    "--seeds",
+    "66007",
+    "66029",
+    "66041",
+    "--rows",
+    "10000",
+    "--dim",
+    "128",
+    "--queries",
+    "1000",
+    "--prefix",
+    "c4holdout"
+  ],
+  "preflight_only": false,
+  "limits_unchanged": true,
+  "oracle_and_timers_unchanged": true,
+  "benchmark_scope": "Local comparison only, not official scorer or result guarantee",
+  "exit_code": 0
+}

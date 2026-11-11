@@ -1,0 +1,17 @@
+[
+  "docker",
+  "run",
+  "--rm",
+  "--network",
+  "none",
+  "--mount",
+  "type=bind,src=/var/tmp/minivectordb-c4-20261111,dst=/c4",
+  "minivectordb:c4-builder",
+  "g++",
+  "-std=c++17",
+  "-O3",
+  "-I/c4/candidate-source/src",
+  "/c4/cpu_dispatch.cpp",
+  "-o",
+  "/c4/cpu_dispatch"
+]

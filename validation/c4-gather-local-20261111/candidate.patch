@@ -1,0 +1,78 @@
+--- a/src/exact_cache.hpp
++++ b/src/exact_cache.hpp
+@@ -132,12 +132,16 @@
+   const bool contiguous=rows[0]%4==0 && rows[1]==rows[0]+1 &&
+       rows[2]==rows[0]+2 && rows[3]==rows[0]+3;
+   const size_t start=cache.index(rows[0]);
+-  const __m128i indices=_mm_set_epi32(int(cache.index(rows[3])),
+-      int(cache.index(rows[2])),int(cache.index(rows[1])),int(start));
++  const size_t second=cache.index(rows[1]), third=cache.index(rows[2]),
++      fourth=cache.index(rows[3]);
+   __m256d sum=_mm256_setzero_pd();
+   for(size_t d=0;d<cache.dim;++d) {
+-    __m128 values=contiguous ? _mm_loadu_ps(cache.vectors.data()+start+d*4) :
+-        _mm_i32gather_ps(cache.vectors.data()+d*4,indices,4);
++    const float* values_at_dimension=cache.vectors.data()+d*4;
++    // Each selected row may belong to a different AoSoA block. Independent
++    // scalar loads avoid AVX2 gather overhead without changing lane order.
++    __m128 values=contiguous ? _mm_loadu_ps(values_at_dimension+start) :
++        _mm_setr_ps(values_at_dimension[start], values_at_dimension[second],
++                    values_at_dimension[third], values_at_dimension[fourth]);
+     __m256d delta=_mm256_sub_pd(_mm256_cvtps_pd(values),
+                               _mm256_set1_pd(double(q[d])));
+     __m256d square=_mm256_mul_pd(delta,delta);
+--- a/tests/test_exact_cache.cpp
++++ b/tests/test_exact_cache.cpp
+@@ -5,6 +5,7 @@
+ #include <iostream>
+ #include <limits>
+ #include <stdexcept>
++#include <random>
+ using namespace mvdb;
+ void require(bool ok) { if(!ok) throw std::runtime_error("exact cache check failed"); }
+ int main() {
+@@ -61,6 +62,44 @@
+       }
+     }
+   }
++  // C4: arbitrary lanes, block-crossing adjacent rows and every tail length.
++  // Compare doubles bit-for-bit with ordered scalar accumulation, not tolerance.
++  std::mt19937 random(41873);
++  for(size_t dim: {size_t(1),size_t(2),size_t(3),size_t(4),size_t(5),
++      size_t(7),size_t(31),size_t(32),size_t(33),size_t(127),size_t(128),
++      size_t(129),size_t(255)}) {
++    exact::Plan plan({Type::BigInt,Type::Vector},1,dim);
++    std::vector<std::vector<Cell>> values;
++    for(size_t i=0;i<37;++i) {
++      std::vector<float> vector(dim);
++      for(auto &x:vector)x=float(int(random()%200001)-100000)/131.0f;
++      values.push_back({int64_t(i),std::move(vector)});plan.observe(values.back());
++    }
++    exact::Compact cache(plan);
++    for(size_t i=0;i<values.size();++i)cache.fill(i,int64_t(i),values[i]);
++    for(size_t iteration=0;iteration<100;++iteration) {
++      std::vector<float> q(dim);
++      for(auto &x:q)x=float(int(random()%200001)-100000)/73.0f;
++      std::vector<std::array<size_t,4>> groups{{0,1,2,3},{1,2,3,4},{3,4,7,8},
++        {0,5,10,15},{1,6,11,16},{36,0,35,17},{36,36,0,0}};
++      for(size_t k=0;k<8;++k)groups.push_back({random()%37,random()%37,random()%37,random()%37});
++      for(const auto& ids:groups) {
++        double output[4];exact::distances4(cache,ids.data(),q,output);
++        for(size_t lane=0;lane<4;++lane) {
++          double scalar=cache.distance(ids[lane],q);
++          require(std::memcmp(&scalar,output+lane,sizeof(double))==0);
++        }
++      }
++      for(size_t tail=1;tail<=3;++tail)
++        for(size_t lane=0;lane<tail;++lane) {
++          auto row=37-tail+lane;double expected=0;
++          auto& vector=std::get<std::vector<float>>(values[row][1]);
++          for(size_t d=0;d<dim;++d){double x=double(vector[d])-double(q[d]);expected+=x*x;}
++          expected=std::sqrt(expected);double actual=cache.distance(row,q);
++          require(std::memcmp(&expected,&actual,sizeof(double))==0);
++        }
++    }
++  }
+   exact::Plan overflow({Type::BigInt,Type::Vector},1,128);
+   std::vector<Cell> row{int64_t(0),std::vector<float>(128)};
+   for(int i=0;i<32000;++i) overflow.observe(row);

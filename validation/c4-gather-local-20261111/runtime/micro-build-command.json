@@ -1,0 +1,18 @@
+[
+  "run",
+  "--rm",
+  "--network",
+  "none",
+  "--mount",
+  "type=bind,src=/var/tmp/minivectordb-c4-20261111,dst=/c4",
+  "minivectordb:c4-builder",
+  "g++",
+  "-std=c++17",
+  "-O3",
+  "-DNDEBUG",
+  "-ffp-contract=off",
+  "-I/c4/baseline-source/src",
+  "/c4/micro.cpp",
+  "-o",
+  "/c4/micro"
+]

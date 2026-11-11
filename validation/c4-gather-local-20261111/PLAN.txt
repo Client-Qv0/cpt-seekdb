@@ -1,0 +1,30 @@
+C4 predeclared plan — 2026-11-11 (Asia/Shanghai)
+
+Frozen production: 87c2778ed0688e6e56152baf02bc4f4355667458.
+Shared branch stays untouched. Material a791ff is independently traceable and not a performance change.
+Run only local WSL experiments, never claim the inaccessible teammate server was used.
+
+First diagnose whole filter passes and whole four-lane distance batches; no per-row clocks.
+Compare frozen AVX2 gather to a diagnostic four scalar FP32 loads assembled into __m128.
+Contiguous aligned blocks keep _mm_loadu_ps. Corroborate microbench with actual JSONL end-to-end workload.
+Select at most this one C4 after evidence. No index, cache budget/invalidation, C3 output, parser or WAL changes.
+Retain per-dimension double order, separate multiply/add (no FMA), sqrt, primary-key tie breaks,
+12MiB budget and scalar/no-AVX2 fallback. No data/seed/label-specific implementation.
+
+A/A first: six alternating baseline pairs, median absolute relative query difference <=3%, max <=10%.
+At most one complete retry, retain both batches. If still unstable, stop performance claims.
+Main six pairs: 10000x128 / 1000 Top10 queries; seeds 3179/3181/3187 twice.
+Query paired median reduction >=5%, > A/A max absolute difference, >=5/6 wins.
+Holdout three pairs: seeds 66007/66029/66041, first use in this C4 round; median >=5%, >=2/3 wins.
+Filtered and unfiltered separately; median regression <=5% for each, writes, overflow queries.
+Overflow three pairs: 32000x128 / 100 queries, seeds 3179/3181/3187.
+Restart ready median regression <=10%; no OOM; no new resident cache structures.
+Same pinned Release configuration, 2CPU (0,1), 128MiB, zero swap, separate data directories,
+default JSONL entrypoint, full output consumption, independent oracle outside timers/cgroup.
+
+Before retention: differing dimensions, multiple L2 projections, filters/ties/updates/transactions,
+cold build/overflow; arbitrary four-lane indices, AoSoA block crossing, nonmultiples of four,
+tails 1-3, bitwise scalar distance agreement, no-FMA assembly inspection.
+Retained production candidate must pass applicable full Release/sanitizer/public original driver,
+default-entrypoint SIGKILL recovery and 128MiB resource regression. Report all skips honestly.
+Negative result: retain evidence, no production candidate and no formal submission.

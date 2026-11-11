@@ -1,0 +1,190 @@
+{
+  "aligned": {
+    "median_reduction": -0.01549479408034976,
+    "wins": 3,
+    "rounds": [
+      {
+        "round": 1,
+        "case": "aligned",
+        "gather_seconds": 0.032145913,
+        "loads_seconds": 0.031699521,
+        "groups": 2500,
+        "repeats": 200,
+        "checksum": 3352069.144020504
+      },
+      {
+        "round": 2,
+        "case": "aligned",
+        "gather_seconds": 0.030435203,
+        "loads_seconds": 0.033094778,
+        "groups": 2500,
+        "repeats": 200,
+        "checksum": 3352069.144020504
+      },
+      {
+        "round": 3,
+        "case": "aligned",
+        "gather_seconds": 0.031107576,
+        "loads_seconds": 0.030826482,
+        "groups": 2500,
+        "repeats": 200,
+        "checksum": 3352069.144020504
+      },
+      {
+        "round": 4,
+        "case": "aligned",
+        "gather_seconds": 0.03031124,
+        "loads_seconds": 0.031524471,
+        "groups": 2500,
+        "repeats": 200,
+        "checksum": 3352069.144020504
+      },
+      {
+        "round": 5,
+        "case": "aligned",
+        "gather_seconds": 0.031331487,
+        "loads_seconds": 0.030492596,
+        "groups": 2500,
+        "repeats": 200,
+        "checksum": 3352069.144020504
+      },
+      {
+        "round": 6,
+        "case": "aligned",
+        "gather_seconds": 0.031620101,
+        "loads_seconds": 0.032999731,
+        "groups": 2500,
+        "repeats": 200,
+        "checksum": 3352069.144020504
+      }
+    ]
+  },
+  "stride5": {
+    "median_reduction": 0.6051721398165453,
+    "wins": 6,
+    "rounds": [
+      {
+        "round": 1,
+        "case": "stride5",
+        "gather_seconds": 0.038072901,
+        "loads_seconds": 0.014752466,
+        "groups": 500,
+        "repeats": 200,
+        "checksum": 670723.1287217094
+      },
+      {
+        "round": 2,
+        "case": "stride5",
+        "gather_seconds": 0.038577099,
+        "loads_seconds": 0.015234573,
+        "groups": 500,
+        "repeats": 200,
+        "checksum": 670723.1287217094
+      },
+      {
+        "round": 3,
+        "case": "stride5",
+        "gather_seconds": 0.038241653,
+        "loads_seconds": 0.015635194,
+        "groups": 500,
+        "repeats": 200,
+        "checksum": 670723.1287217094
+      },
+      {
+        "round": 4,
+        "case": "stride5",
+        "gather_seconds": 0.03876848,
+        "loads_seconds": 0.015025206,
+        "groups": 500,
+        "repeats": 200,
+        "checksum": 670723.1287217094
+      },
+      {
+        "round": 5,
+        "case": "stride5",
+        "gather_seconds": 0.03797346,
+        "loads_seconds": 0.015667349,
+        "groups": 500,
+        "repeats": 200,
+        "checksum": 670723.1287217094
+      },
+      {
+        "round": 6,
+        "case": "stride5",
+        "gather_seconds": 0.038366451,
+        "loads_seconds": 0.015144902,
+        "groups": 500,
+        "repeats": 200,
+        "checksum": 670723.1287217094
+      }
+    ]
+  },
+  "random": {
+    "median_reduction": 0.6228324539949642,
+    "wins": 6,
+    "rounds": [
+      {
+        "round": 1,
+        "case": "random",
+        "gather_seconds": 0.038444783,
+        "loads_seconds": 0.013981294,
+        "groups": 500,
+        "repeats": 200,
+        "checksum": 670143.0806703416
+      },
+      {
+        "round": 2,
+        "case": "random",
+        "gather_seconds": 0.037728771,
+        "loads_seconds": 0.014491045,
+        "groups": 500,
+        "repeats": 200,
+        "checksum": 670143.0806703416
+      },
+      {
+        "round": 3,
+        "case": "random",
+        "gather_seconds": 0.038448631,
+        "loads_seconds": 0.014436803,
+        "groups": 500,
+        "repeats": 200,
+        "checksum": 670143.0806703416
+      },
+      {
+        "round": 4,
+        "case": "random",
+        "gather_seconds": 0.038436607,
+        "loads_seconds": 0.014585981,
+        "groups": 500,
+        "repeats": 200,
+        "checksum": 670143.0806703416
+      },
+      {
+        "round": 5,
+        "case": "random",
+        "gather_seconds": 0.038572253,
+        "loads_seconds": 0.013974807,
+        "groups": 500,
+        "repeats": 200,
+        "checksum": 670143.0806703416
+      },
+      {
+        "round": 6,
+        "case": "random",
+        "gather_seconds": 0.037815298,
+        "loads_seconds": 0.014326409,
+        "groups": 500,
+        "repeats": 200,
+        "checksum": 670143.0806703416
+      }
+    ]
+  },
+  "filter_only_median_seconds_per_full_pass": 2.0307035e-05,
+  "scope": "whole-phase microbenchmark only; 200 repetitions per distance case, 1000 filter passes; not end-to-end SQL gain",
+  "micro_assembly": {
+    "loads_has_gather": false,
+    "baseline_has_gather": true,
+    "FMA_in_both": false,
+    "loads_has_separate_mul_add_sqrt": true
+  }
+}

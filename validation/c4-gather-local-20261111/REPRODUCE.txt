@@ -1,0 +1,16 @@
+Reproduction of a REJECTED C4 experiment; no production change.
+Use a new evidence directory, Linux x86_64 AVX2 + cgroupv2 Docker, CPU0/1 available.
+Fetch frozen commit87c2778ed0688e6e56152baf02bc4f4355667458 into an isolated checkout.
+Extract exactly the88 files listed in inputs/source-manifest.json into R/baseline and verify hashes.
+Preserve the prior evidence; do not point output paths at the existing directories here.
+Build baseline with its unchanged Dockerfile (networkhost only for package build); binary must match b2501504...ee67.
+Build Docker builder target with same source; prepare an isolated NumPy venv for the frozen portable benchmark.
+These scripts record this host's exact paths and Docker socket; when adapting those paths, preserve original scripts and record hashes of adapted copies. Never start a second daemon against an occupied data-root.
+diagnose_and_aa.py: whole-phase microbench and six A/A pairs; prepare_candidate.py: exact isolated patch; build_candidate.py: sameRelease image and seven unit tests.
+run_checks.py retains the first native formal failure on Windows /mnt/c; checks_ext4.py shows the minimal filesystem reproduction and successful unchanged tests on Linux data. For a freshLinux-only reproduction skip theWindows-specificdiagnosis but explicitly record it as not applicable.
+tests/sql_lane_edges.py must use a fresh Linux output directory because it places persistent data beneath it.
+run_pairs.py executes main/holdout/overflow serially and stops with code2 if a gate fails. It must not proceed to full_regression.py after a stop. Each benchmark's tool/bench.frozen.py, adaptedtool and adapter-manifest preserve the exact benchmark implementation.
+The overflow regression, not a database crash, triggered this experiment's stop. No sanitizer or originalofficial public cases were run for C4 after rejection.
+candidate.patch and rejected-candidate/ are experimental records only. Do not apply them to the accepted production branch.
+Large raw request/stdout traces, workload arrays, executables, complete assembly and native test data are retained locally, listed by hashes inARTIFACTS.json; not all are included inGit. Repeat experiments generate new evidence.
+Raw memory andIO counters are retained. No RSS substitution, file-size physicalIO estimate or officialscore prediction is made.

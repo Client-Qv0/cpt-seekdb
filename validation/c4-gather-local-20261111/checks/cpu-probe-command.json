@@ -1,0 +1,14 @@
+[
+  "docker",
+  "run",
+  "--rm",
+  "--network",
+  "none",
+  "--read-only",
+  "--cpuset-cpus",
+  "0,1",
+  "--mount",
+  "type=bind,src=/var/tmp/minivectordb-c4-20261111,dst=/c4",
+  "minivectordb:c4-builder",
+  "/c4/cpu_dispatch"
+]

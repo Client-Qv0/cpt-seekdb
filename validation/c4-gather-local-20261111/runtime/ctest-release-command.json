@@ -1,0 +1,14 @@
+[
+  "docker",
+  "run",
+  "--rm",
+  "--network",
+  "none",
+  "--mount",
+  "type=bind,src=/var/tmp/minivectordb-c4-20261111,dst=/c4",
+  "minivectordb:c4-builder",
+  "ctest",
+  "--test-dir",
+  "/c4/release-tests",
+  "--output-on-failure"
+]

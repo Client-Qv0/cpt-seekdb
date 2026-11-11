@@ -1,0 +1,15 @@
+[
+  "docker",
+  "run",
+  "--rm",
+  "--network",
+  "none",
+  "--mount",
+  "type=bind,src=/var/tmp/minivectordb-c4-20261111,dst=/c4",
+  "minivectordb:c4-builder",
+  "cmake",
+  "--build",
+  "/c4/release-tests",
+  "--parallel",
+  "2"
+]

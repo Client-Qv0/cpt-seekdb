@@ -1,0 +1,2449 @@
+{
+  "records": [
+    {
+      "phase": "aa1",
+      "pair": "c4aa1-1-seed3179",
+      "label": "A",
+      "times": {
+        "write_s": 0.6837231559998145,
+        "first_query_s": 0.011998945000414096,
+        "query_s": 0.54778133600621,
+        "filtered_query_s": 0.3005485670028065,
+        "unfiltered_query_s": 0.24723276900340352,
+        "restart_ready_s": 0.4881187599999066,
+        "restart_query_s": 0.01053614500006006
+      },
+      "checks": 1012,
+      "max_distance_error": 7.105427357601002e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 15245312,
+          "max_sampled_anon_bytes": 6987776,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "aa1/results/c4aa1-1-seed3179/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10981376,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "aa1/results/c4aa1-1-seed3179/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "aa1",
+      "pair": "c4aa1-1-seed3179",
+      "label": "B",
+      "times": {
+        "write_s": 0.6752801279990308,
+        "first_query_s": 0.011445068999819341,
+        "query_s": 0.5509073510056623,
+        "filtered_query_s": 0.3011975990048086,
+        "unfiltered_query_s": 0.24970975200085377,
+        "restart_ready_s": 0.49532362699983423,
+        "restart_query_s": 0.010680503999992652
+      },
+      "checks": 1012,
+      "max_distance_error": 7.105427357601002e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14258176,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "aa1/results/c4aa1-1-seed3179/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10747904,
+          "max_sampled_anon_bytes": 6164480,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "aa1/results/c4aa1-1-seed3179/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "aa1",
+      "pair": "c4aa1-2-seed3181",
+      "label": "A",
+      "times": {
+        "write_s": 0.6616970519999086,
+        "first_query_s": 0.011153531000218209,
+        "query_s": 0.5543933189883319,
+        "filtered_query_s": 0.30260534699345953,
+        "unfiltered_query_s": 0.25178797199487235,
+        "restart_ready_s": 0.48257524700011345,
+        "restart_query_s": 0.010691703000247799
+      },
+      "checks": 1012,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14581760,
+          "max_sampled_anon_bytes": 6995968,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "aa1/results/c4aa1-2-seed3181/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10686464,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "aa1/results/c4aa1-2-seed3181/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "aa1",
+      "pair": "c4aa1-2-seed3181",
+      "label": "B",
+      "times": {
+        "write_s": 0.6320880169987504,
+        "first_query_s": 0.01092053999991549,
+        "query_s": 0.5621452959876478,
+        "filtered_query_s": 0.3065973639954791,
+        "unfiltered_query_s": 0.25554793199216874,
+        "restart_ready_s": 0.49019541600000593,
+        "restart_query_s": 0.011517394999827957
+      },
+      "checks": 1012,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14487552,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "aa1/results/c4aa1-2-seed3181/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10113024,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "aa1/results/c4aa1-2-seed3181/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "aa1",
+      "pair": "c4aa1-3-seed3187",
+      "label": "A",
+      "times": {
+        "write_s": 0.6694811050015232,
+        "first_query_s": 0.01212734000000637,
+        "query_s": 0.5727073630027917,
+        "filtered_query_s": 0.3107170470057099,
+        "unfiltered_query_s": 0.2619903159970818,
+        "restart_ready_s": 0.49337837099983517,
+        "restart_query_s": 0.011124705000383983
+      },
+      "checks": 1012,
+      "max_distance_error": 6.217248937900877e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14843904,
+          "max_sampled_anon_bytes": 6987776,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "aa1/results/c4aa1-3-seed3187/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10240000,
+          "max_sampled_anon_bytes": 6156288,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "aa1/results/c4aa1-3-seed3187/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "aa1",
+      "pair": "c4aa1-3-seed3187",
+      "label": "B",
+      "times": {
+        "write_s": 0.6771628420005982,
+        "first_query_s": 0.010927095000170084,
+        "query_s": 0.5658873410075103,
+        "filtered_query_s": 0.3062006210061554,
+        "unfiltered_query_s": 0.25968672000135484,
+        "restart_ready_s": 0.5090587720001167,
+        "restart_query_s": 0.010611541999878682
+      },
+      "checks": 1012,
+      "max_distance_error": 6.217248937900877e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14426112,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "aa1/results/c4aa1-3-seed3187/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10670080,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "aa1/results/c4aa1-3-seed3187/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "aa1",
+      "pair": "c4aa1-4-seed3179",
+      "label": "A",
+      "times": {
+        "write_s": 0.6881996850006544,
+        "first_query_s": 0.011590219000026991,
+        "query_s": 0.5486617569990813,
+        "filtered_query_s": 0.30079910200311133,
+        "unfiltered_query_s": 0.24786265499596993,
+        "restart_ready_s": 0.46862133400009043,
+        "restart_query_s": 0.01017364000017551
+      },
+      "checks": 1012,
+      "max_distance_error": 7.105427357601002e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14626816,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "aa1/results/c4aa1-4-seed3179/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10158080,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "aa1/results/c4aa1-4-seed3179/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "aa1",
+      "pair": "c4aa1-4-seed3179",
+      "label": "B",
+      "times": {
+        "write_s": 0.6522748370002773,
+        "first_query_s": 0.011187779000010778,
+        "query_s": 0.5592056939963186,
+        "filtered_query_s": 0.3056366440000602,
+        "unfiltered_query_s": 0.2535690499962584,
+        "restart_ready_s": 0.4533210270001291,
+        "restart_query_s": 0.011171349000051123
+      },
+      "checks": 1012,
+      "max_distance_error": 7.105427357601002e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14393344,
+          "max_sampled_anon_bytes": 6987776,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "aa1/results/c4aa1-4-seed3179/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10932224,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "aa1/results/c4aa1-4-seed3179/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "aa1",
+      "pair": "c4aa1-5-seed3181",
+      "label": "A",
+      "times": {
+        "write_s": 0.6853594400004113,
+        "first_query_s": 0.01151819799997611,
+        "query_s": 0.5655462919908132,
+        "filtered_query_s": 0.30621647199313884,
+        "unfiltered_query_s": 0.25932981999767435,
+        "restart_ready_s": 0.4740871290000541,
+        "restart_query_s": 0.011452605000158655
+      },
+      "checks": 1012,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14434304,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "aa1/results/c4aa1-5-seed3181/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10428416,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "aa1/results/c4aa1-5-seed3181/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "aa1",
+      "pair": "c4aa1-5-seed3181",
+      "label": "B",
+      "times": {
+        "write_s": 0.6849433830043381,
+        "first_query_s": 0.01100032900012593,
+        "query_s": 0.5719652020075046,
+        "filtered_query_s": 0.3094383500051663,
+        "unfiltered_query_s": 0.2625268520023383,
+        "restart_ready_s": 0.46434963399997287,
+        "restart_query_s": 0.010974617000101716
+      },
+      "checks": 1012,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14667776,
+          "max_sampled_anon_bytes": 6987776,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "aa1/results/c4aa1-5-seed3181/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10498048,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "aa1/results/c4aa1-5-seed3181/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "aa1",
+      "pair": "c4aa1-6-seed3187",
+      "label": "A",
+      "times": {
+        "write_s": 0.6576073449996329,
+        "first_query_s": 0.010904361000029894,
+        "query_s": 0.5796838540036333,
+        "filtered_query_s": 0.31427860800204144,
+        "unfiltered_query_s": 0.2654052460015919,
+        "restart_ready_s": 0.4580447799999092,
+        "restart_query_s": 0.010984323999764456
+      },
+      "checks": 1012,
+      "max_distance_error": 6.217248937900877e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14958592,
+          "max_sampled_anon_bytes": 6995968,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "aa1/results/c4aa1-6-seed3187/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10289152,
+          "max_sampled_anon_bytes": 6156288,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "aa1/results/c4aa1-6-seed3187/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "aa1",
+      "pair": "c4aa1-6-seed3187",
+      "label": "B",
+      "times": {
+        "write_s": 0.6684684310025659,
+        "first_query_s": 0.011444178000147076,
+        "query_s": 0.561905384995498,
+        "filtered_query_s": 0.3073065779999524,
+        "unfiltered_query_s": 0.2545988069955456,
+        "restart_ready_s": 0.49238012999967395,
+        "restart_query_s": 0.01149793900003715
+      },
+      "checks": 1012,
+      "max_distance_error": 6.217248937900877e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14118912,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "aa1/results/c4aa1-6-seed3187/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10887168,
+          "max_sampled_anon_bytes": 6164480,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "aa1/results/c4aa1-6-seed3187/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "main",
+      "pair": "c4main-1-seed3179",
+      "label": "A",
+      "times": {
+        "write_s": 0.6793249779980215,
+        "first_query_s": 0.011457759000222723,
+        "query_s": 0.5486665120020007,
+        "filtered_query_s": 0.3009290420027355,
+        "unfiltered_query_s": 0.24773746999926516,
+        "restart_ready_s": 0.47045182199963165,
+        "restart_query_s": 0.011478236000129982
+      },
+      "checks": 1012,
+      "max_distance_error": 7.105427357601002e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14020608,
+          "max_sampled_anon_bytes": 6987776,
+          "max_sampled_file_bytes": 5783552,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=139264 wbytes=4096 rios=34 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=139264 wbytes=6049792 rios=34 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "main/results/c4main-1-seed3179/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10244096,
+          "max_sampled_anon_bytes": 6164480,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "main/results/c4main-1-seed3179/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "main",
+      "pair": "c4main-1-seed3179",
+      "label": "B",
+      "times": {
+        "write_s": 0.6823880980005015,
+        "first_query_s": 0.012030639999920822,
+        "query_s": 0.5085842780017629,
+        "filtered_query_s": 0.24097152600370464,
+        "unfiltered_query_s": 0.26761275199805823,
+        "restart_ready_s": 0.46851007799978106,
+        "restart_query_s": 0.010624358999848482
+      },
+      "checks": 1012,
+      "max_distance_error": 7.105427357601002e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14725120,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "main/results/c4main-1-seed3179/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10723328,
+          "max_sampled_anon_bytes": 6164480,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "main/results/c4main-1-seed3179/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "main",
+      "pair": "c4main-2-seed3181",
+      "label": "A",
+      "times": {
+        "write_s": 0.6741010799987635,
+        "first_query_s": 0.01091625999970347,
+        "query_s": 0.5454513629929352,
+        "filtered_query_s": 0.2981717129932804,
+        "unfiltered_query_s": 0.2472796499996548,
+        "restart_ready_s": 0.44540296300010596,
+        "restart_query_s": 0.011133894000067812
+      },
+      "checks": 1012,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14958592,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5648384,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=4096 wbytes=6049792 rios=1 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "main/results/c4main-2-seed3181/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10760192,
+          "max_sampled_anon_bytes": 6164480,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "main/results/c4main-2-seed3181/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "main",
+      "pair": "c4main-2-seed3181",
+      "label": "B",
+      "times": {
+        "write_s": 0.6730906169991613,
+        "first_query_s": 0.012203233000036562,
+        "query_s": 0.48617435999403824,
+        "filtered_query_s": 0.22887064399992596,
+        "unfiltered_query_s": 0.2573037159941123,
+        "restart_ready_s": 0.46114822400022604,
+        "restart_query_s": 0.010664851000001363
+      },
+      "checks": 1012,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14635008,
+          "max_sampled_anon_bytes": 6995968,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "main/results/c4main-2-seed3181/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10211328,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "main/results/c4main-2-seed3181/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "main",
+      "pair": "c4main-3-seed3187",
+      "label": "A",
+      "times": {
+        "write_s": 0.6593952130001526,
+        "first_query_s": 0.010786899000322592,
+        "query_s": 0.5476615729994592,
+        "filtered_query_s": 0.30175269199889954,
+        "unfiltered_query_s": 0.24590888100055963,
+        "restart_ready_s": 0.4847640150001098,
+        "restart_query_s": 0.010645091999776923
+      },
+      "checks": 1012,
+      "max_distance_error": 6.217248937900877e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14741504,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "main/results/c4main-3-seed3187/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10752000,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "main/results/c4main-3-seed3187/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "main",
+      "pair": "c4main-3-seed3187",
+      "label": "B",
+      "times": {
+        "write_s": 0.6616171430014219,
+        "first_query_s": 0.011494076999952085,
+        "query_s": 0.459023400013848,
+        "filtered_query_s": 0.21638280900697282,
+        "unfiltered_query_s": 0.24264059100687518,
+        "restart_ready_s": 0.46118199900001855,
+        "restart_query_s": 0.011761463999846455
+      },
+      "checks": 1012,
+      "max_distance_error": 6.217248937900877e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14475264,
+          "max_sampled_anon_bytes": 6987776,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "main/results/c4main-3-seed3187/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10403840,
+          "max_sampled_anon_bytes": 6164480,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "main/results/c4main-3-seed3187/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "main",
+      "pair": "c4main-4-seed3179",
+      "label": "A",
+      "times": {
+        "write_s": 0.6187469030010107,
+        "first_query_s": 0.011514046999764105,
+        "query_s": 0.576036615983412,
+        "filtered_query_s": 0.3135837589929906,
+        "unfiltered_query_s": 0.2624528569904214,
+        "restart_ready_s": 0.45296853899981215,
+        "restart_query_s": 0.010941825000372774
+      },
+      "checks": 1012,
+      "max_distance_error": 7.105427357601002e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14127104,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "main/results/c4main-4-seed3179/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10371072,
+          "max_sampled_anon_bytes": 6164480,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "main/results/c4main-4-seed3179/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "main",
+      "pair": "c4main-4-seed3179",
+      "label": "B",
+      "times": {
+        "write_s": 0.6603843729994878,
+        "first_query_s": 0.011792255000273144,
+        "query_s": 0.5093264329948397,
+        "filtered_query_s": 0.2410498509975696,
+        "unfiltered_query_s": 0.2682765819972701,
+        "restart_ready_s": 0.4528509629999462,
+        "restart_query_s": 0.011608682999849407
+      },
+      "checks": 1012,
+      "max_distance_error": 7.105427357601002e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14790656,
+          "max_sampled_anon_bytes": 6987776,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "main/results/c4main-4-seed3179/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10424320,
+          "max_sampled_anon_bytes": 6164480,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "main/results/c4main-4-seed3179/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "main",
+      "pair": "c4main-5-seed3181",
+      "label": "A",
+      "times": {
+        "write_s": 0.6644180140019671,
+        "first_query_s": 0.011037116999887076,
+        "query_s": 0.555095297000662,
+        "filtered_query_s": 0.30240167600186396,
+        "unfiltered_query_s": 0.252693620998798,
+        "restart_ready_s": 0.4616914620000898,
+        "restart_query_s": 0.011398380000173347
+      },
+      "checks": 1012,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14614528,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "main/results/c4main-5-seed3181/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10899456,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "main/results/c4main-5-seed3181/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "main",
+      "pair": "c4main-5-seed3181",
+      "label": "B",
+      "times": {
+        "write_s": 0.6763006219985073,
+        "first_query_s": 0.011853458000132377,
+        "query_s": 0.473690886003169,
+        "filtered_query_s": 0.22575172899951212,
+        "unfiltered_query_s": 0.24793915700365687,
+        "restart_ready_s": 0.49959172500030036,
+        "restart_query_s": 0.01200156999993851
+      },
+      "checks": 1012,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14602240,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "main/results/c4main-5-seed3181/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10473472,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "main/results/c4main-5-seed3181/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "main",
+      "pair": "c4main-6-seed3187",
+      "label": "A",
+      "times": {
+        "write_s": 0.6222562049997578,
+        "first_query_s": 0.010823257000083686,
+        "query_s": 0.5426409069955298,
+        "filtered_query_s": 0.29544352700031595,
+        "unfiltered_query_s": 0.24719737999521385,
+        "restart_ready_s": 0.461163619999752,
+        "restart_query_s": 0.010369722000177717
+      },
+      "checks": 1012,
+      "max_distance_error": 6.217248937900877e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14438400,
+          "max_sampled_anon_bytes": 6995968,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "main/results/c4main-6-seed3187/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10158080,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "main/results/c4main-6-seed3187/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "main",
+      "pair": "c4main-6-seed3187",
+      "label": "B",
+      "times": {
+        "write_s": 0.6712598160002017,
+        "first_query_s": 0.01110194800003228,
+        "query_s": 0.4607583029974194,
+        "filtered_query_s": 0.2186995829965781,
+        "unfiltered_query_s": 0.24205872000084128,
+        "restart_ready_s": 0.5254086199997801,
+        "restart_query_s": 0.010883336000006238
+      },
+      "checks": 1012,
+      "max_distance_error": 6.217248937900877e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14905344,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "main/results/c4main-6-seed3187/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10215424,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "main/results/c4main-6-seed3187/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "holdout",
+      "pair": "c4holdout-1-seed66007",
+      "label": "A",
+      "times": {
+        "write_s": 0.6765543530023024,
+        "first_query_s": 0.011746152999876358,
+        "query_s": 0.5580746509958772,
+        "filtered_query_s": 0.30299154500062286,
+        "unfiltered_query_s": 0.2550831059952543,
+        "restart_ready_s": 0.479716628999995,
+        "restart_query_s": 0.010889339000186737
+      },
+      "checks": 1012,
+      "max_distance_error": 6.217248937900877e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14315520,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5640192,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "holdout/results/c4holdout-1-seed66007/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10838016,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "holdout/results/c4holdout-1-seed66007/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "holdout",
+      "pair": "c4holdout-1-seed66007",
+      "label": "B",
+      "times": {
+        "write_s": 0.6777838130064993,
+        "first_query_s": 0.010965405999741051,
+        "query_s": 0.46840489800433716,
+        "filtered_query_s": 0.2192723590028436,
+        "unfiltered_query_s": 0.24913253900149357,
+        "restart_ready_s": 0.5191514420002932,
+        "restart_query_s": 0.010866565000014816
+      },
+      "checks": 1012,
+      "max_distance_error": 6.217248937900877e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14327808,
+          "max_sampled_anon_bytes": 6995968,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "holdout/results/c4holdout-1-seed66007/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10240000,
+          "max_sampled_anon_bytes": 6164480,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "holdout/results/c4holdout-1-seed66007/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "holdout",
+      "pair": "c4holdout-2-seed66029",
+      "label": "A",
+      "times": {
+        "write_s": 0.6638410770033261,
+        "first_query_s": 0.011299323999992339,
+        "query_s": 0.5717931480021434,
+        "filtered_query_s": 0.3131050850020074,
+        "unfiltered_query_s": 0.258688063000136,
+        "restart_ready_s": 0.45086237700024867,
+        "restart_query_s": 0.010667741999895952
+      },
+      "checks": 1012,
+      "max_distance_error": 6.217248937900877e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14807040,
+          "max_sampled_anon_bytes": 6987776,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "holdout/results/c4holdout-2-seed66029/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10285056,
+          "max_sampled_anon_bytes": 6160384,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "holdout/results/c4holdout-2-seed66029/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "holdout",
+      "pair": "c4holdout-2-seed66029",
+      "label": "B",
+      "times": {
+        "write_s": 0.5913956889980909,
+        "first_query_s": 0.01194391600029121,
+        "query_s": 0.4664642170091611,
+        "filtered_query_s": 0.2207539050023115,
+        "unfiltered_query_s": 0.24571031200684956,
+        "restart_ready_s": 0.47891884399996343,
+        "restart_query_s": 0.011294732999886037
+      },
+      "checks": 1012,
+      "max_distance_error": 6.217248937900877e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14565376,
+          "max_sampled_anon_bytes": 6987776,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "holdout/results/c4holdout-2-seed66029/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10706944,
+          "max_sampled_anon_bytes": 6164480,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "holdout/results/c4holdout-2-seed66029/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "holdout",
+      "pair": "c4holdout-3-seed66041",
+      "label": "A",
+      "times": {
+        "write_s": 0.6947161300013249,
+        "first_query_s": 0.010967726999751903,
+        "query_s": 0.5538437340005657,
+        "filtered_query_s": 0.3018031100054941,
+        "unfiltered_query_s": 0.25204062399507166,
+        "restart_ready_s": 0.462590253000144,
+        "restart_query_s": 0.01118580699994709
+      },
+      "checks": 1012,
+      "max_distance_error": 7.105427357601002e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14663680,
+          "max_sampled_anon_bytes": 6991872,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "holdout/results/c4holdout-3-seed66041/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10162176,
+          "max_sampled_anon_bytes": 6164480,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "holdout/results/c4holdout-3-seed66041/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "holdout",
+      "pair": "c4holdout-3-seed66041",
+      "label": "B",
+      "times": {
+        "write_s": 0.6666977830004726,
+        "first_query_s": 0.011654593000002933,
+        "query_s": 0.4723936689956645,
+        "filtered_query_s": 0.22266918099649047,
+        "unfiltered_query_s": 0.24972448799917402,
+        "restart_ready_s": 0.4834303039997394,
+        "restart_query_s": 0.012677712999902724
+      },
+      "checks": 1012,
+      "max_distance_error": 7.105427357601002e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 14417920,
+          "max_sampled_anon_bytes": 6995968,
+          "max_sampled_file_bytes": 5636096,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n",
+          "raw_file": "holdout/results/c4holdout-3-seed66041/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 10723328,
+          "max_sampled_anon_bytes": 6164480,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "holdout/results/c4holdout-3-seed66041/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "overflow",
+      "pair": "c4overflow-1-seed3179",
+      "label": "A",
+      "times": {
+        "write_s": 2.157869389003281,
+        "first_query_s": 0.015137773999867932,
+        "query_s": 1.3935639820001597,
+        "filtered_query_s": 0.6595858760006195,
+        "unfiltered_query_s": 0.7339781059995403,
+        "restart_ready_s": 0.4999000140001044,
+        "restart_query_s": 0.01663871599976119
+      },
+      "checks": 112,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 23162880,
+          "max_sampled_anon_bytes": 2592768,
+          "max_sampled_file_bytes": 18026496,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n",
+          "raw_file": "overflow/results/c4overflow-1-seed3179/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 9523200,
+          "max_sampled_anon_bytes": 3715072,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "overflow/results/c4overflow-1-seed3179/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "overflow",
+      "pair": "c4overflow-1-seed3179",
+      "label": "B",
+      "times": {
+        "write_s": 2.2123055909978575,
+        "first_query_s": 0.015629268999873602,
+        "query_s": 1.477177645001575,
+        "filtered_query_s": 0.7143503709999095,
+        "unfiltered_query_s": 0.7628272740016655,
+        "restart_ready_s": 0.5037884889998168,
+        "restart_query_s": 0.016225522000240744
+      },
+      "checks": 112,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 22949888,
+          "max_sampled_anon_bytes": 2588672,
+          "max_sampled_file_bytes": 18026496,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n",
+          "raw_file": "overflow/results/c4overflow-1-seed3179/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 9551872,
+          "max_sampled_anon_bytes": 3710976,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "overflow/results/c4overflow-1-seed3179/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "overflow",
+      "pair": "c4overflow-2-seed3181",
+      "label": "A",
+      "times": {
+        "write_s": 2.1968755220036655,
+        "first_query_s": 0.015251897000325698,
+        "query_s": 1.4101742070029104,
+        "filtered_query_s": 0.6703132960019502,
+        "unfiltered_query_s": 0.7398609110009602,
+        "restart_ready_s": 0.5422577079998518,
+        "restart_query_s": 0.015460318999885203
+      },
+      "checks": 112,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 22704128,
+          "max_sampled_anon_bytes": 2588672,
+          "max_sampled_file_bytes": 18026496,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n",
+          "raw_file": "overflow/results/c4overflow-2-seed3181/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 9670656,
+          "max_sampled_anon_bytes": 3710976,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "overflow/results/c4overflow-2-seed3181/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "overflow",
+      "pair": "c4overflow-2-seed3181",
+      "label": "B",
+      "times": {
+        "write_s": 2.0897840299971904,
+        "first_query_s": 0.01516371000025174,
+        "query_s": 1.4313352069993925,
+        "filtered_query_s": 0.6901249059988004,
+        "unfiltered_query_s": 0.7412103010005922,
+        "restart_ready_s": 0.5009681550000096,
+        "restart_query_s": 0.01596983400031604
+      },
+      "checks": 112,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 21577728,
+          "max_sampled_anon_bytes": 2588672,
+          "max_sampled_file_bytes": 18026496,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n",
+          "raw_file": "overflow/results/c4overflow-2-seed3181/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 9531392,
+          "max_sampled_anon_bytes": 3715072,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "overflow/results/c4overflow-2-seed3181/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "overflow",
+      "pair": "c4overflow-3-seed3187",
+      "label": "A",
+      "times": {
+        "write_s": 2.1574923409948497,
+        "first_query_s": 0.01533089700023993,
+        "query_s": 1.3996673260021453,
+        "filtered_query_s": 0.6667291609983295,
+        "unfiltered_query_s": 0.7329381650038158,
+        "restart_ready_s": 0.49485202500000014,
+        "restart_query_s": 0.01578666500017789
+      },
+      "checks": 112,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 22585344,
+          "max_sampled_anon_bytes": 2588672,
+          "max_sampled_file_bytes": 18026496,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=0 wbytes=19341312 rios=0 wios=650 dbytes=0 dios=0\n",
+          "raw_file": "overflow/results/c4overflow-3-seed3187/A/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 9285632,
+          "max_sampled_anon_bytes": 3715072,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "overflow/results/c4overflow-3-seed3187/A/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    },
+    {
+      "phase": "overflow",
+      "pair": "c4overflow-3-seed3187",
+      "label": "B",
+      "times": {
+        "write_s": 2.170102983996003,
+        "first_query_s": 0.015504043999953865,
+        "query_s": 1.4762373779990412,
+        "filtered_query_s": 0.7120978610000748,
+        "unfiltered_query_s": 0.7641395169989664,
+        "restart_ready_s": 0.4932531790000212,
+        "restart_query_s": 0.01573917599989727
+      },
+      "checks": 112,
+      "max_distance_error": 5.329070518200751e-15,
+      "limits": {
+        "memory": 134217728,
+        "swap": 0,
+        "cpus": 2,
+        "cpuset": "0,1"
+      },
+      "resources": [
+        {
+          "stage": "initial",
+          "cgroup_memory_peak_bytes": 22769664,
+          "max_sampled_anon_bytes": 2592768,
+          "max_sampled_file_bytes": 18038784,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+          "io_stat_before_shutdown": "8:48 rbytes=4096 wbytes=19341312 rios=1 wios=650 dbytes=0 dios=0\n",
+          "raw_file": "overflow/results/c4overflow-3-seed3187/B/initial/resources.json"
+        },
+        {
+          "stage": "restart",
+          "cgroup_memory_peak_bytes": 9203712,
+          "max_sampled_anon_bytes": 3715072,
+          "max_sampled_file_bytes": 0,
+          "memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          },
+          "last_memory_pressure": "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "max_sampled_pgscan": 0,
+          "io_stat_at_ready": "",
+          "io_stat_before_shutdown": "",
+          "raw_file": "overflow/results/c4overflow-3-seed3187/B/restart/resources.json"
+        }
+      ],
+      "io_window": "resource counters cover ready to pre_shutdown; shutdown/writeback counters may be incomplete"
+    }
+  ],
+  "summary": [
+    {
+      "phase": "aa1",
+      "label": "A",
+      "runs": 6,
+      "peak_min_bytes": 10158080,
+      "peak_max_bytes": 15245312,
+      "anon_max_sample_bytes": 6995968,
+      "file_max_sample_bytes": 5636096,
+      "pgscan_max": 0,
+      "oom": 0,
+      "median_times": {
+        "write_s": 0.6766021305006689,
+        "first_query_s": 0.01155420850000155,
+        "query_s": 0.5599698054895725,
+        "filtered_query_s": 0.3044109094932992,
+        "unfiltered_query_s": 0.25555889599627335,
+        "restart_ready_s": 0.4783311880000838,
+        "restart_query_s": 0.010838013500006127
+      }
+    },
+    {
+      "phase": "aa1",
+      "label": "B",
+      "runs": 6,
+      "peak_min_bytes": 10113024,
+      "peak_max_bytes": 14667776,
+      "anon_max_sample_bytes": 6991872,
+      "file_max_sample_bytes": 5636096,
+      "pgscan_max": 0,
+      "oom": 0,
+      "median_times": {
+        "write_s": 0.6718742795007984,
+        "first_query_s": 0.011094054000068354,
+        "query_s": 0.5620253404915729,
+        "filtered_query_s": 0.30639899250081726,
+        "unfiltered_query_s": 0.25507336949385717,
+        "restart_ready_s": 0.49128777299983994,
+        "restart_query_s": 0.01107298300007642
+      }
+    },
+    {
+      "phase": "main",
+      "label": "A",
+      "runs": 6,
+      "peak_min_bytes": 10158080,
+      "peak_max_bytes": 14958592,
+      "anon_max_sample_bytes": 6995968,
+      "file_max_sample_bytes": 5783552,
+      "pgscan_max": 0,
+      "oom": 0,
+      "median_times": {
+        "write_s": 0.6619066135010598,
+        "first_query_s": 0.010976688499795273,
+        "query_s": 0.5481640425007299,
+        "filtered_query_s": 0.3013408670008175,
+        "unfiltered_query_s": 0.24750855999945998,
+        "restart_ready_s": 0.4614275409999209,
+        "restart_query_s": 0.011037859500220293
+      }
+    },
+    {
+      "phase": "main",
+      "label": "B",
+      "runs": 6,
+      "peak_min_bytes": 10211328,
+      "peak_max_bytes": 14905344,
+      "anon_max_sample_bytes": 6995968,
+      "file_max_sample_bytes": 5636096,
+      "pgscan_max": 0,
+      "oom": 0,
+      "median_times": {
+        "write_s": 0.6721752164996815,
+        "first_query_s": 0.01182285650020276,
+        "query_s": 0.4799326229986036,
+        "filtered_query_s": 0.22731118649971904,
+        "unfiltered_query_s": 0.2526214364988846,
+        "restart_ready_s": 0.4648460384998998,
+        "restart_query_s": 0.011246009499927823
+      }
+    },
+    {
+      "phase": "holdout",
+      "label": "A",
+      "runs": 3,
+      "peak_min_bytes": 10162176,
+      "peak_max_bytes": 14807040,
+      "anon_max_sample_bytes": 6991872,
+      "file_max_sample_bytes": 5640192,
+      "pgscan_max": 0,
+      "oom": 0,
+      "median_times": {
+        "write_s": 0.6765543530023024,
+        "first_query_s": 0.011299323999992339,
+        "query_s": 0.5580746509958772,
+        "filtered_query_s": 0.30299154500062286,
+        "unfiltered_query_s": 0.2550831059952543,
+        "restart_ready_s": 0.462590253000144,
+        "restart_query_s": 0.010889339000186737
+      }
+    },
+    {
+      "phase": "holdout",
+      "label": "B",
+      "runs": 3,
+      "peak_min_bytes": 10240000,
+      "peak_max_bytes": 14565376,
+      "anon_max_sample_bytes": 6995968,
+      "file_max_sample_bytes": 5636096,
+      "pgscan_max": 0,
+      "oom": 0,
+      "median_times": {
+        "write_s": 0.6666977830004726,
+        "first_query_s": 0.011654593000002933,
+        "query_s": 0.46840489800433716,
+        "filtered_query_s": 0.2207539050023115,
+        "unfiltered_query_s": 0.24913253900149357,
+        "restart_ready_s": 0.4834303039997394,
+        "restart_query_s": 0.011294732999886037
+      }
+    },
+    {
+      "phase": "overflow",
+      "label": "A",
+      "runs": 3,
+      "peak_min_bytes": 9285632,
+      "peak_max_bytes": 23162880,
+      "anon_max_sample_bytes": 3715072,
+      "file_max_sample_bytes": 18026496,
+      "pgscan_max": 0,
+      "oom": 0,
+      "median_times": {
+        "write_s": 2.157869389003281,
+        "first_query_s": 0.015251897000325698,
+        "query_s": 1.3996673260021453,
+        "filtered_query_s": 0.6667291609983295,
+        "unfiltered_query_s": 0.7339781059995403,
+        "restart_ready_s": 0.4999000140001044,
+        "restart_query_s": 0.01578666500017789
+      }
+    },
+    {
+      "phase": "overflow",
+      "label": "B",
+      "runs": 3,
+      "peak_min_bytes": 9203712,
+      "peak_max_bytes": 22949888,
+      "anon_max_sample_bytes": 3715072,
+      "file_max_sample_bytes": 18038784,
+      "pgscan_max": 0,
+      "oom": 0,
+      "median_times": {
+        "write_s": 2.170102983996003,
+        "first_query_s": 0.015504043999953865,
+        "query_s": 1.4762373779990412,
+        "filtered_query_s": 0.7120978610000748,
+        "unfiltered_query_s": 0.7628272740016655,
+        "restart_ready_s": 0.5009681550000096,
+        "restart_query_s": 0.01596983400031604
+      }
+    }
+  ],
+  "oracle_checks": 31032,
+  "cgroup_memory_limit_bytes": 134217728,
+  "cpu_quota": 2,
+  "cpu_set": "0,1",
+  "memory_notes": [
+    "memory.peak is cgroup peak, not RSS.",
+    "Anonymous and file maxima are observed phase snapshots and need not occur at the instant of memory.peak.",
+    "No working-set boundary or absence of all memory leaks can be inferred from these bounded vector workloads."
+  ],
+  "io_notes": [
+    "Raw io.stat and process IO remain in resource files.",
+    "Shared WSL block device and writeback attribution limit inference; counters are not file sizes and are not an official physical I/O score."
+  ],
+  "cached_note": "first_query is a new process/cache after independent data load; host and device caches are not globally flushed; preheated query follows 10 warmups.",
+  "formal_submission": false
+}
