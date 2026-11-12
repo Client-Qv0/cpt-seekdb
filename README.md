@@ -1,5 +1,7 @@
 # MiniVectorDB — JSONL protocol implementation
 
+> **最新官方结果（2026-11-13）：`d21e8f852ac2c40de39616adbb5ed6efb7bb9585`。** MySQL 正式用例通过；性能 `E = 3306.163332`；Agent Prompt 首次取得有效原始分 `3.000000`。记录见 [`validation/official-d21e-20261113/REPORT.md`](validation/official-d21e-20261113/REPORT.md)。
+>
 > **当前队友交接入口（2026-11-10）：[TEAM_HANDOFF.md](TEAM_HANDOFF.md)。**
 > 生产代码基线固定为 `6576b24e0774eb11352ab5bca3372cda32f8efd9`；包含交接文档的后续提交没有修改生产源码或 Agent 材料。
 > 从含交接包的分支 HEAD 建立个人开发分支，另建固定 `6576…` 基线 worktree。正式通过状态、本地实验结果及操作命令分别见交接文档；旧 HANDOFF 文件保留作历史记录。

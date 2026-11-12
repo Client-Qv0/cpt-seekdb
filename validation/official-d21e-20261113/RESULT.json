@@ -1,0 +1,38 @@
+{
+  "recorded_client_date": "2026-11-13",
+  "source": "user-provided official platform result screenshot",
+  "commit": "d21e8f852ac2c40de39616adbb5ed6efb7bb9585",
+  "branch": "2026-competition-round2",
+  "mysql_formal_cases": "PASS",
+  "performance": {
+    "raw_metric_E": 3306.163332,
+    "status": "completed"
+  },
+  "agent_prompt": {
+    "raw_score": 3.0,
+    "status": "completed_valid",
+    "score_display": "3",
+    "details": "Agent Prompt评测完成；原始分 = 3.000000"
+  },
+  "comparison_with_c661": {
+    "c661_commit": "c6617860ef56f8672f881ae1e1c40d8a05433638",
+    "c661_performance_E": 3413.755039,
+    "c661_agent_prompt_raw": null,
+    "c661_agent_prompt_status": "invalid_or_needs_review",
+    "performance_delta_E": -107.591707,
+    "performance_relative_change": -0.03151711407843638,
+    "note": "d21e and c661 have identical production inputs. The official E difference is not attributed to the Agent-material-only source change."
+  },
+  "significance": "First confirmed valid non-null Agent Prompt raw score in this handoff history. The c661 material's four explicit insufficient-evidence dimensions were replaced with five covered dimensions in d21e.",
+  "evidence": {
+    "screenshot": "platform-result.png",
+    "screenshot_sha256": "7cc5e939611d0f0abc9f1dac11f7d2ab1b71cf0a72009d4e0476f96d7af1e09e",
+    "screenshot_bytes": 31195
+  },
+  "limitations": [
+    "The screenshot reports the raw Agent Prompt score, not the 40-point ranked competition score.",
+    "The screenshot does not show ranking, review report, or official performance I/O and memory submetrics.",
+    "The platform run belongs to d21e, not to this later evidence-only commit.",
+    "No formal evaluation was triggered by this evidence-recording task."
+  ]
+}
