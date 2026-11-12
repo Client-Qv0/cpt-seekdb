@@ -1,0 +1,463 @@
+{
+  "command": [
+    "docker",
+    "run",
+    "--name",
+    "mvdb-perf-959cebcd82f8",
+    "-i",
+    "--network",
+    "none",
+    "--read-only",
+    "--memory",
+    "128m",
+    "--memory-swap",
+    "128m",
+    "--cpus",
+    "2",
+    "--cpuset-cpus",
+    "0,1",
+    "--pids-limit",
+    "128",
+    "--tmpfs",
+    "/tmp:rw,size=64m",
+    "--mount",
+    "type=bind,src=/var/tmp/mvdb-hmy-c22-parser-main-20261111/hmy-parser22-screen-5-seed71023-candidate,dst=/data",
+    "codex-hmy-c22-parser:20261111"
+  ],
+  "before": {
+    "Id": "6228d7312ccb6fa0c28ec40922602f6a55aa1c6f1cfe30d3a94a08214dd654a9",
+    "Created": "2026-11-11T15:19:51.442942036Z",
+    "Path": "/app/minivectordb",
+    "Args": [
+      "--data-dir",
+      "/data"
+    ],
+    "State": {
+      "Status": "running",
+      "Running": true,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 23983,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-11-11T15:19:51.479867095Z",
+      "FinishedAt": "0001-01-01T00:00:00Z"
+    },
+    "Image": "sha256:a3cbdfecc909257c7ca00596abc57afc2b14b99085fdab6e1b1874892b1e57c8",
+    "ResolvConfPath": "/var/lib/docker/containers/6228d7312ccb6fa0c28ec40922602f6a55aa1c6f1cfe30d3a94a08214dd654a9/resolv.conf",
+    "HostnamePath": "/var/lib/docker/containers/6228d7312ccb6fa0c28ec40922602f6a55aa1c6f1cfe30d3a94a08214dd654a9/hostname",
+    "HostsPath": "/var/lib/docker/containers/6228d7312ccb6fa0c28ec40922602f6a55aa1c6f1cfe30d3a94a08214dd654a9/hosts",
+    "LogPath": "/var/lib/docker/containers/6228d7312ccb6fa0c28ec40922602f6a55aa1c6f1cfe30d3a94a08214dd654a9/6228d7312ccb6fa0c28ec40922602f6a55aa1c6f1cfe30d3a94a08214dd654a9-json.log",
+    "Name": "/mvdb-perf-959cebcd82f8",
+    "RestartCount": 0,
+    "Driver": "overlayfs",
+    "Platform": "linux",
+    "MountLabel": "",
+    "ProcessLabel": "",
+    "AppArmorProfile": "",
+    "ExecIDs": null,
+    "HostConfig": {
+      "Binds": null,
+      "ContainerIDFile": "",
+      "LogConfig": {
+        "Type": "json-file",
+        "Config": {}
+      },
+      "NetworkMode": "none",
+      "PortBindings": {},
+      "RestartPolicy": {
+        "Name": "no",
+        "MaximumRetryCount": 0
+      },
+      "AutoRemove": false,
+      "VolumeDriver": "",
+      "VolumesFrom": null,
+      "ConsoleSize": [
+        0,
+        0
+      ],
+      "CapAdd": null,
+      "CapDrop": null,
+      "CgroupnsMode": "private",
+      "Dns": null,
+      "DnsOptions": [],
+      "DnsSearch": [],
+      "ExtraHosts": null,
+      "GroupAdd": null,
+      "IpcMode": "private",
+      "Cgroup": "",
+      "Links": null,
+      "OomScoreAdj": 0,
+      "PidMode": "",
+      "Privileged": false,
+      "PublishAllPorts": false,
+      "ReadonlyRootfs": true,
+      "SecurityOpt": null,
+      "Tmpfs": {
+        "/tmp": "rw,size=64m"
+      },
+      "UTSMode": "",
+      "UsernsMode": "",
+      "ShmSize": 67108864,
+      "Runtime": "runc",
+      "Isolation": "",
+      "CpuShares": 0,
+      "Memory": 134217728,
+      "NanoCpus": 2000000000,
+      "CgroupParent": "",
+      "BlkioWeight": 0,
+      "BlkioWeightDevice": [],
+      "BlkioDeviceReadBps": [],
+      "BlkioDeviceWriteBps": [],
+      "BlkioDeviceReadIOps": [],
+      "BlkioDeviceWriteIOps": [],
+      "CpuPeriod": 0,
+      "CpuQuota": 0,
+      "CpuRealtimePeriod": 0,
+      "CpuRealtimeRuntime": 0,
+      "CpusetCpus": "0,1",
+      "CpusetMems": "",
+      "Devices": [],
+      "DeviceCgroupRules": null,
+      "DeviceRequests": null,
+      "MemoryReservation": 0,
+      "MemorySwap": 134217728,
+      "MemorySwappiness": null,
+      "OomKillDisable": null,
+      "PidsLimit": 128,
+      "Ulimits": null,
+      "CpuCount": 0,
+      "CpuPercent": 0,
+      "IOMaximumIOps": 0,
+      "IOMaximumBandwidth": 0,
+      "Mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/tmp/mvdb-hmy-c22-parser-main-20261111/hmy-parser22-screen-5-seed71023-candidate",
+          "Target": "/data"
+        }
+      ],
+      "MaskedPaths": [
+        "/proc/acpi",
+        "/proc/asound",
+        "/proc/interrupts",
+        "/proc/kcore",
+        "/proc/keys",
+        "/proc/latency_stats",
+        "/proc/sched_debug",
+        "/proc/scsi",
+        "/proc/timer_list",
+        "/proc/timer_stats",
+        "/sys/devices/virtual/powercap",
+        "/sys/firmware"
+      ],
+      "ReadonlyPaths": [
+        "/proc/bus",
+        "/proc/fs",
+        "/proc/irq",
+        "/proc/sys",
+        "/proc/sysrq-trigger"
+      ]
+    },
+    "Storage": {
+      "RootFS": {
+        "Snapshot": {
+          "Name": "overlayfs"
+        }
+      }
+    },
+    "Mounts": [
+      {
+        "Type": "bind",
+        "Source": "/var/tmp/mvdb-hmy-c22-parser-main-20261111/hmy-parser22-screen-5-seed71023-candidate",
+        "Destination": "/data",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      }
+    ],
+    "Config": {
+      "Hostname": "6228d7312ccb",
+      "Domainname": "",
+      "User": "",
+      "AttachStdin": true,
+      "AttachStdout": true,
+      "AttachStderr": true,
+      "Tty": false,
+      "OpenStdin": true,
+      "StdinOnce": true,
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      ],
+      "Cmd": [
+        "--data-dir",
+        "/data"
+      ],
+      "Image": "codex-hmy-c22-parser:20261111",
+      "Volumes": {
+        "/data": {}
+      },
+      "WorkingDir": "",
+      "Entrypoint": [
+        "/app/minivectordb"
+      ],
+      "Labels": {
+        "org.opencontainers.image.version": "24.04"
+      }
+    },
+    "NetworkSettings": {
+      "SandboxID": "916017900f72b211ed1e997657cca571cffd77bcf6dbb15593b8435a1b42b3f3",
+      "SandboxKey": "/var/run/docker/netns/916017900f72",
+      "Ports": {},
+      "Networks": {
+        "none": {
+          "IPAMConfig": null,
+          "Links": null,
+          "Aliases": null,
+          "DriverOpts": null,
+          "GwPriority": 0,
+          "NetworkID": "3f55e3b7c8b210cd90703b5141effff404bae287f09ebe36c8ceb0ccaee3a3df",
+          "EndpointID": "f365c9014b6fb1f0491267e3301a1b04c450d77dc9cb0981df555f3c3916b172",
+          "Gateway": "",
+          "IPAddress": "",
+          "MacAddress": "",
+          "IPPrefixLen": 0,
+          "IPv6Gateway": "",
+          "GlobalIPv6Address": "",
+          "GlobalIPv6PrefixLen": 0,
+          "DNSNames": null
+        }
+      }
+    },
+    "ImageManifestDescriptor": {
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "digest": "sha256:d5783f4992945361cb8148ca649a1c92ec7c3596c2d26868bfa1fad34543b21b",
+      "size": 860,
+      "platform": {
+        "architecture": "amd64",
+        "os": "linux"
+      }
+    }
+  },
+  "after": {
+    "Id": "6228d7312ccb6fa0c28ec40922602f6a55aa1c6f1cfe30d3a94a08214dd654a9",
+    "Created": "2026-11-11T15:19:51.442942036Z",
+    "Path": "/app/minivectordb",
+    "Args": [
+      "--data-dir",
+      "/data"
+    ],
+    "State": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-11-11T15:19:51.479867095Z",
+      "FinishedAt": "2026-11-11T15:19:52.801867561Z"
+    },
+    "Image": "sha256:a3cbdfecc909257c7ca00596abc57afc2b14b99085fdab6e1b1874892b1e57c8",
+    "ResolvConfPath": "/var/lib/docker/containers/6228d7312ccb6fa0c28ec40922602f6a55aa1c6f1cfe30d3a94a08214dd654a9/resolv.conf",
+    "HostnamePath": "/var/lib/docker/containers/6228d7312ccb6fa0c28ec40922602f6a55aa1c6f1cfe30d3a94a08214dd654a9/hostname",
+    "HostsPath": "/var/lib/docker/containers/6228d7312ccb6fa0c28ec40922602f6a55aa1c6f1cfe30d3a94a08214dd654a9/hosts",
+    "LogPath": "/var/lib/docker/containers/6228d7312ccb6fa0c28ec40922602f6a55aa1c6f1cfe30d3a94a08214dd654a9/6228d7312ccb6fa0c28ec40922602f6a55aa1c6f1cfe30d3a94a08214dd654a9-json.log",
+    "Name": "/mvdb-perf-959cebcd82f8",
+    "RestartCount": 0,
+    "Driver": "overlayfs",
+    "Platform": "linux",
+    "MountLabel": "",
+    "ProcessLabel": "",
+    "AppArmorProfile": "",
+    "ExecIDs": null,
+    "HostConfig": {
+      "Binds": null,
+      "ContainerIDFile": "",
+      "LogConfig": {
+        "Type": "json-file",
+        "Config": {}
+      },
+      "NetworkMode": "none",
+      "PortBindings": {},
+      "RestartPolicy": {
+        "Name": "no",
+        "MaximumRetryCount": 0
+      },
+      "AutoRemove": false,
+      "VolumeDriver": "",
+      "VolumesFrom": null,
+      "ConsoleSize": [
+        0,
+        0
+      ],
+      "CapAdd": null,
+      "CapDrop": null,
+      "CgroupnsMode": "private",
+      "Dns": null,
+      "DnsOptions": [],
+      "DnsSearch": [],
+      "ExtraHosts": null,
+      "GroupAdd": null,
+      "IpcMode": "private",
+      "Cgroup": "",
+      "Links": null,
+      "OomScoreAdj": 0,
+      "PidMode": "",
+      "Privileged": false,
+      "PublishAllPorts": false,
+      "ReadonlyRootfs": true,
+      "SecurityOpt": null,
+      "Tmpfs": {
+        "/tmp": "rw,size=64m"
+      },
+      "UTSMode": "",
+      "UsernsMode": "",
+      "ShmSize": 67108864,
+      "Runtime": "runc",
+      "Isolation": "",
+      "CpuShares": 0,
+      "Memory": 134217728,
+      "NanoCpus": 2000000000,
+      "CgroupParent": "",
+      "BlkioWeight": 0,
+      "BlkioWeightDevice": [],
+      "BlkioDeviceReadBps": [],
+      "BlkioDeviceWriteBps": [],
+      "BlkioDeviceReadIOps": [],
+      "BlkioDeviceWriteIOps": [],
+      "CpuPeriod": 0,
+      "CpuQuota": 0,
+      "CpuRealtimePeriod": 0,
+      "CpuRealtimeRuntime": 0,
+      "CpusetCpus": "0,1",
+      "CpusetMems": "",
+      "Devices": [],
+      "DeviceCgroupRules": null,
+      "DeviceRequests": null,
+      "MemoryReservation": 0,
+      "MemorySwap": 134217728,
+      "MemorySwappiness": null,
+      "OomKillDisable": null,
+      "PidsLimit": 128,
+      "Ulimits": null,
+      "CpuCount": 0,
+      "CpuPercent": 0,
+      "IOMaximumIOps": 0,
+      "IOMaximumBandwidth": 0,
+      "Mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/tmp/mvdb-hmy-c22-parser-main-20261111/hmy-parser22-screen-5-seed71023-candidate",
+          "Target": "/data"
+        }
+      ],
+      "MaskedPaths": [
+        "/proc/acpi",
+        "/proc/asound",
+        "/proc/interrupts",
+        "/proc/kcore",
+        "/proc/keys",
+        "/proc/latency_stats",
+        "/proc/sched_debug",
+        "/proc/scsi",
+        "/proc/timer_list",
+        "/proc/timer_stats",
+        "/sys/devices/virtual/powercap",
+        "/sys/firmware"
+      ],
+      "ReadonlyPaths": [
+        "/proc/bus",
+        "/proc/fs",
+        "/proc/irq",
+        "/proc/sys",
+        "/proc/sysrq-trigger"
+      ]
+    },
+    "Storage": {
+      "RootFS": {
+        "Snapshot": {
+          "Name": "overlayfs"
+        }
+      }
+    },
+    "Mounts": [
+      {
+        "Type": "bind",
+        "Source": "/var/tmp/mvdb-hmy-c22-parser-main-20261111/hmy-parser22-screen-5-seed71023-candidate",
+        "Destination": "/data",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      }
+    ],
+    "Config": {
+      "Hostname": "6228d7312ccb",
+      "Domainname": "",
+      "User": "",
+      "AttachStdin": true,
+      "AttachStdout": true,
+      "AttachStderr": true,
+      "Tty": false,
+      "OpenStdin": true,
+      "StdinOnce": true,
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      ],
+      "Cmd": [
+        "--data-dir",
+        "/data"
+      ],
+      "Image": "codex-hmy-c22-parser:20261111",
+      "Volumes": {
+        "/data": {}
+      },
+      "WorkingDir": "",
+      "Entrypoint": [
+        "/app/minivectordb"
+      ],
+      "Labels": {
+        "org.opencontainers.image.version": "24.04"
+      }
+    },
+    "NetworkSettings": {
+      "SandboxID": "",
+      "SandboxKey": "",
+      "Ports": {},
+      "Networks": {
+        "none": {
+          "IPAMConfig": null,
+          "Links": null,
+          "Aliases": null,
+          "DriverOpts": null,
+          "GwPriority": 0,
+          "NetworkID": "3f55e3b7c8b210cd90703b5141effff404bae287f09ebe36c8ceb0ccaee3a3df",
+          "EndpointID": "",
+          "Gateway": "",
+          "IPAddress": "",
+          "MacAddress": "",
+          "IPPrefixLen": 0,
+          "IPv6Gateway": "",
+          "GlobalIPv6Address": "",
+          "GlobalIPv6PrefixLen": 0,
+          "DNSNames": null
+        }
+      }
+    },
+    "ImageManifestDescriptor": {
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "digest": "sha256:d5783f4992945361cb8148ca649a1c92ec7c3596c2d26868bfa1fad34543b21b",
+      "size": 860,
+      "platform": {
+        "architecture": "amd64",
+        "os": "linux"
+      }
+    }
+  },
+  "startup_s": 0.41586189800000284,
+  "shutdown_s": 0.0020910200000798795
+}

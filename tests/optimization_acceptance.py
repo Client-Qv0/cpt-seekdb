@@ -259,6 +259,25 @@ class CacheAndIndexAcceptance(unittest.TestCase):
         self.assertEqual(self.db.rows("SELECT id,L2_DISTANCE(v,'[0]') AS d FROM ordering ORDER BY d,a DESC,b ASC LIMIT 18446744073709551615;"), [[2, 1], [1, 1], [4, 1], [5, 1], [3, 2]])
         self.assertEqual(self.db.rows("SELECT a AS x,id FROM ordering ORDER BY x DESC,b ASC LIMIT 3;"), [[2, 2], [2, 3], [2, 1]])
 
+    def test_topk_projection_and_transaction_visibility(self):
+        self.db.ok("CREATE TABLE cover_rows (id BIGINT PRIMARY KEY, grp VARCHAR(8), v VECTOR(2));")
+        self.db.ok("INSERT INTO cover_rows VALUES (1,'x','[0,1]'),(2,'y','[0,-1]'),(3,'x','[2,0]');")
+        covered = "SELECT id,L2_DISTANCE(v,'[0,0]') AS d,L2_DISTANCE(v,'[0,0]') AS again,id AS key2 FROM cover_rows ORDER BY d LIMIT 3;"
+        different = "SELECT id,L2_DISTANCE(v,'[0,0]') AS d,L2_DISTANCE(v,'[1,0]') AS other FROM cover_rows ORDER BY d LIMIT 3;"
+        filtered = "SELECT id,L2_DISTANCE(v,'[0,0]') AS d FROM cover_rows WHERE grp='x' ORDER BY d LIMIT 3;"
+        for _ in range(2):
+            self.assertEqual(self.db.rows(covered), [[1,1,1,1],[2,1,1,2],[3,2,2,3]])
+            self.assertEqual(self.db.rows(filtered), [[1,1],[3,2]])
+            rows=self.db.rows(different)
+            self.assertEqual([row[0] for row in rows], [1,2,3])
+            for row, expected in zip(rows, [math.sqrt(2),math.sqrt(2),1]):
+                self.assertAlmostEqual(row[2], expected, places=6)
+        self.db.ok("BEGIN;")
+        self.db.ok("UPDATE cover_rows SET v='[0,0]' WHERE id=3;")
+        self.assertEqual(self.db.rows(covered)[0], [3,0,0,3])
+        self.db.ok("ROLLBACK;")
+        self.assertEqual(self.db.rows(covered), [[1,1,1,1],[2,1,1,2],[3,2,2,3]])
+
     def test_randomized_hot_read_reference_model(self):
         rng = random.Random(20261110)
         model = {}

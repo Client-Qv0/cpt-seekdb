@@ -34,6 +34,25 @@ int main() {
   s = parse_sql("INSERT INTO t VALUES (1, 'x; DELETE FROM t;', '\\n\\t\\\\\\\'')");
   check(s.values[0][1].text == "x; DELETE FROM t;");
   check(s.values[0][2].text == "\n\t\\'");
+  for (size_t n : {size_t(0),size_t(1),size_t(15),size_t(16),size_t(17),size_t(128),size_t(4096)}) {
+    const std::string prefix(n,'7');
+    s = parse_sql("INSERT INTO t VALUES ('" + prefix + "''x\\n\\0\\q\\\\end')");
+    const std::string expected=prefix+"'x\n"+std::string(1,'\0')+"q\\end";
+    check(s.values[0][0].text==expected);
+    s = parse_sql("SELECT `a" + prefix + "``b` FROM t");
+    check(s.projections[0].column=="a"+prefix+"`b");
+    reject("INSERT INTO t VALUES ('"+prefix+"\\");
+    reject("INSERT INTO t VALUES ('"+prefix);
+  }
+  {
+    std::string encoded,decoded;
+    for (size_t n=0;n<20000;++n) {
+      encoded += n%2 ? "\\n" : "\\'";
+      decoded += n%2 ? '\n' : '\'';
+    }
+    s=parse_sql("INSERT INTO t VALUES ('"+encoded+"')");
+    check(s.values[0][0].text==decoded);
+  }
   s = parse_sql("SELECT id, L2_DISTANCE(embedding, '[.9,.1,0,0]') AS distance FROM docs WHERE category='database' AND (id >= -5 AND id < 20) ORDER BY distance ASC, id DESC LIMIT 2");
   check(s.projections.size() == 2 && s.projections[1].kind == Expr::Distance);
   check(s.projections[1].alias == "distance" && s.projections[1].vector.quoted);

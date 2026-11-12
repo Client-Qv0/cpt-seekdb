@@ -44,6 +44,17 @@ int main() {
     check(r.sql == std::string("SELECT\nid FROM t WHERE s=';\"\\\b\f\r\t") +
                    '\0' + u8"中🙂';", "Unicode/escape decoding");
     check(r.search_mode == mvdb::SearchMode::Ann, "ann was not forwarded");
+    for(size_t n=0;n<70;++n) {
+      const std::string prefix(n,'a');
+      const std::string head="{\"id\":1,\"op\":\"execute\",\"sql\":\""+prefix;
+      check(parse(head+"\\n\\\"\\\\\\u4e2d\"}").sql==prefix+"\n\"\\"+u8"中", "string boundary escapes");
+      check(parse(head+u8"中🙂\"}").sql==prefix+u8"中🙂", "string boundary UTF-8");
+      check(parse(head+std::string(1,char(0x7f))+"\"}").sql==prefix+char(0x7f), "DEL is valid JSON text");
+      rejected(head+char(0x1f)+"\"}");
+      rejected(head+char(0x80)+"\"}");
+      rejected(head+"\\q\"}");
+      rejected(head);
+    }
     check(parse(R"({"id":1,"op":"execute","sql":"SELECT id FROM t"})").search_mode
           == mvdb::SearchMode::Exact, "default exact");
     check(parse(R"({"id":1,"op":"execute","sql":"","search_mode":"exact"})").search_mode

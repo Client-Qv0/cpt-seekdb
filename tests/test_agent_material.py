@@ -8,8 +8,9 @@ import unittest
 
 
 MATERIAL = Path(__file__).resolve().parent.parent / 'agent' / 'conversation.json'
-SESSION = 'current_session_hmy_20261109'
 MAX_BYTES = 128 * 1024
+DIMENSIONS = {'problem_understanding', 'technical_transfer', 'independent_validation',
+              'experimental_iteration', 'tradeoff_reflection'}
 
 
 def reject_duplicates(pairs):
@@ -62,6 +63,53 @@ def resolve_pointer(root, pointer):
     return node
 
 
+def validate_v3(doc):
+    def require(ok, message):
+        if not ok:
+            raise ValueError(message)
+    require(doc.get('rule_version') == 'agent-learning-evidence-v3-unbounded', 'rule version')
+    require(isinstance(doc.get('summary'), str) and doc['summary'].strip(), 'material summary')
+    require(isinstance(doc.get('conversations'), list) and isinstance(doc.get('experiments'), list), 'records')
+    dimensions=doc.get('dimensions', [])
+    require(isinstance(dimensions, list) and len(dimensions)==5, 'five dimensions')
+    require({d['id'] for d in dimensions}==DIMENSIONS, 'dimension identities')
+    require(isinstance(doc.get('units'), list), 'units list')
+    seen_ids, seen_chains, seen_quotes, used = set(), set(), set(), []
+    memberships={d:set() for d in DIMENSIONS}
+    for unit in doc['units']:
+        require(unit['id'] not in seen_ids and unit['chain_id'] not in seen_chains, 'duplicate unit/chain')
+        seen_ids.add(unit['id']); seen_chains.add(unit['chain_id'])
+        require(unit['dimension'] in DIMENSIONS, 'single valid dimension')
+        require(type(unit['score']) in (int,float) and unit['score'] in (0.5,1,1.5,2), 'one tier')
+        require(isinstance(unit.get('reason'), str) and unit['reason'], 'reason')
+        memberships[unit['dimension']].add(unit['id'])
+        require(bool(unit['student_evidence']), 'student evidence required')
+        require(bool(unit['result_evidence']) == (unit['score']>0.5), 'plan/result tier')
+        for role in ('student','result'):
+            require(isinstance(unit[role+'_evidence'],list), 'evidence list')
+            for evidence in unit[role+'_evidence']:
+                pointer,quote=evidence['pointer'],evidence['quote']
+                require(pointer.startswith(('/conversations/','/experiments/')), 'source record pointer')
+                value=resolve_pointer(doc,pointer)
+                require(isinstance(value,str) and isinstance(quote,str) and 0<len(quote)<=240, 'string quote length')
+                require(quote in value, 'quote not found')
+                require(quote not in seen_quotes, 'reused quote')
+                seen_quotes.add(quote)
+                start=value.index(quote);end=start+len(quote)
+                require(not any(p==pointer and max(a,start)<min(b,end) for p,a,b in used), 'overlapping evidence')
+                used.append((pointer,start,end))
+                parent=resolve_pointer(doc,pointer.rsplit('/',1)[0])
+                source=parent.get('source','')
+                if role=='student':
+                    require(source=='student' and parent.get('authorship_verified') is True, 'student attribution')
+                else:
+                    require(source.startswith('tool_output') or source=='platform_user_report', 'executed result source')
+    for dimension in dimensions:
+        require(len(dimension['unit_ids'])==len(set(dimension['unit_ids'])), 'duplicate membership')
+        require(set(dimension['unit_ids'])==memberships[dimension['id']], 'dimension membership')
+    return sum(unit['score'] for unit in doc['units'])
+
+
 class AgentMaterialChecks(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -83,27 +131,43 @@ class AgentMaterialChecks(unittest.TestCase):
         with self.assertRaises(ValueError):
             resolve_pointer(example, '/a~2b')
 
-    def test_session_links_are_exact_attributed_and_distinct(self):
-        links = self.doc[SESSION]['evidence_links']
-        self.assertTrue(links)
-        seen = set()
-        for link in links:
-            for role in ('student', 'result'):
-                pointer, excerpt = link[f'{role}_pointer'], link[f'{role}_excerpt']
-                value = resolve_pointer(self.doc, pointer)
-                self.assertIsInstance(value, str)
-                self.assertIsInstance(excerpt, str)
-                self.assertGreater(len(excerpt), 0)
-                self.assertLessEqual(len(excerpt), 240)
-                self.assertIn(excerpt, value)
-                self.assertNotIn((pointer, excerpt), seen)
-                seen.add((pointer, excerpt))
-                parent = resolve_pointer(self.doc, pointer.rsplit('/', 1)[0])
-                if role == 'student':
-                    self.assertEqual(parent.get('source'), 'student')
-                else:
-                    self.assertTrue(parent.get('source', '').startswith('tool_output'))
-            self.assertNotEqual(link['student_pointer'], link['result_pointer'])
+    def test_v3_units_and_exact_evidence(self):
+        validate_v3(self.doc)
+
+    def test_unbounded_total_and_invalid_evidence(self):
+        import copy
+        d = copy.deepcopy(self.doc)
+        # Synthetic test fixtures only: exercise an actual total above 100.
+        fixture=copy.deepcopy(d)
+        fixture['synthetic']=True
+        fixture['conversations']=[{'messages':[]}]
+        fixture['experiments']=[]
+        fixture['units']=[]
+        for dimension in fixture['dimensions']:
+            dimension['unit_ids']=[]
+        for i in range(60):
+            student=f'synthetic student fixture {i:03d}'
+            result=f'synthetic executed fixture {i:03d}'
+            fixture['conversations'][0]['messages'].append(
+                {'source':'student','authorship_verified':True,'content':student})
+            fixture['experiments'].append({'source':'tool_output_fixture','content':result})
+            unit=copy.deepcopy(d['units'][0])
+            unit.update(id=f'fixture-{i}',chain_id=f'fixture-chain-{i}',score=2)
+            unit['student_evidence']=[{'pointer':f'/conversations/0/messages/{i}/content','quote':student}]
+            unit['result_evidence']=[{'pointer':f'/experiments/{i}/content','quote':result}]
+            fixture['units'].append(unit)
+            next(x for x in fixture['dimensions'] if x['id']==unit['dimension'])['unit_ids'].append(unit['id'])
+        self.assertEqual(validate_v3(fixture),120)
+        for mutate in (
+            lambda x: x['units'][0].update(score=3),
+            lambda x: x['units'][0]['student_evidence'][0].update(quote='missing exact quote'),
+            lambda x: x['units'][0].update(result_evidence=[]),
+            lambda x: x['units'].append(copy.deepcopy(x['units'][0])),
+        ):
+            bad=copy.deepcopy(d)
+            mutate(bad)
+            with self.assertRaises((ValueError, KeyError, IndexError)):
+                validate_v3(bad)
 
     def test_obvious_secret_formats_are_absent(self):
         # This is only a narrow check for common complete secret formats.

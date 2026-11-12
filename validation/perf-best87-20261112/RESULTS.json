@@ -1,0 +1,95 @@
+{
+  "scope": "local direct paired comparison, not official evaluation",
+  "best_official_user_report": {
+    "commit": "87c2778ed0688e6e56152baf02bc4f4355667458",
+    "raw": 3122.241181
+  },
+  "candidate": "local C22 source on 6a81c82585b5050eb9df6369176f69d5a470b0be; uncommitted",
+  "candidate_binary_sha256": "0fc4d430b70a32367b42d2a68eae54c0f0e4416bc6585aa77914444fe44a8e6b",
+  "seeds": [
+    91003,
+    91011,
+    91023
+  ],
+  "pairs": 6,
+  "rows": 10000,
+  "dimension": 128,
+  "queries": 1000,
+  "k": 10,
+  "filtered_fraction": 0.5,
+  "write_batch": 100,
+  "metrics": {
+    "write_s": {
+      "base_median_s": 0.49652834600000517,
+      "candidate_median_s": 0.40613233150001804,
+      "paired_median_reduction": 0.1686446239813683,
+      "wins": 6
+    },
+    "first_query_s": {
+      "base_median_s": 0.014182039499999632,
+      "candidate_median_s": 0.018166179499999657,
+      "paired_median_reduction": -0.297864167049429,
+      "wins": 0
+    },
+    "warmup_queries_s": {
+      "base_median_s": 0.009156768500048429,
+      "candidate_median_s": 0.00682369000000449,
+      "paired_median_reduction": 0.2578635939963244,
+      "wins": 6
+    },
+    "first_equality_query_s": {
+      "base_median_s": 0.0009518285000069682,
+      "candidate_median_s": 0.0015785625000148684,
+      "paired_median_reduction": -0.7261745197268366,
+      "wins": 0
+    },
+    "query_s": {
+      "base_median_s": 0.8742376419998124,
+      "candidate_median_s": 0.5404406309998251,
+      "paired_median_reduction": 0.378021327518854,
+      "wins": 6
+    },
+    "filtered_query_s": {
+      "base_median_s": 0.42890198399960866,
+      "candidate_median_s": 0.2551959100000545,
+      "paired_median_reduction": 0.3991583436232646,
+      "wins": 6
+    },
+    "unfiltered_query_s": {
+      "base_median_s": 0.4453122985000846,
+      "candidate_median_s": 0.2852447209997706,
+      "paired_median_reduction": 0.3585927878149936,
+      "wins": 6
+    },
+    "restart_ready_s": {
+      "base_median_s": 0.632658465999981,
+      "candidate_median_s": 0.5789865614999883,
+      "paired_median_reduction": 0.07675620977226622,
+      "wins": 5
+    },
+    "restart_query_s": {
+      "base_median_s": 0.01546088050000094,
+      "candidate_median_s": 0.01924321249998684,
+      "paired_median_reduction": -0.22689485326613523,
+      "wins": 0
+    }
+  },
+  "memory_peak_median_bytes": {
+    "base": 13273088.0,
+    "candidate": 14137344.0
+  },
+  "memory_increase_ratio": 0.06511340842462587,
+  "oracle_checks": 12144,
+  "recall": 1.0,
+  "official_candidate_E": null,
+  "official_score_prediction": null,
+  "limitations": [
+    "Shared WSL local timing, no official cache-reset sequence.",
+    "I/O snapshots end before complete shutdown/writeback: official physical I/O cannot be calculated. Missing metrics are not treated as zero.",
+    "No frozen platform baseline T/B/M values or validated mapping to displayed raw score.",
+    "Six full paired runs, not the official three-round E median.",
+    "Agent material structure changed locally after image build; no effect on this image runtime performance, no locked final submission yet."
+  ],
+  "pushed": false,
+  "formal_submission": false
+}

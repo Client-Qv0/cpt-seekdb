@@ -1,0 +1,517 @@
+{
+  "scope": "local paired tests; not official score",
+  "pairs": [
+    {
+      "round": "hmy-recheck-1-seed91003",
+      "base": {
+        "seed": 91003,
+        "rows": 10000,
+        "dim": 128,
+        "queries": 1000,
+        "image": "codex-hmy-c14-baseline:20261111",
+        "times": {
+          "write_s": 0.8267872749999867,
+          "first_query_s": 0.02135436599999707,
+          "warmup_queries_s": 0.019258748999995134,
+          "first_equality_query_s": 0.0032039179999969747,
+          "query_s": 1.5192714749999539,
+          "filtered_query_s": 0.7323377849999844,
+          "unfiltered_query_s": 0.7869336899999695,
+          "restart_ready_s": 0.9022875989999974,
+          "restart_query_s": 0.019638794000002235
+        },
+        "oracle_checks": 1012,
+        "recall": 1.0,
+        "maximum_distance_error": 7.105427357601002e-15,
+        "workload_sha256": "a925e1d0376eba7fcea9dda47a28f7c2e1ff63d3bd5bcdd923b634dfc90e84df",
+        "memory_peak_bytes": 15998976,
+        "memory_events_final": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "io_stat_ready": "8:48 rbytes=2506752 wbytes=4096 rios=28 wios=1 dbytes=0 dios=0\n",
+        "io_stat_pre_shutdown": "8:48 rbytes=2658304 wbytes=6049792 rios=30 wios=208 dbytes=0 dios=0\n"
+      },
+      "candidate": {
+        "seed": 91003,
+        "rows": 10000,
+        "dim": 128,
+        "queries": 1000,
+        "image": "codex-hmy-c22-parser:20261111",
+        "times": {
+          "write_s": 0.6668250760000376,
+          "first_query_s": 0.02314860199999913,
+          "warmup_queries_s": 0.013789443999982609,
+          "first_equality_query_s": 0.002642876999999544,
+          "query_s": 1.1171133829999391,
+          "filtered_query_s": 0.5465176390000366,
+          "unfiltered_query_s": 0.5705957439999025,
+          "restart_ready_s": 0.6104763390000016,
+          "restart_query_s": 0.02028069499999674
+        },
+        "oracle_checks": 1012,
+        "recall": 1.0,
+        "maximum_distance_error": 7.105427357601002e-15,
+        "workload_sha256": "a925e1d0376eba7fcea9dda47a28f7c2e1ff63d3bd5bcdd923b634dfc90e84df",
+        "memory_peak_bytes": 14258176,
+        "memory_events_final": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "io_stat_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+        "io_stat_pre_shutdown": "8:48 rbytes=196608 wbytes=6049792 rios=2 wios=208 dbytes=0 dios=0\n"
+      },
+      "reductions": {
+        "write_s": 0.19347443270695197,
+        "first_query_s": -0.08402197471010409,
+        "warmup_queries_s": 0.2839906683457948,
+        "first_equality_query_s": 0.175110911077612,
+        "query_s": 0.2647045630867433,
+        "filtered_query_s": 0.253735570942788,
+        "unfiltered_query_s": 0.2749125482225514,
+        "restart_ready_s": 0.32341269050290544,
+        "restart_query_s": -0.0326853573592365
+      }
+    },
+    {
+      "round": "hmy-recheck-2-seed91011",
+      "base": {
+        "seed": 91011,
+        "rows": 10000,
+        "dim": 128,
+        "queries": 1000,
+        "image": "codex-hmy-c14-baseline:20261111",
+        "times": {
+          "write_s": 0.5113151650001271,
+          "first_query_s": 0.01434204599999589,
+          "warmup_queries_s": 0.009864913000001252,
+          "first_equality_query_s": 0.0017520720000021583,
+          "query_s": 0.8083786549996859,
+          "filtered_query_s": 0.34409321399986936,
+          "unfiltered_query_s": 0.4642854409998165,
+          "restart_ready_s": 0.5598398779999911,
+          "restart_query_s": 0.014770971999993776
+        },
+        "oracle_checks": 1012,
+        "recall": 1.0,
+        "maximum_distance_error": 6.217248937900877e-15,
+        "workload_sha256": "6cd5fda0a7f5fb99f41996f5a81e0adccb6758b3839ec5bae7a80c850fa6b304",
+        "memory_peak_bytes": 13172736,
+        "memory_events_final": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "io_stat_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+        "io_stat_pre_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n"
+      },
+      "candidate": {
+        "seed": 91011,
+        "rows": 10000,
+        "dim": 128,
+        "queries": 1000,
+        "image": "codex-hmy-c22-parser:20261111",
+        "times": {
+          "write_s": 0.3972697709999409,
+          "first_query_s": 0.018338303000000167,
+          "warmup_queries_s": 0.010162050000012357,
+          "first_equality_query_s": 0.001706181999999501,
+          "query_s": 0.5357264100000734,
+          "filtered_query_s": 0.2554112140000342,
+          "unfiltered_query_s": 0.2803151960000392,
+          "restart_ready_s": 0.5968984079999942,
+          "restart_query_s": 0.018064352999999755
+        },
+        "oracle_checks": 1012,
+        "recall": 1.0,
+        "maximum_distance_error": 6.217248937900877e-15,
+        "workload_sha256": "6cd5fda0a7f5fb99f41996f5a81e0adccb6758b3839ec5bae7a80c850fa6b304",
+        "memory_peak_bytes": 14589952,
+        "memory_events_final": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "io_stat_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+        "io_stat_pre_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n"
+      },
+      "reductions": {
+        "write_s": 0.2230432457448389,
+        "first_query_s": -0.27863925412074564,
+        "warmup_queries_s": -0.030120590015448423,
+        "first_equality_query_s": 0.026191845998680963,
+        "query_s": 0.33728283560346906,
+        "filtered_query_s": 0.25772667519060355,
+        "unfiltered_query_s": 0.3962438378502806,
+        "restart_ready_s": -0.0661948736706528,
+        "restart_query_s": -0.22296305212733247
+      }
+    },
+    {
+      "round": "hmy-recheck-3-seed91023",
+      "base": {
+        "seed": 91023,
+        "rows": 10000,
+        "dim": 128,
+        "queries": 1000,
+        "image": "codex-hmy-c14-baseline:20261111",
+        "times": {
+          "write_s": 0.546141349999985,
+          "first_query_s": 0.014350155000002474,
+          "warmup_queries_s": 0.011095970999988936,
+          "first_equality_query_s": 0.0024378419999919743,
+          "query_s": 0.8360660050000916,
+          "filtered_query_s": 0.3574556130000559,
+          "unfiltered_query_s": 0.47861039200003574,
+          "restart_ready_s": 0.6208105019999977,
+          "restart_query_s": 0.015368294000012384
+        },
+        "oracle_checks": 1012,
+        "recall": 1.0,
+        "maximum_distance_error": 6.217248937900877e-15,
+        "workload_sha256": "6286fce2db2e81475bd88944644df8eb9cea853a6cdaba5dc9c38673301545fc",
+        "memory_peak_bytes": 13340672,
+        "memory_events_final": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "io_stat_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+        "io_stat_pre_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n"
+      },
+      "candidate": {
+        "seed": 91023,
+        "rows": 10000,
+        "dim": 128,
+        "queries": 1000,
+        "image": "codex-hmy-c22-parser:20261111",
+        "times": {
+          "write_s": 0.4506905020000147,
+          "first_query_s": 0.017192383999997674,
+          "warmup_queries_s": 0.007278556000002823,
+          "first_equality_query_s": 0.001574271999999155,
+          "query_s": 0.6344053229999531,
+          "filtered_query_s": 0.3025229570000505,
+          "unfiltered_query_s": 0.3318823659999026,
+          "restart_ready_s": 0.5306265080000117,
+          "restart_query_s": 0.018487480000004552
+        },
+        "oracle_checks": 1012,
+        "recall": 1.0,
+        "maximum_distance_error": 6.217248937900877e-15,
+        "workload_sha256": "6286fce2db2e81475bd88944644df8eb9cea853a6cdaba5dc9c38673301545fc",
+        "memory_peak_bytes": 14237696,
+        "memory_events_final": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "io_stat_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+        "io_stat_pre_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n"
+      },
+      "reductions": {
+        "write_s": 0.17477315716887742,
+        "first_query_s": -0.19806259932347148,
+        "warmup_queries_s": 0.34403613707983915,
+        "first_equality_query_s": 0.35423542624815807,
+        "query_s": 0.24120186778807784,
+        "filtered_query_s": 0.1536768594538669,
+        "unfiltered_query_s": 0.30657091540988135,
+        "restart_ready_s": 0.14526815140763571,
+        "restart_query_s": -0.20296241079131194
+      }
+    },
+    {
+      "round": "hmy-recheck-4-seed91003",
+      "base": {
+        "seed": 91003,
+        "rows": 10000,
+        "dim": 128,
+        "queries": 1000,
+        "image": "codex-hmy-c14-baseline:20261111",
+        "times": {
+          "write_s": 0.5391890099999443,
+          "first_query_s": 0.014111588000005781,
+          "warmup_queries_s": 0.00939444599998751,
+          "first_equality_query_s": 0.0016072619999931703,
+          "query_s": 0.7431799960003787,
+          "filtered_query_s": 0.32017409999997426,
+          "unfiltered_query_s": 0.4230058960004044,
+          "restart_ready_s": 0.637825160999995,
+          "restart_query_s": 0.014718216000005668
+        },
+        "oracle_checks": 1012,
+        "recall": 1.0,
+        "maximum_distance_error": 7.105427357601002e-15,
+        "workload_sha256": "a925e1d0376eba7fcea9dda47a28f7c2e1ff63d3bd5bcdd923b634dfc90e84df",
+        "memory_peak_bytes": 13258752,
+        "memory_events_final": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "io_stat_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+        "io_stat_pre_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n"
+      },
+      "candidate": {
+        "seed": 91003,
+        "rows": 10000,
+        "dim": 128,
+        "queries": 1000,
+        "image": "codex-hmy-c22-parser:20261111",
+        "times": {
+          "write_s": 0.6085096890000017,
+          "first_query_s": 0.019607871999994586,
+          "warmup_queries_s": 0.008597362999992697,
+          "first_equality_query_s": 0.0017409860000014987,
+          "query_s": 0.7299325169998809,
+          "filtered_query_s": 0.35073540199982745,
+          "unfiltered_query_s": 0.3791971150000535,
+          "restart_ready_s": 0.6238085849999919,
+          "restart_query_s": 0.017924257000004218
+        },
+        "oracle_checks": 1012,
+        "recall": 1.0,
+        "maximum_distance_error": 7.105427357601002e-15,
+        "workload_sha256": "a925e1d0376eba7fcea9dda47a28f7c2e1ff63d3bd5bcdd923b634dfc90e84df",
+        "memory_peak_bytes": 14237696,
+        "memory_events_final": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "io_stat_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+        "io_stat_pre_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n"
+      },
+      "reductions": {
+        "write_s": -0.12856471054568508,
+        "first_query_s": -0.38948727811402617,
+        "warmup_queries_s": 0.08484619529409965,
+        "first_equality_query_s": -0.0831998765657973,
+        "query_s": 0.017825397712253555,
+        "filtered_query_s": -0.09545213682135945,
+        "unfiltered_query_s": 0.10356541460667734,
+        "restart_ready_s": 0.021975577097064658,
+        "restart_query_s": -0.21782809818780446
+      }
+    },
+    {
+      "round": "hmy-recheck-5-seed91011",
+      "base": {
+        "seed": 91011,
+        "rows": 10000,
+        "dim": 128,
+        "queries": 1000,
+        "image": "codex-hmy-c14-baseline:20261111",
+        "times": {
+          "write_s": 0.5377658149999434,
+          "first_query_s": 0.01562219400000231,
+          "warmup_queries_s": 0.009743589000024144,
+          "first_equality_query_s": 0.0020582300000029363,
+          "query_s": 0.8355456070001708,
+          "filtered_query_s": 0.35759071099998607,
+          "unfiltered_query_s": 0.4779548960001847,
+          "restart_ready_s": 0.5943804049999812,
+          "restart_query_s": 0.016780240000002777
+        },
+        "oracle_checks": 1012,
+        "recall": 1.0,
+        "maximum_distance_error": 6.217248937900877e-15,
+        "workload_sha256": "6cd5fda0a7f5fb99f41996f5a81e0adccb6758b3839ec5bae7a80c850fa6b304",
+        "memory_peak_bytes": 13201408,
+        "memory_events_final": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "io_stat_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+        "io_stat_pre_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n"
+      },
+      "candidate": {
+        "seed": 91011,
+        "rows": 10000,
+        "dim": 128,
+        "queries": 1000,
+        "image": "codex-hmy-c22-parser:20261111",
+        "times": {
+          "write_s": 0.40026993599991556,
+          "first_query_s": 0.017392892000003712,
+          "warmup_queries_s": 0.006501323000009052,
+          "first_equality_query_s": 0.0015241940000123577,
+          "query_s": 0.5152580630001466,
+          "filtered_query_s": 0.2422497410003075,
+          "unfiltered_query_s": 0.27300832199983915,
+          "restart_ready_s": 0.5659862669999995,
+          "restart_query_s": 0.018552243000016233
+        },
+        "oracle_checks": 1012,
+        "recall": 1.0,
+        "maximum_distance_error": 6.217248937900877e-15,
+        "workload_sha256": "6cd5fda0a7f5fb99f41996f5a81e0adccb6758b3839ec5bae7a80c850fa6b304",
+        "memory_peak_bytes": 14540800,
+        "memory_events_final": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "io_stat_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+        "io_stat_pre_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n"
+      },
+      "reductions": {
+        "write_s": 0.25567984272120803,
+        "first_query_s": -0.11334502695339332,
+        "warmup_queries_s": 0.3327589043428514,
+        "first_equality_query_s": 0.25946371396287915,
+        "query_s": 0.383327422604663,
+        "filtered_query_s": 0.32255024096440543,
+        "unfiltered_query_s": 0.4287989844135133,
+        "restart_ready_s": 0.047770985989995074,
+        "restart_query_s": -0.10560057543951462
+      }
+    },
+    {
+      "round": "hmy-recheck-6-seed91023",
+      "base": {
+        "seed": 91023,
+        "rows": 10000,
+        "dim": 128,
+        "queries": 1000,
+        "image": "codex-hmy-c14-baseline:20261111",
+        "times": {
+          "write_s": 0.49433061899986797,
+          "first_query_s": 0.013495589000001473,
+          "warmup_queries_s": 0.010061318000026631,
+          "first_equality_query_s": 0.0018649149999987458,
+          "query_s": 0.8123351890001231,
+          "filtered_query_s": 0.3484880070000145,
+          "unfiltered_query_s": 0.46384718200010866,
+          "restart_ready_s": 0.5636674630000016,
+          "restart_query_s": 0.01448597999998924
+        },
+        "oracle_checks": 1012,
+        "recall": 1.0,
+        "maximum_distance_error": 6.217248937900877e-15,
+        "workload_sha256": "6286fce2db2e81475bd88944644df8eb9cea853a6cdaba5dc9c38673301545fc",
+        "memory_peak_bytes": 13250560,
+        "memory_events_final": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "io_stat_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+        "io_stat_pre_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n"
+      },
+      "candidate": {
+        "seed": 91023,
+        "rows": 10000,
+        "dim": 128,
+        "queries": 1000,
+        "image": "codex-hmy-c22-parser:20261111",
+        "times": {
+          "write_s": 0.39180177400012894,
+          "first_query_s": 0.01813274799999931,
+          "warmup_queries_s": 0.0071935369999494014,
+          "first_equality_query_s": 0.0015706780000073195,
+          "query_s": 0.5220789360009235,
+          "filtered_query_s": 0.24820575000049416,
+          "unfiltered_query_s": 0.2738731860004293,
+          "restart_ready_s": 0.5989342430000022,
+          "restart_query_s": 0.01925557999999228
+        },
+        "oracle_checks": 1012,
+        "recall": 1.0,
+        "maximum_distance_error": 6.217248937900877e-15,
+        "workload_sha256": "6286fce2db2e81475bd88944644df8eb9cea853a6cdaba5dc9c38673301545fc",
+        "memory_peak_bytes": 13975552,
+        "memory_events_final": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+        "io_stat_ready": "8:48 rbytes=0 wbytes=4096 rios=0 wios=1 dbytes=0 dios=0\n",
+        "io_stat_pre_shutdown": "8:48 rbytes=0 wbytes=6049792 rios=0 wios=208 dbytes=0 dios=0\n"
+      },
+      "reductions": {
+        "write_s": 0.2074094564629152,
+        "first_query_s": -0.34360552918418974,
+        "warmup_queries_s": 0.28503035090130724,
+        "first_equality_query_s": 0.1577750192323104,
+        "query_s": 0.35731094372074,
+        "filtered_query_s": 0.28776386844071844,
+        "unfiltered_query_s": 0.4095616042777529,
+        "restart_ready_s": -0.06256664135322021,
+        "restart_query_s": -0.329256287804248
+      }
+    }
+  ],
+  "metrics": {
+    "write_s": {
+      "median_reduction": 0.20044194458493358,
+      "reductions": [
+        0.19347443270695197,
+        0.2230432457448389,
+        0.17477315716887742,
+        -0.12856471054568508,
+        0.25567984272120803,
+        0.2074094564629152
+      ],
+      "faster_pairs": 5
+    },
+    "first_query_s": {
+      "median_reduction": -0.23835092672210856,
+      "reductions": [
+        -0.08402197471010409,
+        -0.27863925412074564,
+        -0.19806259932347148,
+        -0.38948727811402617,
+        -0.11334502695339332,
+        -0.34360552918418974
+      ],
+      "faster_pairs": 0
+    },
+    "warmup_queries_s": {
+      "median_reduction": 0.284510509623551,
+      "reductions": [
+        0.2839906683457948,
+        -0.030120590015448423,
+        0.34403613707983915,
+        0.08484619529409965,
+        0.3327589043428514,
+        0.28503035090130724
+      ],
+      "faster_pairs": 5
+    },
+    "first_equality_query_s": {
+      "median_reduction": 0.1664429651549612,
+      "reductions": [
+        0.175110911077612,
+        0.026191845998680963,
+        0.35423542624815807,
+        -0.0831998765657973,
+        0.25946371396287915,
+        0.1577750192323104
+      ],
+      "faster_pairs": 5
+    },
+    "query_s": {
+      "median_reduction": 0.30099369934510617,
+      "reductions": [
+        0.2647045630867433,
+        0.33728283560346906,
+        0.24120186778807784,
+        0.017825397712253555,
+        0.383327422604663,
+        0.35731094372074
+      ],
+      "faster_pairs": 6
+    },
+    "filtered_query_s": {
+      "median_reduction": 0.25573112306669576,
+      "reductions": [
+        0.253735570942788,
+        0.25772667519060355,
+        0.1536768594538669,
+        -0.09545213682135945,
+        0.32255024096440543,
+        0.28776386844071844
+      ],
+      "faster_pairs": 5
+    },
+    "unfiltered_query_s": {
+      "median_reduction": 0.351407376630081,
+      "reductions": [
+        0.2749125482225514,
+        0.3962438378502806,
+        0.30657091540988135,
+        0.10356541460667734,
+        0.4287989844135133,
+        0.4095616042777529
+      ],
+      "faster_pairs": 6
+    },
+    "restart_ready_s": {
+      "median_reduction": 0.034873281543529866,
+      "reductions": [
+        0.32341269050290544,
+        -0.0661948736706528,
+        0.14526815140763571,
+        0.021975577097064658,
+        0.047770985989995074,
+        -0.06256664135322021
+      ],
+      "faster_pairs": 4
+    },
+    "restart_query_s": {
+      "median_reduction": -0.2103952544895582,
+      "reductions": [
+        -0.0326853573592365,
+        -0.22296305212733247,
+        -0.20296241079131194,
+        -0.21782809818780446,
+        -0.10560057543951462,
+        -0.329256287804248
+      ],
+      "faster_pairs": 0
+    }
+  },
+  "oracle_checks": 12144,
+  "memory_peak_median": {
+    "base": 13254656.0,
+    "candidate": 14247936.0
+  },
+  "io_limitation": "ready through pre-shutdown only; not official complete lifecycle physical I/O"
+}

@@ -1,0 +1,16 @@
+import json,pathlib,statistics,hashlib
+root=pathlib.Path('/mnt/f/OceanBase/seekdb/minivectordb-hmy-c14-20261111')
+out=root/'validation/perf-best87-20261112'
+d=json.loads((out/'paired-summary.json').read_text())
+metrics={}
+for key in d['pairs'][0]['base']['times']:
+    metrics[key]={'base_median_s':statistics.median(p['base']['times'][key] for p in d['pairs']),'candidate_median_s':statistics.median(p['candidate']['times'][key] for p in d['pairs']),'paired_median_reduction':d['metrics'][key]['median_reduction'],'wins':d['metrics'][key]['faster_pairs']}
+mem=d['memory_peak_median'];delta=mem['candidate']/mem['base']-1
+record={'scope':'local direct paired comparison, not official evaluation','best_official_user_report':{'commit':'87c2778ed0688e6e56152baf02bc4f4355667458','raw':3122.241181},'candidate':'local C22 source on 6a81c82585b5050eb9df6369176f69d5a470b0be; uncommitted','candidate_binary_sha256':'0fc4d430b70a32367b42d2a68eae54c0f0e4416bc6585aa77914444fe44a8e6b','seeds':[91003,91011,91023],'pairs':6,'rows':10000,'dimension':128,'queries':1000,'k':10,'filtered_fraction':0.5,'write_batch':100,'metrics':metrics,'memory_peak_median_bytes':mem,'memory_increase_ratio':delta,'oracle_checks':d['oracle_checks'],'recall':1.0,'official_candidate_E':None,'official_score_prediction':None,'limitations':['Shared WSL local timing, no official cache-reset sequence.','I/O snapshots end before complete shutdown/writeback: official physical I/O cannot be calculated. Missing metrics are not treated as zero.','No frozen platform baseline T/B/M values or validated mapping to displayed raw score.','Six full paired runs, not the official three-round E median.','Agent material structure changed locally after image build; no effect on this image runtime performance, no locked final submission yet.'],'pushed':False,'formal_submission':False}
+(out/'RESULTS.json').write_text(json.dumps(record,ensure_ascii=False,indent=2,allow_nan=False)+'\n')
+lines=['# MiniVectorDB 性能复核（2026-11-12，本地）','','历史最好官方成绩3122.241181，对应87c2778ed0688e6e56152baf02bc4f4355667458（用户确认）。该SHA源码单独导出构建，无新增Git分支。当前C22镜像二进制哈希与已有Release构建一致。','','10,000行、128维、1,000次TopK、K=10，一半等值过滤；每批100行写入。三个新seed各两轮，顺序交替，固定同样2 CPU、128MiB且禁swap。每轮独立数据目录/容器，完整输入、输出及原始资源快照保存在本目录。','','| 项目 | 历史版本时间中位数/s | 当前候选时间中位数/s | 配对下降中位数 | 更快轮数 |','|---|---:|---:|---:|---:|']
+for key,label in [('write_s','写入'),('query_s','计时查询'),('filtered_query_s','过滤查询'),('unfiltered_query_s','无过滤查询'),('first_query_s','首次查询'),('restart_query_s','重启后首次查询')]:
+    m=metrics[key];lines.append(f"| {label} | {m['base_median_s']:.6f} | {m['candidate_median_s']:.6f} | {100*m['paired_median_reduction']:.2f}% | {m['wins']}/6 |")
+lines += ['',f"峰值内存中位数 {mem['base']:.0f} → {mem['candidate']:.0f} 字节，增加 {100*delta:.2f}%。12,144次结果核对通过，Recall=1；核对ID、数量、去重、过滤、排序和距离，重启后核对10,000行。",'','查询和写入六组均更快，支持进一步平台验证。首次查询、重启首查和内存退化需保留。不能据本地提速比例把3122乘成新的官方分数，也不能确认5000。','','I/O仅保留ready到pre_shutdown的原始io.stat，缺少完整写回窗口；文件大小不视作物理I/O。平台基线、缓存流程及当前排行榜未知，不计算伪E或预报分数。','','另一次b68（官方2586.514427）对照在 ../perf-recheck-20261112：六组查询配对中位快30.10%，写入快20.04%。两套对照独立，百分比不相乘。','','按用户指示，所有新改动保留本地，未推送、未提交正式评测。']
+(out/'REPORT.md').write_text('\n'.join(lines)+'\n')
+print(json.dumps({'metrics':metrics,'memory_increase_percent':100*delta},indent=2))

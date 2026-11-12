@@ -1,0 +1,40 @@
+{
+  "candidate": "C22 quoted SQL span scan",
+  "source_base": "6a81c82585b5050eb9df6369176f69d5a470b0be",
+  "official_latest_user_report": {
+    "mysql": "PASS",
+    "performance_raw": 2586.514427,
+    "commit": "b68b9ff217627c37443eba34f96e041c3bc797fa"
+  },
+  "official_candidate_score": null,
+  "main": {
+    "queries": 1000,
+    "query_median_reduction": -0.006898675349492844,
+    "rows": 10000,
+    "oracle_checks": 12144,
+    "write_median_reduction": 0.059451256734780356,
+    "dimensions": 128,
+    "pairs": 6
+  },
+  "overflow": {
+    "queries": 100,
+    "oracle_checks": 224,
+    "rows": 32000,
+    "query_reduction": 0.10527231677842397,
+    "dimensions": 128,
+    "pairs": 1,
+    "write_reduction": 0.03942192625327379
+  },
+  "validation": {
+    "public_protocol": "20/20 PASS",
+    "release_ctest": "7/7 PASS",
+    "differential": "858 SQL exact equality PASS",
+    "sanitizer": "ASan + UBSan 7/7 PASS",
+    "acceptance": "21/21 PASS",
+    "recovery": "100 batches 10000 rows 1280000 FP32 components PASS",
+    "optimization": "16/16 PASS"
+  },
+  "limits": "Local cgroup snapshots are not complete official I/O lifecycle. No official score mapping.",
+  "remote_push": false,
+  "experimental_notes": "C15 pair, C16 unroll, C17 partial rejection, C18 dot and C19 projection reuse withdrawn. C20 find_first_of screen inconclusive. C21 raw memchr replaced with cached quote position before benchmark to avoid quadratic escape scan. All negative evidence retained."
+}

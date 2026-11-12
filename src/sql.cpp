@@ -1,5 +1,6 @@
 #include "sql.hpp"
 
+#include <cstring>
 #include <limits>
 #include <set>
 #include <string_view>
@@ -54,7 +55,23 @@ std::vector<Token> tokenize(const std::string& sql) {
       ++i;
       std::string value;
       bool closed = false;
+      size_t quote = sql.find(c, i);
+      if (quote == std::string::npos) quote = sql.size();
       while (i < sql.size()) {
+        // Search ordinary runs with optimized byte scans; bound the backslash
+        // scan by the next quote and cache it while processing escapes.
+        if (i > quote) {
+          quote = sql.find(c, i);
+          if (quote == std::string::npos) quote = sql.size();
+        }
+        size_t end = quote < sql.size() ? quote : std::string::npos;
+        if (c != '`') {
+          const void* backslash = std::memchr(sql.data()+i, '\\', quote-i);
+          if (backslash) end=static_cast<const char*>(backslash)-sql.data();
+        }
+        if (end == std::string::npos) { i=sql.size(); break; }
+        value.append(sql, i, end-i);
+        i=end;
         const char next = sql[i++];
         if (next == c) {
           if (i < sql.size() && sql[i] == c) { value += c; ++i; }
@@ -70,7 +87,7 @@ std::vector<Token> tokenize(const std::string& sql) {
             case 'Z': value += '\x1a'; break;
             default: value += sql[i - 1]; break;
           }
-        } else { value += next; }
+        }
       }
       if (!closed) syntax(start, "Unterminated quoted value");
       if (c == '`') {

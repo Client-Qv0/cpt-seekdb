@@ -1,0 +1,42 @@
+diff --git a/src/protocol.cpp b/src/protocol.cpp
+index 177665ace..a028a19bc 100644
+--- a/src/protocol.cpp
++++ b/src/protocol.cpp
+@@ -2,6 +2,9 @@
+ #include <map>
+ #include <set>
+ #include <string_view>
++#if defined(__SSE2__)
++#include <emmintrin.h>
++#endif
+ 
+ namespace mvdb {
+ namespace {
+@@ -137,6 +140,27 @@ private:
+   void string(std::string *out) {
+     expect('"');
+     while (position_ < text_.size()) {
++      // Ordinary ASCII needs no decoding. Copy a run once; escapes, controls
++      // and UTF-8 continue through the original validating decoder below.
++      const size_t plain = position_;
++#if defined(__SSE2__)
++      while(text_.size()-position_>=16) {
++        const __m128i bytes=_mm_loadu_si128(reinterpret_cast<const __m128i*>(text_.data()+position_));
++        // Signed comparison includes high-bit bytes, which require UTF-8 validation.
++        const __m128i special=_mm_or_si128(_mm_cmplt_epi8(bytes,_mm_set1_epi8(0x20)),
++            _mm_or_si128(_mm_cmpeq_epi8(bytes,_mm_set1_epi8('"')),
++                         _mm_cmpeq_epi8(bytes,_mm_set1_epi8('\\'))));
++        if(_mm_movemask_epi8(special)) break;
++        position_+=16;
++      }
++#endif
++      while(position_<text_.size()) {
++        const unsigned char byte=text_[position_];
++        if(byte<0x20 || byte>=0x80 || byte=='"' || byte=='\\') break;
++        ++position_;
++      }
++      if(out && position_>plain) out->append(text_,plain,position_-plain);
++      if(position_==text_.size()) break;
+       const size_t start = position_;
+       const unsigned char c = text_[position_++];
+       if (c == '"')
