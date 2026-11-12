@@ -11,6 +11,7 @@
 #include <map>
 #include <sys/file.h>
 #include <sys/stat.h>
+#include <sys/uio.h>
 #include <unistd.h>
 
 namespace mvdb {
@@ -94,6 +95,31 @@ void write_all(int fd, const void *buffer, size_t size, uint64_t offset) {
     offset += static_cast<size_t>(n);
   }
 }
+void writev_all(int fd, struct iovec *parts, int count, uint64_t offset) {
+  while (count) {
+    const ssize_t written = ::pwritev(fd, parts, count,
+                                      static_cast<off_t>(offset));
+    if (written < 0) {
+      if (errno == EINTR)
+        continue;
+      io_error("write journal");
+    }
+    if (written == 0)
+      throw Error("IO", "zero-length write to journal");
+    size_t consumed = static_cast<size_t>(written);
+    offset += consumed;
+    while (count && consumed >= parts->iov_len) {
+      consumed -= parts->iov_len;
+      ++parts;
+      --count;
+    }
+    if (consumed) {
+      parts->iov_base = static_cast<unsigned char *>(parts->iov_base) + consumed;
+      parts->iov_len -= consumed;
+    }
+  }
+}
+
 void sync_fd(int fd) {
   while (::fdatasync(fd) != 0) {
     if (errno != EINTR)
@@ -286,9 +312,18 @@ struct Store::Impl {
     set32(h.data() + 24, crc);
     const Ref ref{position + kFrameHeader + table.size(),
                   static_cast<uint32_t>(value.size()), kind == kErase};
-    write_all(target_fd, h.data(), h.size(), position);
-    write_all(target_fd, table.data(), table.size(), position + kFrameHeader);
-    write_all(target_fd, value.data(), value.size(), ref.offset);
+    struct iovec parts[3];
+    int part_count = 0;
+    auto add_part = [&](const void *data, size_t size) {
+      if (!size)
+        return;
+      parts[part_count++] = {const_cast<void *>(data), size};
+    };
+    add_part(h.data(), h.size());
+    add_part(table.data(), table.size());
+    add_part(value.data(), value.size());
+    writev_all(target_fd, parts, part_count, position);
+
     position += bytes;
     return ref;
   }

@@ -468,10 +468,12 @@ void checkpoint_crash_boundaries() {
                      "unavailable\n";
         return;
       }
-      selected = (boundary == BeforeWrite && entering &&
-                  regs.orig_rax == SYS_pwrite64 && regs.r10 == 0) ||
-                 (boundary == DuringWrite && entering &&
-                  regs.orig_rax == SYS_pwrite64 && regs.r10 >= 1024 * 1024) ||
+      const bool write_syscall = regs.orig_rax == SYS_pwrite64 ||
+                                 regs.orig_rax == SYS_pwritev;
+      selected = (boundary == BeforeWrite && entering && write_syscall &&
+                  regs.r10 == 0) ||
+                 (boundary == DuringWrite && entering && write_syscall &&
+                  regs.r10 >= 1024 * 1024) ||
                  (boundary == BeforeRename && entering &&
                   regs.orig_rax == SYS_renameat) ||
                  (boundary == AfterRename && !entering &&

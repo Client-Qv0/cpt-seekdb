@@ -1,0 +1,47 @@
+{
+  "candidate": "C12 journal frame pwritev",
+  "base_commit": "7168a6476697141ea9afc86c11e8bc4e5297be92",
+  "retained": true,
+  "successful_optimization_number": 2,
+  "performance_gate": {
+    "environment": "fresh 2 CPU, 128 MiB, zero-swap transient cgroup per run",
+    "pairs": 6,
+    "target_metric": "write",
+    "write_median_reduction": 0.06647700831632303,
+    "write_wins": 6,
+    "query_median_reduction": 0.011866706455337309,
+    "peak_process_rss_median_reduction": 0.0,
+    "data_file_bytes_unchanged": true,
+    "passed": true
+  },
+  "syscall_diagnostic": {
+    "rows": 1000,
+    "base_pwrite64_calls": 3015,
+    "candidate_pwritev_calls": 1012,
+    "candidate_pwrite64_calls": 1,
+    "base_total_traced_seconds": 0.023831,
+    "candidate_total_traced_seconds": 0.006703
+  },
+  "validation": {
+    "targeted_storage_suites": "9 PASS",
+    "release_ctest": "7/7 PASS",
+    "asan_ubsan_ctest": "7/7 PASS",
+    "acceptance_stress": "21/21 PASS",
+    "optimization_large": "16/16 PASS",
+    "public_bridge": "4/4 PASS",
+    "native_official_public": "20/20 cases, 95 SQL PASS",
+    "official_docker_public": "20/20 PASS",
+    "crash_injection": "pwrite64 and pwritev BeforeWrite/DuringWrite covered",
+    "recovery_semantics": "PASS"
+  },
+  "identity": {
+    "candidate_binary_sha256": "f9b8fc09aa0c0a9ec78755b32c5cc99bc5e951d91d11f776c9cbd2ffc0dea431",
+    "docker_image_id": "sha256:ae44d06cb438f65a9013206dd07e245b599735b7541694abd6cfd3c1ee2eddc0",
+    "image_binary_matches_native": true
+  },
+  "limitations": [
+    "shared measurement host",
+    "not an official performance score",
+    "physical I/O and hidden official cases are unavailable"
+  ]
+}
