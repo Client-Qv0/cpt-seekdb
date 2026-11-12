@@ -1,0 +1,47 @@
+{
+  "candidate": "C7 direct compact winner projection",
+  "base_commit": "5f1436e660877559bad07275d92ed8d4357711ee",
+  "retained": true,
+  "successful_optimization_number": 1,
+  "performance_gate": {
+    "environment": "fresh 2 CPU, 128 MiB, zero-swap transient cgroup per run",
+    "pairs": 6,
+    "query_median_reduction": 0.0868784025110732,
+    "query_wins": 6,
+    "write_median_reduction": 0.007936360239549111,
+    "write_wins": 5,
+    "peak_process_rss_median_reduction": 0.005494505494505495,
+    "data_file_bytes_unchanged": true,
+    "passed": true
+  },
+  "supporting_performance": {
+    "exploratory_combined_pairs": 12,
+    "exploratory_query_median_reduction": 0.03596173906683936,
+    "exploratory_query_wins": 10,
+    "write_only_pairs": 6,
+    "write_only_median_reduction": 0.023610318912371964,
+    "write_only_wins": 4
+  },
+  "validation": {
+    "targeted_exact_cache": "PASS",
+    "targeted_engine_extra": "PASS, 33 checks",
+    "ctest": "7/7 PASS",
+    "acceptance_stress": "21/21 PASS",
+    "optimization_large": "16/16 PASS",
+    "public_bridge": "4/4 PASS",
+    "native_official_public": "20/20 cases, 95 SQL PASS",
+    "official_docker_public": "20/20 PASS",
+    "multiple_distinct_distance_regression": "PASS",
+    "transaction_cache_invalidation": "PASS"
+  },
+  "identity": {
+    "candidate_binary_sha256": "9cccf095a0d8c5f8e98d1538564de1b4b8b51586b404aa073f98cecaef3d407e",
+    "docker_image_id": "sha256:daf33e109e6bea20c6ceddf6ce33b172d6f0c05ee235dd2793ca41c3acaf9b51",
+    "image_binary_matches_native": true
+  },
+  "limitations": [
+    "shared measurement host",
+    "not an official performance score",
+    "physical I/O and hidden official cases are unavailable"
+  ]
+}

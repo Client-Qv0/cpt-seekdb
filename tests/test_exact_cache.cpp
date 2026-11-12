@@ -8,6 +8,22 @@
 #include <random>
 using namespace mvdb;
 void require(bool ok) { if(!ok) throw std::runtime_error("exact cache check failed"); }
+
+void test_compact_accessors() {
+  exact::Plan plan({Type::BigInt,Type::Varchar,Type::Vector},2,3);
+  const std::vector<std::vector<Cell>> rows={
+      {int64_t(-5),std::string(),std::vector<float>{1,2,3}},
+      {int64_t(7),std::string("中🙂"),std::vector<float>{-1,0.5f,9}}};
+  for(const auto& row:rows)plan.observe(row);
+  exact::Compact view(plan);
+  for(size_t i=0;i<rows.size();++i)view.fill(i,int64_t(i),rows[i]);
+  require(view.integer_cell(0,0)==std::get<int64_t>(rows[0][0]) &&
+          view.integer_cell(1,0)==7);
+  require(view.text_cell(1,1)==std::get<std::string>(rows[1][1]) &&
+          view.text_cell(0,1).empty());
+  require(view.vector_cell(1,2)==std::get<std::vector<float>>(rows[1][2]));
+  std::cout<<"compact direct-cell accessors passed\n";
+}
 void check_posting_range(exact::Compact& view,size_t col,const Cell& value,bool indexed=true) {
   auto range=view.equality_range(col,value);
   require(range.indexed==indexed);
@@ -270,6 +286,7 @@ void test_quantized_screen() {
 }
 
 int main() {
+  test_compact_accessors();
   test_equality_postings();
   test_fp32_screen();
   test_quantized_screen();

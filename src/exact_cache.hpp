@@ -144,6 +144,31 @@ struct Compact {
   size_t index(size_t row,size_t dimension=0) const {
     return (row/4)*dim*4+dimension*4+row%4;
   }
+  int64_t integer_cell(size_t row,size_t column) const {
+    return columns[column].integers[row];
+  }
+  std::string text_cell(size_t row,size_t column) const {
+    const auto& col=columns[column];
+    const size_t begin=col.offsets[row],end=col.offsets[row+1];
+    return begin==end ? std::string() : std::string(col.text.data()+begin,end-begin);
+  }
+  std::vector<float> vector_cell(size_t row,size_t column) const {
+    if(column!=vector_column) throw Error("CORRUPTION","invalid exact vector column");
+    std::vector<float> result(dim);
+    for(size_t d=0;d<dim;++d)result[d]=vectors[index(row,d)];
+    return result;
+  }
+  double distance_cell(size_t row,size_t column,
+                       const std::vector<float>& q) const {
+    if(column!=vector_column || q.size()!=dim)
+      throw Error("CORRUPTION","invalid exact distance projection");
+    double sum=0;
+    for(size_t d=0;d<dim;++d) {
+      const double x=double(vectors[index(row,d)])-double(q[d]);
+      sum+=x*x;
+    }
+    return std::sqrt(sum);
+  }
   void fill(size_t i,int64_t key,const std::vector<Cell>& row) {
     if(i>=count) throw Error("CORRUPTION","exact cache row count changed");
     keys[i]=key;
@@ -251,9 +276,7 @@ struct Compact {
     return {begin,static_cast<size_t>(end-begin),true};
   }
   double distance(size_t row,const std::vector<float>& q) const {
-    double sum=0;
-    for(size_t d=0;d<dim;++d) {double x=double(vectors[index(row,d)])-double(q[d]);sum+=x*x;}
-    return std::sqrt(sum);
+    return distance_cell(row,vector_column,q);
   }
 };
 static_assert(sizeof(Compact)<512,"exact view object exceeds fixed reserve");

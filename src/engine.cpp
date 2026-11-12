@@ -739,6 +739,7 @@ Result Engine::execute_statement(const Statement &st) {
     struct Neighbor {
       double distance;
       int64_t key;
+      size_t row;
     };
     auto better_neighbor = [](const Neighbor &a, const Neighbor &b) {
       return a.distance < b.distance ||
@@ -748,8 +749,9 @@ Result Engine::execute_statement(const Statement &st) {
                         decltype(better_neighbor)>
         nearest(better_neighbor);
     const auto &projection = ps[keys[0].index];
-    auto consider = [&](int64_t key, double distance) {
-      Neighbor n{distance, key};
+    auto consider = [&](int64_t key, double distance,
+                        size_t row = std::numeric_limits<size_t>::max()) {
+      Neighbor n{distance, key, row};
       if (nearest.size() < *st.limit)
         nearest.push(n);
       else if (better_neighbor(n, nearest.top())) {
@@ -764,6 +766,7 @@ Result Engine::execute_statement(const Statement &st) {
     const bool point_lookup = std::any_of(fs.begin(), fs.end(), [&](const Filter &f) {
       return f.column == pk && f.op == "=";
     });
+    const exact::Compact *winner_view = nullptr;
     if (exact::available() && !point_lookup && st.table.size() <= 1024) {
       if (cache_->table != st.table || cache_->exact_column != projection.col ||
           cache_->complete) {
@@ -773,6 +776,7 @@ Result Engine::execute_statement(const Statement &st) {
       }
       if (cache_->exact_view) {
         auto &view = *cache_->exact_view;
+        winner_view = &view;
         const bool screen=exact::fp32_screen_available(view.dim);
         auto quantized=exact::prepare_quantized_query(view,projection.query,screen);
         if (fs.empty()) {
@@ -808,7 +812,7 @@ Result Engine::execute_statement(const Statement &st) {
               if (survivors != all) {
                 for (size_t lane=0;lane<batch_count;++lane)
                   if (survivors&(uint32_t(1)<<lane))
-                    consider(view.keys[i+lane],view.distance(i+lane,projection.query));
+                    consider(view.keys[i+lane],view.distance(i+lane,projection.query),i+lane);
                 // A threshold captured before this batch is conservative even
                 // if refinement improves the heap; refresh it for the next batch.
                 i+=batch_count;
@@ -821,7 +825,8 @@ Result Engine::execute_statement(const Statement &st) {
               double distances[8];
               exact::distances8_contiguous(view, i+offset, projection.query, distances);
               for (size_t lane = 0; lane < 8; ++lane)
-                consider(view.keys[i + offset + lane], distances[lane]);
+                consider(view.keys[i + offset + lane], distances[lane],
+                         i + offset + lane);
             }
             i+=batch_count;
           }
@@ -830,11 +835,11 @@ Result Engine::execute_statement(const Statement &st) {
             double distances[4];
             exact::distances4(view, rows, projection.query, distances);
             for (size_t lane = 0; lane < 4; ++lane)
-              consider(view.keys[i + lane], distances[lane]);
+              consider(view.keys[i + lane], distances[lane], i + lane);
             i += 4;
           }
           for (; i < view.count; ++i)
-            consider(view.keys[i], view.distance(i, projection.query));
+            consider(view.keys[i], view.distance(i, projection.query), i);
         } else {
           double screened_worst=-1,screen_threshold=0;
           size_t pending[32], pending_count = 0;
@@ -862,7 +867,7 @@ Result Engine::execute_statement(const Statement &st) {
               if (survivors != uint32_t(0xffffffffu)) {
                 for (size_t lane=0;lane<32;++lane)
                   if (survivors&(uint32_t(1)<<lane))
-                    consider(view.keys[pending[lane]],view.distance(pending[lane],projection.query));
+                    consider(view.keys[pending[lane]],view.distance(pending[lane],projection.query),pending[lane]);
                 pending_count=0;
                 return;
               }
@@ -871,7 +876,8 @@ Result Engine::execute_statement(const Statement &st) {
               double distances[8];
               exact::distances8(view, pending+offset, projection.query, distances);
               for (size_t lane = 0; lane < 8; ++lane)
-                consider(view.keys[pending[offset+lane]], distances[lane]);
+                consider(view.keys[pending[offset+lane]], distances[lane],
+                         pending[offset+lane]);
             }
             pending_count = 0;
           };
@@ -916,17 +922,20 @@ Result Engine::execute_statement(const Statement &st) {
             double distances[8];
             exact::distances8(view, pending+tail, projection.query, distances);
             for (size_t lane=0;lane<8;++lane)
-              consider(view.keys[pending[tail+lane]],distances[lane]);
+              consider(view.keys[pending[tail+lane]],distances[lane],
+                       pending[tail+lane]);
           }
           if (tail+4<=pending_count) {
             double distances[4];
             exact::distances4(view, pending+tail, projection.query, distances);
             for (size_t lane = 0; lane < 4; ++lane)
-              consider(view.keys[pending[tail+lane]], distances[lane]);
+              consider(view.keys[pending[tail+lane]], distances[lane],
+                       pending[tail+lane]);
             tail += 4;
           }
           for (size_t lane = tail; lane < pending_count; ++lane)
-            consider(view.keys[pending[lane]], view.distance(pending[lane], projection.query));
+            consider(view.keys[pending[lane]], view.distance(pending[lane], projection.query),
+                     pending[lane]);
         }
       } else if (cache_->exact_bypass) {
         // Remember this view's budget bypass until existing invalidation clears it.
@@ -976,14 +985,36 @@ Result Engine::execute_statement(const Statement &st) {
       nearest.pop();
     }
     std::sort(winners.begin(), winners.end(), better_neighbor);
+    result.rows.reserve(winners.size());
     for (const auto &n : winners) {
-      auto data = store_.get(st.table, n.key);
-      if (!data)
-        throw Error("CORRUPTION", "missing visible search result");
-      auto row = unpack_row(*data, schema);
       std::vector<Cell> output;
-      for (auto &p : ps)
-        output.push_back(project(p, row));
+      output.reserve(ps.size());
+      if (winner_view) {
+        for (const auto &p : ps) {
+          if (p.distance) {
+            if (p.col == projection.col && p.query == projection.query)
+              output.push_back(n.distance);
+            else
+              output.push_back(
+                  winner_view->distance_cell(n.row, p.col, p.query));
+            continue;
+          }
+          const auto type = schema.columns[p.col].type;
+          if (type == Type::BigInt)
+            output.push_back(winner_view->integer_cell(n.row, p.col));
+          else if (type == Type::Varchar)
+            output.push_back(winner_view->text_cell(n.row, p.col));
+          else
+            output.push_back(winner_view->vector_cell(n.row, p.col));
+        }
+      } else {
+        auto data = store_.get(st.table, n.key);
+        if (!data)
+          throw Error("CORRUPTION", "missing visible search result");
+        auto row = unpack_row(*data, schema);
+        for (auto &p : ps)
+          output.push_back(project(p, row));
+      }
       result.rows.push_back(std::move(output));
     }
     return result;

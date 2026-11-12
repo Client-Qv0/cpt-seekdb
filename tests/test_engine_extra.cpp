@@ -70,6 +70,30 @@ int main() {
       db.execute("UPDATE t SET v='[1,1]' WHERE id=5");
       r = db.execute("SELECT id,L2_DISTANCE(v,'[1,1]') AS d FROM t ORDER BY d LIMIT 1");
       check(id(r,0) == 5,"Vector search must see transaction updates");
+      const std::string compact_sql =
+          "SELECT id,s,v,L2_DISTANCE(v,'[1,1]') AS d,"
+          "L2_DISTANCE(v,'[9,9]') AS other FROM t ORDER BY d LIMIT 3";
+      const auto first_compact = db.execute(compact_sql);
+      const auto cached_compact = db.execute(compact_sql);
+      check(first_compact.rows == cached_compact.rows,
+            "Compact winner projection must match the first-scan output");
+      check(id(cached_compact,0) == 5 &&
+                std::get<std::string>(cached_compact.rows[0][1]) == "x" &&
+                std::get<std::vector<float>>(cached_compact.rows[0][2]) ==
+                    std::vector<float>{1,1} &&
+                std::get<double>(cached_compact.rows[0][3]) == 0 &&
+                std::get<double>(cached_compact.rows[0][4]) ==
+                    std::sqrt(128.0),
+            "Compact output must materialize scalar, text, vector and distances");
+      db.execute("UPDATE t SET s='z',v='[9,9]' WHERE id=5");
+      r = db.execute("SELECT id,s,v,L2_DISTANCE(v,'[9,9]') AS d FROM t "
+                     "ORDER BY d LIMIT 1");
+      check(id(r,0) == 5 && std::get<std::string>(r.rows[0][1]) == "z" &&
+                std::get<std::vector<float>>(r.rows[0][2]) ==
+                    std::vector<float>{9,9} &&
+                std::get<double>(r.rows[0][3]) == 0,
+            "Compact output must be invalidated by transaction updates");
+      db.execute("UPDATE t SET s='x',v='[1,1]' WHERE id=5");
       db.execute("COMMIT");
       db.execute("CREATE VECTOR INDEX vi ON t(v)");
       db.execute("BEGIN");
