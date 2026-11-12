@@ -178,7 +178,18 @@ class AgentMaterialChecks(unittest.TestCase):
             with self.assertRaises((ValueError, KeyError, IndexError)):
                 validate_v3(bad)
 
+    def test_current_iteration_records_present(self):
+        unit_ids={unit['id'] for unit in self.doc['units']}
+        for expected in ('evidence-directory-discipline','negative-results-not-counted',
+                         'bounded-self-iteration','performance-prompt-balance',
+                         'server-only-execution'):
+            with self.subTest(expected=expected):
+                self.assertIn(expected, unit_ids)
+        self.assertIn('c8d86836bdf4e9b69b2836d047cb839878f0caa7',
+                      self.doc['coverage']['source_version'])
+
     def test_obvious_secret_formats_are_absent(self):
+
         # This is only a narrow check for common complete secret formats.
         text = self.raw.decode('utf-8')
         for pattern in (r'-----BEGIN [A-Z ]*PRIVATE KEY-----', r'github_pat_[A-Za-z0-9_]{20,}',

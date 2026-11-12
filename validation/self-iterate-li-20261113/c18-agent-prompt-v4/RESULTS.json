@@ -1,0 +1,38 @@
+{
+  "candidate": "Agent Prompt v4",
+  "base_commit": "c8d86836bdf4e9b69b2836d047cb839878f0caa7",
+  "retained": true,
+  "successful_optimization_number": 5,
+  "material": {
+    "bytes": 28648,
+    "sha256": "bb70bb34112b2f36f995d63cff9ba1006cdb4b038cfe2155a1203c22a06fd189",
+    "conversations": 7,
+    "experiments": 15,
+    "units": 10,
+    "new_units": [
+      "evidence-directory-discipline",
+      "server-only-execution",
+      "negative-results-not-counted",
+      "bounded-self-iteration",
+      "performance-prompt-balance"
+    ],
+    "dimensions_with_two_units": 5,
+    "historical_official_agent_raw_score": 3.0,
+    "new_official_score_claim": null
+  },
+  "validation": {
+    "agent_material_tests": "8/8 PASS",
+    "strict_json": "PASS",
+    "pointer_resolution": "PASS",
+    "verbatim_quotes": "PASS",
+    "cross_dimension_quote_deduplication": "PASS",
+    "score_tier_result_evidence": "PASS",
+    "secret_format_scan": "PASS",
+    "size_limit": "28648 < 131072 bytes"
+  },
+  "limitations": [
+    "Local structural validation is not an official semantic review.",
+    "The d21 raw score of 3 is historical platform evidence, not a v4 result.",
+    "No higher official score is claimed or predicted."
+  ]
+}

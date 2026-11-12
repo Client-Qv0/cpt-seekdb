@@ -1,12 +1,13 @@
 {
   "rule_version": "agent-learning-evidence-v3-unbounded",
-  "summary": "MiniVectorDB 的真实交互摘录、实际执行结果和版本绑定记录。所选引用均为已核对的原文字符串；五个评价维度各有独立候选实例。学生指令、Agent 工作与工具或平台结果分开归因。材料不是完整聊天导出，但每个引用实例保留判断所需的上下文，不依赖仓库外文件或链接。",
+  "summary": "MiniVectorDB v4 材料：保留真实用户约束、四轮成功性能证据、十三项本地负结果和d21 的历史官方反馈。学生原话、Agent 执行与工具结果分开归因；性能数字均为本地证据，不宣称 v4 已获得新的官方分数。",
   "synthetic": false,
   "coverage": {
     "complete_conversation": false,
     "selected_material_complete": true,
     "exclusion": "泛泛的“继续/执行”、Agent 代写的方案和没有实际结果的未来计划不作为学生技术能力证据。仅当原话直接表达任务约束、环境机制、质疑、结果反馈或取舍时纳入。",
-    "source_version": "从真实历史摘录整理；当前绑定 c6617860ef56f8672f881ae1e1c40d8a05433638，材料修订另提交。"
+    "source_version": "生产源码绑定 c8d86836bdf4e9b69b2836d047cb839878f0caa7；v4 材料修订随第五个成功提交另行提交。",
+    "material_revision": "agent-learning-evidence-v4"
   },
   "conversations": [
     {
@@ -134,6 +135,54 @@
           "content": "旧目录保持原样；本轮只在新的独立工作区和验证目录中操作。"
         }
       ]
+    },
+    {
+      "id": "self-iterate-li-20261113",
+      "scope": "2026-11-13 autonomous MiniVectorDB performance and Agent Prompt iteration",
+      "messages": [
+        {
+          "id": "negative-rule",
+          "source": "student",
+          "authorship_verified": true,
+          "content": "负结果只在本地保留，不 commit、不推送、不计入五轮上限。"
+        },
+        {
+          "id": "validation-rule",
+          "source": "student",
+          "authorship_verified": true,
+          "content": "每轮实验使用新的 validation 子目录，保存命令、原始数据、二进制/镜像哈希和报告。"
+        },
+        {
+          "id": "five-success-rule",
+          "source": "student",
+          "authorship_verified": true,
+          "content": "只有通过性能门槛并保留生产代码的成功优化才 commit；最多累计 5 个成功 commit。"
+        },
+        {
+          "id": "stop-rule",
+          "source": "student",
+          "authorship_verified": true,
+          "content": "达到 5 个成功 commit 后停止"
+        },
+        {
+          "id": "server-only",
+          "source": "student",
+          "authorship_verified": true,
+          "content": "通过mcp+ssh，所有东西都在服务器上弄，完成接手的任务"
+        },
+        {
+          "id": "self-iteration",
+          "source": "student",
+          "authorship_verified": true,
+          "content": "我要睡觉了，接下来的时间你来进行自迭代，自行思考下一步的“性能”和“prompt”的提升优化方案，并执行。"
+        },
+        {
+          "id": "invariants",
+          "source": "student",
+          "authorship_verified": true,
+          "content": "保留 V2 的内存收益、事务原子性和崩溃恢复正确性。"
+        }
+      ]
     }
   ],
   "experiments": [
@@ -172,6 +221,76 @@
       "content": "python3 tests/test_agent_material.py -v：Ran 7 tests in 0.008s，OK。五个维度均有候选 unit，引用可定位、原文匹配、跨单元去重、结果档限制和严格 JSON 检查通过。",
       "context": "本轮在服务器独立执行；验证的是材料结构、引用和五维覆盖，不是官方语义评分。",
       "executed": true
+    },
+    {
+      "id": "server-bound-execution",
+      "source": "tool_output_summary",
+      "executed": true,
+      "content": "本轮构建、单元/压力/公开/Docker 验证、Git fetch/commit/push 和原始日志采集均在 li@103.236.99.247 的 MCP SSH 会话内执行；未创建 PR，未修改比赛分支，未提交正式评测。",
+      "context": "Only branch perf/self-iterate-li-20261113 received pushes."
+    },
+    {
+      "id": "successful-optimizations-1-4",
+      "source": "tool_output_summary",
+      "executed": true,
+      "content": "保留优化：7168a647 直接紧凑视图输出，六对查询+8.688%/6胜；6c1c32d2 帧合并写，写入+6.648%/6胜；76f4df0a 语句缓冲，写入+6.755%/5胜；c8d86836 同步写提交，写入+2.096%/5胜。",
+      "context": "Local cgroup A/B measurements; not an official score."
+    },
+    {
+      "id": "negative-results-local-only",
+      "source": "tool_output_summary",
+      "executed": true,
+      "content": "C1、C2、C3、C4、C5、C6、C8、C9、C10、C11、C14、C15、C16 未达到各自门槛；均为本地负结果，不 commit、不推送、不计入成功轮次。",
+      "context": "Patches and raw results remain under /home/li/mvdb-negative-local-20261113."
+    },
+    {
+      "id": "validation-directory-discipline",
+      "source": "tool_output_summary",
+      "executed": true,
+      "content": "每个保留或否决候选都有独立 validation 目录，保存 candidate patch、A/B 原始 JSON、summary、构建与测试日志、二进制/镜像哈希以及 REPORT 和 RESULTS。",
+      "context": "Negative evidence stayed local; retained evidence was committed with its successful change."
+    },
+    {
+      "id": "d21-platform-report",
+      "source": "platform_user_report",
+      "executed": true,
+      "content": "d21e8f85 官方结果：MySQL 正式用例通过；性能原始分 3306.163332；Agent Prompt 原始分 3.000000。该历史结果不用于声称 v4 已获得更高官方分。",
+      "context": "Platform/user report supplied before this iteration."
+    },
+    {
+      "id": "retained-c7-query",
+      "source": "tool_output_summary",
+      "executed": true,
+      "content": "成功提交 7168a647 将 TopK winner 直接从紧凑视图投影：最终源码六对查询中位+8.688%、6/6胜；写入+0.794%、数据字节不变；完整 Release、公开和 Docker 矩阵通过。",
+      "context": "Local cgroup A/B, not official."
+    },
+    {
+      "id": "retained-c12-pwritev",
+      "source": "tool_output_summary",
+      "executed": true,
+      "content": "成功提交 6c1c32d2 将每帧三次 pwrite64 合并为一次 pwritev：六对写入中位+6.648%、6/6胜；1000 行帧写系统调用从 3015 降到 1012，崩溃与恢复测试通过。",
+      "context": "Local syscall and cgroup evidence, not official."
+    },
+    {
+      "id": "retained-c13-statement-buffer",
+      "source": "tool_output_summary",
+      "executed": true,
+      "content": "成功提交 76f4df0a 按语句缓冲 journal 帧：六对写入中位再降6.755%、5/6胜；1000 行的相关 traced syscall 从 1026 降到 36，语句内读、回滚与恢复通过。",
+      "context": "Local syscall and cgroup evidence, not official."
+    },
+    {
+      "id": "retained-c17-dsync",
+      "source": "tool_output_summary",
+      "executed": true,
+      "content": "成功提交 c8d86836 用小语句 pwritev2(RWF_DSYNC) 合并数据与 commit marker：写入中位+2.096%、5/6胜；1000 行 traced syscall 从 36 降到 14。",
+      "context": "Durability and public matrices passed; not an official score."
+    },
+    {
+      "id": "v4-local-structural-validation",
+      "source": "tool_output_summary",
+      "executed": true,
+      "content": "v4 本地结构审计：tests/test_agent_material.py 8 tests passed；严格 JSON、五维 unit、pointer、原文匹配、跨维度去重、分数档和 128 KiB 上限检查均通过；不代表官方语义评分。",
+      "context": "Local structural check after v4 content update."
     }
   ],
   "dimensions": [
@@ -179,7 +298,8 @@
       "id": "problem_understanding",
       "name": "问题理解与自主拆解",
       "unit_ids": [
-        "update-priority-and-invariants"
+        "update-priority-and-invariants",
+        "evidence-directory-discipline"
       ],
       "evidence_status": "candidate_unit_present"
     },
@@ -187,7 +307,8 @@
       "id": "technical_transfer",
       "name": "技术理解与迁移",
       "unit_ids": [
-        "frp-topology-transfer"
+        "frp-topology-transfer",
+        "server-only-execution"
       ],
       "evidence_status": "candidate_unit_present"
     },
@@ -195,7 +316,8 @@
       "id": "independent_validation",
       "name": "独立验证与质疑",
       "unit_ids": [
-        "deploy-key-correction"
+        "deploy-key-correction",
+        "negative-results-not-counted"
       ],
       "evidence_status": "candidate_unit_present"
     },
@@ -203,7 +325,8 @@
       "id": "experimental_iteration",
       "name": "实验与反馈迭代",
       "unit_ids": [
-        "agent-score-failure-loop"
+        "agent-score-failure-loop",
+        "bounded-self-iteration"
       ],
       "evidence_status": "candidate_unit_present"
     },
@@ -211,7 +334,8 @@
       "id": "tradeoff_reflection",
       "name": "取舍与反思",
       "unit_ids": [
-        "exact-route-gated-choice"
+        "exact-route-gated-choice",
+        "performance-prompt-balance"
       ],
       "evidence_status": "candidate_unit_present"
     }
@@ -317,12 +441,127 @@
           "quote": "首次查询因两遍构建慢54.732%，约36.189–47.033ms对基线22.675–32.605ms；超缓存查询慢1.935%。不宣称所有工作负载均更快。"
         }
       ]
+    },
+    {
+      "id": "evidence-directory-discipline",
+      "chain_id": "candidate-evidence-directories",
+      "dimension": "problem_understanding",
+      "score": 1.5,
+      "reason": "用户为每轮实验规定了新的 validation 目录和证据包内容。Agent 按该要求分别保存成功与否决候选，保留了提交绑定、原始测量、哈希和报告，能够支持独立复核。",
+      "student_evidence": [
+        {
+          "pointer": "/conversations/6/messages/1/content",
+          "quote": "每轮实验使用新的 validation 子目录，保存命令、原始数据、二进制/镜像哈希和报告。"
+        }
+      ],
+      "result_evidence": [
+        {
+          "pointer": "/experiments/10/content",
+          "quote": "成功提交 7168a647 将 TopK winner 直接从紧凑视图投影：最终源码六对查询中位+8.688%、6/6胜；写入+0.794%、数据字节不变；完整 Release、公开和 Docker 矩阵通过。"
+        },
+        {
+          "pointer": "/experiments/8/content",
+          "quote": "每个保留或否决候选都有独立 validation 目录，保存 candidate patch、A/B 原始 JSON、summary、构建与测试日志、二进制/镜像哈希以及 REPORT 和 RESULTS。"
+        }
+      ]
+    },
+    {
+      "id": "server-only-execution",
+      "chain_id": "mcp-ssh-server-execution",
+      "dimension": "technical_transfer",
+      "score": 1.0,
+      "reason": "用户要求全部工作通过 MCP SSH 在服务器执行。实际构建、测试、Docker、Git 和证据采集均在该路径完成，并把远端分支限制落实为可核对的执行结果；学生证据只计其执行边界要求。",
+      "student_evidence": [
+        {
+          "pointer": "/conversations/6/messages/4/content",
+          "quote": "通过mcp+ssh，所有东西都在服务器上弄，完成接手的任务"
+        }
+      ],
+      "result_evidence": [
+        {
+          "pointer": "/experiments/5/content",
+          "quote": "本轮构建、单元/压力/公开/Docker 验证、Git fetch/commit/push 和原始日志采集均在 li@103.236.99.247 的 MCP SSH 会话内执行；未创建 PR，未修改比赛分支，未提交正式评测。"
+        }
+      ]
+    },
+    {
+      "id": "negative-results-not-counted",
+      "chain_id": "negative-results-excluded",
+      "dimension": "independent_validation",
+      "score": 2.0,
+      "reason": "用户明确否定了用失败实验凑提交的做法。后续十三项候选未过门槛时均保留本地证据但不提交；只有独立满足目标指标的候选进入分支，形成了学生约束与工具结果的完整验证链。",
+      "student_evidence": [
+        {
+          "pointer": "/conversations/6/messages/0/content",
+          "quote": "负结果只在本地保留，不 commit、不推送、不计入五轮上限。"
+        }
+      ],
+      "result_evidence": [
+        {
+          "pointer": "/experiments/7/content",
+          "quote": "C1、C2、C3、C4、C5、C6、C8、C9、C10、C11、C14、C15、C16 未达到各自门槛；均为本地负结果，不 commit、不推送、不计入成功轮次。"
+        }
+      ]
+    },
+    {
+      "id": "bounded-self-iteration",
+      "chain_id": "five-success-stop-loop",
+      "dimension": "experimental_iteration",
+      "score": 2.0,
+      "reason": "用户要求自主循环同时设置五成功提交停止线。实际过程先形成四个保留优化，并在多个失败候选后继续按证据调整；材料和最终提交按停止规则收束，没有把负结果计入轮次。",
+      "student_evidence": [
+        {
+          "pointer": "/conversations/6/messages/2/content",
+          "quote": "只有通过性能门槛并保留生产代码的成功优化才 commit；最多累计 5 个成功 commit。"
+        },
+        {
+          "pointer": "/conversations/6/messages/3/content",
+          "quote": "达到 5 个成功 commit 后停止"
+        }
+      ],
+      "result_evidence": [
+        {
+          "pointer": "/experiments/11/content",
+          "quote": "成功提交 6c1c32d2 将每帧三次 pwrite64 合并为一次 pwritev：六对写入中位+6.648%、6/6胜；1000 行帧写系统调用从 3015 降到 1012，崩溃与恢复测试通过。"
+        },
+        {
+          "pointer": "/experiments/12/content",
+          "quote": "成功提交 76f4df0a 按语句缓冲 journal 帧：六对写入中位再降6.755%、5/6胜；1000 行的相关 traced syscall 从 1026 降到 36，语句内读、回滚与恢复通过。"
+        }
+      ]
+    },
+    {
+      "id": "performance-prompt-balance",
+      "chain_id": "performance-and-material-balance",
+      "dimension": "tradeoff_reflection",
+      "score": 2.0,
+      "reason": "用户同时要求性能与 prompt 推进，并保留内存、事务原子性和恢复正确性。四轮保留改动分别覆盖查询与写入，且都通过恢复、公开和 Docker 回归；材料同步记录历史有效 Agent 分但不提前宣称 v4 官方提升。",
+      "student_evidence": [
+        {
+          "pointer": "/conversations/6/messages/6/content",
+          "quote": "保留 V2 的内存收益、事务原子性和崩溃恢复正确性。"
+        },
+        {
+          "pointer": "/conversations/6/messages/5/content",
+          "quote": "我要睡觉了，接下来的时间你来进行自迭代，自行思考下一步的“性能”和“prompt”的提升优化方案，并执行。"
+        }
+      ],
+      "result_evidence": [
+        {
+          "pointer": "/experiments/13/content",
+          "quote": "成功提交 c8d86836 用小语句 pwritev2(RWF_DSYNC) 合并数据与 commit marker：写入中位+2.096%、5/6胜；1000 行 traced syscall 从 36 降到 14。"
+        },
+        {
+          "pointer": "/experiments/9/content",
+          "quote": "d21e8f85 官方结果：MySQL 正式用例通过；性能原始分 3306.163332；Agent Prompt 原始分 3.000000。该历史结果不用于声称 v4 已获得更高官方分。"
+        }
+      ]
     }
   ],
   "limitations": [
-    "每个被引用字符串都是材料内的完整原话；相邻上下文用于解释来源和时序。",
-    "该材料按公开规则组织候选实例，但不声称本地检查等于官方三轮评审或排名。",
-    "Agent 生成的算法、代码、实验分析和解释没有转记为学生贡献。",
-    "c661 的官方结果为 MySQL 通过、性能 E 3413.755039、Agent Prompt 汇总提示无效；本轮不能预填后续官方评分。"
+    "所有引用均来自材料内真实原话；四个性能数字是本地 cgroup A/B 配对结果，不是官方成绩。",
+    "d21 的 Agent Prompt 3.000000 是历史平台结果；本材料尚未正式评测，不保证排名或分数提升。",
+    "Agent 生成的算法、代码、测量和解释没有转记为学生贡献。",
+    "负结果证据保留在服务器本地目录，未包含在 fork 分支提交中。"
   ]
 }

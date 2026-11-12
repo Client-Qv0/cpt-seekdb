@@ -1,0 +1,67 @@
+test_all_five_dimensions_have_candidate_units (__main__.AgentMaterialChecks.test_all_five_dimensions_have_candidate_units) ... ok
+test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present) ... 
+  test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present) (expected='evidence-directory-discipline') ... FAIL
+  test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present) (expected='negative-results-not-counted') ... FAIL
+  test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present) (expected='bounded-self-iteration') ... FAIL
+  test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present) (expected='performance-prompt-balance') ... FAIL
+  test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present) (expected='server-only-execution') ... FAIL
+test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present) ... FAIL
+test_obvious_secret_formats_are_absent (__main__.AgentMaterialChecks.test_obvious_secret_formats_are_absent) ... ok
+test_pointer_resolves_and_rejects_bad_escape (__main__.AgentMaterialChecks.test_pointer_resolves_and_rejects_bad_escape) ... ok
+test_size_encoding_and_top_level_object (__main__.AgentMaterialChecks.test_size_encoding_and_top_level_object) ... ok
+test_strict_decoder_rejects_duplicate_keys_and_nonfinite_numbers (__main__.AgentMaterialChecks.test_strict_decoder_rejects_duplicate_keys_and_nonfinite_numbers) ... ok
+test_unbounded_total_and_invalid_evidence (__main__.AgentMaterialChecks.test_unbounded_total_and_invalid_evidence) ... ok
+test_v3_units_and_exact_evidence (__main__.AgentMaterialChecks.test_v3_units_and_exact_evidence) ... ok
+
+======================================================================
+FAIL: test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present) (expected='evidence-directory-discipline')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/li/minivectordb-self-iterate-20261113/tests/test_agent_material.py", line 187, in test_current_iteration_records_present
+    self.assertIn(expected, unit_ids)
+AssertionError: 'evidence-directory-discipline' not found in {'update-priority-and-invariants', 'agent-score-failure-loop', 'deploy-key-correction', 'frp-topology-transfer', 'exact-route-gated-choice'}
+
+======================================================================
+FAIL: test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present) (expected='negative-results-not-counted')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/li/minivectordb-self-iterate-20261113/tests/test_agent_material.py", line 187, in test_current_iteration_records_present
+    self.assertIn(expected, unit_ids)
+AssertionError: 'negative-results-not-counted' not found in {'update-priority-and-invariants', 'agent-score-failure-loop', 'deploy-key-correction', 'frp-topology-transfer', 'exact-route-gated-choice'}
+
+======================================================================
+FAIL: test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present) (expected='bounded-self-iteration')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/li/minivectordb-self-iterate-20261113/tests/test_agent_material.py", line 187, in test_current_iteration_records_present
+    self.assertIn(expected, unit_ids)
+AssertionError: 'bounded-self-iteration' not found in {'update-priority-and-invariants', 'agent-score-failure-loop', 'deploy-key-correction', 'frp-topology-transfer', 'exact-route-gated-choice'}
+
+======================================================================
+FAIL: test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present) (expected='performance-prompt-balance')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/li/minivectordb-self-iterate-20261113/tests/test_agent_material.py", line 187, in test_current_iteration_records_present
+    self.assertIn(expected, unit_ids)
+AssertionError: 'performance-prompt-balance' not found in {'update-priority-and-invariants', 'agent-score-failure-loop', 'deploy-key-correction', 'frp-topology-transfer', 'exact-route-gated-choice'}
+
+======================================================================
+FAIL: test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present) (expected='server-only-execution')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/li/minivectordb-self-iterate-20261113/tests/test_agent_material.py", line 187, in test_current_iteration_records_present
+    self.assertIn(expected, unit_ids)
+AssertionError: 'server-only-execution' not found in {'update-priority-and-invariants', 'agent-score-failure-loop', 'deploy-key-correction', 'frp-topology-transfer', 'exact-route-gated-choice'}
+
+======================================================================
+FAIL: test_current_iteration_records_present (__main__.AgentMaterialChecks.test_current_iteration_records_present)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/li/minivectordb-self-iterate-20261113/tests/test_agent_material.py", line 188, in test_current_iteration_records_present
+    self.assertIn('c8d86836bdf4e9b69b2836d047cb839878f0caa7',
+AssertionError: 'c8d86836bdf4e9b69b2836d047cb839878f0caa7' not found in '从真实历史摘录整理；当前绑定 c6617860ef56f8672f881ae1e1c40d8a05433638，材料修订另提交。'
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.008s
+
+FAILED (failures=6)
