@@ -1,0 +1,49 @@
+{
+  "candidate": "C13 statement-level journal buffering",
+  "base_commit": "6c1c32d2c5d05b2b188d9689069d98099e002d4d",
+  "retained": true,
+  "successful_optimization_number": 3,
+  "performance_gate": {
+    "environment": "fresh 2 CPU, 128 MiB, zero-swap transient cgroup per run",
+    "pairs": 6,
+    "target_metric": "write",
+    "write_median_reduction": 0.06755334271542343,
+    "write_wins": 5,
+    "query_median_reduction": 0.015208006348416995,
+    "peak_process_rss_median_reduction": -0.01105006105006105,
+    "data_file_bytes_unchanged": true,
+    "passed": true
+  },
+  "syscall_diagnostic": {
+    "rows": 1000,
+    "immediate_parent_total_traced_calls": 1026,
+    "candidate_total_traced_calls": 36,
+    "candidate_pwrite64_calls": 12,
+    "candidate_pwritev_calls": 11,
+    "candidate_fdatasync_calls": 13
+  },
+  "validation": {
+    "targeted_storage_suites": "10 PASS",
+    "release_ctest": "7/7 PASS",
+    "asan_ubsan_ctest": "7/7 PASS",
+    "acceptance_stress": "21/21 PASS",
+    "optimization_large": "16/16 PASS",
+    "public_bridge": "4/4 PASS",
+    "native_official_public": "20/20 cases, 95 SQL PASS",
+    "official_docker_public": "20/20 PASS",
+    "buffered_read_your_writes": "PASS",
+    "flush_threshold_and_abort": "PASS",
+    "transaction_rollback": "PASS",
+    "recovery_semantics": "PASS"
+  },
+  "identity": {
+    "candidate_binary_sha256": "4784016c18bd29ddaa282f73944af1ad2a6425abb6b34dbdea90153001a0349e",
+    "docker_image_id": "sha256:a1e701730bcd6c105e90e3cf8547b3a216931f3fb1c83b525c1651c390e4f893",
+    "image_binary_matches_native": true
+  },
+  "limitations": [
+    "shared measurement host",
+    "not an official performance score",
+    "physical I/O and hidden official cases are unavailable"
+  ]
+}

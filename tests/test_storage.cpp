@@ -97,6 +97,45 @@ void basics() {
     assert(!s.metadata("new"));
   }
 }
+void statement_buffer_visibility() {
+  Temp t;
+  Store s(t.path);
+  s.begin_statement();
+  s.put("t", 1, "one");
+  assert(s.get("t", 1) == "one");
+  s.put("t", 1, "two");
+  assert(s.get("t", 1) == "two");
+  size_t seen = 0;
+  s.scan("t", [&](int64_t key, const std::string &value) {
+    assert(key == 1 && value == "two");
+    ++seen;
+  });
+  assert(seen == 1);
+  s.abort_statement();
+  assert(!s.get("t", 1));
+
+  s.begin_statement();
+  const std::string first(600 * 1024, 'a');
+  const std::string second(600 * 1024, 'b');
+  const std::string third(600 * 1024, 'c');
+  s.put("t", 1, first);
+  s.put("t", 2, second);
+  s.put("t", 3, third);
+  assert(s.get("t", 1) == first);
+  assert(s.get("t", 2) == second);
+  assert(s.get("t", 3) == third);
+  s.abort_statement();
+  assert(all(s).empty());
+
+  s.begin();
+  s.begin_statement();
+  s.put("t", 7, "transaction");
+  s.finish_statement();
+  assert(s.get("t", 7) == "transaction");
+  s.rollback();
+  assert(!s.get("t", 7));
+}
+
 void snapshot_scan() {
   Temp t;
   Store s(t.path);
@@ -517,6 +556,7 @@ void checkpoint_crash_boundaries() {
 }
 int main() {
   basics();
+  statement_buffer_visibility();
   snapshot_scan();
   crash_recovery();
   every_truncated_commit();
@@ -525,6 +565,6 @@ int main() {
   checkpoint_correctness();
   automatic_checkpoint();
   checkpoint_crash_boundaries();
-  std::cout << "storage: 9 suites passed (including commit truncation, "
+  std::cout << "storage: 10 suites passed (including commit truncation, "
                "recovery interruption, and checkpoint crash boundaries)\n";
 }

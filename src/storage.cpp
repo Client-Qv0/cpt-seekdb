@@ -146,6 +146,10 @@ struct Store::Impl {
       meta.clear();
     }
   };
+  static constexpr size_t statement_flush_threshold = 1024 * 1024;
+  std::string statement_buffer;
+  uint64_t statement_buffered_start = kFileHeader;
+
   int fd = -1, lockfd = -1, dirfd = -1;
   uint64_t live_bytes = kFileHeader + kFrameHeader;
   uint64_t end = kFileHeader, durable_end = kFileHeader;
@@ -327,25 +331,76 @@ struct Store::Impl {
     position += bytes;
     return ref;
   }
+  void flush_statement_buffer() {
+    if (statement_buffer.empty()) {
+      statement_buffered_start = end;
+      return;
+    }
+    write_all(fd, statement_buffer.data(), statement_buffer.size(),
+              statement_buffered_start);
+    statement_buffer.clear();
+    statement_buffered_start = end;
+  }
+  Ref append_staged(uint32_t kind, const std::string &table, int64_t key,
+                    const std::string &value) {
+    if (table.size() > 1024 * 1024 ||
+        value.size() > std::numeric_limits<uint32_t>::max())
+      throw Error("LIMIT", "record or table identifier is too large");
+    const uint64_t bytes = kFrameHeader + table.size() + value.size();
+    if (end > uint64_t(std::numeric_limits<off_t>::max()) - bytes)
+      throw Error("LIMIT", "journal offset overflow");
+    std::array<unsigned char, kFrameHeader> h{};
+    set32(h.data(), kFrameMagic);
+    set32(h.data() + 4, kind);
+    set32(h.data() + 8, static_cast<uint32_t>(table.size()));
+    set32(h.data() + 12, static_cast<uint32_t>(value.size()));
+    uint64_t key_bits;
+    std::memcpy(&key_bits, &key, sizeof key_bits);
+    set64(h.data() + 16, key_bits);
+    uint32_t crc = crc_update(0xffffffffu, h.data(), h.size());
+    crc = crc_update(crc, table.data(), table.size());
+    crc = crc_update(crc, value.data(), value.size()) ^ 0xffffffffu;
+    set32(h.data() + 24, crc);
+    const Ref ref{end + kFrameHeader + table.size(),
+                  static_cast<uint32_t>(value.size()), kind == kErase};
+    statement_buffer.append(reinterpret_cast<const char *>(h.data()), h.size());
+    statement_buffer.append(table);
+    statement_buffer.append(value);
+    end += bytes;
+    if (statement_buffer.size() >= statement_flush_threshold)
+      flush_statement_buffer();
+    return ref;
+  }
+
   Ref append(uint32_t kind, const std::string &table, int64_t key,
              const std::string &value) {
     check();
     try {
-      return append_to(fd, end, kind, table, key, value);
+      return append_staged(kind, table, key, value);
+
     } catch (...) {
       poisoned = true;
       throw;
     }
   }
   std::string load(const Ref &ref) const {
+    if (statement && ref.offset >= statement_buffered_start &&
+        ref.offset <= end) {
+      const uint64_t relative = ref.offset - statement_buffered_start;
+      if (relative > statement_buffer.size() ||
+          ref.size > statement_buffer.size() - relative)
+        throw Error("CORRUPT", "buffered frame range is invalid");
+      return statement_buffer.substr(static_cast<size_t>(relative), ref.size);
+    }
     std::string value(ref.size, '\0');
     if (ref.size)
       read_all(fd, value.data(), value.size(), ref.offset);
     return value;
   }
+
   void seal(Layer &layer) {
     try {
-      append(kCommit, {}, 0, {});
+      append_to(fd, end, kCommit, {}, 0, {});
       sync_fd(fd);
       durable_end = end;
       account_live(layer);
@@ -355,6 +410,7 @@ struct Store::Impl {
       throw;
     }
   }
+
   void account_live(const Layer &incoming) {
     // Work is proportional to the current write set, never the entire database.
     for (const auto &entry : incoming.meta) {
@@ -592,27 +648,39 @@ void Store::begin_statement() {
   if (!s.transaction)
     s.maybe_checkpoint();
   s.statement_start = s.end;
+  s.statement_buffer.clear();
+  s.statement_buffered_start = s.end;
   s.statement = true;
 }
 void Store::finish_statement() {
   auto &s = *impl_;
   s.require_statement();
   s.no_scan();
-  if (s.transaction)
-    Impl::overlay(s.pending, s.current, false);
-  else
-    s.seal(s.current);
-  s.statement = false;
+  try {
+    s.flush_statement_buffer();
+    if (s.transaction)
+      Impl::overlay(s.pending, s.current, false);
+    else
+      s.seal(s.current);
+    s.statement = false;
+    s.statement_buffer.clear();
+    s.statement_buffered_start = s.end;
+  } catch (...) {
+    s.poisoned = true;
+    throw;
+  }
 }
 void Store::abort_statement() {
   auto &s = *impl_;
   s.no_scan();
   if (!s.statement)
     throw Error("TRANSACTION", "no active statement");
+  s.statement_buffer.clear();
   if (!s.poisoned)
     s.truncate_to(s.statement_start);
   s.current.clear();
   s.statement = false;
+  s.statement_buffered_start = s.end;
 }
 std::optional<std::string> Store::metadata(const std::string &table) const {
   const auto &s = *impl_;
