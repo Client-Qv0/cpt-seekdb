@@ -134,6 +134,15 @@ class AgentMaterialChecks(unittest.TestCase):
     def test_v3_units_and_exact_evidence(self):
         validate_v3(self.doc)
 
+    def test_all_five_dimensions_have_candidate_units(self):
+        # A material-level "insufficient evidence" marker makes the official
+        # v3 review return NEEDS_REVIEW instead of a numeric score.
+        for dimension in self.doc['dimensions']:
+            with self.subTest(dimension=dimension['id']):
+                self.assertTrue(dimension['unit_ids'])
+                self.assertNotEqual(dimension.get('evidence_status'),
+                                    'insufficient_student_evidence_in_selected_material')
+
     def test_unbounded_total_and_invalid_evidence(self):
         import copy
         d = copy.deepcopy(self.doc)
@@ -161,7 +170,7 @@ class AgentMaterialChecks(unittest.TestCase):
         for mutate in (
             lambda x: x['units'][0].update(score=3),
             lambda x: x['units'][0]['student_evidence'][0].update(quote='missing exact quote'),
-            lambda x: x['units'][0].update(result_evidence=[]),
+            lambda x: next(u for u in x['units'] if u['score'] > 0.5).update(result_evidence=[]),
             lambda x: x['units'].append(copy.deepcopy(x['units'][0])),
         ):
             bad=copy.deepcopy(d)

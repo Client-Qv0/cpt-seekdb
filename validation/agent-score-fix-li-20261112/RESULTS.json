@@ -1,0 +1,51 @@
+{
+  "candidate_base_commit": "c6617860ef56f8672f881ae1e1c40d8a05433638",
+  "candidate_base_branch": "2026-competition-round2",
+  "verification_branch": "fix/agent-score-li-20261112",
+  "production_source_changed": false,
+  "formal_assessment_submitted": false,
+  "platform_feedback": {
+    "commit": "c6617860ef56f8672f881ae1e1c40d8a05433638",
+    "mysql": "PASS",
+    "performance_raw": 3413.755039,
+    "agent_prompt_raw": null,
+    "agent_prompt_message": "Prompt结果无效、待复核、超出平台0–100范围或缺少材料摘要，本项不参与排名；未截断或换算本地分数。",
+    "detail_available": false
+  },
+  "cause_analysis": {
+    "finding": "基线材料有四个维度显式标记为 insufficient_student_evidence_in_selected_material，只有一个维度含候选 unit。",
+    "official_rule": "任一维度证据不足时，状态为 NEEDS_REVIEW，原始分暂为 null，完成复核前不用于排名。",
+    "confirmed_scope": "能够解释为何基线材料不能产生有效数值分数；平台合并提示不提供更细错误码。"
+  },
+  "material": {
+    "path": "agent/conversation.json",
+    "bytes": 16619,
+    "max_bytes": 131072,
+    "sha256": "1a40923e38105638c7c9b045f2c9f07cfa5e1e8d2337f791c4f12ebf619ae6fc",
+    "declared_candidate_score": 4.0,
+    "dimensions_with_units": 5,
+    "units": 5,
+    "local_checks_passed": 7,
+    "local_checks_total": 7
+  },
+  "release_validation": {
+    "ctest": "7/7",
+    "acceptance_with_stress": "21/21",
+    "optimization_large": "16/16",
+    "official_public_protocol": "20/20",
+    "official_public_result_passed": true
+  },
+  "binary": {
+    "native_sha256": "0fc4d430b70a32367b42d2a68eae54c0f0e4416bc6585aa77914444fe44a8e6b",
+    "image_sha256": "0fc4d430b70a32367b42d2a68eae54c0f0e4416bc6585aa77914444fe44a8e6b",
+    "native_image_identical": true,
+    "docker_image_id": "sha256:a13e62475f13a8697f0270a46e992b4e13e170ae6e7b0779ae7f5d99a7fbc36e",
+    "docker_image_tag": "mvdb-agent-score:c661-fix-20261112"
+  },
+  "limits": [
+    "本地结构检查不等于官方三轮语义评审。",
+    "无法从平台合并提示确认是否还存在本轮未发现的平台侧问题。",
+    "本轮没有正式提测，也没有新的官方 Agent Prompt 分数。",
+    "提交后最终 commit SHA 与本文件所在的 c661 基线不同，平台必须使用新完整 commit。"
+  ]
+}
