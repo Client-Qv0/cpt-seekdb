@@ -1,0 +1,47 @@
+{
+  "candidate": "C17 sync-on-write autocommit",
+  "base_commit": "76f4df0a85197b1dfaf0b67c88e7e4de1d402f96",
+  "retained": true,
+  "successful_optimization_number": 4,
+  "performance_gate": {
+    "environment": "fresh 2 CPU, 128 MiB, zero-swap transient cgroup per run",
+    "pairs": 6,
+    "target_metric": "write",
+    "write_median_reduction": 0.020964656276402763,
+    "write_wins": 5,
+    "query_median_reduction": -0.0038561798908609765,
+    "peak_process_rss_median_reduction": 0.005494505494505495,
+    "data_file_bytes_unchanged": true,
+    "passed": true
+  },
+  "syscall_diagnostic": {
+    "rows": 1000,
+    "parent_total_traced_calls": 36,
+    "candidate_total_traced_calls": 14,
+    "candidate_pwritev2_calls": 11,
+    "candidate_pwrite64_calls": 1,
+    "candidate_fdatasync_calls": 2
+  },
+  "validation": {
+    "targeted_storage_suites": "10 PASS",
+    "release_ctest": "7/7 PASS",
+    "asan_ubsan_ctest": "7/7 PASS",
+    "acceptance_stress": "21/21 PASS",
+    "optimization_large": "16/16 PASS",
+    "public_bridge": "4/4 PASS",
+    "native_official_public": "20/20 cases, 95 SQL PASS",
+    "official_docker_public": "20/20 PASS",
+    "durability_semantics": "PASS",
+    "large_statement_fallback": "non-durable chunks followed by fdatasync"
+  },
+  "identity": {
+    "candidate_binary_sha256": "9aa8283238a2e9e513b8f25d621becb2680d7a5e8bdebfa78dff014f9614e84a",
+    "docker_image_id": "sha256:975782592767ee05c47a1f5ba290608bb09ab8d51d9f1f5b3e72df64221a45dd",
+    "image_binary_matches_native": true
+  },
+  "limitations": [
+    "shared measurement host",
+    "not an official performance score",
+    "physical I/O and hidden official cases are unavailable"
+  ]
+}

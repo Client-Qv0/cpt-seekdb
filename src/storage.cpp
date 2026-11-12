@@ -95,6 +95,26 @@ void write_all(int fd, const void *buffer, size_t size, uint64_t offset) {
     offset += static_cast<size_t>(n);
   }
 }
+void write_all_dsync(int fd, const void *buffer, size_t size,
+                     uint64_t offset) {
+  struct iovec part{const_cast<void *>(buffer), size};
+  while (part.iov_len) {
+    const ssize_t written = ::pwritev2(
+        fd, &part, 1, static_cast<off_t>(offset), RWF_DSYNC);
+    if (written < 0) {
+      if (errno == EINTR)
+        continue;
+      io_error("write journal");
+    }
+    if (written == 0)
+      throw Error("IO", "zero-length write to journal");
+    offset += static_cast<size_t>(written);
+    if (static_cast<size_t>(written) == part.iov_len)
+      return;
+    part.iov_base = static_cast<unsigned char *>(part.iov_base) + written;
+    part.iov_len -= static_cast<size_t>(written);
+  }
+}
 void writev_all(int fd, struct iovec *parts, int count, uint64_t offset) {
   while (count) {
     const ssize_t written = ::pwritev(fd, parts, count,
@@ -149,6 +169,7 @@ struct Store::Impl {
   static constexpr size_t statement_flush_threshold = 1024 * 1024;
   std::string statement_buffer;
   uint64_t statement_buffered_start = kFileHeader;
+  bool statement_previously_flushed = false;
 
   int fd = -1, lockfd = -1, dirfd = -1;
   uint64_t live_bytes = kFileHeader + kFrameHeader;
@@ -331,15 +352,23 @@ struct Store::Impl {
     position += bytes;
     return ref;
   }
-  void flush_statement_buffer() {
+  bool flush_statement_buffer(bool durable = false) {
     if (statement_buffer.empty()) {
       statement_buffered_start = end;
-      return;
+      return false;
     }
-    write_all(fd, statement_buffer.data(), statement_buffer.size(),
-              statement_buffered_start);
+    const bool combined_sync = durable && !statement_previously_flushed;
+    if (combined_sync) {
+      write_all_dsync(fd, statement_buffer.data(), statement_buffer.size(),
+                      statement_buffered_start);
+    } else {
+      write_all(fd, statement_buffer.data(), statement_buffer.size(),
+                statement_buffered_start);
+      statement_previously_flushed = true;
+    }
     statement_buffer.clear();
     statement_buffered_start = end;
+    return combined_sync;
   }
   Ref append_staged(uint32_t kind, const std::string &table, int64_t key,
                     const std::string &value) {
@@ -398,10 +427,16 @@ struct Store::Impl {
     return value;
   }
 
-  void seal(Layer &layer) {
+  void seal(Layer &layer, bool staged = false) {
     try {
-      append_to(fd, end, kCommit, {}, 0, {});
-      sync_fd(fd);
+      if (staged) {
+        append_staged(kCommit, {}, 0, {});
+        if (!flush_statement_buffer(true))
+          sync_fd(fd);
+      } else {
+        append_to(fd, end, kCommit, {}, 0, {});
+        sync_fd(fd);
+      }
       durable_end = end;
       account_live(layer);
       overlay(committed, layer, true);
@@ -650,6 +685,7 @@ void Store::begin_statement() {
   s.statement_start = s.end;
   s.statement_buffer.clear();
   s.statement_buffered_start = s.end;
+  s.statement_previously_flushed = false;
   s.statement = true;
 }
 void Store::finish_statement() {
@@ -657,14 +693,16 @@ void Store::finish_statement() {
   s.require_statement();
   s.no_scan();
   try {
-    s.flush_statement_buffer();
-    if (s.transaction)
+    if (s.transaction) {
+      s.flush_statement_buffer();
       Impl::overlay(s.pending, s.current, false);
-    else
-      s.seal(s.current);
+    } else {
+      s.seal(s.current, true);
+    }
     s.statement = false;
     s.statement_buffer.clear();
     s.statement_buffered_start = s.end;
+    s.statement_previously_flushed = false;
   } catch (...) {
     s.poisoned = true;
     throw;
@@ -681,6 +719,7 @@ void Store::abort_statement() {
   s.current.clear();
   s.statement = false;
   s.statement_buffered_start = s.end;
+  s.statement_previously_flushed = false;
 }
 std::optional<std::string> Store::metadata(const std::string &table) const {
   const auto &s = *impl_;
