@@ -36,3 +36,7 @@
 
 CTest 9/9、压力黑盒 21/21、优化/大输出 16/16、public bridge 4/4、
 官方公开题包 20 用例 95 SQL（含事务内多行插入失败的原子性用例）。
+
+Sanitizer（源码同版本重新构建）：ASan+UBSan CTest **9/9**；
+ThreadSanitizer 下 `test_parallel_search` 与 `test_storage`（10 组，含 commit 截断、
+恢复中断、checkpoint 崩溃边界）**均无竞争报告**。
