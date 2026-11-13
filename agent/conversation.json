@@ -1,13 +1,13 @@
 {
  "rule_version": "agent-learning-evidence-v3-unbounded",
- "summary": "MiniVectorDB v12 材料：补入 CPU 配额迁移链——选手事前给出的取宽边界、配额×亲和性矩阵与持续负载下的限流复测；并纠正旧结论的适用范围（参考负载不触发限流）。v10 的六条事后追问已移出 units，只作导航。",
+ "summary": "MiniVectorDB v13 材料：收尾 CPU 配额链——单请求往返口径下三组对照均无限流、未达预设 P95 门槛；流水线（在途 32）对照复现限流，4 线程吞吐 -14.5%、p95 11.13ms 对 8.01ms，策略据此保留但理由收窄为防止持续供给时线程超配。分批格的 P95 差异保留为原因未确认。",
  "synthetic": false,
  "coverage": {
   "complete_conversation": false,
   "selected_material_complete": true,
   "exclusion": "泛泛的“继续/执行”、Agent 代写的方案和没有实际结果的未来计划不作为学生技术能力证据。用户转交的任务书（含 W2/W3 划分与 15% 门槛）技术措辞来自文档原作者，材料只把用户实际采纳、限定范围并据以裁决的行为计为学生证据，引用位置仍保留逐字原文以便核对。",
   "source_version": "生产源码绑定 f5a7e3e2373742eee40268cf20ef7837b91da655；v5 材料修订随后续提交。",
-  "material_revision": "agent-learning-evidence-v12",
+  "material_revision": "agent-learning-evidence-v13",
   "rubric_mapping": "维度名称与档位定义取自加赛文档 3.4.1/3.4.2：0.5=提出具体问题、预测或方案但没有实际结果；1=参与验证并有实际验证结果；1.5=解释结果、据此修正方案并复测；2=在同一实例中迁移到新场景、完成验证并分析局限。本材料按该口径重新自评，只对有时间线结果支撑的实例给到 1 或 1.5。"
  },
  "conversations": [
@@ -543,6 +543,29 @@
      "content": "该策略与现有实现（取 min(配额, 亲和性)）在被测各格等价；据此设计配额/亲和性解耦矩阵验证。"
     }
    ]
+  },
+  {
+   "id": "quota-chain-closing",
+   "scope": "配额链收尾阶段的学生决策：判据未达成后如何处置策略，以及对未解释差异的报告要求。",
+   "messages": [
+    {
+     "id": "student-keep-narrowed",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "保留现有配额策略，理由收窄为防止持续供给时线程超配；这次单请求往返没观察到限流，也没达到预设的 P95 门槛。"
+    },
+    {
+     "id": "student-unconfirmed",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "分批那格的 P95 差异写成原因未确认，别直接归为噪声，也别归因于限流。"
+    },
+    {
+     "id": "agent-quota-close",
+     "source": "agent",
+     "content": "按该口径改写该链：判据未达成、单请求往返无限流、流水线对照下 4 线程出现限流并损失吞吐与尾延迟；分批格差异保留为原因未确认。"
+    }
+   ]
   }
  ],
  "experiments": [
@@ -798,6 +821,20 @@
    "content": "旧（按亲和性）与新（按配额）在 q200/a4、参考负载下 4 对：线程 4 vs 2，读取 0.3371 vs 0.3107 s，两者限流均为 0。",
    "context": "CPU 配额迁移实验的逐格结果。",
    "executed": true
+  },
+  {
+   "id": "p95-singleflight-matrix",
+   "source": "tool_output_summary",
+   "content": "单请求往返（正式 JSONL，10k 查询，2 CPU 配额/4 核可见，3 轮中位）：W2 连续 p95 0.395ms、零限流；W4 连续 p95 0.400ms、零限流；W2 分批 p95 0.402ms；W4 分批 p95 0.453ms。四格结果逐字节一致，全部零限流。",
+   "context": "配额链收尾的两组对照，用于确认策略的适用条件。",
+   "executed": true
+  },
+  {
+   "id": "pipeline-32-control",
+   "source": "tool_output_summary",
+   "content": "流水线对照（在途上限 32，2 轮中位）：W2 4868 req/s、p50 6.167ms、p95 8.011ms、零限流；W4 4163 req/s、p50 7.098ms、p95 11.132ms、限流 6 次/42144us；吞吐 -14.5%，结果逐字节一致。",
+   "context": "配额链收尾的两组对照，用于确认策略的适用条件。",
+   "executed": true
   }
  ],
  "dimensions": [
@@ -832,7 +869,8 @@
     "one-shot-eval-risk-question",
     "working-tree-verification",
     "quantified-before-after-demand",
-    "merge-readiness-check"
+    "merge-readiness-check",
+    "unconfirmed-cause-reporting"
    ],
    "evidence_status": "candidate_unit_present"
   },
@@ -1227,21 +1265,36 @@
    "id": "quota-policy-boundary",
    "chain_id": "cpu-quota-migration",
    "dimension": "technical_transfer",
-   "score": 1.0,
-   "reason": "选手在测量前给出一条可检验的策略边界（只在配额小于可见核数时按配额取宽），并按该边界设计配额×亲和性矩阵；复测还修正了旧结论的适用范围：限流只在持续负载下出现，参考负载下两个构建都不限流。",
+   "score": 1.5,
+   "reason": "学生在看到判据未达成后，仍然保留策略但把理由收窄为“防止持续供给时线程超配”，并要求补一组流水线对照复测；复测在在途上限 32 时复现限流，4 线程吞吐 -14.5%、p95 11.13ms 对 8.01ms，据此确认策略的适用条件是持续供给而非单请求往返。",
    "student_evidence": [
     {
-     "pointer": "/conversations/17/messages/0/content",
-     "quote": "分情况——只在\"配额 < 可见核数\""
+     "pointer": "/conversations/18/messages/0/content",
+     "quote": "保留现有配额策略，理由收窄为防止持续供给时线程超配"
     }
    ],
    "result_evidence": [
     {
-     "pointer": "/experiments/34/content",
-     "quote": "持续负载（10000 次查询）下旧实现 14–18 次限流、161–221 ms，新实现 0 次"
+     "pointer": "/experiments/37/content",
+     "quote": "W4 4163 req/s、p50 7.098ms、p95 11.132ms、限流 6 次/42144us"
     }
    ],
-   "rule_basis": "1 档（参与验证并有实际验证结果）：学生事先给出策略与边界，Agent 按矩阵执行并给出逐格结果。"
+   "rule_basis": "1.5 档（解释结果、据此修正方案并复测）：学生据未达标的判据修正了策略理由，并指定复测口径，复测复现了限流与尾延迟代价。"
+  },
+  {
+   "id": "unconfirmed-cause-reporting",
+   "chain_id": "report-unknown-cause",
+   "dimension": "independent_validation",
+   "score": 0.5,
+   "reason": "学生要求把分批格中无法解释的 P95 差异标为“原因未确认”，既不允许归为噪声，也不允许归因于限流；这是对证据强度的显式约束。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/18/messages/1/content",
+     "quote": "分批那格的 P95 差异写成原因未确认，别直接归为噪声，也别归因于限流。"
+    }
+   ],
+   "result_evidence": [],
+   "rule_basis": "0.5 档（提出具体判断但还没有为该差异设计出可执行验证）。"
   }
  ],
  "limitations": [
@@ -1252,7 +1305,8 @@
   "按官方 3.4.2 档位，目前没有任何实例达到 2 分（要求同一实例迁移到新场景并分析局限），最高为 1.5。",
   "评审只读这一个 conversation.json；仓库其它文件、外部链接与平台日志不会被引用。",
   "复盘问答中的机理解释由 Agent 整理，学生本人的口头解释仍缺失；retrospective 中逐条标注了 open_question。",
-  "CPU 配额链的结果解释与边界复测尚未由选手本人给出，retrospective 中以 open_question 标注。"
+  "CPU 配额链的结果解释与边界复测尚未由选手本人给出，retrospective 中以 open_question 标注。",
+  "流水线对照只跑了 2 轮（时间盒），且分批格 P95 差异至今没有可解释机制。"
  ],
  "user_prompts": [
   {
