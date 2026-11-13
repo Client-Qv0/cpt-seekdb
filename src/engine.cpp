@@ -936,10 +936,16 @@ Result Engine::execute_statement(const Statement &st) {
               }
               uint32_t survivors = 0;
               if (quantized.codes) {
-                for (size_t lane = 0; lane < batch_count; ++lane)
-                  if (!(double(exact::quantized_squared_distance(
-                            view, i + lane, quantized)) > screen_threshold))
-                    survivors |= uint32_t(1) << lane;
+                for (size_t offset = 0; offset < batch_count; offset += 4) {
+                  uint32_t approximate[4];
+                  const size_t rows4[4] = {i + offset, i + offset + 1,
+                                           i + offset + 2, i + offset + 3};
+                  exact::quantized_squared_distance4(view, rows4, quantized,
+                                                     approximate);
+                  for (size_t lane = 0; lane < 4; ++lane)
+                    if (!(double(approximate[lane]) > screen_threshold))
+                      survivors |= uint32_t(1) << (offset + lane);
+                }
               } else {
                 float approximate[32];
                 if (batch_count == 32)
@@ -1055,10 +1061,16 @@ Result Engine::execute_statement(const Statement &st) {
               }
               uint32_t survivors = 0;
               if (quantized.codes) {
-                for (size_t lane = 0; lane < 32; ++lane)
-                  if (!(double(exact::quantized_squared_distance(
-                            view, batch[lane], quantized)) > screen_threshold))
-                    survivors |= uint32_t(1) << lane;
+                for (size_t offset = 0; offset < 32; offset += 4) {
+                  uint32_t approximate[4];
+                  const size_t rows4[4] = {batch[offset], batch[offset + 1],
+                                           batch[offset + 2], batch[offset + 3]};
+                  exact::quantized_squared_distance4(view, rows4, quantized,
+                                                     approximate);
+                  for (size_t lane = 0; lane < 4; ++lane)
+                    if (!(double(approximate[lane]) > screen_threshold))
+                      survivors |= uint32_t(1) << (offset + lane);
+                }
               } else {
                 float approximate[32];
                 exact::squared_distances32_fp32(view, batch, projection.query,

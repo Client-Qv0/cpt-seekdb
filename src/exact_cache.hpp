@@ -506,6 +506,71 @@ inline void squared_distances32_fp32_avx2(
   _mm256_storeu_ps(out+16,sum2);_mm256_storeu_ps(out+24,sum3);
 }
 
+// Four rows per call: one query load feeds four independent integer
+// accumulators. Per-row arithmetic is unchanged, so the results are identical
+// to four quantized_squared_distance_avx2 calls.
+__attribute__((target("avx2,no-fma"),noinline))
+inline void quantized_squared_distance4_avx2(const int8_t* r0,const int8_t* r1,
+                                             const int8_t* r2,const int8_t* r3,
+                                             const int16_t* query,size_t dim,
+                                             uint32_t* out) {
+  __m256i s0=_mm256_setzero_si256(),s1=_mm256_setzero_si256();
+  __m256i s2=_mm256_setzero_si256(),s3=_mm256_setzero_si256();
+  size_t d=0;
+  for(;d+16<=dim;d+=16) {
+    const __m256i q=_mm256_loadu_si256(reinterpret_cast<const __m256i*>(query+d));
+    const int8_t* rows[4]={r0,r1,r2,r3};
+    __m256i* sums[4]={&s0,&s1,&s2,&s3};
+    for(int lane=0;lane<4;++lane) {
+      const __m128i bytes=_mm_loadu_si128(reinterpret_cast<const __m128i*>(rows[lane]+d));
+      const __m256i values=_mm256_cvtepi8_epi16(bytes);
+      const __m256i delta=_mm256_sub_epi16(values,q);
+      *sums[lane]=_mm256_add_epi32(*sums[lane],_mm256_madd_epi16(delta,delta));
+    }
+  }
+  const uint32_t partial[4]={
+      static_cast<uint32_t>(_mm256_extract_epi32(s0,0)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s0,1)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s0,2)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s0,3)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s0,4)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s0,5)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s0,6)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s0,7)),
+      static_cast<uint32_t>(_mm256_extract_epi32(s1,0)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s1,1)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s1,2)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s1,3)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s1,4)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s1,5)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s1,6)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s1,7)),
+      static_cast<uint32_t>(_mm256_extract_epi32(s2,0)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s2,1)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s2,2)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s2,3)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s2,4)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s2,5)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s2,6)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s2,7)),
+      static_cast<uint32_t>(_mm256_extract_epi32(s3,0)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s3,1)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s3,2)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s3,3)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s3,4)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s3,5)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s3,6)) +
+          static_cast<uint32_t>(_mm256_extract_epi32(s3,7))};
+  const int8_t* rows[4]={r0,r1,r2,r3};
+  for(int lane=0;lane<4;++lane) {
+    uint32_t extra=partial[lane];
+    for(size_t t=d;t<dim;++t) {
+      const int delta=int(rows[lane][t])-int(query[t]);extra+=uint32_t(delta*delta);
+    }
+    out[lane]=extra;
+  }
+}
+
 #endif
 inline uint32_t quantized_squared_distance(const Compact& cache,size_t row,
                                           const QuantizedQuery& query) {
@@ -518,6 +583,20 @@ inline uint32_t quantized_squared_distance(const Compact& cache,size_t row,
     const int delta=int(codes[d])-int(query.codes[d]);sum+=uint32_t(delta*delta);
   }
   return sum;
+#endif
+}
+inline void quantized_squared_distance4(const Compact& cache,const size_t* rows,
+                                        const QuantizedQuery& query,
+                                        uint32_t* out) {
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  const int8_t* base=cache.quantized_codes.get();
+  const size_t stride=cache.dim;
+  quantized_squared_distance4_avx2(base+rows[0]*stride,base+rows[1]*stride,
+                                   base+rows[2]*stride,base+rows[3]*stride,
+                                   query.codes.get(),cache.dim,out);
+#else
+  for(int lane=0;lane<4;++lane)
+    out[lane]=quantized_squared_distance(cache,rows[lane],query);
 #endif
 }
 inline void distances4(const Compact& cache,const size_t* rows,

@@ -285,11 +285,46 @@ void test_quantized_screen() {
 #endif
 }
 
+
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+// The four-row integer kernel must return exactly what four single-row calls
+// return, including short dimensions that leave a scalar tail.
+void test_quantized_four_row_kernel() {
+  if (!exact::available()) return;
+  std::mt19937 rng(20261113);
+  std::uniform_int_distribution<int> code(-127, 127);
+  for (size_t dim : {size_t(1), size_t(7), size_t(16), size_t(17), size_t(64),
+                     size_t(127), size_t(128), size_t(129)}) {
+    std::vector<int8_t> rows(4 * dim);
+    std::vector<int16_t> query(dim);
+    for (auto &value : rows) value = static_cast<int8_t>(code(rng));
+    for (auto &value : query) value = static_cast<int16_t>(code(rng));
+    uint32_t batch[4];
+    const int8_t *row0 = rows.data();
+    const int8_t *row1 = rows.data() + dim;
+    const int8_t *row2 = rows.data() + 2 * dim;
+    const int8_t *row3 = rows.data() + 3 * dim;
+    exact::quantized_squared_distance4_avx2(row0, row1, row2, row3,
+                                            query.data(), dim, batch);
+    const uint32_t single[4] = {
+        exact::quantized_squared_distance_avx2(row0, query.data(), dim),
+        exact::quantized_squared_distance_avx2(row1, query.data(), dim),
+        exact::quantized_squared_distance_avx2(row2, query.data(), dim),
+        exact::quantized_squared_distance_avx2(row3, query.data(), dim)};
+    for (int lane = 0; lane < 4; ++lane)
+      require(batch[lane] == single[lane]);
+  }
+}
+#endif
+
 int main() {
   test_compact_accessors();
   test_equality_postings();
   test_fp32_screen();
   test_quantized_screen();
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  test_quantized_four_row_kernel();
+#endif
   for(size_t n: {size_t(0),size_t(1),size_t(3),size_t(4),size_t(5),size_t(9)})
     for(size_t dim: {size_t(1),size_t(3),size_t(128)}) {
       exact::Plan plan({Type::BigInt,Type::Varchar,Type::Vector},2,dim);
