@@ -892,6 +892,34 @@ Result Engine::execute_statement(const Statement &st) {
         // more permissive than the merged one: extra candidates can survive, but
         // a row that belongs in the top K is never screened out.
         auto scan_contiguous = [&](size_t begin, size_t end, Heap &heap) {
+          // Survivors are scattered over batches, so refining them one by one
+          // leaves the vector kernels unused. Collect them first and refine in
+          // blocks of eight, four and a scalar tail, keeping scan order.
+          size_t picked[64];
+          size_t picked_count = 0;
+          auto flush_picked = [&](Heap &heap) {
+            size_t at = 0;
+            for (; at + 8 <= picked_count; at += 8) {
+              double distances[8];
+              exact::distances8(view, picked + at, projection.query, distances);
+              for (size_t lane = 0; lane < 8; ++lane)
+                consider(heap, view.keys[picked[at + lane]], distances[lane],
+                         picked[at + lane]);
+            }
+            if (at + 4 <= picked_count) {
+              double distances[4];
+              exact::distances4(view, picked + at, projection.query, distances);
+              for (size_t lane = 0; lane < 4; ++lane)
+                consider(heap, view.keys[picked[at + lane]], distances[lane],
+                         picked[at + lane]);
+              at += 4;
+            }
+            for (; at < picked_count; ++at)
+              consider(heap, view.keys[picked[at]],
+                       view.distance(picked[at], projection.query), picked[at]);
+            picked_count = 0;
+          };
+          constexpr size_t picked_flush = 8;
           double screened_worst = -1, screen_threshold = 0;
           size_t i = begin;
           for (; i + 8 <= end;) {
@@ -929,9 +957,8 @@ Result Engine::execute_statement(const Statement &st) {
                   batch_count == 32 ? uint32_t(0xffffffffu) : uint32_t(0xffu);
               if (survivors != all) {
                 for (size_t lane = 0; lane < batch_count; ++lane)
-                  if (survivors & (uint32_t(1) << lane))
-                    consider(heap, view.keys[i + lane],
-                             view.distance(i + lane, projection.query), i + lane);
+                  if (survivors & (uint32_t(1) << lane)) picked[picked_count++] = i + lane;
+                if (picked_count >= picked_flush) flush_picked(heap);
                 // A threshold captured before this batch is conservative even
                 // if refinement improves the heap; refresh it for the next batch.
                 i += batch_count;
@@ -960,12 +987,41 @@ Result Engine::execute_statement(const Statement &st) {
           }
           for (; i < end; ++i)
             consider(heap, view.keys[i], view.distance(i, projection.query), i);
+          if (picked_count) flush_picked(heap);
         };
         // Batched scan of an explicit candidate list. Non-contiguous rows keep
         // the gather-based float32 screen for 32 rows at a time; the posting
         // array stays uint32 and only the active batch is widened.
         auto scan_list = [&](const uint32_t *rows, size_t count, Heap &heap) {
           if (!count) return;
+          // Survivors are scattered over batches, so refining them one by one
+          // leaves the vector kernels unused. Collect them first and refine in
+          // blocks of eight, four and a scalar tail, keeping scan order.
+          size_t picked[64];
+          size_t picked_count = 0;
+          auto flush_picked = [&](Heap &heap) {
+            size_t at = 0;
+            for (; at + 8 <= picked_count; at += 8) {
+              double distances[8];
+              exact::distances8(view, picked + at, projection.query, distances);
+              for (size_t lane = 0; lane < 8; ++lane)
+                consider(heap, view.keys[picked[at + lane]], distances[lane],
+                         picked[at + lane]);
+            }
+            if (at + 4 <= picked_count) {
+              double distances[4];
+              exact::distances4(view, picked + at, projection.query, distances);
+              for (size_t lane = 0; lane < 4; ++lane)
+                consider(heap, view.keys[picked[at + lane]], distances[lane],
+                         picked[at + lane]);
+              at += 4;
+            }
+            for (; at < picked_count; ++at)
+              consider(heap, view.keys[picked[at]],
+                       view.distance(picked[at], projection.query), picked[at]);
+            picked_count = 0;
+          };
+          constexpr size_t picked_flush = 8;
           double screened_worst = -1, screen_threshold = 0;
           auto refine = [&](const size_t *batch, size_t lanes) {
             size_t offset = 0;
@@ -1015,9 +1071,8 @@ Result Engine::execute_statement(const Statement &st) {
               if (survivors != uint32_t(0xffffffffu)) {
                 for (size_t lane = 0; lane < 32; ++lane)
                   if (survivors & (uint32_t(1) << lane))
-                    consider(heap, view.keys[batch[lane]],
-                             view.distance(batch[lane], projection.query),
-                             batch[lane]);
+                    picked[picked_count++] = batch[lane];
+                if (picked_count >= picked_flush) flush_picked(heap);
                 continue;
               }
             }
@@ -1027,6 +1082,7 @@ Result Engine::execute_statement(const Statement &st) {
           const size_t remaining = count - at;
           for (size_t lane = 0; lane < remaining; ++lane) tail[lane] = rows[at + lane];
           refine(tail, remaining);
+          if (picked_count) flush_picked(heap);
         };
         // Split the scan into contiguous slices and merge the per-slice heaps.
         // Neighbor comparison is a total order on (distance, primary key), so
