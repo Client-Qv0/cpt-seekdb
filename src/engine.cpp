@@ -114,12 +114,25 @@ private:
 };
 // Rows below this stay serial: pool wake-up would cost more than the scan.
 constexpr size_t parallel_scan_min_rows = 1024;
+// Multi-row INSERT pays for text parsing and packing per tuple; a statement
+// with at least this many rows is worth splitting across workers.
+constexpr size_t parallel_insert_min_rows = 16;
+// Bounds the packed rows a parallel INSERT holds before applying them, so a
+// very large statement cannot double its resident size.
+constexpr size_t parallel_insert_chunk_rows = 256;
 size_t scan_width(size_t rows) {
   size_t width = exact::thread_limit();
   if (width == 0) width = cpu::budget_cpus();
   width = std::min<size_t>(width, 4);
   if (width < 2 || rows < parallel_scan_min_rows) return 1;
   return width;
+}
+size_t insert_width(size_t rows) {
+  size_t width = exact::thread_limit();
+  if (width == 0) width = cpu::budget_cpus();
+  width = std::min<size_t>(width, 4);
+  if (width < 2 || rows < parallel_insert_min_rows) return 1;
+  return std::min(width, WorkerPool::instance().capacity());
 }
 struct Schema {
   std::vector<Column> columns;
@@ -681,17 +694,37 @@ Result Engine::execute_statement(const Statement &st) {
         throw Error("COLUMN",
                     "all columns must be provided; NULL/defaults unsupported");
     }
-    for (auto &tuple : st.values) {
-      if (tuple.size() != mapping.size())
-        throw Error("TYPE", "column/value count mismatch");
-      std::vector<Cell> row(schema.columns.size());
-      for (size_t i = 0; i < tuple.size(); ++i)
-        row[mapping[i]] = convert(tuple[i], schema.columns[mapping[i]]);
-      auto key = std::get<int64_t>(row[pk]);
-      if (store_.get(st.table, key))
-        throw Error("DUPLICATE_KEY", "duplicate primary key");
-      store_.put(st.table, key, pack_row(row, schema));
-      ++result.affected;
+    const size_t rows = st.values.size();
+    const size_t width = insert_width(rows);
+    // Conversion and packing are pure per tuple, so a chunk is prepared in
+    // parallel and only then applied in statement order. Duplicate detection
+    // still runs sequentially against the rows applied so far.
+    std::vector<std::pair<int64_t, std::string>> prepared;
+    for (size_t begin = 0; begin < rows; begin += parallel_insert_chunk_rows) {
+      const size_t end = std::min(rows, begin + parallel_insert_chunk_rows);
+      prepared.assign(end - begin, {});
+      auto prepare = [&](size_t lane) {
+        for (size_t i = begin + lane; i < end; i += width) {
+          auto &tuple = st.values[i];
+          if (tuple.size() != mapping.size())
+            throw Error("TYPE", "column/value count mismatch");
+          std::vector<Cell> row(schema.columns.size());
+          for (size_t c = 0; c < tuple.size(); ++c)
+            row[mapping[c]] = convert(tuple[c], schema.columns[mapping[c]]);
+          prepared[i - begin] = {std::get<int64_t>(row[pk]),
+                                 pack_row(row, schema)};
+        }
+      };
+      if (width > 1)
+        WorkerPool::instance().run(width, prepare);
+      else
+        prepare(0);
+      for (auto &entry : prepared) {
+        if (store_.get(st.table, entry.first))
+          throw Error("DUPLICATE_KEY", "duplicate primary key");
+        store_.put(st.table, entry.first, entry.second);
+        ++result.affected;
+      }
     }
     return result;
   }
