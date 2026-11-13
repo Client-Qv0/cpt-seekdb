@@ -284,7 +284,13 @@ void parse_request(const std::string &line, Request &request) {
   }
   if (op != "execute")
     throw Error("UNSUPPORTED_OP", "unsupported request operation");
-  request.sql = field_string("sql");
+  // The decoded field is consumed here and `fields` dies with this call.
+  {
+    auto field = fields.find("sql");
+    if (field == fields.end() || !field->second.is_string)
+      throw Error("PROTOCOL", "request requires string sql");
+    request.sql = std::move(field->second.decoded);
+  }
   if (fields.count("search_mode")) {
     const auto &mode = field_string("search_mode");
     if (mode == "exact")

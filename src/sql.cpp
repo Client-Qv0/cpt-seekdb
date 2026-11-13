@@ -200,11 +200,14 @@ class Parser {
     return n;
   }
   Literal literal() {
-    const Token& t = current();
+    Token& t = tokens_[pos_];
     if (t.kind != TokenKind::String && t.kind != TokenKind::Number)
       syntax(t.offset, "Expected string or numeric literal");
+    const bool quoted = t.kind == TokenKind::String;
+    // The token is consumed here; its text moves into the literal instead of
+    // being copied, and no later parse step reads it again.
     ++pos_;
-    return {t.text, t.kind == TokenKind::String};
+    return {std::move(t.text), quoted};
   }
   void create(Statement& s) {
     if (accept("vector")) {
