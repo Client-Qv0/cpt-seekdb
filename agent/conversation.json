@@ -1,13 +1,13 @@
 {
  "rule_version": "agent-learning-evidence-v3-unbounded",
- "summary": "MiniVectorDB v14 材料（收尾版）：CPU 配额链按实际时间线记录——单请求往返下两种宽度均未观察到限流、连续发送的 P95 差异 +1.32% 未达预设 10% 门槛；学生据此收窄策略理由并要求补流水线对照，复测复现限流与吞吐下降但因果待验证。策略与 deploy key 两条按实际发生的判断、修正与复测定档。",
+ "summary": "MiniVectorDB v15 材料：补入 Top-K 并行边界链（两轮合并为一条证据，先按 1 档候选记录）——候选数 1023/1024/1025 三格跨切片并列，以及末尾唯一最近行与等距截断的补测；两种宽度均与独立参考逐位一致，未发现缺陷。边界值构思来自队友书面分析，判据与布局调整由选手决定，已在记录范围内注明。",
  "synthetic": false,
  "coverage": {
   "complete_conversation": false,
   "selected_material_complete": true,
   "exclusion": "泛泛的“继续/执行”、Agent 代写的方案和没有实际结果的未来计划不作为学生技术能力证据。用户转交的任务书（含 W2/W3 划分与 15% 门槛）技术措辞来自文档原作者，材料只把用户实际采纳、限定范围并据以裁决的行为计为学生证据，引用位置仍保留逐字原文以便核对。",
   "source_version": "生产源码绑定 f5a7e3e2373742eee40268cf20ef7837b91da655；v5 材料修订随后续提交。",
-  "material_revision": "agent-learning-evidence-v14",
+  "material_revision": "agent-learning-evidence-v15",
   "rubric_mapping": "维度名称与档位定义取自加赛文档 3.4.1/3.4.2：0.5=提出具体问题、预测或方案但没有实际结果；1=参与验证并有实际验证结果；1.5=解释结果、据此修正方案并复测；2=在同一实例中迁移到新场景、完成验证并分析局限。本材料按该口径重新自评，只对有时间线结果支撑的实例给到 1 或 1.5。"
  },
  "conversations": [
@@ -566,6 +566,40 @@
      "content": "按该口径改写该链：判据未达成、单请求往返无限流、流水线对照下 4 线程出现限流并损失吞吐与尾延迟；分批格差异保留为原因未确认。"
     }
    ]
+  },
+  {
+   "id": "topk-parallel-counterexample",
+   "scope": "Top-K 反例链。来源：1023/1024/1025 的边界值构思来自队友书面分析，选手转交并采纳；判据选择、并列带位置调整与末尾最近行补测由选手本人决定。Agent 负责搭建独立参考与执行。",
+   "messages": [
+    {
+     "id": "student-topk-brief",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "下一轮只做 Top-K：组合过滤后剩 1023、1024、1025 行，构造第 K 名跨切片并列。开跑前把最小数据布局和独立参考的核验口径发我，我先定判据；跑完给我每格的实际并行计数和完整排序对照，我再决定复测哪一格。生产代码冻结，不提测。"
+    },
+    {
+     "id": "agent-topk-protocol",
+     "source": "agent",
+     "content": "给出三格布局（并列带 id 512–551）、宽度 2 的切片边界（1024 行跨 512、1025 行跨 544）、独立标量参考的位级比对口径，以及按过滤后候选数决定并行的 1024 门槛。"
+    },
+    {
+     "id": "student-criterion",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "选 C。先把并列带改成 id=512–551，`0–511` 的距离保持 1，`552–1024` 保持 3，确保 B、C 都跨切片。"
+    },
+    {
+     "id": "agent-first-round",
+     "source": "agent",
+     "content": "首轮三格：宽度 2 下并行计数 0/1/1，强制宽度 1 下 0/0/0，两种宽度的完整有序结果均与独立参考逐位一致，未发现缺陷。"
+    },
+    {
+     "id": "student-retest",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "补跑 C 格，不改插入顺序。把 id=1024 设成唯一最近行（距离 1），`100、101、544、545、546` 设为等距（距离 2），其余距离 3。用 LIMIT 5，独立参考应返回 1024、100、101、544、545。"
+    }
+   ]
   }
  ],
  "experiments": [
@@ -835,6 +869,20 @@
    "content": "流水线对照（在途上限 32，2 轮中位）：W2 4868 req/s、p50 6.167ms、p95 8.011ms、零限流；W4 4163 req/s、p50 7.098ms、p95 11.132ms、限流 6 次/42144us；吞吐 -14.5%，结果逐字节一致。只跑了 2 轮且未隔离因果（线程数、调度、内存带宽同时变化），限流与尾延迟的因果机制待验证。",
    "context": "配额链收尾的两组对照，用于确认策略的适用条件。",
    "executed": true
+  },
+  {
+   "id": "topk-boundary-matrix",
+   "source": "tool_output_summary",
+   "content": "首轮三格（1023/1024/1025 行，并列带 id 512–551）：宽度 2 时并行计数 0/1/1，强制宽度 1 时 0/0/0；两种宽度的 546 行完整有序结果与独立参考逐项位级一致。切片：1024 行 per=512 chunk=512，跨 512；1025 行 per=513 chunk=544，跨 544。",
+   "context": "Top-K 并行边界链的两轮实测，生产代码未改动。",
+   "executed": true
+  },
+  {
+   "id": "topk-tail-tie-retest",
+   "source": "tool_output_summary",
+   "content": "补测 C 格（1025 候选，LIMIT 5）：唯一最近行 id=1024 位于候选末尾，等距带 100/101 在第一片、544/545/546 在第二片；两种宽度均返回 1024、100、101、544、545，保留 544/545 并排除 546，与独立参考逐位一致；并行计数宽度 2 为 1、宽度 1 为 0。",
+   "context": "Top-K 并行边界链的两轮实测，生产代码未改动。",
+   "executed": true
   }
  ],
  "dimensions": [
@@ -870,7 +918,8 @@
     "working-tree-verification",
     "quantified-before-after-demand",
     "merge-readiness-check",
-    "unconfirmed-cause-reporting"
+    "unconfirmed-cause-reporting",
+    "topk-parallel-boundary-counterexample"
    ],
    "evidence_status": "candidate_unit_present"
   },
@@ -1295,6 +1344,26 @@
    ],
    "result_evidence": [],
    "rule_basis": "0.5 档（提出具体判断但还没有为该差异设计出可执行验证）。"
+  },
+  {
+   "id": "topk-parallel-boundary-counterexample",
+   "chain_id": "topk-parallel-boundary",
+   "dimension": "independent_validation",
+   "score": 1.0,
+   "reason": "选手把并行门槛 1024 作为反例目标，并在首轮通过后改动布局追问两个更具体的问题：末尾唯一最近行是否漏扫、两片合并时第 K 名是否按主键取对。两轮在两种宽度下都与独立标量参考逐位一致，未发现缺陷；结论只覆盖已测的 1023/1024/1025 三种候选数与宽度 1、2。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/19/messages/2/content",
+     "quote": "选 C。先把并列带改成 id=512–551"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/39/content",
+     "quote": "两种宽度均返回 1024、100、101、544、545，保留 544/545 并排除 546"
+    }
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出反例设计与判据，结果由独立参考核验给出。"
   }
  ],
  "limitations": [
@@ -1307,7 +1376,9 @@
   "复盘问答中的机理解释由 Agent 整理，学生本人的口头解释仍缺失；retrospective 中逐条标注了 open_question。",
   "CPU 配额链的结果解释与边界复测尚未由选手本人给出，retrospective 中以 open_question 标注。",
   "流水线对照只跑 2 轮且未隔离因果，限流与尾延迟的因果机制标为待验证。",
-  "文件重定向喂入下的限流结论只适用于那种喂入方式，不代表单请求往返口径。"
+  "文件重定向喂入下的限流结论只适用于那种喂入方式，不代表单请求往返口径。",
+  "Top-K 链只覆盖 1023/1024/1025 三种候选数与宽度 1、2；未覆盖非单调插入顺序与更大宽度，结论不外推。",
+  "该链未发现缺陷，按 1 档记录；1.5 档所需的“解释结果并据此修正”未发生。"
  ],
  "user_prompts": [
   {
