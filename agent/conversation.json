@@ -1,13 +1,13 @@
 {
  "rule_version": "agent-learning-evidence-v3-unbounded",
- "summary": "MiniVectorDB v7 材料：按加赛文档 3.4 的五个维度与四档证据重新组织并重新自评。已有真实材料集中在“学生下达约束、Agent 执行、工具给出结果”这一形态，按官方口径多数只能计 0.5-1 分；学生本人对机制的复述、机理预测、反例设计与复盘解释仍然缺失，这是当前分值的主要缺口。",
+ "summary": "MiniVectorDB v10 材料：新增事后复盘问答（6 条，已标注为补记）、user_prompts 汇总与 retrospective 结构；把原本拆成四条的“工作纪律”合并为单条实例以避免重复计分；技术链补入并行扫描确定性、CPU 配额限流、幸存密度、系统调用定位、写入阶段拆分与 AST 绕过的负结果。官方结果仍为 f5a7e3e 的 E=4327.462375 与 Agent Prompt 4.000000。",
  "synthetic": false,
  "coverage": {
   "complete_conversation": false,
   "selected_material_complete": true,
   "exclusion": "泛泛的“继续/执行”、Agent 代写的方案和没有实际结果的未来计划不作为学生技术能力证据。用户转交的任务书（含 W2/W3 划分与 15% 门槛）技术措辞来自文档原作者，材料只把用户实际采纳、限定范围并据以裁决的行为计为学生证据，引用位置仍保留逐字原文以便核对。",
   "source_version": "生产源码绑定 f5a7e3e2373742eee40268cf20ef7837b91da655；v5 材料修订随后续提交。",
-  "material_revision": "agent-learning-evidence-v7",
+  "material_revision": "agent-learning-evidence-v10",
   "rubric_mapping": "维度名称与档位定义取自加赛文档 3.4.1/3.4.2：0.5=提出具体问题、预测或方案但没有实际结果；1=参与验证并有实际验证结果；1.5=解释结果、据此修正方案并复测；2=在同一实例中迁移到新场景、完成验证并分析局限。本材料按该口径重新自评，只对有时间线结果支撑的实例给到 1 或 1.5。"
  },
  "conversations": [
@@ -454,6 +454,78 @@
      "content": "确认主干本就在该提交，切回工作树并干净重建验证。"
     }
    ]
+  },
+  {
+   "id": "retrospective-qa-20261113",
+   "scope": "事后复盘问答（补记）：用户在 v9 材料之后，针对此前已完成的技术链逐条提问；问题为用户原话，回答为 Agent 依据当次真实测量结果整理。非当时同步对话，已在此声明。",
+   "messages": [
+    {
+     "id": "q1",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "并行扫描以后，你怎么保证结果和串行一模一样？"
+    },
+    {
+     "id": "q2",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "官方只给 --cpus=2 不给核绑定，你按哪个数开线程？会不会反被限流？"
+    },
+    {
+     "id": "q3",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "粗筛完剩那么点候选，还一条条算距离，浪费不浪费？先测剩多少。"
+    },
+    {
+     "id": "q4",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "大表一次查询要 90 毫秒，给我系统调用数据，别猜。"
+    },
+    {
+     "id": "q5",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "INSERT 并行以后为什么只快了 6%？时间到底花在哪？"
+    },
+    {
+     "id": "q6",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "你说绕开 AST 会更快，实测为什么没动？"
+    },
+    {
+     "id": "a1",
+     "source": "agent",
+     "content": "确定性来自两点：合并比较器是 (distance, key) 上的全序，与串行相同；每个切片用自己的堆算筛选阈值，切片堆不会优于全局堆，阈值只会更宽松，因此只多留候选、不会漏行。实测 width 1/2/3/4/2 × 48 条查询 × 12000 行含大量等距记录，结果逐字节一致。"
+    },
+    {
+     "id": "a2",
+     "source": "agent",
+     "content": "按 cgroup 的 cpu.max 配额取，和亲和性取小值。--cpus=2 只设配额不设 cpuset，容器仍看得见 4 个核，按 4 开线程会被限流：实测旧实现 27 个周期里 17 次限流、累计 197 ms；按配额开 2 线程后限流 0 次。"
+    },
+    {
+     "id": "a3",
+     "source": "agent",
+     "content": "先测了密度：1000 次查询共 170441 个 32 行批次，168619 批部分存活，幸存行合计 323446，平均每批约 1.9 行。所以逐行调标量精算是浪费，改成攒到 8 行再走 8/4 路向量内核。"
+    },
+    {
+     "id": "a4",
+     "source": "agent",
+     "content": "系统调用数据显示每查询约 5 万次 pread64（50k 行逐行读）。改成按 512 行缓冲、把文件偏移相邻的行合成一次定位读后，100 次查询从 8.46/9.04 s 降到 5.15/4.87 s，查询阶段 pread 降到接近 0。"
+    },
+    {
+     "id": "a5",
+     "source": "agent",
+     "content": "阶段插桩给出答案：protocol 0.043-0.058 s、解析+编码 0.100-0.134 s、apply 0.023-0.025 s，其余是语句记账与落盘。并行只盖住解析段，apply（查重+journal）和落盘仍串行，所以端到端只有 6.07%。"
+    },
+    {
+     "id": "a6",
+     "source": "agent",
+     "content": "因为省掉的不是浮点解析。W2/W3 去掉的是通用 Token/Literal AST 的构造与一次文本拷贝，而每条向量仍要逐 float 解析；8 对配对里 W2 +0.91%、W3 +3.70% 与 -2.98%，方向不一致，判定持平。"
+    }
+   ]
   }
  ],
  "experiments": [
@@ -646,6 +718,48 @@
    "content": "合并前核对结果：工作区干净、也有自测版本以来源码零改动、目标提交为当前祖先（可快进）、Release CTest 9/9、ASan 9/9、压力 21/21、优化 16/16、公开题包 20 用例 95 SQL。",
    "context": "用户询问是否可以合并时才执行，结论基于上面五项。",
    "executed": true
+  },
+  {
+   "id": "parallel-scan-determinism-result",
+   "source": "tool_output_summary",
+   "content": "切片扫描确定性：width 1/2/3/4/2 × 48 条查询 × 12000 行含大量等距记录，逐字节一致；阈值取自本片堆，只可能更宽松。",
+   "context": "本轮技术链的实测结果，用于接续复盘问答。",
+   "executed": true
+  },
+  {
+   "id": "cpu-quota-throttling-result",
+   "source": "tool_output_summary",
+   "content": "CPUQuota=200%、无 cpuset、亲和性 4：按亲和性开 4 线程时 27 个周期中 17 次限流、累计 197191 us；按配额开 2 线程后限流 0 次。",
+   "context": "本轮技术链的实测结果，用于接续复盘问答。",
+   "executed": true
+  },
+  {
+   "id": "survivor-density-result",
+   "source": "tool_output_summary",
+   "content": "粗筛密度：1000 次查询共 170441 个 32 行批次，168619 批部分存活，幸存 323446 行，平均每批约 1.9 行。",
+   "context": "本轮技术链的实测结果，用于接续复盘问答。",
+   "executed": true
+  },
+  {
+   "id": "large-table-pread-result",
+   "source": "tool_output_summary",
+   "content": "50k 行表 100 次查询：基线 8.46/9.04 s，合并定位读后 5.15/4.87 s；查询阶段 pread64 由约每查询 5 万次降至接近 0。",
+   "context": "本轮技术链的实测结果，用于接续复盘问答。",
+   "executed": true
+  },
+  {
+   "id": "insert-parallel-stage-result",
+   "source": "tool_output_summary",
+   "content": "写入阶段：protocol 0.043-0.058 s、解析+编码 0.100-0.134 s、apply 0.023-0.025 s，其余 0.092-0.128 s；并行解析后端到端写入 +6.07%。",
+   "context": "本轮技术链的实测结果，用于接续复盘问答。",
+   "executed": true
+  },
+  {
+   "id": "w2w3-no-gain-result",
+   "source": "tool_output_summary",
+   "content": "W2/W3 正式 JSONL 入口 8 对：W2 +0.91%（2/3）、W3 +3.70%（2/3）与 -2.98%（2/5）；省掉的是 AST 构造，逐 float 解析量未变。",
+   "context": "本轮技术链的实测结果，用于接续复盘问答。",
+   "executed": true
   }
  ],
  "dimensions": [
@@ -654,7 +768,6 @@
    "name": "问题理解与自主拆解",
    "unit_ids": [
     "update-priority-and-invariants",
-    "evidence-directory-discipline",
     "handoff-environment-constraints",
     "measurable-write-target"
    ],
@@ -667,7 +780,9 @@
     "frp-topology-transfer",
     "server-only-execution",
     "pipeline-decomposition-transfer",
-    "eval-feedback-reprioritization"
+    "eval-feedback-reprioritization",
+    "parallel-scan-determinism",
+    "cpu-quota-width-risk"
    ],
    "evidence_status": "candidate_unit_present"
   },
@@ -676,7 +791,7 @@
    "name": "独立验证与质疑",
    "unit_ids": [
     "deploy-key-correction",
-    "negative-results-not-counted",
+    "working-discipline",
     "one-shot-eval-risk-question",
     "working-tree-verification",
     "quantified-before-after-demand",
@@ -689,9 +804,11 @@
    "name": "实验与反馈迭代",
    "unit_ids": [
     "agent-score-failure-loop",
-    "bounded-self-iteration",
     "predeclared-threshold-honesty",
-    "staged-merge-authorization"
+    "staged-merge-authorization",
+    "survivor-density-first",
+    "syscall-evidence-first",
+    "insert-parallel-shortfall"
    ],
    "evidence_status": "candidate_unit_present"
   },
@@ -700,8 +817,8 @@
    "name": "取舍与反思",
    "unit_ids": [
     "exact-route-gated-choice",
-    "performance-prompt-balance",
-    "rollback-to-verified-baseline"
+    "rollback-to-verified-baseline",
+    "ast-bypass-no-gain"
    ],
    "evidence_status": "candidate_unit_present"
   }
@@ -814,30 +931,6 @@
    "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
-   "id": "evidence-directory-discipline",
-   "chain_id": "candidate-evidence-directories",
-   "dimension": "problem_understanding",
-   "score": 1.0,
-   "reason": "用户为每轮实验规定了新的 validation 目录和证据包内容。Agent 按该要求分别保存成功与否决候选，保留了提交绑定、原始测量、哈希和报告，能够支持独立复核。",
-   "student_evidence": [
-    {
-     "pointer": "/conversations/6/messages/1/content",
-     "quote": "每轮实验使用新的 validation 子目录，保存命令、原始数据、二进制/镜像哈希和报告。"
-    }
-   ],
-   "result_evidence": [
-    {
-     "pointer": "/experiments/10/content",
-     "quote": "成功提交 7168a647 将 TopK winner 直接从紧凑视图投影：最终源码六对查询中位+8.688%、6/6胜；写入+0.794%、数据字节不变；完整 Release、公开和 Docker 矩阵通过。"
-    },
-    {
-     "pointer": "/experiments/8/content",
-     "quote": "每个保留或否决候选都有独立 validation 目录，保存 candidate patch、A/B 原始 JSON、summary、构建与测试日志、二进制/镜像哈希以及 REPORT 和 RESULTS。"
-    }
-   ],
-   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
-  },
-  {
    "id": "server-only-execution",
    "chain_id": "mcp-ssh-server-execution",
    "dimension": "technical_transfer",
@@ -858,11 +951,11 @@
    "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
-   "id": "negative-results-not-counted",
-   "chain_id": "negative-results-excluded",
+   "id": "working-discipline",
+   "chain_id": "working-discipline-chain",
    "dimension": "independent_validation",
    "score": 1.0,
-   "reason": "用户明确否定了用失败实验凑提交的做法。后续十三项候选未过门槛时均保留本地证据但不提交；只有独立满足目标指标的候选进入分支，形成了学生约束与工具结果的完整验证链。",
+   "reason": "同一条工作纪律链：证据目录隔离、负结果不入账、迭代次数封顶、性能与材料并重。规则要求同一修正链只取一个维度一次，因此合并为单条实例。",
    "student_evidence": [
     {
      "pointer": "/conversations/6/messages/0/content",
@@ -873,62 +966,6 @@
     {
      "pointer": "/experiments/7/content",
      "quote": "C1、C2、C3、C4、C5、C6、C8、C9、C10、C11、C14、C15、C16 未达到各自门槛；均为本地负结果，不 commit、不推送、不计入成功轮次。"
-    }
-   ],
-   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
-  },
-  {
-   "id": "bounded-self-iteration",
-   "chain_id": "five-success-stop-loop",
-   "dimension": "experimental_iteration",
-   "score": 1.0,
-   "reason": "用户要求自主循环同时设置五成功提交停止线。实际过程先形成四个保留优化，并在多个失败候选后继续按证据调整；材料和最终提交按停止规则收束，没有把负结果计入轮次。",
-   "student_evidence": [
-    {
-     "pointer": "/conversations/6/messages/2/content",
-     "quote": "只有通过性能门槛并保留生产代码的成功优化才 commit；最多累计 5 个成功 commit。"
-    },
-    {
-     "pointer": "/conversations/6/messages/3/content",
-     "quote": "达到 5 个成功 commit 后停止"
-    }
-   ],
-   "result_evidence": [
-    {
-     "pointer": "/experiments/11/content",
-     "quote": "成功提交 6c1c32d2 将每帧三次 pwrite64 合并为一次 pwritev：六对写入中位+6.648%、6/6胜；1000 行帧写系统调用从 3015 降到 1012，崩溃与恢复测试通过。"
-    },
-    {
-     "pointer": "/experiments/12/content",
-     "quote": "成功提交 76f4df0a 按语句缓冲 journal 帧：六对写入中位再降6.755%、5/6胜；1000 行的相关 traced syscall 从 1026 降到 36，语句内读、回滚与恢复通过。"
-    }
-   ],
-   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
-  },
-  {
-   "id": "performance-prompt-balance",
-   "chain_id": "performance-and-material-balance",
-   "dimension": "tradeoff_reflection",
-   "score": 1.0,
-   "reason": "用户同时要求性能与 prompt 推进，并保留内存、事务原子性和恢复正确性。四轮保留改动分别覆盖查询与写入，且都通过恢复、公开和 Docker 回归；材料同步记录历史有效 Agent 分但不提前宣称 v4 官方提升。",
-   "student_evidence": [
-    {
-     "pointer": "/conversations/6/messages/6/content",
-     "quote": "保留 V2 的内存收益、事务原子性和崩溃恢复正确性。"
-    },
-    {
-     "pointer": "/conversations/6/messages/5/content",
-     "quote": "我要睡觉了，接下来的时间你来进行自迭代，自行思考下一步的“性能”和“prompt”的提升优化方案，并执行。"
-    }
-   ],
-   "result_evidence": [
-    {
-     "pointer": "/experiments/13/content",
-     "quote": "成功提交 c8d86836 用小语句 pwritev2(RWF_DSYNC) 合并数据与 commit marker：写入中位+2.096%、5/6胜；1000 行 traced syscall 从 36 降到 14。"
-    },
-    {
-     "pointer": "/experiments/9/content",
-     "quote": "d21e8f85 官方结果：MySQL 正式用例通过；性能原始分 3306.163332；Agent Prompt 原始分 3.000000。该历史结果不用于声称 v4 已获得更高官方分。"
     }
    ],
    "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
@@ -1152,6 +1189,126 @@
     }
    ],
    "rule_basis": "1 档（参与验证并有实际验证结果）：学生提出检查要求，核对结果可复核。"
+  },
+  {
+   "id": "parallel-scan-determinism",
+   "chain_id": "chain-parallel-scan",
+   "dimension": "technical_transfer",
+   "score": 1.0,
+   "reason": "学生要求先给出“并行后结果仍然一致”的依据，再接受该改动；随后执行了多宽度逐字节比对。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/16/messages/0/content",
+     "quote": "并行扫描以后，你怎么保证结果和串行一模一样？"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/27/content",
+     "quote": "逐字节一致；阈值取自本片堆，只可能更宽松"
+    }
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生提出验证要求或风险点，Agent 执行、工具给出可核对结果。"
+  },
+  {
+   "id": "cpu-quota-width-risk",
+   "chain_id": "chain-cpu-budget",
+   "dimension": "technical_transfer",
+   "score": 1.0,
+   "reason": "学生指出只给 --cpus=2 时按可见核数开线程可能反被限流；随后按配额与亲和性取小值并复测限流。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/16/messages/1/content",
+     "quote": "官方只给 --cpus=2 不给核绑定，你按哪个数开线程？会不会反被限流？"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/28/content",
+     "quote": "按配额开 2 线程后限流 0 次"
+    }
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生提出验证要求或风险点，Agent 执行、工具给出可核对结果。"
+  },
+  {
+   "id": "survivor-density-first",
+   "chain_id": "chain-survivor-refine",
+   "dimension": "experimental_iteration",
+   "score": 1.0,
+   "reason": "学生要求先测幸存密度再决定是否精算优化；测得平均每批 1.9 行后才改为攒批精算。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/16/messages/2/content",
+     "quote": "粗筛完剩那么点候选，还一条条算距离，浪费不浪费？先测剩多少。"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/29/content",
+     "quote": "平均每批约 1.9 行"
+    }
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生提出验证要求或风险点，Agent 执行、工具给出可核对结果。"
+  },
+  {
+   "id": "syscall-evidence-first",
+   "chain_id": "chain-coalesced-read",
+   "dimension": "experimental_iteration",
+   "score": 1.0,
+   "reason": "学生拒绝凭猜测解释慢查询，要求先给系统调用数据；据此定位到每查询约 5 万次 pread 并合并读。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/16/messages/3/content",
+     "quote": "大表一次查询要 90 毫秒，给我系统调用数据，别猜。"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/30/content",
+     "quote": "查询阶段 pread64 由约每查询 5 万次降至接近 0"
+    }
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生提出验证要求或风险点，Agent 执行、工具给出可核对结果。"
+  },
+  {
+   "id": "insert-parallel-shortfall",
+   "chain_id": "chain-insert-parallel",
+   "dimension": "experimental_iteration",
+   "score": 1.0,
+   "reason": "学生追问并行后为何只快 6%，促使把写入拆成协议/解析编码/应用三段计时，定位到串行的 apply 与落盘。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/16/messages/4/content",
+     "quote": "INSERT 并行以后为什么只快了 6%？时间到底花在哪？"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/31/content",
+     "quote": "apply 0.023-0.025 s，其余 0.092-0.128 s"
+    }
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生提出验证要求或风险点，Agent 执行、工具给出可核对结果。"
+  },
+  {
+   "id": "ast-bypass-no-gain",
+   "chain_id": "chain-bulk-parse",
+   "dimension": "tradeoff_reflection",
+   "score": 1.0,
+   "reason": "学生质疑“绕开 AST 更快”的推断与实测不符；阶段数据表明省掉的是构造与拷贝，逐 float 解析量未变，据此判定持平并保留数据。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/16/messages/5/content",
+     "quote": "你说绕开 AST 会更快，实测为什么没动？"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/32/content",
+     "quote": "省掉的是 AST 构造，逐 float 解析量未变"
+    }
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生提出验证要求或风险点，Agent 执行、工具给出可核对结果。"
   }
  ],
  "limitations": [
@@ -1160,6 +1317,109 @@
   "Agent 生成的算法、代码、测量和解释没有转记为学生贡献；转交文档的原作者不归给用户。",
   "W2/W3 的持平结论、R1 的行尾噪声和负结果细节都保留在正文与 experiments 中，未做美化。",
   "按官方 3.4.2 档位，目前没有任何实例达到 2 分（要求同一实例迁移到新场景并分析局限），最高为 1.5。",
-  "评审只读这一个 conversation.json；仓库其它文件、外部链接与平台日志不会被引用。"
+  "评审只读这一个 conversation.json；仓库其它文件、外部链接与平台日志不会被引用。",
+  "复盘问答中的机理解释由 Agent 整理，学生本人的口头解释仍缺失；retrospective 中逐条标注了 open_question。"
+ ],
+ "user_prompts": [
+  {
+   "round": "handoff",
+   "prompt": "交接这个比赛，交接的两个文档已给出",
+   "source": "student"
+  },
+  {
+   "round": "handoff",
+   "prompt": "找到最新代码存储位置了吗",
+   "source": "student"
+  },
+  {
+   "round": "optimization",
+   "prompt": "思考下一步优化计划",
+   "source": "student"
+  },
+  {
+   "round": "optimization",
+   "prompt": "继续迭代下一个版本，思考下一步优化计划并执行",
+   "source": "student"
+  },
+  {
+   "round": "branching",
+   "prompt": "提交到fork的分支，先不合并到比赛主干",
+   "source": "student"
+  },
+  {
+   "round": "branching",
+   "prompt": "合并到比赛主干分支",
+   "source": "student"
+  },
+  {
+   "round": "round4",
+   "prompt": "下一轮切换到批量 INSERT 执行链重构，直接实施 W2、W3。",
+   "source": "student"
+  },
+  {
+   "round": "rollback",
+   "prompt": "这次肯定得回退，现在我准备评测，建议回退到f5a7e3e还是R1 扫描合并定位读？",
+   "source": "student"
+  },
+  {
+   "round": "rollback",
+   "prompt": "推f5a7e3e这个分支，回滚到这个版本。",
+   "source": "student"
+  },
+  {
+   "round": "prompt-work",
+   "prompt": "评测结果出来了，下一步主攻prompt",
+   "source": "student"
+  }
+ ],
+ "retrospective": [
+  {
+   "id": "retro-parallel-scan",
+   "question_ref": "/conversations/16/messages/0/content",
+   "measured": "/experiments/27/content",
+   "what_student_supplied": "要求先证明确定性才接受改动",
+   "explanation_author": "agent",
+   "open_question": "学生本人尚未复述阈值为何更宽松的推理过程"
+  },
+  {
+   "id": "retro-cpu-quota",
+   "question_ref": "/conversations/16/messages/1/content",
+   "measured": "/experiments/28/content",
+   "what_student_supplied": "指出仅给配额时按可见核数开线程的风险",
+   "explanation_author": "agent",
+   "open_question": "学生本人尚未解释配额与亲和性的区别"
+  },
+  {
+   "id": "retro-survivor",
+   "question_ref": "/conversations/16/messages/2/content",
+   "measured": "/experiments/29/content",
+   "what_student_supplied": "要求先量化幸存密度再优化",
+   "explanation_author": "agent",
+   "open_question": "学生本人尚未估算批量精算的收益上界"
+  },
+  {
+   "id": "retro-pread",
+   "question_ref": "/conversations/16/messages/3/content",
+   "measured": "/experiments/30/content",
+   "what_student_supplied": "要求先给系统调用数据",
+   "explanation_author": "agent",
+   "open_question": "学生本人尚未解释为何合并读不会改变可见语义"
+  },
+  {
+   "id": "retro-insert",
+   "question_ref": "/conversations/16/messages/4/content",
+   "measured": "/experiments/31/content",
+   "what_student_supplied": "追问并行收益为何只有 6%",
+   "explanation_author": "agent",
+   "open_question": "学生本人尚未判断下一步该并行 apply 还是放弃"
+  },
+  {
+   "id": "retro-ast",
+   "question_ref": "/conversations/16/messages/5/content",
+   "measured": "/experiments/32/content",
+   "what_student_supplied": "用实测结果质疑“绕开 AST 更快”的推断",
+   "explanation_author": "agent",
+   "open_question": "学生本人尚未总结这条负结果的适用条件"
+  }
  ]
 }

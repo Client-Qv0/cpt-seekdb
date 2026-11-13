@@ -180,9 +180,9 @@ class AgentMaterialChecks(unittest.TestCase):
 
     def test_current_iteration_records_present(self):
         unit_ids={unit['id'] for unit in self.doc['units']}
-        for expected in ('evidence-directory-discipline','negative-results-not-counted',
-                         'bounded-self-iteration','performance-prompt-balance',
-                         'server-only-execution'):
+        # The four discipline units were merged into one chain, as the rubric
+        # counts a single chain once regardless of how it is split.
+        for expected in ('working-discipline','server-only-execution'):
             with self.subTest(expected=expected):
                 self.assertIn(expected, unit_ids)
         self.assertIn('f5a7e3e2373742eee40268cf20ef7837b91da655',
