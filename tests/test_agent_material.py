@@ -185,7 +185,7 @@ class AgentMaterialChecks(unittest.TestCase):
                          'server-only-execution'):
             with self.subTest(expected=expected):
                 self.assertIn(expected, unit_ids)
-        self.assertIn('c8d86836bdf4e9b69b2836d047cb839878f0caa7',
+        self.assertIn('f5a7e3e2373742eee40268cf20ef7837b91da655',
                       self.doc['coverage']['source_version'])
 
     def test_obvious_secret_formats_are_absent(self):
