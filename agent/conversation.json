@@ -286,6 +286,51 @@
      "content": "全机扫描所有 worktree 后确认最新提交所在目录，并指出 /opt 下两份副本停留在旧提交。"
     }
    ]
+  },
+  {
+   "id": "rubric-discovery",
+   "scope": "用户要求继续优化 Agent 材料；Agent 从加赛文档取回 3.4 节的维度与档位定义，并据此重排材料。",
+   "messages": [
+    {
+     "id": "student-prompt-optimization",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "规划下一步prompt的优化方案并执行"
+    },
+    {
+     "id": "agent-rubric-findings",
+     "source": "agent",
+     "content": "找到官方 3.4 节：五个维度、四档证据（0.5 无结果 / 1 有验证结果 / 1.5 解释并修正复测 / 2 迁移到新场景并分析局限），且明确 Agent 给出的规划与解释不证明学生理解；据此把材料按档位重排并下调自评。"
+    }
+   ]
+  },
+  {
+   "id": "pre-merge-checks",
+   "scope": "用户在两次合并前要求先给出可核对的依据：一次要量化幅度，一次要确认是否真的可以合并。",
+   "messages": [
+    {
+     "id": "student-quantify",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "本次commit对比比赛主干，提升幅度如何"
+    },
+    {
+     "id": "agent-quantify",
+     "source": "agent",
+     "content": "给出 2 CPU cgroup 下 20 对交替配对的查询/写入中位数、胜率与端到端口径，并说明哪些数字是换算、哪些是实测。"
+    },
+    {
+     "id": "student-merge-ready",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "现在是做好可以合并了吗"
+    },
+    {
+     "id": "agent-merge-ready",
+     "source": "agent",
+     "content": "逐项核对：工作区干净、分支 tip、自测版本以来源码零变化、可快进、回归与公开用例结果，然后才给结论。"
+    }
+   ]
   }
  ],
  "experiments": [
@@ -457,6 +502,27 @@
    "content": "全机扫描 git worktree：最新提交在 /home/li/minivectordb-self-iterate-20261113，/opt/minivectordb-v2 停在 75ecbf3 且带未合并的旧原型，另有四个同仓库 worktree 分别指向不同基线。",
    "context": "执行任何改动前先确认工作副本；/opt 下那份是过期现场。",
    "executed": true
+  },
+  {
+   "id": "official-rubric-text",
+   "source": "tool_output_summary",
+   "content": "加赛文档 3.4.2：0.5=学生提出具体问题、预测或验证方案但没有实际结果；1=学生参与验证并有实际验证结果；1.5=学生解释结果、据此修正方案并复测，形成完整证据链；2=在同一实例中迁移到新场景，完成验证，并结合结果分析局限。另明确“Agent 自动给出的优秀规划、技术解释、代码或修复，不直接证明学生理解”。",
+   "context": "从赛事文档取回的规则原文摘要，用于校准自评口径。",
+   "executed": true
+  },
+  {
+   "id": "paired-ab-summary",
+   "source": "tool_output_summary",
+   "content": "f5a7e3e 之后 20 对配对：查询 +22.37%（20/20）、端到端 +14.69%；相对 10a8762 累计查询 +31.39%（20/20）。写入侧两次对照方向相反，判为噪声。",
+   "context": "同机 2 CPU cgroup、独立数据目录、交替配对。",
+   "executed": true
+  },
+  {
+   "id": "merge-readiness-checklist",
+   "source": "tool_output_summary",
+   "content": "合并前核对结果：工作区干净、也有自测版本以来源码零改动、目标提交为当前祖先（可快进）、Release CTest 9/9、ASan 9/9、压力 21/21、优化 16/16、公开题包 20 用例 95 SQL。",
+   "context": "用户询问是否可以合并时才执行，结论基于上面五项。",
+   "executed": true
   }
  ],
  "dimensions": [
@@ -489,7 +555,9 @@
     "deploy-key-correction",
     "negative-results-not-counted",
     "one-shot-eval-risk-question",
-    "working-tree-verification"
+    "working-tree-verification",
+    "quantified-before-after-demand",
+    "merge-readiness-check"
    ],
    "evidence_status": "candidate_unit_present"
   },
@@ -528,7 +596,8 @@
      "quote": "当前优先任务是定位并尽可能修复单行 UPDATE 延迟退化，同时保留 V2 的内存收益、事务原子性和崩溃恢复正确性。先复现原始写入和查询历史，再根据证据实施最小修复，不预设退化原因。"
     }
    ],
-   "result_evidence": []
+   "result_evidence": [],
+   "rule_basis": "0.5 档（提出具体问题、预测或方案但无实际结果）：本实例只有目标设定，尚未产生可核对结果。"
   },
   {
    "id": "frp-topology-transfer",
@@ -542,7 +611,8 @@
      "quote": "如果设备不够的话，我还可以开一台8c16g或16c32g的云电脑（可用总时间20小时，没有公网IP所以我frp到了当前服务器的frps上）"
     }
    ],
-   "result_evidence": []
+   "result_evidence": [],
+   "rule_basis": "0.5 档（提出具体问题、预测或方案但无实际结果）：本实例只有目标设定，尚未产生可核对结果。"
   },
   {
    "id": "deploy-key-correction",
@@ -561,7 +631,8 @@
      "pointer": "/experiments/0/content",
      "quote": "Hi Client-Qv0/cpt-seekdb! You've successfully authenticated, but GitHub does not provide shell access."
     }
-   ]
+   ],
+   "rule_basis": "1.5 档（解释结果、据此修正方案并复测）：学生基于结果修正了原方案，并由 Agent 复测验证。"
   },
   {
    "id": "agent-score-failure-loop",
@@ -584,7 +655,8 @@
      "pointer": "/experiments/2/content",
      "quote": "Agent Prompt：Prompt结果无效、待复核、超出平台0–100范围或缺少材料摘要，本项不参与排名；未截断或换算本地分数。"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "exact-route-gated-choice",
@@ -615,7 +687,8 @@
      "pointer": "/experiments/1/cost_content",
      "quote": "首次查询因两遍构建慢54.732%，约36.189–47.033ms对基线22.675–32.605ms；超缓存查询慢1.935%。不宣称所有工作负载均更快。"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "evidence-directory-discipline",
@@ -638,7 +711,8 @@
      "pointer": "/experiments/8/content",
      "quote": "每个保留或否决候选都有独立 validation 目录，保存 candidate patch、A/B 原始 JSON、summary、构建与测试日志、二进制/镜像哈希以及 REPORT 和 RESULTS。"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "server-only-execution",
@@ -657,7 +731,8 @@
      "pointer": "/experiments/5/content",
      "quote": "本轮构建、单元/压力/公开/Docker 验证、Git fetch/commit/push 和原始日志采集均在 li@103.236.99.247 的 MCP SSH 会话内执行；未创建 PR，未修改比赛分支，未提交正式评测。"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "negative-results-not-counted",
@@ -676,7 +751,8 @@
      "pointer": "/experiments/7/content",
      "quote": "C1、C2、C3、C4、C5、C6、C8、C9、C10、C11、C14、C15、C16 未达到各自门槛；均为本地负结果，不 commit、不推送、不计入成功轮次。"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "bounded-self-iteration",
@@ -703,7 +779,8 @@
      "pointer": "/experiments/12/content",
      "quote": "成功提交 76f4df0a 按语句缓冲 journal 帧：六对写入中位再降6.755%、5/6胜；1000 行的相关 traced syscall 从 1026 降到 36，语句内读、回滚与恢复通过。"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "performance-prompt-balance",
@@ -730,7 +807,8 @@
      "pointer": "/experiments/9/content",
      "quote": "d21e8f85 官方结果：MySQL 正式用例通过；性能原始分 3306.163332；Agent Prompt 原始分 3.000000。该历史结果不用于声称 v4 已获得更高官方分。"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "handoff-environment-constraints",
@@ -749,7 +827,8 @@
      "pointer": "/experiments/20/content",
      "quote": "生成交接目录：文档约 12.5 KB，含 11 节和接手自检清单"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "measurable-write-target",
@@ -768,7 +847,8 @@
      "pointer": "/experiments/16/content",
      "quote": "写入阶段总计 0.29-0.33 s：protocol 0.043-0.058 s、解析+编码 0.100-0.134 s、apply 0.023-0.025 s"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "pipeline-decomposition-transfer",
@@ -787,7 +867,8 @@
      "pointer": "/experiments/16/content",
      "quote": "W3 把「其余」压低约 0.036 s，但 encode 段同步上升，总时间基本不变"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "predeclared-threshold-honesty",
@@ -806,7 +887,8 @@
      "pointer": "/experiments/17/content",
      "quote": "合并 8 对方向不一致，判定持平，未达 15% 门槛。"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "one-shot-eval-risk-question",
@@ -825,7 +907,8 @@
      "pointer": "/experiments/19/content",
      "quote": "实际逻辑约 90 行：脚本编辑把整文件行尾从混合 CRLF/LF 规范成了 LF"
     }
-   ]
+   ],
+   "rule_basis": "1.5 档（解释结果、据此修正方案并复测）：学生基于结果修正了原方案，并由 Agent 复测验证。"
   },
   {
    "id": "rollback-to-verified-baseline",
@@ -844,7 +927,8 @@
      "pointer": "/experiments/21/content",
      "quote": "ls-remote 显示 2026-competition-round2 仍为 f5a7e3e"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "eval-feedback-reprioritization",
@@ -863,7 +947,8 @@
      "pointer": "/experiments/15/content",
      "quote": "性能原始分：E = 4327.462375。Agent Prompt 原始分：4.000000。"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "staged-merge-authorization",
@@ -882,7 +967,8 @@
      "pointer": "/experiments/22/content",
      "quote": "W2/W3/R1 全程只推个人分支，主干未动，直到单独指令后才快进"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
   },
   {
    "id": "working-tree-verification",
@@ -901,7 +987,48 @@
      "pointer": "/experiments/23/content",
      "quote": "/opt/minivectordb-v2 停在 75ecbf3 且带未合并的旧原型"
     }
-   ]
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出可执行约束，Agent 执行、工具给出可核对结果，学生据此推进后续决定；学生本人尚未复述机制或修正后复测。"
+  },
+  {
+   "id": "quantified-before-after-demand",
+   "chain_id": "measured-before-accepting",
+   "dimension": "independent_validation",
+   "score": 1.0,
+   "reason": "学生不满足于“已经优化”的结论，要求给出相对主干的量化提升幅度；这条要求把结论压到可复核的比例上，之后的合并决定都基于该口径。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/12/messages/0/content",
+     "quote": "本次commit对比比赛主干，提升幅度如何"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/25/content",
+     "quote": "f5a7e3e 之后 20 对配对：查询 +22.37%（20/20）"
+    }
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生要求量化后再决策，结果由工具配对测量给出。"
+  },
+  {
+   "id": "merge-readiness-check",
+   "chain_id": "pre-merge-gate",
+   "dimension": "independent_validation",
+   "score": 1.0,
+   "reason": "学生把“可以合并了吗”作为一次独立检查，而不是接受 Agent 的完成声明；Agent 随后逐项核对工作区、祖先关系与回归结果才给出结论。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/12/messages/2/content",
+     "quote": "现在是做好可以合并了吗"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/26/content",
+     "quote": "合并前核对结果：工作区干净、也有自测版本以来源码零改动"
+    }
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生提出检查要求，核对结果可复核。"
   }
  ],
  "limitations": [
