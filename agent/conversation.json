@@ -1,13 +1,14 @@
 {
  "rule_version": "agent-learning-evidence-v3-unbounded",
- "summary": "MiniVectorDB v5 材料：在 v4 的真实约束、四轮成功性能证据与十三项负结果之上，补入第四轮批量 INSERT 重构的方向设定、15% 采纳门槛与失败交付、评测前回退取舍，以及 f5a7e3e 的官方结果（性能 E=4327.462375、Agent Prompt 4.000000）。学生原话、Agent 执行与工具/平台结果分开归因；本地数字不冒充官方成绩。",
+ "summary": "MiniVectorDB v6 材料：五个维度按官方评审内容的措辞重新命名，并补入分支准入与工作副本核对两条流程证据；技术结论来自 v4/v5 的真实性能、负结果与 f5a7e3e 官方结果（性能 E=4327.462375、Agent Prompt 4.000000）。学生原话、Agent 执行、工具与平台结果分开归因；转交任务书的技术措辞不记为学生贡献。",
  "synthetic": false,
  "coverage": {
   "complete_conversation": false,
   "selected_material_complete": true,
-  "exclusion": "泛泛的“继续/执行”、Agent 代写的方案和没有实际结果的未来计划不作为学生技术能力证据。仅当原话直接表达任务约束、环境机制、质疑、结果反馈或取舍时纳入。",
+  "exclusion": "泛泛的“继续/执行”、Agent 代写的方案和没有实际结果的未来计划不作为学生技术能力证据。用户转交的任务书（含 W2/W3 划分与 15% 门槛）技术措辞来自文档原作者，材料只把用户实际采纳、限定范围并据以裁决的行为计为学生证据，引用位置仍保留逐字原文以便核对。",
   "source_version": "生产源码绑定 f5a7e3e2373742eee40268cf20ef7837b91da655；v5 材料修订随后续提交。",
-  "material_revision": "agent-learning-evidence-v5"
+  "material_revision": "agent-learning-evidence-v6",
+  "rubric_mapping": "官方描述的四项评审内容与本材料 five-dimension 结构的对应：问题理解与学习规划=problem_understanding；Prompt 设计与迭代=experimental_iteration（含任务书下达、分支准入与迭代节奏）；验证纠错与独立判断=independent_validation；总结复盘与知识迁移=tradeoff_reflection + technical_transfer。该对应是本材料的组织方式，不是平台公布的计分项。"
  },
  "conversations": [
   {
@@ -257,6 +258,34 @@
      "content": "确认远端主干本就在 f5a7e3e，未推送任何东西；本地工作树切回该提交并干净重建，复核二进制哈希与公开用例。"
     }
    ]
+  },
+  {
+   "id": "branch-and-tree-control",
+   "scope": "用户对工作落在哪个分支、以及在哪个工作副本上执行的控制；都属于可核对的流程约束。",
+   "messages": [
+    {
+     "id": "student-staged-merge",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "提交到fork的分支，先不合并到比赛主干"
+    },
+    {
+     "id": "agent-staged-merge",
+     "source": "agent",
+     "content": "把改动提交并推送到个人分支，主干保持不动，等单独指令再快进。"
+    },
+    {
+     "id": "student-tree-check",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "找到最新代码存储位置了吗"
+    },
+    {
+     "id": "agent-tree-check",
+     "source": "agent",
+     "content": "全机扫描所有 worktree 后确认最新提交所在目录，并指出 /opt 下两份副本停留在旧提交。"
+    }
+   ]
   }
  ],
  "experiments": [
@@ -414,12 +443,26 @@
    "content": "ls-remote 显示 2026-competition-round2 仍为 f5a7e3e；本地重建二进制 97956a87…，CTest 9/9、官方公开题包 20 用例 95 SQL 通过，工作树与目标零差异。",
    "context": "回退后复核，确认没有把实验分支带上评测。",
    "executed": true
+  },
+  {
+   "id": "staged-branch-workflow",
+   "source": "tool_output_summary",
+   "content": "首轮合并前：远端 2026-competition-round2 停在 59d425b，五个任务分支各自独立；W2/W3/R1 全程只推个人分支，主干未动，直到单独指令后才快进。",
+   "context": "用户先要求只推 fork 分支，再在单独一轮指令里同意合并。",
+   "executed": true
+  },
+  {
+   "id": "tree-location-verification",
+   "source": "tool_output_summary",
+   "content": "全机扫描 git worktree：最新提交在 /home/li/minivectordb-self-iterate-20261113，/opt/minivectordb-v2 停在 75ecbf3 且带未合并的旧原型，另有四个同仓库 worktree 分别指向不同基线。",
+   "context": "执行任何改动前先确认工作副本；/opt 下那份是过期现场。",
+   "executed": true
   }
  ],
  "dimensions": [
   {
    "id": "problem_understanding",
-   "name": "问题理解与自主拆解",
+   "name": "问题理解与学习规划",
    "unit_ids": [
     "update-priority-and-invariants",
     "evidence-directory-discipline",
@@ -430,7 +473,7 @@
   },
   {
    "id": "technical_transfer",
-   "name": "技术理解与迁移",
+   "name": "知识迁移与总结",
    "unit_ids": [
     "frp-topology-transfer",
     "server-only-execution",
@@ -441,27 +484,29 @@
   },
   {
    "id": "independent_validation",
-   "name": "独立验证与质疑",
+   "name": "验证纠错与独立判断",
    "unit_ids": [
     "deploy-key-correction",
     "negative-results-not-counted",
-    "one-shot-eval-risk-question"
+    "one-shot-eval-risk-question",
+    "working-tree-verification"
    ],
    "evidence_status": "candidate_unit_present"
   },
   {
    "id": "experimental_iteration",
-   "name": "实验与反馈迭代",
+   "name": "Prompt 设计与迭代",
    "unit_ids": [
     "agent-score-failure-loop",
     "bounded-self-iteration",
-    "predeclared-threshold-honesty"
+    "predeclared-threshold-honesty",
+    "staged-merge-authorization"
    ],
    "evidence_status": "candidate_unit_present"
   },
   {
    "id": "tradeoff_reflection",
-   "name": "取舍与反思",
+   "name": "取舍与复盘反思",
    "unit_ids": [
     "exact-route-gated-choice",
     "performance-prompt-balance",
@@ -817,6 +862,44 @@
     {
      "pointer": "/experiments/15/content",
      "quote": "性能原始分：E = 4327.462375。Agent Prompt 原始分：4.000000。"
+    }
+   ]
+  },
+  {
+   "id": "staged-merge-authorization",
+   "chain_id": "staged-branch-gate",
+   "dimension": "experimental_iteration",
+   "score": 1.5,
+   "reason": "用户把“先落个人分支、主干需单独授权”写成流程约束，并在此后的轮次里实际执行（W2/W3/R1 均未上主干）；这是对集成风险的预先设计，不是事后的口头要求。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/10/messages/0/content",
+     "quote": "提交到fork的分支，先不合并到比赛主干"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/22/content",
+     "quote": "W2/W3/R1 全程只推个人分支，主干未动，直到单独指令后才快进"
+    }
+   ]
+  },
+  {
+   "id": "working-tree-verification",
+   "chain_id": "tree-location-check",
+   "dimension": "independent_validation",
+   "score": 1.0,
+   "reason": "用户在开始改动前先追问“最新代码在哪里”，没有默认 Agent 所在目录就是当前现场；核对结果是两份过期副本并存，避免了在废弃树上下手。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/10/messages/2/content",
+     "quote": "找到最新代码存储位置了吗"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/23/content",
+     "quote": "/opt/minivectordb-v2 停在 75ecbf3 且带未合并的旧原型"
     }
    ]
   }
