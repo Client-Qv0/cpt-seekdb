@@ -139,6 +139,113 @@ struct Schema {
   std::vector<Column> columns;
   std::vector<std::pair<std::string, std::string>> indexes;
 };
+// Structural scan for the common INSERT INTO t [(cols)] VALUES (...),(...);
+// shape. It only reports row text ranges; any unexpected construct returns
+// false so the general parser stays authoritative.
+struct BulkInsert {
+  std::string table;
+  std::vector<std::string> columns;
+  std::vector<std::pair<size_t, size_t>> tuples;
+};
+bool match_word(const std::string &sql, size_t &pos, const char *word) {
+  const size_t n = std::strlen(word);
+  if (sql.size() - pos < n) return false;
+  for (size_t i = 0; i < n; ++i)
+    if (std::tolower(static_cast<unsigned char>(sql[pos + i])) != word[i])
+      return false;
+  pos += n;
+  return true;
+}
+void skip_space(const std::string &sql, size_t &pos) {
+  while (pos < sql.size() && (sql[pos] == ' ' || sql[pos] == '\t' ||
+                              sql[pos] == '\r' || sql[pos] == '\n'))
+    ++pos;
+}
+bool scan_identifier(const std::string &sql, size_t &pos, std::string &out) {
+  if (pos >= sql.size()) return false;
+  const char first = sql[pos];
+  if (!(std::isalpha(static_cast<unsigned char>(first)) || first == '_'))
+    return false;
+  const size_t start = pos;
+  while (pos < sql.size() &&
+         (std::isalnum(static_cast<unsigned char>(sql[pos])) || sql[pos] == '_'))
+    ++pos;
+  out.assign(sql, start, pos - start);
+  return true;
+}
+bool scan_bulk_insert(const std::string &sql, BulkInsert &out) {
+  size_t pos = 0;
+  skip_space(sql, pos);
+  if (!match_word(sql, pos, "insert")) return false;
+  skip_space(sql, pos);
+  if (!match_word(sql, pos, "into")) return false;
+  skip_space(sql, pos);
+  if (!scan_identifier(sql, pos, out.table)) return false;
+  skip_space(sql, pos);
+  if (pos < sql.size() && sql[pos] == '(') {
+    ++pos;
+    for (;;) {
+      skip_space(sql, pos);
+      std::string name;
+      if (!scan_identifier(sql, pos, name)) return false;
+      out.columns.push_back(std::move(name));
+      skip_space(sql, pos);
+      if (pos < sql.size() && sql[pos] == ',') {
+        ++pos;
+        continue;
+      }
+      if (pos < sql.size() && sql[pos] == ')') {
+        ++pos;
+        break;
+      }
+      return false;
+    }
+    skip_space(sql, pos);
+  }
+  if (!match_word(sql, pos, "values")) return false;
+  for (;;) {
+    skip_space(sql, pos);
+    if (pos >= sql.size() || sql[pos] != '(') return false;
+    const size_t begin = ++pos;
+    while (pos < sql.size() && sql[pos] != ')') {
+      if (sql[pos] != '\'') {
+        ++pos;
+        continue;
+      }
+      ++pos;
+      while (pos < sql.size()) {
+        // Backslash escapes are accepted by the general tokenizer; this scanner
+        // only needs to skip them so the tuple boundary stays correct.
+        if (sql[pos] == '\\') {
+          pos += 2;
+          continue;
+        }
+        if (sql[pos] == '\'') {
+          if (pos + 1 < sql.size() && sql[pos + 1] == '\'') {
+            pos += 2;
+            continue;
+          }
+          ++pos;
+          break;
+        }
+        ++pos;
+      }
+    }
+    if (pos >= sql.size() || sql[pos] != ')') return false;
+    out.tuples.emplace_back(begin, pos - begin);
+    ++pos;
+    skip_space(sql, pos);
+    if (pos < sql.size() && sql[pos] == ',') {
+      ++pos;
+      continue;
+    }
+    break;
+  }
+  skip_space(sql, pos);
+  if (pos < sql.size() && sql[pos] == ';') ++pos;
+  skip_space(sql, pos);
+  return pos == sql.size() && !out.tuples.empty();
+}
 void u32(std::string &out, uint32_t x) {
   for (int i = 0; i < 4; ++i)
     out.push_back(char(x >> (8 * i)));
@@ -484,9 +591,77 @@ Result Engine::execute_ann(const Statement &statement) {
   // or evidence that hidden tests accept the missing approximate index.
   return execute_statement(statement);
 }
+namespace {
+// Signals that the optimistic INSERT path met syntax it does not own. The
+// statement is aborted and re-parsed by the general parser, so no partial row
+// is ever applied.
+struct FastInsertUnsupported {};
+} // namespace
+
+bool Engine::try_fast_insert(const std::string &sql, Result &result) {
+  BulkInsert scan;
+  if (!scan_bulk_insert(sql, scan)) return false;
+  auto meta = store_.metadata(scan.table);
+  if (!meta) return false; // Let the general parser report the real error.
+  auto schema = unpack_schema(*meta);
+  const size_t pk = primary_index(schema);
+  std::vector<size_t> source(schema.columns.size());
+  for (size_t i = 0; i < source.size(); ++i) source[i] = i;
+  if (!scan.columns.empty()) {
+    if (scan.columns.size() != schema.columns.size()) return false;
+    for (size_t i = 0; i < scan.columns.size(); ++i)
+      source[col_index(schema, scan.columns[i])] = i;
+    // Only the identity mapping can be emitted in a single text pass.
+    for (size_t i = 0; i < source.size(); ++i)
+      if (source[i] != i) return false;
+  }
+  const codec::Plan plan{schema.columns, pk};
+  const size_t rows = scan.tuples.size();
+  std::vector<std::pair<int64_t, std::string>> prepared(rows);
+  const size_t width = insert_width(rows);
+  const std::string_view text(sql);
+  auto encode = [&](size_t lane) {
+    for (size_t i = lane; i < rows; i += width) {
+      int64_t key = 0;
+      const auto range = scan.tuples[i];
+      if (!codec::encode_tuple_text(text.substr(range.first, range.second),
+                                    plan, prepared[i].second, key))
+        throw FastInsertUnsupported{};
+      prepared[i].first = key;
+    }
+  };
+  *cache_ = Cache{};
+  store_.begin_statement();
+  try {
+    if (width > 1)
+      WorkerPool::instance().run(width, encode);
+    else
+      encode(0);
+    for (auto &entry : prepared) {
+      if (store_.get(scan.table, entry.first))
+        throw Error("DUPLICATE_KEY", "duplicate primary key");
+      store_.put(scan.table, entry.first, entry.second);
+      ++result.affected;
+    }
+    store_.finish_statement();
+  } catch (const FastInsertUnsupported &) {
+    store_.abort_statement();
+    return false;
+  } catch (...) {
+    store_.abort_statement();
+    throw;
+  }
+  result.reports_affected = true;
+  return true;
+}
+
 Result Engine::execute(const std::string &sql, SearchMode mode) {
   if (mode != SearchMode::Exact && mode != SearchMode::Ann)
     throw Error("PROTOCOL", "invalid search mode");
+  {
+    Result fast;
+    if (try_fast_insert(sql, fast)) return fast;
+  }
   auto st = parse_sql(sql);
   // Cached records never outlive a mutation or transaction boundary. Failed
   // statements also invalidate: their intermediate writes must not be reused.

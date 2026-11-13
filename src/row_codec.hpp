@@ -170,6 +170,14 @@ inline int64_t parse_bigint(const Literal &l) {
     throw Error("TYPE", "invalid or overflowing BIGINT");
   return x;
 }
+inline void encode_vector_body(std::string_view body, uint32_t dim,
+                               std::string &out) {
+  parse_vector_body(body, dim, [&](float f) {
+    uint32_t bits;
+    std::memcpy(&bits, &f, 4);
+    put_u32(out, bits);
+  });
+}
 inline void encode_vector(const Literal &l, uint32_t dim, std::string &out) {
   parse_vector_text(l, dim, [&](float f) {
     uint32_t bits;
@@ -180,6 +188,86 @@ inline void encode_vector(const Literal &l, uint32_t dim, std::string &out) {
 // Append tuple bytes in storage column order and return the primary key value.
 // `source[column]` is the tuple slot holding that column, so an INSERT list in a
 // different order still writes the canonical row layout.
+inline int64_t parse_bigint_text(std::string_view text) {
+  int64_t x = 0;
+  const char *begin = text.data();
+  const char *end = begin + text.size();
+  if (begin != end && *begin == '+') ++begin;
+  auto res = std::from_chars(begin, end, x);
+  if (begin == end || res.ec != std::errc() || res.ptr != end)
+    throw Error("TYPE", "invalid or overflowing BIGINT");
+  return x;
+}
+inline const char *skip_spaces(const char *p, const char *end) {
+  while (p < end && (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n')) ++p;
+  return p;
+}
+// Encode one tuple written as raw SQL text (the part between its parentheses).
+// Returns false for anything outside the supported fast-path grammar so the
+// caller can fall back to the general parser; never applies partial work.
+inline bool encode_tuple_text(std::string_view tuple, const Plan &plan,
+                              std::string &out, int64_t &key) {
+  const char *p = tuple.data();
+  const char *end = p + tuple.size();
+  for (size_t column = 0; column < plan.columns.size(); ++column) {
+    const Column &c = plan.columns[column];
+    p = skip_spaces(p, end);
+    if (p >= end) return false;
+    if (*p == '\'') {
+      const char *start = ++p;
+      bool escaped = false;
+      while (p < end) {
+        if (*p == '\'') {
+          if (p + 1 < end && p[1] == '\'') { escaped = true; p += 2; continue; }
+          break;
+        }
+        ++p;
+      }
+      if (p >= end) return false;
+      const std::string_view body(start, static_cast<size_t>(p - start));
+      ++p;
+      // Backslash escapes follow the general tokenizer's rules; leave those
+      // statements to it rather than duplicating the mapping here.
+      if (body.find('\\') != std::string_view::npos) return false;
+      if (c.type == Type::Varchar) {
+        std::string value;
+        value.reserve(body.size());
+        for (size_t i = 0; i < body.size(); ++i) {
+          if (body[i] == '\'' && i + 1 < body.size() && body[i + 1] == '\'') ++i;
+          value.push_back(body[i]);
+        }
+        if (utf8_count(value) > c.size)
+          throw Error("TYPE", "VARCHAR character limit exceeded");
+        if (value.size() > UINT32_MAX)
+          throw Error("RESOURCE", "value exceeds serialization limit");
+        put_u32(out, static_cast<uint32_t>(value.size()));
+        out.append(value);
+      } else if (c.type == Type::Vector) {
+        if (escaped) return false;
+        encode_vector_body(body, c.size, out);
+      } else {
+        return false;
+      }
+    } else {
+      const char *start = p;
+      while (p < end && *p != ',') ++p;
+      const char *stop = p;
+      while (stop > start && (stop[-1] == ' ' || stop[-1] == '\t')) --stop;
+      if (c.type != Type::BigInt) return false;
+      const int64_t value =
+          parse_bigint_text(std::string_view(start, static_cast<size_t>(stop - start)));
+      put_u64(out, static_cast<uint64_t>(value));
+      if (column == plan.primary) key = value;
+    }
+    p = skip_spaces(p, end);
+    if (column + 1 < plan.columns.size()) {
+      if (p >= end || *p != ',') return false;
+      ++p;
+    }
+  }
+  p = skip_spaces(p, end);
+  return p == end;
+}
 inline int64_t encode_row(const std::vector<Literal> &tuple,
                           const std::vector<size_t> &source, const Plan &plan,
                           std::string &out) {

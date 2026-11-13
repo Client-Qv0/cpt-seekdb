@@ -29,6 +29,9 @@ private:
   struct Cache;
   std::unique_ptr<Cache> cache_;
   Result execute_statement(const Statement &statement);
+  // Optimistic direct path for multi-row INSERT ... VALUES; returns false when
+  // the statement is outside the fast-path grammar so the parser can handle it.
+  bool try_fast_insert(const std::string &sql, Result &result);
   Result execute_ann(const Statement &statement);
 };
 std::string result_json(const Result &result);
