@@ -331,6 +331,129 @@
      "content": "逐项核对：工作区干净、分支 tip、自测版本以来源码零变化、可快进、回归与公开用例结果，然后才给结论。"
     }
    ]
+  },
+  {
+   "id": "handoff-and-tree-recon",
+   "scope": "接手时的实际对话：用户先指定交接材料，随后追问代码到底在哪一份工作副本里。",
+   "messages": [
+    {
+     "id": "student-takeover",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "你的任务是：交接这个比赛，交接的两个文档已给出"
+    },
+    {
+     "id": "agent-takeover",
+     "source": "agent",
+     "content": "读取两份交接文档，核对远端分支与提交，指出 /opt 下的旧现场不是当前代码。"
+    },
+    {
+     "id": "student-tree-location",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "找到最新代码存储位置了吗"
+    },
+    {
+     "id": "agent-tree-location",
+     "source": "agent",
+     "content": "全机扫描 worktree，确认最新提交所在目录，并列出其余副本各自停留的提交。"
+    }
+   ]
+  },
+  {
+   "id": "optimization-loops",
+   "scope": "连续几轮“思考并执行优化”的真实指令；用户只给方向，具体方案由 Agent 提出后被接受或否决。",
+   "messages": [
+    {
+     "id": "student-plan-1",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "思考下一步优化计划"
+    },
+    {
+     "id": "agent-plan-1",
+     "source": "agent",
+     "content": "给出三条候选路线（并行扫描、写路径并行、ANN）与风险对比，建议先做零语义风险的并行扫描。"
+    },
+    {
+     "id": "student-go-1",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "往下走，"
+    },
+    {
+     "id": "student-plan-2",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "继续迭代下一个版本，思考下一步优化计划并执行"
+    },
+    {
+     "id": "agent-plan-2",
+     "source": "agent",
+     "content": "先重新 profile 再定方向，发现大表路径每次查询 5 万次 pread，改为合并定位读。"
+    },
+    {
+     "id": "student-plan-3",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "继续迭代下一个版本，思考下一步优化计划并执行"
+    },
+    {
+     "id": "agent-plan-3",
+     "source": "agent",
+     "content": "profile 显示粗筛仍是 36%，改从写入侧并行解析入手。"
+    }
+   ]
+  },
+  {
+   "id": "merge-and-rollback-ops",
+   "scope": "分支与合并的实际操作序列：先只推个人分支，再授权合并，最后在评测前回退。",
+   "messages": [
+    {
+     "id": "student-fork-only",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "提交到fork的分支，先不合并到比赛主干"
+    },
+    {
+     "id": "agent-fork-only",
+     "source": "agent",
+     "content": "提交并推送个人分支，主干保持不动。"
+    },
+    {
+     "id": "student-merge",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "合并到比赛主干分支"
+    },
+    {
+     "id": "agent-merge",
+     "source": "agent",
+     "content": "快进主干并核对两条分支指向同一提交。"
+    },
+    {
+     "id": "student-quantify-2",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "本次commit对比比赛主干，提升幅度如何"
+    },
+    {
+     "id": "agent-quantify-2",
+     "source": "agent",
+     "content": "给出 20 对配对的中位数与胜率，并区分实测与换算。"
+    },
+    {
+     "id": "student-rollback-2",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "推f5a7e3e这个分支，回滚到这个版本。"
+    },
+    {
+     "id": "agent-rollback-2",
+     "source": "agent",
+     "content": "确认主干本就在该提交，切回工作树并干净重建验证。"
+    }
+   ]
   }
  ],
  "experiments": [
