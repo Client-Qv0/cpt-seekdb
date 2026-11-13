@@ -22,6 +22,18 @@ inline bool available() {
   return false;
 #endif
 }
+// Scan width: 0 keeps the automatic width derived from the CPU affinity mask.
+// Tests set an explicit width to prove every width returns identical rows.
+inline size_t &thread_limit() {
+  static size_t value = 0;
+  return value;
+}
+inline void set_thread_limit(size_t width) { thread_limit() = width; }
+// Queries answered by the scan workers instead of the serial loop.
+inline size_t &parallel_runs() {
+  static size_t value = 0;
+  return value;
+}
 // The screening bound assumes IEEE binary32/binary64 round-to-nearest with
 // gradual underflow. Check once per query, never change the caller's FP mode.
 constexpr size_t fp32_screen_max_dim = 8192;

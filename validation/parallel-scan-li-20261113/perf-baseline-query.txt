@@ -1,0 +1,30 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 6K of event 'cycles:P'
+# Event count (approx.): 6861880771
+#
+# Overhead  Command       Shared Object         Symbol                                                                  
+# ........  ............  ....................  ........................................................................
+#
+    36.74%  minivectordb  minivectordb          [.] mvdb::exact::quantized_squared_distance_avx2(signed char const*, sho
+    19.92%  minivectordb  minivectordb          [.] mvdb::exact::Compact::distance_cell(unsigned long, unsigned long, st
+    14.01%  minivectordb  minivectordb          [.] mvdb::Engine::execute_statement(mvdb::Statement const&)
+     3.43%  minivectordb  minivectordb          [.] mvdb::Engine::execute_statement(mvdb::Statement const&)::{lambda()#1
+     1.49%  minivectordb  libstdc++.so.6.0.33   [.] std::from_chars(char const*, char const*, float&, std::chars_format)
+     1.27%  minivectordb  minivectordb          [.] mvdb::Engine::execute_statement(mvdb::Statement const&)::{lambda(lon
+     1.26%  minivectordb  minivectordb          [.] mvdb::exact::distances8_avx2(mvdb::exact::Compact const&, unsigned l
+     1.07%  minivectordb  minivectordb          [.] mvdb::Engine::execute_statement(mvdb::Statement const&)::{lambda(uns
+     0.95%  minivectordb  minivectordb          [.] mvdb::(anonymous namespace)::vector_literal(mvdb::Literal const&, un
+     0.77%  minivectordb  libc.so.6             [.] __printf_fp_buffer_1.isra.0
+     0.65%  minivectordb  minivectordb          [.] mvdb::Store::Impl::recover()
+     0.53%  minivectordb  libc.so.6             [.] malloc
+     0.53%  minivectordb  minivectordb          [.] mvdb::(anonymous namespace)::tokenize(std::__cxx11::basic_string<cha
+     0.53%  minivectordb  minivectordb          [.] void std::__push_heap<__gnu_cxx::__normal_iterator<mvdb::Engine::exe
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

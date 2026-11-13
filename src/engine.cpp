@@ -4,17 +4,136 @@
 #include <algorithm>
 #include <charconv>
 #include <cmath>
+#include <condition_variable>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
+#include <functional>
 #include <iomanip>
 #include <limits>
 #include <locale>
+#include <mutex>
 #include <queue>
 #include <set>
 #include <sstream>
+#include <thread>
+#if defined(__linux__)
+#include <sched.h>
+#endif
 
 namespace mvdb {
 namespace {
+// CPUs this process may actually run on. The official checker fixes the CPU
+// set, so the affinity mask is a better guide than the host core count.
+size_t usable_cpus() {
+#if defined(__linux__)
+  cpu_set_t set;
+  CPU_ZERO(&set);
+  if (sched_getaffinity(0, sizeof(set), &set) == 0) {
+    const int count = CPU_COUNT(&set);
+    if (count > 0) return static_cast<size_t>(count);
+  }
+#endif
+  const size_t count = std::thread::hardware_concurrency();
+  return count ? count : 1;
+}
+// Statements execute one at a time, so a fixed pool of idle workers is enough:
+// a query publishes one body and waits for the participating workers.
+class WorkerPool {
+public:
+  static WorkerPool &instance() {
+    static WorkerPool pool;
+    return pool;
+  }
+  size_t capacity() const { return threads_.size() + 1; }
+  void run(size_t width, const std::function<void(size_t)> &body) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (width < 2 || width > capacity()) {
+      lock.unlock();
+      body(0);
+      return;
+    }
+    body_ = &body;
+    width_ = width;
+    pending_ = width - 1;
+    failure_ = nullptr;
+    ++generation_;
+    cv_.notify_all();
+    lock.unlock();
+    try {
+      body(0);
+    } catch (...) {
+      lock.lock();
+      failure_ = std::current_exception();
+      lock.unlock();
+    }
+    lock.lock();
+    done_.wait(lock, [this] { return pending_ == 0; });
+    body_ = nullptr;
+    const std::exception_ptr failure = failure_;
+    pending_ = 0;
+    lock.unlock();
+    if (failure) std::rethrow_exception(failure);
+  }
+
+private:
+  WorkerPool() {
+    const size_t count = std::min<size_t>(usable_cpus(), 4);
+    for (size_t index = 1; index < count; ++index)
+      threads_.emplace_back([this, index] { work(index); });
+  }
+  ~WorkerPool() {
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      stopping_ = true;
+      ++generation_;
+    }
+    cv_.notify_all();
+    for (auto &thread : threads_) thread.join();
+  }
+  WorkerPool(const WorkerPool &) = delete;
+  WorkerPool &operator=(const WorkerPool &) = delete;
+  void work(size_t index) {
+    size_t seen = 0;
+    std::unique_lock<std::mutex> lock(mutex_);
+    for (;;) {
+      cv_.wait(lock, [&] { return stopping_ || generation_ != seen; });
+      if (stopping_) return;
+      seen = generation_;
+      if (index >= width_) continue;
+      const std::function<void(size_t)> *body = body_;
+      lock.unlock();
+      std::exception_ptr failure;
+      try {
+        (*body)(index);
+      } catch (...) {
+        failure = std::current_exception();
+      }
+      lock.lock();
+      if (failure && !failure_) failure_ = failure;
+      if (--pending_ == 0) done_.notify_one();
+    }
+  }
+  std::vector<std::thread> threads_;
+  std::mutex mutex_;
+  std::condition_variable cv_;
+  std::condition_variable done_;
+  const std::function<void(size_t)> *body_ = nullptr;
+  std::exception_ptr failure_;
+  size_t width_ = 1;
+  size_t pending_ = 0;
+  size_t generation_ = 0;
+  bool stopping_ = false;
+};
+// Rows below this stay serial: pool wake-up would cost more than the scan.
+constexpr size_t parallel_scan_min_rows = 1024;
+size_t scan_width(size_t rows) {
+  size_t width = exact::thread_limit();
+  if (width == 0) width = usable_cpus();
+  width = std::min<size_t>(width, 4);
+  if (width < 2 || rows < parallel_scan_min_rows) return 1;
+  return width;
+}
 struct Schema {
   std::vector<Column> columns;
   std::vector<std::pair<std::string, std::string>> indexes;
@@ -748,20 +867,21 @@ Result Engine::execute_statement(const Statement &st) {
     std::priority_queue<Neighbor, std::vector<Neighbor>,
                         decltype(better_neighbor)>
         nearest(better_neighbor);
+    using Heap = decltype(nearest);
     const auto &projection = ps[keys[0].index];
-    auto consider = [&](int64_t key, double distance,
+    auto consider = [&](Heap &heap, int64_t key, double distance,
                         size_t row = std::numeric_limits<size_t>::max()) {
       Neighbor n{distance, key, row};
-      if (nearest.size() < *st.limit)
-        nearest.push(n);
-      else if (better_neighbor(n, nearest.top())) {
-        nearest.pop();
-        nearest.push(n);
+      if (heap.size() < *st.limit)
+        heap.push(n);
+      else if (better_neighbor(n, heap.top())) {
+        heap.pop();
+        heap.push(n);
       }
     };
     auto original_visit = [&](int64_t key, const std::vector<Cell> &row) {
       if (matches(row, fs))
-        consider(key, std::get<double>(project(projection, row)));
+        consider(nearest, key, std::get<double>(project(projection, row)));
     };
     const bool point_lookup = std::any_of(fs.begin(), fs.end(), [&](const Filter &f) {
       return f.column == pk && f.op == "=";
@@ -779,113 +899,185 @@ Result Engine::execute_statement(const Statement &st) {
         winner_view = &view;
         const bool screen=exact::fp32_screen_available(view.dim);
         auto quantized=exact::prepare_quantized_query(view,projection.query,screen);
-        if (fs.empty()) {
-          double screened_worst=-1,screen_threshold=0;
-          size_t i = 0;
-          for (; i + 8 <= view.count;) {
-            size_t batch_count=8;
-            if (screen && nearest.size() == *st.limit) {
-              if (i + 32 <= view.count) batch_count=32;
-              const double worst=nearest.top().distance;
+        // One contiguous slice of the packed scan. Each slice keeps its own
+        // heap, so slices run on separate threads without shared mutable state.
+        // A slice's screening threshold comes from its own heap and is therefore
+        // more permissive than the merged one: extra candidates can survive, but
+        // a row that belongs in the top K is never screened out.
+        auto scan_contiguous = [&](size_t begin, size_t end, Heap &heap) {
+          double screened_worst = -1, screen_threshold = 0;
+          size_t i = begin;
+          for (; i + 8 <= end;) {
+            size_t batch_count = 8;
+            if (screen && heap.size() == *st.limit) {
+              if (i + 32 <= end) batch_count = 32;
+              const double worst = heap.top().distance;
               if (worst != screened_worst) {
-                screen_threshold=quantized.codes ?
-                    exact::quantized_threshold(worst,view.quantized_step,quantized.root_dim_upper) :
-                    exact::fp32_screen_threshold(worst,view.dim);
-                screened_worst=worst;
+                screen_threshold = quantized.codes
+                    ? exact::quantized_threshold(worst, view.quantized_step,
+                                                  quantized.root_dim_upper)
+                    : exact::fp32_screen_threshold(worst, view.dim);
+                screened_worst = worst;
               }
-              uint32_t survivors=0;
-              if(quantized.codes) {
-                for(size_t lane=0;lane<batch_count;++lane)
-                  if(!(double(exact::quantized_squared_distance(view,i+lane,quantized))>screen_threshold))
-                    survivors|=uint32_t(1)<<lane;
+              uint32_t survivors = 0;
+              if (quantized.codes) {
+                for (size_t lane = 0; lane < batch_count; ++lane)
+                  if (!(double(exact::quantized_squared_distance(
+                            view, i + lane, quantized)) > screen_threshold))
+                    survivors |= uint32_t(1) << lane;
               } else {
                 float approximate[32];
-                if (batch_count==32)
-                  exact::squared_distances32_fp32_contiguous(view,i,projection.query,approximate);
+                if (batch_count == 32)
+                  exact::squared_distances32_fp32_contiguous(
+                      view, i, projection.query, approximate);
                 else
-                  exact::squared_distances8_fp32_contiguous(view,i,projection.query,approximate);
-                for (size_t lane=0;lane<batch_count;++lane)
-                  if (!exact::fp32_screen_reject(approximate[lane],screen_threshold))
-                    survivors|=uint32_t(1)<<lane;
+                  exact::squared_distances8_fp32_contiguous(
+                      view, i, projection.query, approximate);
+                for (size_t lane = 0; lane < batch_count; ++lane)
+                  if (!exact::fp32_screen_reject(approximate[lane],
+                                                 screen_threshold))
+                    survivors |= uint32_t(1) << lane;
               }
-              const uint32_t all=batch_count==32 ? uint32_t(0xffffffffu) : uint32_t(0xffu);
+              const uint32_t all =
+                  batch_count == 32 ? uint32_t(0xffffffffu) : uint32_t(0xffu);
               if (survivors != all) {
-                for (size_t lane=0;lane<batch_count;++lane)
-                  if (survivors&(uint32_t(1)<<lane))
-                    consider(view.keys[i+lane],view.distance(i+lane,projection.query),i+lane);
+                for (size_t lane = 0; lane < batch_count; ++lane)
+                  if (survivors & (uint32_t(1) << lane))
+                    consider(heap, view.keys[i + lane],
+                             view.distance(i + lane, projection.query), i + lane);
                 // A threshold captured before this batch is conservative even
                 // if refinement improves the heap; refresh it for the next batch.
-                i+=batch_count;
+                i += batch_count;
                 continue;
               }
             }
             // Heap initialization, unsupported FP modes, and all-surviving
             // batches retain the original eight-record double computation.
-            for (size_t offset=0;offset<batch_count;offset+=8) {
+            for (size_t offset = 0; offset < batch_count; offset += 8) {
               double distances[8];
-              exact::distances8_contiguous(view, i+offset, projection.query, distances);
+              exact::distances8_contiguous(view, i + offset, projection.query,
+                                           distances);
               for (size_t lane = 0; lane < 8; ++lane)
-                consider(view.keys[i + offset + lane], distances[lane],
+                consider(heap, view.keys[i + offset + lane], distances[lane],
                          i + offset + lane);
             }
-            i+=batch_count;
+            i += batch_count;
           }
-          if (i + 4 <= view.count) {
+          if (i + 4 <= end) {
             const size_t rows[4] = {i, i + 1, i + 2, i + 3};
             double distances[4];
             exact::distances4(view, rows, projection.query, distances);
             for (size_t lane = 0; lane < 4; ++lane)
-              consider(view.keys[i + lane], distances[lane], i + lane);
+              consider(heap, view.keys[i + lane], distances[lane], i + lane);
             i += 4;
           }
-          for (; i < view.count; ++i)
-            consider(view.keys[i], view.distance(i, projection.query), i);
-        } else {
-          double screened_worst=-1,screen_threshold=0;
-          size_t pending[32], pending_count = 0;
-          auto flush = [&] {
-            if (screen && nearest.size() == *st.limit) {
-              const double worst=nearest.top().distance;
+          for (; i < end; ++i)
+            consider(heap, view.keys[i], view.distance(i, projection.query), i);
+        };
+        // Batched scan of an explicit candidate list. Non-contiguous rows keep
+        // the gather-based float32 screen for 32 rows at a time; the posting
+        // array stays uint32 and only the active batch is widened.
+        auto scan_list = [&](const uint32_t *rows, size_t count, Heap &heap) {
+          if (!count) return;
+          double screened_worst = -1, screen_threshold = 0;
+          auto refine = [&](const size_t *batch, size_t lanes) {
+            size_t offset = 0;
+            for (; offset + 8 <= lanes; offset += 8) {
+              double distances[8];
+              const size_t rows[8] = {batch[offset], batch[offset + 1],
+                                      batch[offset + 2], batch[offset + 3],
+                                      batch[offset + 4], batch[offset + 5],
+                                      batch[offset + 6], batch[offset + 7]};
+              exact::distances8(view, rows, projection.query, distances);
+              for (size_t lane = 0; lane < 8; ++lane)
+                consider(heap, view.keys[rows[lane]], distances[lane],
+                         rows[lane]);
+            }
+            for (size_t lane = offset; lane < lanes; ++lane)
+              consider(heap, view.keys[batch[lane]],
+                       view.distance(batch[lane], projection.query), batch[lane]);
+          };
+          size_t at = 0;
+          for (; at + 32 <= count; at += 32) {
+            size_t batch[32];
+            for (size_t lane = 0; lane < 32; ++lane) batch[lane] = rows[at + lane];
+            if (screen && heap.size() == *st.limit) {
+              const double worst = heap.top().distance;
               if (worst != screened_worst) {
-                screen_threshold=quantized.codes ?
-                    exact::quantized_threshold(worst,view.quantized_step,quantized.root_dim_upper) :
-                    exact::fp32_screen_threshold(worst,view.dim);
-                screened_worst=worst;
+                screen_threshold = quantized.codes
+                    ? exact::quantized_threshold(worst, view.quantized_step,
+                                                  quantized.root_dim_upper)
+                    : exact::fp32_screen_threshold(worst, view.dim);
+                screened_worst = worst;
               }
-              uint32_t survivors=0;
-              if(quantized.codes) {
-                for(size_t lane=0;lane<32;++lane)
-                  if(!(double(exact::quantized_squared_distance(view,pending[lane],quantized))>screen_threshold))
-                    survivors|=uint32_t(1)<<lane;
+              uint32_t survivors = 0;
+              if (quantized.codes) {
+                for (size_t lane = 0; lane < 32; ++lane)
+                  if (!(double(exact::quantized_squared_distance(
+                            view, batch[lane], quantized)) > screen_threshold))
+                    survivors |= uint32_t(1) << lane;
               } else {
                 float approximate[32];
-                exact::squared_distances32_fp32(view,pending,projection.query,approximate);
-                for (size_t lane=0;lane<32;++lane)
-                  if (!exact::fp32_screen_reject(approximate[lane],screen_threshold))
-                    survivors|=uint32_t(1)<<lane;
+                exact::squared_distances32_fp32(view, batch, projection.query,
+                                                approximate);
+                for (size_t lane = 0; lane < 32; ++lane)
+                  if (!exact::fp32_screen_reject(approximate[lane],
+                                                 screen_threshold))
+                    survivors |= uint32_t(1) << lane;
               }
               if (survivors != uint32_t(0xffffffffu)) {
-                for (size_t lane=0;lane<32;++lane)
-                  if (survivors&(uint32_t(1)<<lane))
-                    consider(view.keys[pending[lane]],view.distance(pending[lane],projection.query),pending[lane]);
-                pending_count=0;
-                return;
+                for (size_t lane = 0; lane < 32; ++lane)
+                  if (survivors & (uint32_t(1) << lane))
+                    consider(heap, view.keys[batch[lane]],
+                             view.distance(batch[lane], projection.query),
+                             batch[lane]);
+                continue;
               }
             }
-            for (size_t offset=0;offset<32;offset+=8) {
-              double distances[8];
-              exact::distances8(view, pending+offset, projection.query, distances);
-              for (size_t lane = 0; lane < 8; ++lane)
-                consider(view.keys[pending[offset+lane]], distances[lane],
-                         pending[offset+lane]);
+            refine(batch, 32);
+          }
+          size_t tail[32];
+          const size_t remaining = count - at;
+          for (size_t lane = 0; lane < remaining; ++lane) tail[lane] = rows[at + lane];
+          refine(tail, remaining);
+        };
+        // Split the scan into contiguous slices and merge the per-slice heaps.
+        // Neighbor comparison is a total order on (distance, primary key), so
+        // the merged top K is identical to the serial one at every width.
+        auto run_slices = [&](
+            size_t total,
+            const std::function<void(size_t, size_t, Heap &)> &body) {
+          const size_t width = scan_width(total);
+          if (width < 2) {
+            body(0, total, nearest);
+            return;
+          }
+          std::vector<Heap> heaps;
+          heaps.reserve(width);
+          for (size_t index = 0; index < width; ++index)
+            heaps.emplace_back(better_neighbor);
+          const size_t per = (total + width - 1) / width;
+          const size_t chunk = (per + 31) / 32 * 32;
+          WorkerPool::instance().run(width, [&](size_t index) {
+            const size_t begin = std::min(total, index * chunk);
+            const size_t end = std::min(total, begin + chunk);
+            if (begin < end) body(begin, end, heaps[index]);
+          });
+          for (auto &heap : heaps)
+            while (!heap.empty()) {
+              const Neighbor neighbor = heap.top();
+              heap.pop();
+              consider(nearest, neighbor.key, neighbor.distance, neighbor.row);
             }
-            pending_count = 0;
-          };
-          auto enqueue = [&](size_t i) {
-            pending[pending_count++] = i;
-            if (pending_count == 32) flush();
-          };
-          auto eligible = [&](size_t i, const Filter* satisfied) {
+          ++exact::parallel_runs();
+        };
+        if (fs.empty()) {
+          run_slices(static_cast<size_t>(view.count),
+                     [&](size_t begin, size_t end, Heap &heap) {
+                       scan_contiguous(begin, end, heap);
+                     });
+        } else {
+          auto eligible = [&](size_t i, const Filter *satisfied) {
             for (const auto &f : fs) {
               if (&f == satisfied) continue;
               const int cmp = view.compare_scalar(f.column, i, f.value);
@@ -897,45 +1089,42 @@ Result Engine::execute_statement(const Statement &st) {
             return true;
           };
           exact::Compact::EqualityRange candidates;
-          const Filter* indexed_filter = nullptr;
+          const Filter *indexed_filter = nullptr;
           for (const auto &f : fs) {
             if (f.op == "=" && f.column != pk) {
               auto range = view.equality_range(f.column, f.value);
-              if (range.indexed) { candidates = range; indexed_filter = &f; break; }
-            }
-          }
-          if (indexed_filter) {
-            if (fs.size() == 1) {
-              for (size_t n = 0; n < candidates.size; ++n) enqueue(candidates.rows[n]);
-            } else {
-              for (size_t n = 0; n < candidates.size; ++n) {
-                const size_t i = candidates.rows[n];
-                if (eligible(i, indexed_filter)) enqueue(i);
+              if (range.indexed) {
+                candidates = range;
+                indexed_filter = &f;
+                break;
               }
             }
+          }
+          // A single indexed equality keeps the posting array untouched; any
+          // other filter materializes the surviving rows once before scanning.
+          std::vector<uint32_t> hits;
+          const uint32_t *rows = nullptr;
+          size_t row_count = 0;
+          if (indexed_filter && fs.size() == 1) {
+            rows = candidates.rows;
+            row_count = candidates.size;
           } else {
-            for (size_t i = 0; i < view.count; ++i)
-              if (eligible(i, nullptr)) enqueue(i);
+            if (indexed_filter) {
+              hits.reserve(candidates.size);
+              for (size_t n = 0; n < candidates.size; ++n)
+                if (eligible(candidates.rows[n], indexed_filter))
+                  hits.push_back(candidates.rows[n]);
+            } else {
+              hits.reserve(view.count);
+              for (size_t i = 0; i < view.count; ++i)
+                if (eligible(i, nullptr)) hits.push_back(static_cast<uint32_t>(i));
+            }
+            rows = hits.data();
+            row_count = hits.size();
           }
-          size_t tail = 0;
-          for (;tail+8<=pending_count;tail+=8) {
-            double distances[8];
-            exact::distances8(view, pending+tail, projection.query, distances);
-            for (size_t lane=0;lane<8;++lane)
-              consider(view.keys[pending[tail+lane]],distances[lane],
-                       pending[tail+lane]);
-          }
-          if (tail+4<=pending_count) {
-            double distances[4];
-            exact::distances4(view, pending+tail, projection.query, distances);
-            for (size_t lane = 0; lane < 4; ++lane)
-              consider(view.keys[pending[tail+lane]], distances[lane],
-                       pending[tail+lane]);
-            tail += 4;
-          }
-          for (size_t lane = tail; lane < pending_count; ++lane)
-            consider(view.keys[pending[lane]], view.distance(pending[lane], projection.query),
-                     pending[lane]);
+          run_slices(row_count, [&](size_t begin, size_t end, Heap &heap) {
+            scan_list(rows + begin, end - begin, heap);
+          });
         }
       } else if (cache_->exact_bypass) {
         // Remember this view's budget bypass until existing invalidation clears it.
