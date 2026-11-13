@@ -1,6 +1,7 @@
 #include "engine.hpp"
 #include "cpu_budget.hpp"
 #include "exact_cache.hpp"
+#include "row_codec.hpp"
 #include "spill.hpp"
 #include <algorithm>
 #include <charconv>
@@ -238,121 +239,9 @@ size_t primary_index(const Schema &s) {
       return i;
   throw Error("CORRUPTION", "missing primary key");
 }
-size_t utf8_count(const std::string &s) {
-  size_t n = 0;
-  for (size_t i = 0; i < s.size(); ++n) {
-    uint8_t b = s[i++];
-    uint32_t cp;
-    int more;
-    if (b < 0x80) {
-      cp = b;
-      more = 0;
-    } else if (b >= 0xc2 && b <= 0xdf) {
-      cp = b & 31;
-      more = 1;
-    } else if (b >= 0xe0 && b <= 0xef) {
-      cp = b & 15;
-      more = 2;
-    } else if (b >= 0xf0 && b <= 0xf4) {
-      cp = b & 7;
-      more = 3;
-    } else
-      throw Error("TYPE", "invalid UTF-8");
-    if (s.size() - i < static_cast<size_t>(more))
-      throw Error("TYPE", "truncated UTF-8");
-    for (int j = 0; j < more; ++j) {
-      b = s[i++];
-      if ((b & 0xc0) != 0x80)
-        throw Error("TYPE", "invalid UTF-8 continuation");
-      cp = (cp << 6) | (b & 63);
-    }
-    if ((more == 1 && cp < 0x80) || (more == 2 && cp < 0x800) ||
-        (more == 3 && cp < 0x10000) || cp > 0x10ffff ||
-        (cp >= 0xd800 && cp <= 0xdfff))
-      throw Error("TYPE", "invalid Unicode scalar");
-  }
-  return n;
-}
+size_t utf8_count(const std::string &s) { return codec::utf8_count(s); }
 std::vector<float> vector_literal(const Literal &l, uint32_t dim) {
-  if (!l.quoted)
-    throw Error("TYPE", "VECTOR requires a quoted array");
-  const auto &s = l.text;
-  size_t p = 0;
-  auto space = [&] {
-    while (p < s.size() &&
-           (s[p] == ' ' || s[p] == '\t' || s[p] == '\r' || s[p] == '\n'))
-      ++p;
-  };
-  space();
-  if (p == s.size() || s[p++] != '[')
-    throw Error("TYPE", "expected vector array");
-  space();
-  std::vector<float> v;
-  if (p < s.size() && s[p] != ']')
-    for (;;) {
-      size_t start = p;
-      if (p < s.size() && (s[p] == '-' || s[p] == '+'))
-        ++p;
-      size_t digits = 0;
-      while (p < s.size() && s[p] >= '0' && s[p] <= '9') {
-        ++p;
-        ++digits;
-      }
-      if (p < s.size() && s[p] == '.') {
-        ++p;
-        while (p < s.size() && s[p] >= '0' && s[p] <= '9') {
-          ++p;
-          ++digits;
-        }
-      }
-      if (!digits)
-        throw Error("TYPE", "vector component must be a finite number");
-      if (p < s.size() && (s[p] == 'e' || s[p] == 'E')) {
-        ++p;
-        if (p < s.size() && (s[p] == '-' || s[p] == '+'))
-          ++p;
-        size_t e = p;
-        while (p < s.size() && s[p] >= '0' && s[p] <= '9')
-          ++p;
-        if (p == e)
-          throw Error("TYPE", "invalid exponent");
-      }
-      const char *begin = s.data() + start;
-      const char *last = s.data() + p;
-      // Floating from_chars does not accept a leading '+'. The unchanged
-      // scanner above has already validated the complete decimal token.
-      if (*begin == '+')
-        ++begin;
-      float f = 0;
-      const auto parsed = std::from_chars(begin, last, f, std::chars_format::general);
-      if (parsed.ec != std::errc() || parsed.ptr != last) {
-        // Preserve strtof's existing acceptance and rounding of finite
-        // underflows (including signed zero), and its overflow diagnostics.
-        auto token = s.substr(start, p - start);
-        char *end = nullptr;
-        f = std::strtof(token.c_str(), &end);
-        if (end != token.c_str() + token.size())
-          throw Error("TYPE", "vector component overflows finite float32");
-      }
-      if (!std::isfinite(f))
-        throw Error("TYPE", "vector component overflows finite float32");
-      v.push_back(f);
-      if (v.size() > dim)
-        throw Error("TYPE", "vector dimension mismatch");
-      space();
-      if (p < s.size() && s[p] == ',') {
-        ++p;
-        space();
-        continue;
-      }
-      break;
-    }
-  if (p == s.size() || s[p++] != ']')
-    throw Error("TYPE", "invalid vector array");
-  space();
-  if (p != s.size() || v.size() != dim)
-    throw Error("TYPE", "vector dimension mismatch or trailing input");
-  return v;
+  return codec::vector_literal_text(l, dim);
 }
 Cell convert(const Literal &l, const Column &c, bool storing = true) {
   if (c.type == Type::Varchar) {
@@ -696,6 +585,10 @@ Result Engine::execute_statement(const Statement &st) {
     }
     const size_t rows = st.values.size();
     const size_t width = insert_width(rows);
+    const codec::Plan plan{schema.columns, pk};
+    // Storage column -> tuple slot, so encode_row can emit the canonical order.
+    std::vector<size_t> source(schema.columns.size(), SIZE_MAX);
+    for (size_t i = 0; i < mapping.size(); ++i) source[mapping[i]] = i;
     // Conversion and packing are pure per tuple, so a chunk is prepared in
     // parallel and only then applied in statement order. Duplicate detection
     // still runs sequentially against the rows applied so far.
@@ -708,11 +601,12 @@ Result Engine::execute_statement(const Statement &st) {
           auto &tuple = st.values[i];
           if (tuple.size() != mapping.size())
             throw Error("TYPE", "column/value count mismatch");
-          std::vector<Cell> row(schema.columns.size());
-          for (size_t c = 0; c < tuple.size(); ++c)
-            row[mapping[c]] = convert(tuple[c], schema.columns[mapping[c]]);
-          prepared[i - begin] = {std::get<int64_t>(row[pk]),
-                                 pack_row(row, schema)};
+          // Encode straight from the parsed literals: no Cell row, no
+          // intermediate vector<float>, and the previous buffer is reused.
+          std::string &bytes = prepared[i - begin].second;
+          bytes.clear();
+          prepared[i - begin].first =
+              codec::encode_row(tuple, source, plan, bytes);
         }
       };
       if (width > 1)
