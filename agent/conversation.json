@@ -1,14 +1,14 @@
 {
  "rule_version": "agent-learning-evidence-v3-unbounded",
- "summary": "MiniVectorDB v6 材料：五个维度按官方评审内容的措辞重新命名，并补入分支准入与工作副本核对两条流程证据；技术结论来自 v4/v5 的真实性能、负结果与 f5a7e3e 官方结果（性能 E=4327.462375、Agent Prompt 4.000000）。学生原话、Agent 执行、工具与平台结果分开归因；转交任务书的技术措辞不记为学生贡献。",
+ "summary": "MiniVectorDB v7 材料：按加赛文档 3.4 的五个维度与四档证据重新组织并重新自评。已有真实材料集中在“学生下达约束、Agent 执行、工具给出结果”这一形态，按官方口径多数只能计 0.5-1 分；学生本人对机制的复述、机理预测、反例设计与复盘解释仍然缺失，这是当前分值的主要缺口。",
  "synthetic": false,
  "coverage": {
   "complete_conversation": false,
   "selected_material_complete": true,
   "exclusion": "泛泛的“继续/执行”、Agent 代写的方案和没有实际结果的未来计划不作为学生技术能力证据。用户转交的任务书（含 W2/W3 划分与 15% 门槛）技术措辞来自文档原作者，材料只把用户实际采纳、限定范围并据以裁决的行为计为学生证据，引用位置仍保留逐字原文以便核对。",
   "source_version": "生产源码绑定 f5a7e3e2373742eee40268cf20ef7837b91da655；v5 材料修订随后续提交。",
-  "material_revision": "agent-learning-evidence-v6",
-  "rubric_mapping": "官方描述的四项评审内容与本材料 five-dimension 结构的对应：问题理解与学习规划=problem_understanding；Prompt 设计与迭代=experimental_iteration（含任务书下达、分支准入与迭代节奏）；验证纠错与独立判断=independent_validation；总结复盘与知识迁移=tradeoff_reflection + technical_transfer。该对应是本材料的组织方式，不是平台公布的计分项。"
+  "material_revision": "agent-learning-evidence-v7",
+  "rubric_mapping": "维度名称与档位定义取自加赛文档 3.4.1/3.4.2：0.5=提出具体问题、预测或方案但没有实际结果；1=参与验证并有实际验证结果；1.5=解释结果、据此修正方案并复测；2=在同一实例中迁移到新场景、完成验证并分析局限。本材料按该口径重新自评，只对有时间线结果支撑的实例给到 1 或 1.5。"
  },
  "conversations": [
   {
@@ -462,7 +462,7 @@
  "dimensions": [
   {
    "id": "problem_understanding",
-   "name": "问题理解与学习规划",
+   "name": "问题理解与自主拆解",
    "unit_ids": [
     "update-priority-and-invariants",
     "evidence-directory-discipline",
@@ -473,7 +473,7 @@
   },
   {
    "id": "technical_transfer",
-   "name": "知识迁移与总结",
+   "name": "技术理解与迁移",
    "unit_ids": [
     "frp-topology-transfer",
     "server-only-execution",
@@ -484,7 +484,7 @@
   },
   {
    "id": "independent_validation",
-   "name": "验证纠错与独立判断",
+   "name": "独立验证与质疑",
    "unit_ids": [
     "deploy-key-correction",
     "negative-results-not-counted",
@@ -495,7 +495,7 @@
   },
   {
    "id": "experimental_iteration",
-   "name": "Prompt 设计与迭代",
+   "name": "实验与反馈迭代",
    "unit_ids": [
     "agent-score-failure-loop",
     "bounded-self-iteration",
@@ -506,7 +506,7 @@
   },
   {
    "id": "tradeoff_reflection",
-   "name": "取舍与复盘反思",
+   "name": "取舍与反思",
    "unit_ids": [
     "exact-route-gated-choice",
     "performance-prompt-balance",
@@ -548,7 +548,7 @@
    "id": "deploy-key-correction",
    "chain_id": "push-auth-root-key",
    "dimension": "independent_validation",
-   "score": 1,
+   "score": 1.5,
    "reason": "Agent 初步把推送失败归为缺少认证时，用户依据既有经验指出 deploy key 曾经可用并直接质疑结论。随后工具定位到同指纹专用密钥并认证成功，形成学生质疑加实际结果的验证链。",
    "student_evidence": [
     {
@@ -567,7 +567,7 @@
    "id": "agent-score-failure-loop",
    "chain_id": "agent-material-87c2-to-c661",
    "dimension": "experimental_iteration",
-   "score": 1,
+   "score": 1.0,
    "reason": "用户在 87c2 的 Agent 材料失败后要求依据结果规划下一轮，又在新版本 c661 完成后主动反馈同一项目仍无分数。最后一次反馈证明上一轮修订没有解决目标，驱动本轮继续查找官方 null 规则并修正五维覆盖；没有把修复结果提前写成已完成。",
    "student_evidence": [
     {
@@ -590,7 +590,7 @@
    "id": "exact-route-gated-choice",
    "chain_id": "exact-scan-route-choice",
    "dimension": "tradeoff_reflection",
-   "score": 1,
+   "score": 1.0,
    "reason": "用户在候选路线中选择精确结构优化，选择当前服务器作为测试环境，并把查询至少快15%设为保留门槛，同时决定暂缓未完成的向量索引工作。后续实测显示查询达到门槛但首次查询和超缓存场景有代价，因此证据链包含实际取舍结果；算法实现和成本分析仍归 Agent，不列为学生解释。",
    "student_evidence": [
     {
@@ -621,7 +621,7 @@
    "id": "evidence-directory-discipline",
    "chain_id": "candidate-evidence-directories",
    "dimension": "problem_understanding",
-   "score": 1.5,
+   "score": 1.0,
    "reason": "用户为每轮实验规定了新的 validation 目录和证据包内容。Agent 按该要求分别保存成功与否决候选，保留了提交绑定、原始测量、哈希和报告，能够支持独立复核。",
    "student_evidence": [
     {
@@ -663,7 +663,7 @@
    "id": "negative-results-not-counted",
    "chain_id": "negative-results-excluded",
    "dimension": "independent_validation",
-   "score": 2.0,
+   "score": 1.0,
    "reason": "用户明确否定了用失败实验凑提交的做法。后续十三项候选未过门槛时均保留本地证据但不提交；只有独立满足目标指标的候选进入分支，形成了学生约束与工具结果的完整验证链。",
    "student_evidence": [
     {
@@ -682,7 +682,7 @@
    "id": "bounded-self-iteration",
    "chain_id": "five-success-stop-loop",
    "dimension": "experimental_iteration",
-   "score": 2.0,
+   "score": 1.0,
    "reason": "用户要求自主循环同时设置五成功提交停止线。实际过程先形成四个保留优化，并在多个失败候选后继续按证据调整；材料和最终提交按停止规则收束，没有把负结果计入轮次。",
    "student_evidence": [
     {
@@ -709,7 +709,7 @@
    "id": "performance-prompt-balance",
    "chain_id": "performance-and-material-balance",
    "dimension": "tradeoff_reflection",
-   "score": 2.0,
+   "score": 1.0,
    "reason": "用户同时要求性能与 prompt 推进，并保留内存、事务原子性和恢复正确性。四轮保留改动分别覆盖查询与写入，且都通过恢复、公开和 Docker 回归；材料同步记录历史有效 Agent 分但不提前宣称 v4 官方提升。",
    "student_evidence": [
     {
@@ -736,7 +736,7 @@
    "id": "handoff-environment-constraints",
    "chain_id": "handoff-deliverable",
    "dimension": "problem_understanding",
-   "score": 1.5,
+   "score": 1.0,
    "reason": "用户把移交目标与接手方的运行环境一起写进要求，使交付物必须具备可移植性而不是服务器现场复述；这是可检验的任务拆解，不是泛泛的继续指令。",
    "student_evidence": [
     {
@@ -774,7 +774,7 @@
    "id": "pipeline-decomposition-transfer",
    "chain_id": "round4-pipeline-split",
    "dimension": "technical_transfer",
-   "score": 1.5,
+   "score": 1.0,
    "reason": "用户把写入链路拆成“直接行编码”和“批量专用解析”两级，并明确第二级建立在第一级之上、不允许改 SQL parser；这是对执行链结构的迁移判断，Agent 只负责落地与测量。",
    "student_evidence": [
     {
@@ -793,7 +793,7 @@
    "id": "predeclared-threshold-honesty",
    "chain_id": "round4-15pct-gate",
    "dimension": "experimental_iteration",
-   "score": 2.0,
+   "score": 1.0,
    "reason": "用户在实验开始前就固定了 15% 的接纳门槛，并事先规定“结果不好也要保留数据并说明”；这避免了事后挑选有利数字，后续确实按持平结论交付。",
    "student_evidence": [
     {
@@ -831,7 +831,7 @@
    "id": "rollback-to-verified-baseline",
    "chain_id": "post-eval-revert",
    "dimension": "tradeoff_reflection",
-   "score": 2.0,
+   "score": 1.0,
    "reason": "用户用“回滚到已验证版本”换取一次性评测的确定性，放弃未达标分支的潜在收益；取舍有明确判据（是否达到门槛），不是情绪化回退。",
    "student_evidence": [
     {
@@ -850,7 +850,7 @@
    "id": "eval-feedback-reprioritization",
    "chain_id": "post-eval-pivot",
    "dimension": "technical_transfer",
-   "score": 1.5,
+   "score": 1.0,
    "reason": "拿到官方结果后，用户依据两块分数的实际值把投入从性能转向 Agent 材料，这是用平台反馈重排优先级，而非继续加固已见效的方向。",
    "student_evidence": [
     {
@@ -869,7 +869,7 @@
    "id": "staged-merge-authorization",
    "chain_id": "staged-branch-gate",
    "dimension": "experimental_iteration",
-   "score": 1.5,
+   "score": 1.0,
    "reason": "用户把“先落个人分支、主干需单独授权”写成流程约束，并在此后的轮次里实际执行（W2/W3/R1 均未上主干）；这是对集成风险的预先设计，不是事后的口头要求。",
    "student_evidence": [
     {
@@ -908,6 +908,8 @@
   "所有引用均来自材料内真实原话；本地性能数字是 cgroup 配对结果，官方数字只有 f5a7e3e 的 E=4327.462375 与 Agent Prompt 4.000000。",
   "材料未写入官方评分细则；5 个维度与 unit 划分是本材料的组织方式，不代表平台的实际计分项。",
   "Agent 生成的算法、代码、测量和解释没有转记为学生贡献；转交文档的原作者不归给用户。",
-  "W2/W3 的持平结论、R1 的行尾噪声和负结果细节都保留在正文与 experiments 中，未做美化。"
+  "W2/W3 的持平结论、R1 的行尾噪声和负结果细节都保留在正文与 experiments 中，未做美化。",
+  "按官方 3.4.2 档位，目前没有任何实例达到 2 分（要求同一实例迁移到新场景并分析局限），最高为 1.5。",
+  "评审只读这一个 conversation.json；仓库其它文件、外部链接与平台日志不会被引用。"
  ]
 }
