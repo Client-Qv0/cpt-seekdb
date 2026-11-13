@@ -1,13 +1,13 @@
 {
  "rule_version": "agent-learning-evidence-v3-unbounded",
- "summary": "MiniVectorDB v13 材料：收尾 CPU 配额链——单请求往返口径下三组对照均无限流、未达预设 P95 门槛；流水线（在途 32）对照复现限流，4 线程吞吐 -14.5%、p95 11.13ms 对 8.01ms，策略据此保留但理由收窄为防止持续供给时线程超配。分批格的 P95 差异保留为原因未确认。",
+ "summary": "MiniVectorDB v14 材料（收尾版）：CPU 配额链按实际时间线记录——单请求往返下两种宽度均未观察到限流、连续发送的 P95 差异 +1.32% 未达预设 10% 门槛；学生据此收窄策略理由并要求补流水线对照，复测复现限流与吞吐下降但因果待验证。策略与 deploy key 两条按实际发生的判断、修正与复测定档。",
  "synthetic": false,
  "coverage": {
   "complete_conversation": false,
   "selected_material_complete": true,
   "exclusion": "泛泛的“继续/执行”、Agent 代写的方案和没有实际结果的未来计划不作为学生技术能力证据。用户转交的任务书（含 W2/W3 划分与 15% 门槛）技术措辞来自文档原作者，材料只把用户实际采纳、限定范围并据以裁决的行为计为学生证据，引用位置仍保留逐字原文以便核对。",
   "source_version": "生产源码绑定 f5a7e3e2373742eee40268cf20ef7837b91da655；v5 材料修订随后续提交。",
-  "material_revision": "agent-learning-evidence-v13",
+  "material_revision": "agent-learning-evidence-v14",
   "rubric_mapping": "维度名称与档位定义取自加赛文档 3.4.1/3.4.2：0.5=提出具体问题、预测或方案但没有实际结果；1=参与验证并有实际验证结果；1.5=解释结果、据此修正方案并复测；2=在同一实例中迁移到新场景、完成验证并分析局限。本材料按该口径重新自评，只对有时间线结果支撑的实例给到 1 或 1.5。"
  },
  "conversations": [
@@ -811,7 +811,7 @@
   {
    "id": "throttle-load-dependence",
    "source": "tool_output_summary",
-   "content": "限流依赖负载强度：参考负载（1000 次查询、约 0.3 s）下旧实现 4 线程与新实现 2 线程都不触发限流；持续负载（10000 次查询）下旧实现 14–18 次限流、161–221 ms，新实现 0 次。",
+   "content": "文件重定向喂入（无客户端往返等待）下的限流对照：参考量级 1000 次查询两个构建都不限流；持续 10000 次查询时旧实现（按亲和性 4 线程）14–18 次限流、161–221 ms，新实现（按配额 2 线程）0 次。该结论只适用于这种喂入方式，不能外推到单请求往返口径。",
    "context": "CPU 配额迁移实验的逐格结果。",
    "executed": true
   },
@@ -832,7 +832,7 @@
   {
    "id": "pipeline-32-control",
    "source": "tool_output_summary",
-   "content": "流水线对照（在途上限 32，2 轮中位）：W2 4868 req/s、p50 6.167ms、p95 8.011ms、零限流；W4 4163 req/s、p50 7.098ms、p95 11.132ms、限流 6 次/42144us；吞吐 -14.5%，结果逐字节一致。",
+   "content": "流水线对照（在途上限 32，2 轮中位）：W2 4868 req/s、p50 6.167ms、p95 8.011ms、零限流；W4 4163 req/s、p50 7.098ms、p95 11.132ms、限流 6 次/42144us；吞吐 -14.5%，结果逐字节一致。只跑了 2 轮且未隔离因果（线程数、调度、内存带宽同时变化），限流与尾延迟的因果机制待验证。",
    "context": "配额链收尾的两组对照，用于确认策略的适用条件。",
    "executed": true
   }
@@ -930,7 +930,7 @@
    "chain_id": "push-auth-root-key",
    "dimension": "independent_validation",
    "score": 1.5,
-   "reason": "Agent 初步把推送失败归为缺少认证时，用户依据既有经验指出 deploy key 曾经可用并直接质疑结论。随后工具定位到同指纹专用密钥并认证成功，形成学生质疑加实际结果的验证链。",
+   "reason": "Agent 把推送失败归为缺少认证时，学生依据既有经验断言 deploy key 曾可用并直接质疑该结论；随后定位到同指纹专用密钥并用同一密钥完成认证，形成“学生纠正假设 → 复测成功”的闭环。",
    "student_evidence": [
     {
      "pointer": "/conversations/2/messages/0/content",
@@ -943,7 +943,7 @@
      "quote": "Hi Client-Qv0/cpt-seekdb! You've successfully authenticated, but GitHub does not provide shell access."
     }
    ],
-   "rule_basis": "1.5 档（解释结果、据此修正方案并复测）：学生基于结果修正了原方案，并由 Agent 复测验证。"
+   "rule_basis": "1.5 档（解释结果、据此修正方案并复测）：学生依据已发生的事实纠正 Agent 假设，随后复测验证。"
   },
   {
    "id": "agent-score-failure-loop",
@@ -1125,8 +1125,8 @@
    "id": "one-shot-eval-risk-question",
    "chain_id": "pre-eval-risk-check",
    "dimension": "independent_validation",
-   "score": 1.5,
-   "reason": "在一次性评测前，用户没有直接接受 Agent 的候选推荐，而是要求在两个版本之间给出取舍依据；这条质疑直接促使重新核对候选的真实 diff。",
+   "score": 1.0,
+   "reason": "在一次性评测前，学生没有直接接受 Agent 的候选推荐，而是要求给出取舍依据；该质询促使重新核对候选的真实 diff（发现整文件行尾改写），学生随后决定回退并复核。解读该差异与最终取舍由学生做出，但机制解释仍由 Agent 给出，按 1 档计。",
    "student_evidence": [
     {
      "pointer": "/conversations/9/messages/1/content",
@@ -1139,7 +1139,7 @@
      "quote": "实际逻辑约 90 行：脚本编辑把整文件行尾从混合 CRLF/LF 规范成了 LF"
     }
    ],
-   "rule_basis": "1.5 档（解释结果、据此修正方案并复测）：学生基于结果修正了原方案，并由 Agent 复测验证。"
+   "rule_basis": "1 档（参与验证并有实际验证结果）：学生提出质疑并提出可核对的要求，结果由工具复核给出。"
   },
   {
    "id": "rollback-to-verified-baseline",
@@ -1266,7 +1266,7 @@
    "chain_id": "cpu-quota-migration",
    "dimension": "technical_transfer",
    "score": 1.5,
-   "reason": "学生在看到判据未达成后，仍然保留策略但把理由收窄为“防止持续供给时线程超配”，并要求补一组流水线对照复测；复测在在途上限 32 时复现限流，4 线程吞吐 -14.5%、p95 11.13ms 对 8.01ms，据此确认策略的适用条件是持续供给而非单请求往返。",
+   "reason": "按实际时间线：学生先给定判据（连续发送下 4 线程 P95 比 2 线程差 ≥10% 才保留）；单请求往返四格实测两种宽度均未观察到限流，连续发送的 P95 差异为 +1.32%，未达该门槛；学生据此把策略理由收窄为“防止持续供给时线程超配”，并要求补一组流水线对照复测；复测在在途上限 32 下复现限流与吞吐下降（2 轮）。判据未达成的结论保留，策略按收窄后的理由保留。",
    "student_evidence": [
     {
      "pointer": "/conversations/18/messages/0/content",
@@ -1275,11 +1275,11 @@
    ],
    "result_evidence": [
     {
-     "pointer": "/experiments/37/content",
-     "quote": "W4 4163 req/s、p50 7.098ms、p95 11.132ms、限流 6 次/42144us"
+     "pointer": "/experiments/36/content",
+     "quote": "四格结果逐字节一致，全部零限流"
     }
    ],
-   "rule_basis": "1.5 档（解释结果、据此修正方案并复测）：学生据未达标的判据修正了策略理由，并指定复测口径，复测复现了限流与尾延迟代价。"
+   "rule_basis": "1.5 档（解释结果、据此修正方案并复测）：学生据未达成的判据收窄策略理由，并指定复测口径；复测复现限流与吞吐下降，但因果未隔离，机制标为待验证。"
   },
   {
    "id": "unconfirmed-cause-reporting",
@@ -1306,7 +1306,8 @@
   "评审只读这一个 conversation.json；仓库其它文件、外部链接与平台日志不会被引用。",
   "复盘问答中的机理解释由 Agent 整理，学生本人的口头解释仍缺失；retrospective 中逐条标注了 open_question。",
   "CPU 配额链的结果解释与边界复测尚未由选手本人给出，retrospective 中以 open_question 标注。",
-  "流水线对照只跑了 2 轮（时间盒），且分批格 P95 差异至今没有可解释机制。"
+  "流水线对照只跑 2 轮且未隔离因果，限流与尾延迟的因果机制标为待验证。",
+  "文件重定向喂入下的限流结论只适用于那种喂入方式，不代表单请求往返口径。"
  ],
  "user_prompts": [
   {
