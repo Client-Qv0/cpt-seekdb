@@ -1,4 +1,5 @@
 #include "engine.hpp"
+#include "cpu_budget.hpp"
 #include "exact_cache.hpp"
 #include "spill.hpp"
 #include <algorithm>
@@ -23,20 +24,6 @@
 
 namespace mvdb {
 namespace {
-// CPUs this process may actually run on. The official checker fixes the CPU
-// set, so the affinity mask is a better guide than the host core count.
-size_t usable_cpus() {
-#if defined(__linux__)
-  cpu_set_t set;
-  CPU_ZERO(&set);
-  if (sched_getaffinity(0, sizeof(set), &set) == 0) {
-    const int count = CPU_COUNT(&set);
-    if (count > 0) return static_cast<size_t>(count);
-  }
-#endif
-  const size_t count = std::thread::hardware_concurrency();
-  return count ? count : 1;
-}
 // Statements execute one at a time, so a fixed pool of idle workers is enough:
 // a query publishes one body and waits for the participating workers.
 class WorkerPool {
@@ -78,7 +65,7 @@ public:
 
 private:
   WorkerPool() {
-    const size_t count = std::min<size_t>(usable_cpus(), 4);
+    const size_t count = std::min<size_t>(cpu::budget_cpus(), 4);
     for (size_t index = 1; index < count; ++index)
       threads_.emplace_back([this, index] { work(index); });
   }
@@ -129,7 +116,7 @@ private:
 constexpr size_t parallel_scan_min_rows = 1024;
 size_t scan_width(size_t rows) {
   size_t width = exact::thread_limit();
-  if (width == 0) width = usable_cpus();
+  if (width == 0) width = cpu::budget_cpus();
   width = std::min<size_t>(width, 4);
   if (width < 2 || rows < parallel_scan_min_rows) return 1;
   return width;
@@ -1047,7 +1034,15 @@ Result Engine::execute_statement(const Statement &st) {
         auto run_slices = [&](
             size_t total,
             const std::function<void(size_t, size_t, Heap &)> &body) {
-          const size_t width = scan_width(total);
+          size_t width = scan_width(total);
+          if (width < 2) {
+            body(0, total, nearest);
+            return;
+          }
+          // Never slice for more lanes than the pool can actually run: a slice
+          // without a worker would silently skip its rows.
+          const size_t capacity = WorkerPool::instance().capacity();
+          if (width > capacity) width = capacity;
           if (width < 2) {
             body(0, total, nearest);
             return;
