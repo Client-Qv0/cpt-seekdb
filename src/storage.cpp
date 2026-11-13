@@ -789,6 +789,55 @@ void Store::scan(
     Guard(const Impl &x) : s(x) { ++s.scans; }
     ~Guard() { --s.scans; }
   } guard(s);
+  // Rows of consecutive keys usually sit back to back in the journal, so scan
+  // coalesces byte-adjacent rows into one positioned read instead of issuing a
+  // syscall per row. Callback order stays ascending by key.
+  struct Pending {
+    int64_t key;
+    Impl::Ref ref;
+  };
+  std::vector<Pending> pending;
+  pending.reserve(512);
+  std::string run;
+  auto in_statement_buffer = [&](const Impl::Ref &ref) {
+    return s.statement && ref.offset >= s.statement_buffered_start &&
+           ref.offset <= s.end;
+  };
+  auto slice = [&](const Pending &entry, const char *data) {
+    fn(entry.key, std::string(data, entry.ref.size));
+  };
+  auto flush = [&] {
+    size_t index = 0;
+    while (index < pending.size()) {
+      const Pending &first = pending[index];
+      if (in_statement_buffer(first.ref)) {
+        fn(first.key, s.load(first.ref));
+        ++index;
+        continue;
+      }
+      constexpr uint64_t read_limit = 1024 * 1024;
+      uint64_t begin = first.ref.offset;
+      uint64_t finish = begin + first.ref.size;
+      size_t next = index + 1;
+      // Frame headers and the table name sit between consecutive values, so a
+      // run tolerates small forward gaps instead of requiring exact adjacency.
+      constexpr uint64_t gap_limit = 65536;
+      while (next < pending.size()) {
+        const Impl::Ref &ref = pending[next].ref;
+        if (in_statement_buffer(ref)) break;
+        if (ref.offset < finish || ref.offset - finish > gap_limit) break;
+        if (ref.offset + ref.size - begin > read_limit) break;
+        finish = ref.offset + ref.size;
+        ++next;
+      }
+      run.resize(static_cast<size_t>(finish - begin));
+      if (!run.empty()) read_all(s.fd, run.data(), run.size(), begin);
+      for (size_t lane = index; lane < next; ++lane)
+        slice(pending[lane], run.data() + (pending[lane].ref.offset - begin));
+      index = next;
+    }
+    pending.clear();
+  };
   while (a != base.end() || b != transaction.end() || c != statement.end()) {
     int64_t key = std::numeric_limits<int64_t>::max();
     if (a != base.end())
@@ -810,8 +859,11 @@ void Store::scan(
       ref = c.ref();
       ++c;
     }
-    if (!ref.deleted)
-      fn(key, s.load(ref));
+    if (!ref.deleted) {
+      pending.push_back({key, ref});
+      if (pending.size() >= 512) flush();
+    }
   }
+  flush();
 }
 } // namespace mvdb
