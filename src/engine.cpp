@@ -274,7 +274,11 @@ std::vector<float> vector_literal(const Literal &l, uint32_t dim) {
   if (p == s.size() || s[p++] != '[')
     throw Error("TYPE", "expected vector array");
   space();
+  // A component needs at least two text bytes ("0,"), so the text bounds the
+  // result size. The schema dimension is not trusted as a reservation here: a
+  // hostile CREATE TABLE could name an arbitrarily large one.
   std::vector<float> v;
+  v.reserve(std::min<size_t>(dim, s.size() / 2 + 1));
   if (p < s.size() && s[p] != ']')
     for (;;) {
       size_t start = p;
@@ -365,7 +369,18 @@ Cell convert(const Literal &l, const Column &c, bool storing = true) {
   return x;
 }
 std::string pack_row(const std::vector<Cell> &row, const Schema &s) {
+  size_t expected = 0;
+  for (size_t i = 0; i < row.size(); ++i) {
+    const auto &c = s.columns[i];
+    if (c.type == Type::BigInt)
+      expected += 8;
+    else if (c.type == Type::Varchar)
+      expected += 4 + std::get<std::string>(row[i]).size();
+    else
+      expected += size_t(4) * std::get<std::vector<float>>(row[i]).size();
+  }
   std::string out;
+  out.reserve(expected);
   for (size_t i = 0; i < row.size(); ++i) {
     auto &c = s.columns[i];
     if (c.type == Type::BigInt)
