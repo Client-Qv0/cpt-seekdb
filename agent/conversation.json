@@ -7,7 +7,7 @@
   "selected_material_complete": true,
   "exclusion": "泛泛的“继续/执行”、Agent 代写的方案和没有实际结果的未来计划不作为学生技术能力证据。用户转交的任务书（含 W2/W3 划分与 15% 门槛）技术措辞来自文档原作者，材料只把用户实际采纳、限定范围并据以裁决的行为计为学生证据，引用位置仍保留逐字原文以便核对。",
   "source_version": "生产源码绑定 f5a7e3e2373742eee40268cf20ef7837b91da655；v5 材料修订随后续提交。",
-  "material_revision": "agent-learning-evidence-v17",
+  "material_revision": "agent-learning-evidence-v17.1",
   "rubric_mapping": "维度名称与档位定义取自加赛文档 3.4.1/3.4.2：0.5=提出具体问题、预测或方案但没有实际结果；1=参与验证并有实际验证结果；1.5=解释结果、据此修正方案并复测；2=在同一实例中迁移到新场景、完成验证并分析局限。本材料按该口径重新自评，只对有时间线结果支撑的实例给到 1 或 1.5。"
  },
  "conversations": [
@@ -668,6 +668,18 @@
      "source": "student",
      "authorship_verified": true,
      "content": "EOF 只说明没收到回包。实验里用唯一事务标记、完整写入集和注入点证明状态"
+    },
+    {
+     "id": "student-a-retention",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "链 A： 即使 checkpoint 后收益恢复，R1 仍留实验分支。这轮只验证重写后的物理布局是否恢复合并收益。"
+    },
+    {
+     "id": "student-b-conclusion",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "两组都没收到成功回包，但重启后一组 0 行、一组 100 行，这足以说明 无回包不能判断提交状态。"
     }
    ]
   }
@@ -1552,8 +1564,12 @@
    "reason": "选手据队友提出的 checkpoint 前后配对，先要求按每百万候选折算向后跳而不是看占比，并指定散布更新复测；结果是：checkpoint 前 R1 慢 28.8%（0/6），checkpoint 后快 37.3%（6/6），再散布更新 500 行后仍快 34.2%（6/6）。结论只覆盖这份数据与这三种布局。",
    "student_evidence": [
     {
-     "pointer": "/conversations/20/messages/4/content",
-     "quote": "链 3 先拆偏移原因，再补块内乱序。"
+     "pointer": "/conversations/21/messages/5/content",
+     "quote": "链 A： 即使 checkpoint 后收益恢复，R1 仍留实验分支。"
+    },
+    {
+     "pointer": "/conversations/21/messages/2/content",
+     "quote": "布局看每百万候选的向后跳次数和合并段数"
     }
    ],
    "result_evidence": [
@@ -1578,8 +1594,12 @@
    "reason": "选手把“没收到成功回包”拆成两个可证明的时点分别验证：写 marker 前强杀时整批不应出现，COMMIT 完成但回包前强杀时整批应完整可见。实测两种情况客户端都没收到成功回包，重启后分别是 0 行与 100 行，说明无回包不能判断提交状态。",
    "student_evidence": [
     {
-     "pointer": "/conversations/21/messages/0/content",
-     "quote": "A-C / B-B，开跑。"
+     "pointer": "/conversations/21/messages/6/content",
+     "quote": "无回包不能判断提交状态。"
+    },
+    {
+     "pointer": "/conversations/21/messages/4/content",
+     "quote": "EOF 只说明没收到回包。"
     }
    ],
    "result_evidence": [
@@ -1611,7 +1631,8 @@
   "跨块原子性只记录日志长度退回语句起点，未做逐字节比对。",
   "三条链的用例构思部分来自队友书面分析（经选手转交采纳），各 unit 已用 provenance 字段注明提案者与采纳者。",
   "500 行 UPDATE 同时改了向量值，收益回落不能全部归因于碎片化；checkpoint 成本单列，不参与是否合入的判断。",
-  "恢复链只验证进程强杀；业务操作标记的应用建议本轮未验证。"
+  "恢复链只验证进程强杀；业务操作标记的应用建议本轮未验证。",
+  "选手本人的话只覆盖到判断层面；机制解释、代码事实与实验方案由 Agent 提供，未记为学生理解。"
  ],
  "user_prompts": [
   {
