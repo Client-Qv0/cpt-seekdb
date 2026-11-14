@@ -117,4 +117,42 @@ inline size_t budget_cpus() {
   static const size_t width = effective_width(affinity_cpus(), cgroup_quota_cpus(), 64);
   return width;
 }
+// Bytes this process may use, or 0 when no limit is known. cgroup v2 keeps the
+// limit in memory.max with "max" meaning unlimited; v1 has its own hierarchy and
+// a very large sentinel for unlimited. A limit may sit on any ancestor, so this
+// walks the same path as the CPU quota.
+inline size_t memory_limit_bytes() {
+#if defined(__linux__)
+  const std::string self = read_small_file("/proc/self/cgroup");
+  std::string relative;
+  const size_t marker = self.find("0::");
+  if (marker != std::string::npos) {
+    relative = self.substr(marker + 3);
+    while (!relative.empty() && (relative.back() == '\n' || relative.back() == ' '))
+      relative.pop_back();
+  }
+  auto parse = [](const std::string &text) -> size_t {
+    if (text.empty() || text.rfind("max", 0) == 0) return 0;
+    const long long value = std::strtoll(text.c_str(), nullptr, 10);
+    // v1 reports a page-aligned "unlimited" value far above any real container.
+    if (value <= 0 || value > (1LL << 46)) return 0;
+    return static_cast<size_t>(value);
+  };
+  std::string base = "/sys/fs/cgroup";
+  size_t limit = 0;
+  for (;;) {
+    const size_t value = parse(read_small_file((base + "/memory.max").c_str()));
+    if (value && (limit == 0 || value < limit)) limit = value;
+    if (relative.empty() || relative == "/") break;
+    if (relative.front() == '/') relative.erase(0, 1);
+    const size_t slash = relative.find('/');
+    base += "/" + relative.substr(0, slash);
+    relative = slash == std::string::npos ? "" : relative.substr(slash);
+  }
+  if (limit) return limit;
+  return parse(read_small_file("/sys/fs/cgroup/memory/memory.limit_in_bytes"));
+#else
+  return 0;
+#endif
+}
 } // namespace mvdb::cpu

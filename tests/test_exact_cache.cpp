@@ -58,14 +58,14 @@ void test_equality_postings() {
     }
     require(view.equality_attempted && view.equality_rows);
     require(view.allocated_bytes()==before+view.count*sizeof(uint32_t));
-    require(view.allocated_bytes()+view.equality_sort_scratch<=exact::budget);
+    require(view.allocated_bytes()+view.equality_sort_scratch<=exact::budget());
   }
   exact::Plan empty({Type::BigInt,Type::Vector},1,1);
   exact::Compact zero(empty);check_posting_range(zero,0,Cell(int64_t(0)));
   require(!zero.equality_rows);
   exact::Plan boundary({Type::BigInt,Type::BigInt,Type::Vector},2,128);
   boundary.count=22000;
-  while(boundary.required_bytes()+boundary.count*sizeof(uint32_t)+exact::Compact::equality_sort_scratch<=exact::budget)++boundary.count;
+  while(boundary.required_bytes()+boundary.count*sizeof(uint32_t)+exact::Compact::equality_sort_scratch<=exact::budget())++boundary.count;
   require(boundary.fits());
   exact::Compact full(boundary);size_t before=full.allocated_bytes();
   check_posting_range(full,1,Cell(int64_t(0)),false);
@@ -221,7 +221,7 @@ void test_quantized_screen() {
     for(size_t i=0;i<vectors.size();++i)
       for(float& value:vectors[i])value=float(i)+float(int(random()%2001)-1000)/1024;
     auto cache=make_cache(vectors);
-    require(bool(cache.quantized_codes) && cache.allocated_bytes()<=exact::budget);
+    require(bool(cache.quantized_codes) && cache.allocated_bytes()<=exact::budget());
     for(size_t i=0;i<vectors.size();++i)for(size_t d=0;d<dim;++d) {
       const int code=int(cache.quantized_codes[i*dim+d]);
       require(code>=-127 && code<=127);
@@ -280,7 +280,7 @@ void test_quantized_screen() {
   require(full_plan.fits());
   exact::Compact full(full_plan);
   full.prepare_quantized_codes();
-  require(!full.quantized_codes && full.allocated_bytes()<=exact::budget);
+  require(!full.quantized_codes && full.allocated_bytes()<=exact::budget());
   std::cout<<"quantized screen code bounds, exact integer sums, rejection safety and budget fallback passed\n";
 #endif
 }
@@ -318,6 +318,10 @@ void test_quantized_four_row_kernel() {
 #endif
 
 int main() {
+  // The view budget follows the memory this process may use, so it must never
+  // fall below the old fixed value nor outgrow its ceiling.
+  require(exact::budget() >= size_t(12) * 1024 * 1024 &&
+          exact::budget() <= size_t(48) * 1024 * 1024);
   test_compact_accessors();
   test_equality_postings();
   test_fp32_screen();
@@ -338,7 +342,7 @@ int main() {
       require(plan.fits());
       exact::Compact cache(plan);
       for(size_t i=0;i<n;++i) cache.fill(i,int64_t(i)-5,rows[i]);
-      require(cache.allocated_bytes()<=exact::budget);
+      require(cache.allocated_bytes()<=exact::budget());
       std::vector<float> q(dim,0.5f);
       for(size_t i=0;i<n;++i) {
         double sum=0; const auto& v=std::get<std::vector<float>>(rows[i][2]);
@@ -426,11 +430,11 @@ int main() {
   exact::Plan huge({Type::Vector},0,std::numeric_limits<size_t>::max());
   require(!huge.fits());
   exact::Plan strings({Type::Varchar,Type::Vector},1,1);
-  std::vector<Cell> large{std::string(exact::budget,'x'),std::vector<float>(1)};
+  std::vector<Cell> large{std::string(exact::budget(),'x'),std::vector<float>(1)};
   strings.observe(large); require(!strings.fits());
   exact::Plan boundary({Type::BigInt,Type::Vector},1,1);
   size_t last=boundary.required_bytes();
   while(boundary.fits()) {last=boundary.required_bytes();boundary.observe({int64_t(1),std::vector<float>(1)});}
-  require(last<=exact::budget && boundary.required_bytes()>exact::budget);
+  require(last<=exact::budget() && boundary.required_bytes()>exact::budget());
   std::cout<<"compact scalar layout/budget/distance checks passed\n";
 }

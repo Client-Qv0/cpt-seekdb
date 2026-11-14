@@ -1,6 +1,7 @@
 #pragma once
 // Transient exact-search view. No disk/protocol representation depends on this.
 #include "engine.hpp"
+#include "cpu_budget.hpp"
 #include <cmath>
 #include <cfenv>
 #include <algorithm>
@@ -14,7 +15,22 @@
 #endif
 
 namespace mvdb::exact {
-constexpr size_t budget = 12 * 1024 * 1024;
+// The view budget follows the memory this process may actually use. A fixed
+// 12 MiB left every table that needs more (50k rows x 128D is about 33 MiB with
+// its screening codes) on the per-row path permanently. The old value stays the
+// floor, so a run with no cgroup limit behaves exactly as before.
+inline size_t budget() {
+  static const size_t value = [] {
+    constexpr size_t floor_bytes = 12 * 1024 * 1024;
+    constexpr size_t ceiling_bytes = 48 * 1024 * 1024;
+    const size_t limit = cpu::memory_limit_bytes();
+    if (!limit) return floor_bytes;
+    const size_t share = limit / 3;
+    if (share < floor_bytes) return floor_bytes;
+    return share > ceiling_bytes ? ceiling_bytes : share;
+  }();
+  return value;
+}
 inline bool available() {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
   return __builtin_cpu_supports("avx2");
@@ -70,10 +86,10 @@ inline bool fp32_screen_reject(float approximate_sum,double threshold) {
   return std::isfinite(approximate_sum) && double(approximate_sum)>threshold;
 }
 inline size_t add(size_t a,size_t b) {
-  return a>budget || b>budget-a ? budget+1 : a+b;
+  return a>budget() || b>budget()-a ? budget()+1 : a+b;
 }
 inline size_t mul(size_t a,size_t b) {
-  return b && a>budget/b ? budget+1 : a*b;
+  return b && a>budget()/b ? budget()+1 : a*b;
 }
 struct ScalarColumn {
   Type type;
@@ -105,7 +121,7 @@ struct Plan {
     // Fixed reserve covers objects, table identity, allocator metadata and the
     // four-lane query scratch. Count all owned capacity again after allocation.
     size_t bytes=4096;
-    if(!dim || vector_column>=types.size() || dim>budget || count>budget) return budget+1;
+    if(!dim || vector_column>=types.size() || dim>budget() || count>budget()) return budget()+1;
     bytes=add(bytes,mul(types.size(),sizeof(ScalarColumn)+sizeof(Type)+sizeof(size_t)+96));
     bytes=add(bytes,mul(text_max.size(),sizeof(size_t)));
     bytes=add(bytes,mul(count,sizeof(int64_t)));
@@ -119,7 +135,7 @@ struct Plan {
     }
     return bytes;
   }
-  bool fits() const {return required_bytes()<=budget;}
+  bool fits() const {return required_bytes()<=budget();}
 };
 struct Compact {
   size_t dim,count,vector_column;
@@ -154,7 +170,7 @@ struct Compact {
       if(col.type==Type::Varchar) {col.offsets.resize(count+1);col.text.resize(p.text_bytes[c]);}
     }
     // Include the live sizing plan until it is destroyed after publication.
-    if(allocated_bytes()>budget) throw Error("RESOURCE","exact cache allocation exceeds budget");
+    if(allocated_bytes()>budget()) throw Error("RESOURCE","exact cache allocation exceeds budget");
   }
   size_t allocated_bytes() const {
     size_t bytes=4096+columns.capacity()*(sizeof(ScalarColumn)+sizeof(Type)+sizeof(size_t)+96);
@@ -221,7 +237,7 @@ struct Compact {
        std::fegetround()!=FE_TONEAREST) return;
     const size_t payload=mul(count,dim);
     const size_t scratch=add(mul(dim,sizeof(int16_t)),64);
-    if(add(add(allocated_bytes(),payload),scratch)>budget) return;
+    if(add(add(allocated_bytes(),payload),scratch)>budget()) return;
     double max_abs=0;
     for(float value:vectors) {
       if(!std::isfinite(value)) return;
@@ -264,7 +280,7 @@ struct Compact {
       // itself as construction storage; sorting needs no second array. Reserve
       // scratch for the fixed toolchain's in-place introsort stack as well.
       const size_t needed=mul(count,sizeof(uint32_t));
-      if(add(add(allocated_bytes(),needed),equality_sort_scratch)>budget) return {};
+      if(add(add(allocated_bytes(),needed),equality_sort_scratch)>budget()) return {};
       try {
         std::unique_ptr<uint32_t[]> rows(new uint32_t[count]);
         for(size_t i=0;i<count;++i) rows[i]=static_cast<uint32_t>(i);
