@@ -893,16 +893,20 @@ Result Engine::execute_statement(const Statement &st) {
   const bool heap_fits = limit <= result_budget / 64;
   const bool wide_ok = declared_fits && heap_fits;
   const bool narrow_ok = limit <= 4096 && measure_actual;
-  if (limit && (wide_ok || narrow_ok) && keys.size() == 1 && !keys[0].desc &&
+  if (limit && (wide_ok || narrow_ok) && keys.size() == 1 &&
       keys[0].projection && ps[keys[0].index].distance) {
     struct Neighbor {
       double distance;
       int64_t key;
       size_t row;
     };
-    auto better_neighbor = [](const Neighbor &a, const Neighbor &b) {
-      return a.distance < b.distance ||
-             (a.distance == b.distance && a.key < b.key);
+    // A descending key keeps the farthest distances, but ties still resolve by
+    // ascending primary key, matching the order the general path produces.
+    const bool descending = keys[0].desc;
+    auto better_neighbor = [descending](const Neighbor &a, const Neighbor &b) {
+      if (a.distance != b.distance)
+        return descending ? a.distance > b.distance : a.distance < b.distance;
+      return a.key < b.key;
     };
     std::priority_queue<Neighbor, std::vector<Neighbor>,
                         decltype(better_neighbor)>
@@ -934,7 +938,10 @@ Result Engine::execute_statement(const Statement &st) {
       if (cache_->exact_view) {
         auto &view = *cache_->exact_view;
         winner_view = &view;
-        const bool screen=exact::fp32_screen_available(view.dim);
+        // Both screens reject records whose approximation cannot beat the worst
+        // kept distance, which assumes smaller is better. A descending key keeps
+        // the farthest records, so it scans without screening.
+        const bool screen=!descending && exact::fp32_screen_available(view.dim);
         auto quantized=exact::prepare_quantized_query(view,projection.query,screen);
         // One contiguous slice of the packed scan. Each slice keeps its own
         // heap, so slices run on separate threads without shared mutable state.

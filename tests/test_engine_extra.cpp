@@ -143,6 +143,20 @@ int main() {
         if (narrow.rows[i] != wide.rows[i]) { prefix = false; break; }
       check(prefix,"A narrower TopK must be a prefix of a wider one");
     }
+    {
+      // A descending distance key keeps the farthest rows, while ties still
+      // resolve by ascending primary key like the path that projects every row.
+      mvdb::Engine db(path.string() + "-desc");
+      db.execute("CREATE TABLE d1(id BIGINT PRIMARY KEY,v VECTOR(2))");
+      db.execute("INSERT INTO d1 VALUES (1,'[0,0]'),(2,'[1,0]'),(3,'[2,0]'),(4,'[3,0]'),(5,'[4,0]')");
+      auto asc = db.execute("SELECT id,L2_DISTANCE(v,'[0,0]') AS d FROM d1 ORDER BY d LIMIT 3");
+      auto desc = db.execute("SELECT id,L2_DISTANCE(v,'[0,0]') AS d FROM d1 ORDER BY d DESC LIMIT 3");
+      check(asc.rows.size() == 3 && desc.rows.size() == 3,"both directions must respect the limit");
+      check(id(asc,0) == 1 && id(asc,2) == 3,"ascending TopK must start at the nearest row");
+      check(id(desc,0) == 5 && id(desc,1) == 4 && id(desc,2) == 3,
+            "descending TopK must start at the farthest row");
+    }
+    fs::remove_all(path.string() + "-desc");
     fs::remove_all(path.string() + "-cap");
     fs::remove_all(path);
     std::cout << "engine extra checks passed: " << checks << '\n';
