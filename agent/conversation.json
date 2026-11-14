@@ -1,13 +1,13 @@
 {
  "rule_version": "agent-learning-evidence-v3-unbounded",
- "summary": "MiniVectorDB v16 材料：新增三条已收尾的链——跨块 INSERT 失败原子性、12 MiB 回退分层与量化码开关对照、合并读在顺序/全乱序/块内乱序三种布局下的边界（结论：R1 留实验分支、不合入）。每条都有选手判据、首测、复测与取舍；生产代码未改动。",
+ "summary": "MiniVectorDB v17 材料：R1 链扩展到 checkpoint 前后与散布更新三种布局（仍为同一个 unit），新增恢复链——写 marker 前与 COMMIT 完成后回包前两个强杀时点，客户端均无成功回包，重启后分别 0 行与 100 行。生产代码未改动。",
  "synthetic": false,
  "coverage": {
   "complete_conversation": false,
   "selected_material_complete": true,
   "exclusion": "泛泛的“继续/执行”、Agent 代写的方案和没有实际结果的未来计划不作为学生技术能力证据。用户转交的任务书（含 W2/W3 划分与 15% 门槛）技术措辞来自文档原作者，材料只把用户实际采纳、限定范围并据以裁决的行为计为学生证据，引用位置仍保留逐字原文以便核对。",
   "source_version": "生产源码绑定 f5a7e3e2373742eee40268cf20ef7837b91da655；v5 材料修订随后续提交。",
-  "material_revision": "agent-learning-evidence-v16.1",
+  "material_revision": "agent-learning-evidence-v17",
   "rubric_mapping": "维度名称与档位定义取自加赛文档 3.4.1/3.4.2：0.5=提出具体问题、预测或方案但没有实际结果；1=参与验证并有实际验证结果；1.5=解释结果、据此修正方案并复测；2=在同一实例中迁移到新场景、完成验证并分析局限。本材料按该口径重新自评，只对有时间线结果支撑的实例给到 1 或 1.5。"
  },
  "conversations": [
@@ -635,6 +635,41 @@
      "content": "链 3 先拆偏移原因，再补块内乱序。 用现有偏移序列统计「向后跳」和「向前间隔超过 64 KiB」分别打断了多少次合并。"
     }
    ]
+  },
+  {
+   "id": "checkpoint-and-recovery-round",
+   "scope": "两件事：把 R1 的结论迁移到 checkpoint 后验证；新增“提交已落盘但客户端没收到回包”的恢复链。checkpoint 前后配对由队友书面分析提出、选手采纳；逐百万候选折算、拒绝占比作废线、散布更新复测由选手决定。恢复链的两个强杀时点与判据由选手给出。",
+   "messages": [
+    {
+     "id": "student-two-chains",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "A-C / B-B，开跑。"
+    },
+    {
+     "id": "agent-layout-first",
+     "source": "agent",
+     "content": "先做布局判定：checkpoint 前后统计合并段数与向后跳次数，并保持两份副本逻辑等价。"
+    },
+    {
+     "id": "student-a-call",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "布局看每百万候选的向后跳次数和合并段数，不要把「向后跳占打断比例 <10%」设为作废条件：打断总数很小时，占比会误导。"
+    },
+    {
+     "id": "student-scatter",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "下一次只复测 checkpoint 后分散更新一小批行，确认没有再次触发 checkpoint，再看偏移和收益会不会被打散。"
+    },
+    {
+     "id": "student-b-call",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "EOF 只说明没收到回包。实验里用唯一事务标记、完整写入集和注入点证明状态"
+    }
+   ]
   }
  ],
  "experiments": [
@@ -953,6 +988,34 @@
    "content": "块内乱序 30k 行：插桩组 pread 由 1,590,857 降到 841,207，但未插桩 R1 端到端 3,295 ms 对基线 2,674 ms（约 +23%，多次运行取最好值）；顺序组 R1 仍为 1,797 ms 对 2,751 ms（约 −33%）。乱序日志长度不变。",
    "context": "三条可靠性/回退/布局链的实测，生产代码未改动。",
    "executed": true
+  },
+  {
+   "id": "chain3-checkpoint-retest",
+   "source": "tool_output_summary",
+   "content": "同一份块内乱序 30k 数据：checkpoint 前（向后跳 743,200、间隔超限 4,200、合并段 750,350）；checkpoint 后（向后跳 0、间隔超限 0、合并段 2,950），30,000 行逐行比对等价；checkpoint 自身 147.27 ms，日志 40,279,500 → 16,740,268 字节。按 150 万候选折算每百万候选向后跳：495,467 → 0。",
+   "context": "checkpoint 迁移与恢复时点实验的原始记录，生产代码未改动。",
+   "executed": true
+  },
+  {
+   "id": "chain3-scatter-update",
+   "source": "tool_output_summary",
+   "content": "checkpoint 后对 500 个稀疏 id 逐条 UPDATE（同时改了向量值）：日志 16,740,268 → 17,035,268 字节，未再次触发 checkpoint；合并段 52,750、向后跳 25,000（每百万候选 16,667）、间隔超限 24,800。该更新负载下 R1 仍快 34.2%（6/6）。",
+   "context": "checkpoint 迁移与恢复时点实验的原始记录，生产代码未改动。",
+   "executed": true
+  },
+  {
+   "id": "chain3-recovery-separate",
+   "source": "tool_output_summary",
+   "content": "恢复耗时与查询分开测（各 6 轮）：四种组合恢复均为 112–131 ms，R1 未改善恢复。查询总耗时按逐轮报告，未统一扣除恢复时间。",
+   "context": "checkpoint 迁移与恢复时点实验的原始记录，生产代码未改动。",
+   "executed": true
+  },
+  {
+   "id": "recovery-kill-two-points",
+   "source": "tool_output_summary",
+   "content": "两个时点各 3 次、VECTOR(8) 100 行、唯一 id 与向量值：写 marker 前强杀 → 客户端无成功回包、重启后 0 行；COMMIT 完成（fdatasync 已返回，诊断打印 SYNC_OK）但回包前强杀 → 客户端无成功回包、重启后 100 行且逐行值一致。",
+   "context": "checkpoint 迁移与恢复时点实验的原始记录，生产代码未改动。",
+   "executed": true
   }
  ],
  "dimensions": [
@@ -991,7 +1054,8 @@
     "merge-readiness-check",
     "unconfirmed-cause-reporting",
     "topk-parallel-boundary-counterexample",
-    "cross-chunk-insert-atomicity"
+    "cross-chunk-insert-atomicity",
+    "commit-state-without-response"
    ],
    "evidence_status": "candidate_unit_present"
   },
@@ -1485,7 +1549,7 @@
    "chain_id": "coalesced-read-boundary",
    "dimension": "tradeoff_reflection",
    "score": 1.5,
-   "reason": "选手把“乱序下收益是否消失”拆成两种打断原因并要求分块乱序复测；结果表明间隔问题被消除而向后跳仍在，部分合并的 pread 更少但端到端出现退化，据此把 R1 留在实验分支、不合入。",
+   "reason": "选手据队友提出的 checkpoint 前后配对，先要求按每百万候选折算向后跳而不是看占比，并指定散布更新复测；结果是：checkpoint 前 R1 慢 28.8%（0/6），checkpoint 后快 37.3%（6/6），再散布更新 500 行后仍快 34.2%（6/6）。结论只覆盖这份数据与这三种布局。",
    "student_evidence": [
     {
      "pointer": "/conversations/20/messages/4/content",
@@ -1494,12 +1558,39 @@
    ],
    "result_evidence": [
     {
-     "pointer": "/experiments/44/content",
-     "quote": "插桩组 pread 由 1,590,857 降到 841,207，但未插桩 R1 端到端 3,295 ms 对基线 2,674 ms（约 +23%"
+     "pointer": "/experiments/46/content",
+     "quote": "该更新负载下 R1 仍快 34.2%（6/6）"
+    },
+    {
+     "pointer": "/experiments/47/content",
+     "quote": "四种组合恢复均为 112–131 ms，R1 未改善恢复"
     }
    ],
-   "rule_basis": "1.5 档（解释结果、据此修正方案并复测）：选手据首测把假设拆成两种失效原因，改变了实验设计并完成复测。",
-   "provenance": "顺序/乱序两份日志的对照来自队友书面分析；偏移原因拆分与块内乱序复测由选手提出。"
+   "rule_basis": "1.5 档（解释结果、据此修正方案并复测）：选手改变判定口径并要求新的散布更新复测，复测回答了“收益会不会被打散”。",
+   "provenance": "checkpoint 前后配对由队友书面分析提出、选手采纳；逐百万候选折算、拒绝占比作废线、散布更新复测由选手决定；实现与测量由 Agent 完成。",
+   "limitations_note": "500 行 UPDATE 同时改了向量值，收益从 38.4% 到 34.2% 的变化不能全部归因于碎片化；checkpoint 的 147.27 ms 单列，不据此判断合入是否值得。"
+  },
+  {
+   "id": "commit-state-without-response",
+   "chain_id": "recovery-without-reply",
+   "dimension": "independent_validation",
+   "score": 1.0,
+   "reason": "选手把“没收到成功回包”拆成两个可证明的时点分别验证：写 marker 前强杀时整批不应出现，COMMIT 完成但回包前强杀时整批应完整可见。实测两种情况客户端都没收到成功回包，重启后分别是 0 行与 100 行，说明无回包不能判断提交状态。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/21/messages/0/content",
+     "quote": "A-C / B-B，开跑。"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/48/content",
+     "quote": "重启后 100 行且逐行值一致"
+    }
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：选手给出两个时点与预期状态，结果由强杀与重启核验给出。",
+   "provenance": "时点选择与判据由选手给出；注入点、脚本与测量由 Agent 完成。",
+   "limitations_note": "业务侧“同一事务写唯一操作标记、重连后查到即确认提交”是可应用建议，本轮未验证，不写成结论。范围仅限进程强杀，不外推到断电或自动重试。"
   }
  ],
  "limitations": [
@@ -1518,7 +1609,9 @@
   "量化码开关对照只有两次观测，不把 560→640 的 +33% 全部归因于量化码，剩余差异未拆算。",
   "块内乱序的 +23% 是多次运行取最好值的结果，只记“本次观察到退化”，不写成普遍规律；短段缓冲与拷贝开销是待验证解释。",
   "跨块原子性只记录日志长度退回语句起点，未做逐字节比对。",
-  "三条链的用例构思部分来自队友书面分析（经选手转交采纳），各 unit 已用 provenance 字段注明提案者与采纳者。"
+  "三条链的用例构思部分来自队友书面分析（经选手转交采纳），各 unit 已用 provenance 字段注明提案者与采纳者。",
+  "500 行 UPDATE 同时改了向量值，收益回落不能全部归因于碎片化；checkpoint 成本单列，不参与是否合入的判断。",
+  "恢复链只验证进程强杀；业务操作标记的应用建议本轮未验证。"
  ],
  "user_prompts": [
   {
