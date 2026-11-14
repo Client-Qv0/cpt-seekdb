@@ -1,13 +1,13 @@
 {
  "rule_version": "agent-learning-evidence-v3-unbounded",
- "summary": "MiniVectorDB v15 材料：补入 Top-K 并行边界链（两轮合并为一条证据，先按 1 档候选记录）——候选数 1023/1024/1025 三格跨切片并列，以及末尾唯一最近行与等距截断的补测；两种宽度均与独立参考逐位一致，未发现缺陷。边界值构思来自队友书面分析，判据与布局调整由选手决定，已在记录范围内注明。",
+ "summary": "MiniVectorDB v16 材料：新增三条已收尾的链——跨块 INSERT 失败原子性、12 MiB 回退分层与量化码开关对照、合并读在顺序/全乱序/块内乱序三种布局下的边界（结论：R1 留实验分支、不合入）。每条都有选手判据、首测、复测与取舍；生产代码未改动。",
  "synthetic": false,
  "coverage": {
   "complete_conversation": false,
   "selected_material_complete": true,
   "exclusion": "泛泛的“继续/执行”、Agent 代写的方案和没有实际结果的未来计划不作为学生技术能力证据。用户转交的任务书（含 W2/W3 划分与 15% 门槛）技术措辞来自文档原作者，材料只把用户实际采纳、限定范围并据以裁决的行为计为学生证据，引用位置仍保留逐字原文以便核对。",
   "source_version": "生产源码绑定 f5a7e3e2373742eee40268cf20ef7837b91da655；v5 材料修订随后续提交。",
-  "material_revision": "agent-learning-evidence-v15",
+  "material_revision": "agent-learning-evidence-v16",
   "rubric_mapping": "维度名称与档位定义取自加赛文档 3.4.1/3.4.2：0.5=提出具体问题、预测或方案但没有实际结果；1=参与验证并有实际验证结果；1.5=解释结果、据此修正方案并复测；2=在同一实例中迁移到新场景、完成验证并分析局限。本材料按该口径重新自评，只对有时间线结果支撑的实例给到 1 或 1.5。"
  },
  "conversations": [
@@ -600,6 +600,41 @@
      "content": "补跑 C 格，不改插入顺序。把 id=1024 设成唯一最近行（距离 1），`100、101、544、545、546` 设为等距（距离 2），其余距离 3。用 LIMIT 5，独立参考应返回 1024、100、101、544、545。"
     }
    ]
+  },
+  {
+   "id": "reliability-fallback-scatter-chains",
+   "scope": "三条链：跨块写入失败、12 MiB 回退分层、R1 合并读的布局边界。选手先定判据（1C/2A/3B），首测后按结果改变验证方案并要求补测；Agent 负责插桩、执行与独立参考比对。",
+   "messages": [
+    {
+     "id": "student-criteria",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "1C / 2A / 3B，按这三个判据开跑。"
+    },
+    {
+     "id": "agent-first-round",
+     "source": "agent",
+     "content": "三条首测：跨块失败前首块已应用且大块组已写出日志；回退分层四格；R1 在顺序与全乱序两组上的对照。"
+    },
+    {
+     "id": "student-chain1-close",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "链 1 收尾。 重点保留第 257 行失败前，前 256 行已应用且日志已写出的证据。"
+    },
+    {
+     "id": "student-chain2-control",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "链 2 补一组，不改维度。 固定 pad=560、同一数据和查询，只在诊断构建里对照启用和禁用量化码，确认两组都保留完整视图和 posting，结果都与参考一致。"
+    },
+    {
+     "id": "student-chain3-split",
+     "source": "student",
+     "authorship_verified": true,
+     "content": "链 3 先拆偏移原因，再补块内乱序。 用现有偏移序列统计「向后跳」和「向前间隔超过 64 KiB」分别打断了多少次合并。"
+    }
+   ]
   }
  ],
  "experiments": [
@@ -883,6 +918,41 @@
    "content": "补测 C 格（1025 候选，LIMIT 5）：唯一最近行 id=1024 位于候选末尾，等距带 100/101 在第一片、544/545/546 在第二片；两种宽度均返回 1024、100、101、544、545，保留 544/545 并排除 546，与独立参考逐位一致；并行计数宽度 2 为 1、宽度 1 为 0。",
    "context": "Top-K 并行边界链的两轮实测，生产代码未改动。",
    "executed": true
+  },
+  {
+   "id": "chain1-cross-chunk-atomicity",
+   "source": "tool_output_summary",
+   "content": "257 行 INSERT，坏向量放第 257 行：失败前首块 256 行已应用；小块组日志刷出 87 B，大块组首块实际写出 1,049,090 B 后才失败。失败后日志长度退回语句起点（257 = 前一条语句之后），失败批次无残行；同一事务中前一条语句提交后重启仍可见。",
+   "context": "三条可靠性/回退/布局链的实测，生产代码未改动。",
+   "executed": true
+  },
+  {
+   "id": "chain2-fallback-layers",
+   "source": "tool_output_summary",
+   "content": "10k 行×128 维，只改 payload 字节数：pad 0/560 走完整视图且量化码与 posting 均在（热查 1.31/1.29 ms）；pad 640 视图仍在但量化码被丢弃（热查 1.72 ms，+33%）；pad 720 整视图放不下走 bypass（热查 18.72 ms，峰值内存 5,532 KB）。四格均与独立参考一致。",
+   "context": "三条可靠性/回退/布局链的实测，生产代码未改动。",
+   "executed": true
+  },
+  {
+   "id": "chain2-quantized-toggle",
+   "source": "tool_output_summary",
+   "content": "固定 pad=560 对照开关量化码（各两次）：启用时热查 1.27/1.28 ms、RSS 17.4/17.6 MB、cgroup 峰值 25.1 MB；禁用时热查 1.95/1.56 ms、RSS 16.0/16.1 MB、cgroup 峰值 23.7/23.9 MB；冷查禁用反而快 4–5 ms；两组结果都与参考一致。仅两次观测。",
+   "context": "三条可靠性/回退/布局链的实测，生产代码未改动。",
+   "executed": true
+  },
+  {
+   "id": "chain3-span-decomposition",
+   "source": "tool_output_summary",
+   "content": "50 次查询累计合并段与打断原因：顺序 2,950 段（向后跳 0、间隔超限 0）；全乱序 1,494,100 段（向后跳 751,400、间隔超限 739,750）；块内乱序 750,350 段（向后跳 743,200、间隔超限仅 4,200）。块内乱序把间隔问题基本消除，剩余打断主要是向后跳。",
+   "context": "三条可靠性/回退/布局链的实测，生产代码未改动。",
+   "executed": true
+  },
+  {
+   "id": "chain3-block-shuffle",
+   "source": "tool_output_summary",
+   "content": "块内乱序 30k 行：插桩组 pread 由 1,590,857 降到 841,207；未插桩 R1 端到端 3,295 ms 对基线 2,674 ms（约 +23%，多次运行取最好值）；顺序组 R1 仍为 1,797 ms 对 2,751 ms（约 −33%）。乱序日志长度不变。",
+   "context": "三条可靠性/回退/布局链的实测，生产代码未改动。",
+   "executed": true
   }
  ],
  "dimensions": [
@@ -904,7 +974,8 @@
     "server-only-execution",
     "pipeline-decomposition-transfer",
     "eval-feedback-reprioritization",
-    "quota-policy-boundary"
+    "quota-policy-boundary",
+    "cache-fallback-layers"
    ],
    "evidence_status": "candidate_unit_present"
   },
@@ -919,7 +990,8 @@
     "quantified-before-after-demand",
     "merge-readiness-check",
     "unconfirmed-cause-reporting",
-    "topk-parallel-boundary-counterexample"
+    "topk-parallel-boundary-counterexample",
+    "cross-chunk-insert-atomicity"
    ],
    "evidence_status": "candidate_unit_present"
   },
@@ -938,7 +1010,8 @@
    "name": "取舍与反思",
    "unit_ids": [
     "exact-route-gated-choice",
-    "rollback-to-verified-baseline"
+    "rollback-to-verified-baseline",
+    "coalesced-read-layout-boundary"
    ],
    "evidence_status": "candidate_unit_present"
   }
@@ -1364,6 +1437,66 @@
     }
    ],
    "rule_basis": "1 档（参与验证并有实际验证结果）：学生给出反例设计与判据，结果由独立参考核验给出。"
+  },
+  {
+   "id": "cross-chunk-insert-atomicity",
+   "chain_id": "cross-chunk-atomicity",
+   "dimension": "independent_validation",
+   "score": 1.0,
+   "reason": "选手把判据定在三个层次（同进程、重启、日志长度），并要求先确认前一块已应用；实测首块 256 行已应用且大块组已写出 1,049,090 B，失败后日志长度退回语句起点、失败批次无残行、前一条语句提交后重启可见。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/20/messages/0/content",
+     "quote": "1C / 2A / 3B，按这三个判据开跑。"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/40/content",
+     "quote": "失败后日志长度退回语句起点（257 = 前一条语句之后），失败批次无残行"
+    }
+   ],
+   "rule_basis": "1 档（参与验证并有实际验证结果）：选手给出三层判据，结果由插桩与重启检查给出。"
+  },
+  {
+   "id": "cache-fallback-layers",
+   "chain_id": "view-budget-fallback",
+   "dimension": "technical_transfer",
+   "score": 1.5,
+   "reason": "选手先以路径标志为判据要求区分回退层级；四格结果表明回退分两层（丢量化码 vs 整视图 bypass），选手随后指出 +33% 不能直接归给量化码，要求在同一 pad 下做开关对照，复测给出量化码本身的代价与内存收益。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/20/messages/3/content",
+     "quote": "链 2 补一组，不改维度。 固定 pad=560、同一数据和查询，只在诊断构建里对照启用和禁用量化码"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/42/content",
+     "quote": "启用时热查 1.27/1.28 ms、RSS 17.4/17.6 MB、cgroup 峰值 25.1 MB"
+    }
+   ],
+   "rule_basis": "1.5 档（解释结果、据此修正方案并复测）：选手解释首测能说明什么、不能说明什么，据此改了验证方案并完成复测。"
+  },
+  {
+   "id": "coalesced-read-layout-boundary",
+   "chain_id": "coalesced-read-boundary",
+   "dimension": "tradeoff_reflection",
+   "score": 1.5,
+   "reason": "选手把“乱序下收益是否消失”拆成两种打断原因并要求分块乱序复测；结果表明间隔问题被消除而向后跳仍在，部分合并的 pread 更少但端到端出现退化，据此把 R1 留在实验分支、不合入。",
+   "student_evidence": [
+    {
+     "pointer": "/conversations/20/messages/4/content",
+     "quote": "链 3 先拆偏移原因，再补块内乱序。"
+    }
+   ],
+   "result_evidence": [
+    {
+     "pointer": "/experiments/44/content",
+     "quote": "插桩组 pread 由 1,590,857 降到 841,207"
+    }
+   ],
+   "rule_basis": "1.5 档（解释结果、据此修正方案并复测）：选手据首测把假设拆成两种失效原因，改变了实验设计并完成复测。"
   }
  ],
  "limitations": [
@@ -1378,7 +1511,10 @@
   "流水线对照只跑 2 轮且未隔离因果，限流与尾延迟的因果机制标为待验证。",
   "文件重定向喂入下的限流结论只适用于那种喂入方式，不代表单请求往返口径。",
   "Top-K 链只覆盖 1023/1024/1025 三种候选数与宽度 1、2；未覆盖非单调插入顺序与更大宽度，结论不外推。",
-  "该链未发现缺陷，按 1 档记录；1.5 档所需的“解释结果并据此修正”未发生。"
+  "该链未发现缺陷，按 1 档记录；1.5 档所需的“解释结果并据此修正”未发生。",
+  "量化码开关对照只有两次观测，不把 560→640 的 +33% 全部归因于量化码，剩余差异未拆算。",
+  "块内乱序的 +23% 是多次运行取最好值的结果，只记“本次观察到退化”，不写成普遍规律；短段缓冲与拷贝开销是待验证解释。",
+  "跨块原子性只记录日志长度退回语句起点，未做逐字节比对。"
  ],
  "user_prompts": [
   {
