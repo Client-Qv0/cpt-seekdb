@@ -364,6 +364,31 @@ class CacheAndIndexAcceptance(unittest.TestCase):
                         for row, (distance, _) in zip(actual, expected):
                             self.assertAlmostEqual(row[1], distance, places=10)
 
+    def test_fp32_storage_and_fp64_distance_boundary(self):
+        # FP64 over the original SQL decimals reverses this first ordering.
+        # The stored vector AND query literal must first be rounded to FP32.
+        self.db.ok("CREATE TABLE precision_input(id BIGINT PRIMARY KEY,v VECTOR(1));")
+        self.db.ok("INSERT INTO precision_input VALUES (2,'[16777217]'),(1,'[16777216]');")
+        # Here all inputs are representable, but FP32 accumulation loses +1
+        # from 4096^2+1 and would incorrectly tie the two rows.
+        self.db.ok("CREATE TABLE precision_sum(id BIGINT PRIMARY KEY,v VECTOR(2));")
+        self.db.ok("INSERT INTO precision_sum VALUES (2,'[4096,0]'),(1,'[4096,1]');")
+        for phase in range(3):
+            if phase == 2:
+                directory = self.db.directory
+                self.db.close()
+                self.db = core.Database(directory)
+            self.assertEqual(self.db.rows("SELECT id,v FROM precision_input ORDER BY id;"),
+                             [[1, [16777216]], [2, [16777216]]])
+            self.assertEqual(self.db.rows("SELECT id,L2_DISTANCE(v,'[16777217]') AS d "
+                                         "FROM precision_input ORDER BY d LIMIT 2;"),
+                             [[1, 0], [2, 0]])
+            rows = self.db.rows("SELECT id,L2_DISTANCE(v,'[0,0]') AS d "
+                                "FROM precision_sum ORDER BY d LIMIT 2;")
+            self.assertEqual([r[0] for r in rows], [2, 1])
+            self.assertEqual(rows[0][1], 4096)
+            self.assertAlmostEqual(rows[1][1], math.sqrt(4096**2 + 1), places=10)
+
     def test_topk_reference_at_distance_loop_boundaries(self):
         # The oracle uses FP32 inputs but accumulates in ordinary Python double
         # precision, in the same component order; it does not use the TopK path.

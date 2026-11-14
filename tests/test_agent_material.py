@@ -178,15 +178,16 @@ class AgentMaterialChecks(unittest.TestCase):
             with self.assertRaises((ValueError, KeyError, IndexError)):
                 validate_v3(bad)
 
-    def test_current_iteration_records_present(self):
-        unit_ids={unit['id'] for unit in self.doc['units']}
-        # The four discipline units were merged into one chain, as the rubric
-        # counts a single chain once regardless of how it is split.
-        for expected in ('working-discipline','server-only-execution'):
-            with self.subTest(expected=expected):
-                self.assertIn(expected, unit_ids)
-        self.assertIn('f5a7e3e2373742eee40268cf20ef7837b91da655',
-                      self.doc['coverage']['source_version'])
+    def test_excluded_evidence_is_not_scored(self):
+        # Workflow instructions remain inspectable but must not simultaneously
+        # be offered as scored technical learning instances.
+        unit_ids = {unit['id'] for unit in self.doc['units']}
+        exclusions = self.doc.get('review_exclusions', [])
+        excluded_ids = [item['id'] for item in exclusions]
+        self.assertEqual(len(excluded_ids), len(set(excluded_ids)))
+        self.assertTrue(unit_ids.isdisjoint(excluded_ids))
+        for item in exclusions:
+            self.assertTrue(isinstance(item['reason'], str) and item['reason'].strip())
 
     def test_obvious_secret_formats_are_absent(self):
 

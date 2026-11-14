@@ -1,0 +1,2647 @@
+{
+  "purpose": "Independent review branch for teammate integration; do not merge competition branch automatically.",
+  "branch": "codex/hmy-agent-evidence-20261114",
+  "base_commit": "6b9886d6cc2471de7b9f27d9c7ef967f43f3f33a",
+  "production_source_dockerfile_cmake_unchanged": true,
+  "changes": [
+    "agent/conversation.json: 13 technical learning chains, workflow-only units excluded, source/result attribution and pointers preserved; metadata updated for approved handoff.",
+    "tests/test_agent_material.py: excluded unit IDs must not also be scored.",
+    "tests/optimization_acceptance.py: FP32 input and FP64 distance precision boundary including normal restart.",
+    "tests/test_exact_cache.cpp: independent integer reference, four-lane maximum and tail boundaries."
+  ],
+  "agent_material": {
+    "path": "agent/conversation.json",
+    "sha256": "6af10a9978f2e5ac5197a4e4ab5719dd2f28e1d2662e6feef57f20ac51bd61b1",
+    "bytes": 130422,
+    "rule_version": "agent-learning-evidence-v3-unbounded",
+    "units": 13,
+    "official_prediction": null,
+    "caveat": "Local candidate tiers are not an official score. Full historical conversation was not exported; selected scope is explicitly disclosed."
+  },
+  "validation_scope": {
+    "all_four_experimental_builds": {
+      "release": true,
+      "ctest_passed": 9,
+      "optimization_regressions_passed": 17,
+      "canonical_query_checks": 1000,
+      "filtered_recall": 1.0,
+      "unfiltered_recall": 1.0
+    },
+    "timed_runs": 48,
+    "query_checks_per_timed_run_including_warmup_restart": 1012,
+    "diagnostic_query_checks": 9099,
+    "new_candidate_full_sanitizer_and_kill9_matrix": "Not run: no performance candidate selected. Normal restart checks do not replace crash recovery.",
+    "formal_evaluation": "Not performed."
+  },
+  "experiments": {
+    "screen-fp32-20261114": {
+      "decision": "experimental_only_not_adopted",
+      "comparisons": {
+        "repeat_vs_base": {
+          "write_s": {
+            "paired_percent_improvement": [
+              9.503274711285915,
+              16.72951486913029,
+              -7.877922012592653,
+              -6.8151082009147546,
+              0.02908189029109387,
+              -12.79353917863919
+            ],
+            "median_percent_improvement": -3.3930131553118303,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -10.335730595615921,
+              13.116394790208103
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              16.79322578789345,
+              16.487728009140934,
+              1.9995511968072477,
+              -3.611053351599436,
+              2.641604346100146,
+              3.766690412857887
+            ],
+            "median_percent_improvement": 3.2041473794790165,
+            "faster_pairs": 5,
+            "bootstrap_median_95_interval": [
+              -0.8057510773960941,
+              16.640476898517193
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              5.742049592989451,
+              14.980775118861523,
+              -5.718976325816261,
+              0.4583400277547556,
+              -5.72905211608703,
+              6.110873176277575
+            ],
+            "median_percent_improvement": 3.1001948103721033,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -5.724014220951645,
+              10.54582414756955
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              7.005387028762488,
+              -1.3052241372679019,
+              1.5604317124174094,
+              -3.935441599094225,
+              -20.25049369729328,
+              -8.166637114497611
+            ],
+            "median_percent_improvement": -2.6203328681810634,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -14.208565405895445,
+              4.282909370589949
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              16.547197231882837,
+              17.173479303452986,
+              1.6466117375208311,
+              -3.673338011517746,
+              2.503440343849217,
+              2.4898840036965075
+            ],
+            "median_percent_improvement": 2.4966621737728625,
+            "faster_pairs": 5,
+            "bootstrap_median_95_interval": [
+              -1.0133631369984575,
+              16.860338267667913
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              17.01942831802431,
+              15.840845430912864,
+              2.3326423581194855,
+              -3.5529302802458806,
+              2.770610743710289,
+              4.9388425477128735
+            ],
+            "median_percent_improvement": 3.8547266457115814,
+            "faster_pairs": 5,
+            "bootstrap_median_95_interval": [
+              -0.6101439610631976,
+              16.430136874468587
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        },
+        "shell_vs_base": {
+          "write_s": {
+            "paired_percent_improvement": [
+              15.813395674769303,
+              11.062923513367428,
+              0.9849765014909639,
+              -10.89316698980567,
+              4.8848430737417186,
+              -8.135279693487352
+            ],
+            "median_percent_improvement": 2.9349097876163412,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -9.51422334164651,
+              13.438159594068367
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              15.303000250722121,
+              12.957398820658184,
+              1.4874368060659338,
+              0.81083891763849,
+              -3.613928159364077,
+              -0.23816352959526998
+            ],
+            "median_percent_improvement": 1.149137861852212,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -1.9260458444796735,
+              14.130199535690153
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              4.4132199454867465,
+              14.162466756855864,
+              -2.117015553882573,
+              0.28997902323593117,
+              -1.899218204304387,
+              10.496009241350224
+            ],
+            "median_percent_improvement": 2.351599484361339,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -2.00811687909348,
+              12.329237999103043
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              -3.1684647373295682,
+              0.8319291690191855,
+              -1.6774166011791491,
+              -8.976643645170256,
+              -3.5660319572131005,
+              -2.709267003221427
+            ],
+            "median_percent_improvement": -2.9388658702754977,
+            "faster_pairs": 1,
+            "bootstrap_median_95_interval": [
+              -6.271337801191678,
+              -0.42274371607998185
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              14.562186988844239,
+              13.174818318135017,
+              2.3368760451496606,
+              -0.05520788995356796,
+              -2.9599969218055966,
+              -1.3160795367064493
+            ],
+            "median_percent_improvement": 1.1408340775980463,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -2.138038229256023,
+              13.868502653489628
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              15.984115633865015,
+              12.75230276578897,
+              0.6857675815971076,
+              1.6190202653279528,
+              -4.224516386889143,
+              0.751400385391332
+            ],
+            "median_percent_improvement": 1.1852103253596424,
+            "faster_pairs": 5,
+            "bootstrap_median_95_interval": [
+              -1.7693744026460179,
+              14.368209199826993
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        },
+        "fp32_vs_base": {
+          "write_s": {
+            "paired_percent_improvement": [
+              12.874069550507205,
+              -8.06318617200208,
+              -0.20264414747483972,
+              3.1740737040841904,
+              -6.087640137353523,
+              -10.312108098571704
+            ],
+            "median_percent_improvement": -3.145142142414181,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -9.187647135286891,
+              8.024071627295697
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              12.428484776146231,
+              -6.945023815559592,
+              -7.681976256252354,
+              -7.7285952461442875,
+              -13.257800230580518,
+              -8.425930524616243
+            ],
+            "median_percent_improvement": -7.705285751198321,
+            "faster_pairs": 1,
+            "bootstrap_median_95_interval": [
+              -10.841865377598381,
+              2.7417304802933193
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              25.117751149826862,
+              28.438206535573187,
+              20.17959539672597,
+              22.910553896685435,
+              19.098589592929038,
+              26.05987294044606
+            ],
+            "median_percent_improvement": 24.01415252325615,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              19.6390924948275,
+              27.24903973800962
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              27.22664276027339,
+              22.896299268311083,
+              23.800823357356403,
+              -8.793584333943105,
+              13.25618585525038,
+              20.726343313974894
+            ],
+            "median_percent_improvement": 21.81132129114299,
+            "faster_pairs": 5,
+            "bootstrap_median_95_interval": [
+              2.231300760653637,
+              25.513733058814896
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              10.651817063339564,
+              -6.853219142968747,
+              -7.418695347309789,
+              -9.21761492683013,
+              -14.65615846095345,
+              -11.002046902006256
+            ],
+            "median_percent_improvement": -8.31815513706996,
+            "faster_pairs": 1,
+            "bootstrap_median_95_interval": [
+              -12.829102681479853,
+              1.8992989601854084
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              14.061981059485474,
+              -7.0316249547649035,
+              -7.930451005684813,
+              -6.339065348079398,
+              -11.952126140876063,
+              -6.060967214809643
+            ],
+            "median_percent_improvement": -6.685345151422151,
+            "faster_pairs": 1,
+            "bootstrap_median_95_interval": [
+              -9.941288573280438,
+              4.000506922337916
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        },
+        "tight_vs_base": {
+          "write_s": {
+            "paired_percent_improvement": [
+              14.556230553957638,
+              15.310282032126654,
+              -9.028467446611788,
+              -11.199902418329755,
+              -0.9724450868305645,
+              -4.634707285603223
+            ],
+            "median_percent_improvement": -2.803576186216894,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -10.11418493247077,
+              14.933256293042145
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              6.985366311669095,
+              -6.1918439742409515,
+              -8.070612878240624,
+              -9.539766073051648,
+              -39.12012852695905,
+              -4.148140354294494
+            ],
+            "median_percent_improvement": -7.131228426240788,
+            "faster_pairs": 1,
+            "bootstrap_median_95_interval": [
+              -24.32994730000535,
+              1.4186129786873005
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              18.657965457842216,
+              31.26042073898214,
+              15.062652135187694,
+              25.324226913059654,
+              19.771083759764586,
+              26.318078920329057
+            ],
+            "median_percent_improvement": 22.54765533641212,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              16.860308796514957,
+              28.7892498296556
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              23.520483486710685,
+              10.141507013419682,
+              20.990857315755996,
+              2.87348314091731,
+              22.257485767749287,
+              15.337274002537693
+            ],
+            "median_percent_improvement": 18.164065659146843,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              6.507495077168496,
+              22.888984627229988
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              4.989828044332178,
+              -7.170260062473233,
+              -8.626957261046787,
+              -10.98993873610057,
+              -41.21114457371584,
+              -6.052789774549461
+            ],
+            "median_percent_improvement": -7.89860866176001,
+            "faster_pairs": 1,
+            "bootstrap_median_95_interval": [
+              -26.100541654908206,
+              -0.5314808651086413
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              8.820095630752967,
+              -5.268884984611266,
+              -7.545555700068718,
+              -8.186487604808246,
+              -37.1677064550566,
+              -2.3996067723174974
+            ],
+            "median_percent_improvement": -6.407220342339992,
+            "faster_pairs": 1,
+            "bootstrap_median_95_interval": [
+              -22.677097029932426,
+              3.2102444292177346
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        },
+        "shell_vs_repeat": {
+          "write_s": {
+            "paired_percent_improvement": [
+              6.972761658891025,
+              -6.805041842685466,
+              8.215674114532023,
+              -3.8178670204782605,
+              4.857173741389342,
+              4.1298992114913835
+            ],
+            "median_percent_improvement": 4.493536476440363,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -5.311454431581863,
+              7.594217886711524
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              -1.7909906390224162,
+              -4.227317859187396,
+              -0.5225633116943795,
+              4.267780440598779,
+              -6.425262519425723,
+              -4.161608864575794
+            ],
+            "median_percent_improvement": -2.976299751799105,
+            "faster_pairs": 1,
+            "bootstrap_median_95_interval": [
+              -5.32629018930656,
+              1.8726085644521997
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              -1.4097799090312835,
+              -0.9624980269459016,
+              3.4071090140267435,
+              -0.16913622353269542,
+              3.6223098903578665,
+              4.670547286381499
+            ],
+            "median_percent_improvement": 1.618986395247024,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -1.1861389679885925,
+              4.146428588369683
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              -10.940259269898522,
+              2.1096180621359317,
+              -3.2891736218686685,
+              -4.8503205148453965,
+              13.874755293795282,
+              5.045335841863485
+            ],
+            "median_percent_improvement": -0.5897777798663684,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -7.895289892371959,
+              9.460045567829383
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              -2.3786022484519442,
+              -4.827754385540284,
+              0.7018205674691025,
+              3.489933083048058,
+              -5.603723131280924,
+              -3.9031473827261687
+            ],
+            "median_percent_improvement": -3.1408748155890565,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -5.215738758410604,
+              2.09587682525858
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              -1.2476567263565608,
+              -3.6698831885109806,
+              -1.6862079780647132,
+              4.994499461847157,
+              -7.194457544272725,
+              -4.404998081812006
+            ],
+            "median_percent_improvement": -2.678045583287847,
+            "faster_pairs": 1,
+            "bootstrap_median_95_interval": [
+              -5.799727813042366,
+              1.8734213677452982
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        },
+        "fp32_vs_repeat": {
+          "write_s": {
+            "paired_percent_improvement": [
+              3.7247699609763263,
+              -29.773695928596577,
+              7.114780969012246,
+              9.351843642015256,
+              -6.118501403510246,
+              2.1999762558540414
+            ],
+            "median_percent_improvement": 2.962373108415184,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -17.946098666053413,
+              8.233312305513751
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              -5.245655841218944,
+              -28.059052000483685,
+              -9.879064403574622,
+              -3.9740372878675156,
+              -16.33079969107296,
+              -12.669855156995657
+            ],
+            "median_percent_improvement": -11.27445978028514,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -22.19492584577832,
+              -4.609846564543229
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              20.55603954167491,
+              15.828692199353611,
+              24.497561953991287,
+              22.555595190185628,
+              23.482326959439803,
+              21.247401524590693
+            ],
+            "median_percent_improvement": 21.90149835738816,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              18.19236587051426,
+              23.989944456715545
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              21.74454528647285,
+              23.889709155360116,
+              22.59293903033548,
+              -4.6741926142845225,
+              27.86406818161601,
+              26.711545444357686
+            ],
+            "median_percent_improvement": 23.241324092847798,
+            "faster_pairs": 5,
+            "bootstrap_median_95_interval": [
+              8.535176336094164,
+              27.287806812986847
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              -7.064328546189436,
+              -29.008460387281954,
+              -9.21707654914512,
+              -5.347832935307273,
+              -17.600209551312208,
+              -13.836442268424975
+            ],
+            "median_percent_improvement": -11.526759408785047,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -23.30433496929708,
+              -6.206080740748354
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              -3.5640237209660475,
+              -27.17763801548354,
+              -10.508212376786386,
+              -2.690541986878947,
+              -15.142270251002255,
+              -11.571297948947779
+            ],
+            "median_percent_improvement": -11.039755162867081,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -21.1599541332429,
+              -3.1272828539224973
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        },
+        "tight_vs_repeat": {
+          "write_s": {
+            "paired_percent_improvement": [
+              5.583578661604771,
+              -1.7043647995723,
+              -1.0665253951451126,
+              -4.105031854826535,
+              -1.001818324827819,
+              7.233421304490006
+            ],
+            "median_percent_improvement": -1.0341718599864658,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -2.9046983271994176,
+              6.408499983047388
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              -11.787332905398618,
+              -27.157172763620064,
+              -10.275630569071236,
+              -5.722085173030145,
+              -42.89484496182365,
+              -8.22462700400559
+            ],
+            "median_percent_improvement": -11.031481737234927,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -35.02600886272186,
+              -6.973356088517868
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              13.702733625207419,
+              19.148193414936987,
+              19.657424980125484,
+              24.98038197498229,
+              24.118381244781517,
+              21.522413113917516
+            ],
+            "median_percent_improvement": 20.5899190470215,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              16.425463520072203,
+              24.549381609881905
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              17.759196936553934,
+              11.299250604467693,
+              19.738430329737223,
+              6.551109645808129,
+              35.3495259421121,
+              21.729353656576844
+            ],
+            "median_percent_improvement": 18.74881363314558,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              8.92518012513791,
+              28.53943979934447
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              -13.848988654897653,
+              -29.39123744569063,
+              -10.445566929682348,
+              -7.057360035778881,
+              -44.837053811680036,
+              -8.760807728471786
+            ],
+            "median_percent_improvement": -12.147277792290001,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -37.114145628685336,
+              -7.9090838821253335
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              -9.881026993517716,
+              -25.083106554017153,
+              -10.114124408288848,
+              -4.474578664285533,
+              -41.07638390434845,
+              -7.719713831291886
+            ],
+            "median_percent_improvement": -9.997575700903283,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -33.0797452291828,
+              -6.097146247788709
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        },
+        "repeat_vs_shell": {
+          "write_s": {
+            "paired_percent_improvement": [
+              -7.495397889082289,
+              6.371461239356757,
+              -8.95106439500777,
+              3.6774662493549215,
+              -5.105139223199973,
+              -4.307807311689427
+            ],
+            "median_percent_improvement": -4.7064732674447,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -8.22323114204503,
+              5.024463744355839
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              1.7594785430212867,
+              4.055863612357912,
+              0.519846783128719,
+              -4.458039790825752,
+              6.037347117892167,
+              3.9953385032545308
+            ],
+            "median_percent_improvement": 2.877408523137909,
+            "faster_pairs": 5,
+            "bootstrap_median_95_interval": [
+              -1.9690965038485164,
+              5.046605365125039
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              1.3901814108027044,
+              0.9533223184404749,
+              -3.5272875459556374,
+              0.16885063594365146,
+              -3.7584526940176888,
+              -4.8993749082063776
+            ],
+            "median_percent_improvement": -1.679218455005993,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -4.328913801112034,
+              1.1717518646215896
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              9.861396883238527,
+              -2.1550820625820144,
+              3.1844321205531267,
+              4.625947246540518,
+              -16.109974887300037,
+              -5.313415498433072
+            ],
+            "median_percent_improvement": 0.5146750289855562,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -10.711695192866554,
+              7.243672064889522
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              2.323339248839862,
+              4.6054162028354995,
+              -0.7067809012006876,
+              -3.6161337304337238,
+              5.306368909280468,
+              3.7565246876968605
+            ],
+            "median_percent_improvement": 3.039931968268361,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -2.1614573158172057,
+              4.955892556057984
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              1.2322820761458297,
+              3.5399704095718354,
+              1.6582464933970753,
+              -5.257063468489842,
+              6.711594712162528,
+              4.219144832855837
+            ],
+            "median_percent_improvement": 2.5991084514844554,
+            "faster_pairs": 5,
+            "bootstrap_median_95_interval": [
+              -2.012390696172006,
+              5.465369772509183
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        },
+        "fp32_vs_shell": {
+          "write_s": {
+            "paired_percent_improvement": [
+              -3.491441599077749,
+              -21.50521519362536,
+              -1.1994347998954824,
+              12.685398997742626,
+              -11.53599864173287,
+              -2.013060317830262
+            ],
+            "median_percent_improvement": -2.7522509584540056,
+            "faster_pairs": 1,
+            "bootstrap_median_95_interval": [
+              -16.520606917679117,
+              5.742982098923571
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              -3.3938811092306675,
+              -22.865151508065562,
+              -9.307861621940706,
+              -8.609241242288634,
+              -9.307505508703052,
+              -8.16831305234711
+            ],
+            "median_percent_improvement": -8.958373375495842,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -16.086506565003134,
+              -5.781097080788888
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              21.660454711971987,
+              16.63111606234039,
+              21.834373859901557,
+              22.686360560209785,
+              20.606446415647227,
+              17.38901647532597
+            ],
+            "median_percent_improvement": 21.133450563809607,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              17.010066268833178,
+              22.26036721005567
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              29.461626258556763,
+              22.249469929588283,
+              25.057914343429623,
+              0.16798031679449155,
+              16.242987680954467,
+              22.817425341436113
+            ],
+            "median_percent_improvement": 22.533447635512196,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              8.20548399887448,
+              27.259770300993193
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              -4.576860979568953,
+              -23.06708384957745,
+              -9.9890019870442,
+              -9.157351456361873,
+              -11.3599085944327,
+              -9.560148211015807
+            ],
+            "median_percent_improvement": -9.774575099030002,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -17.213496222005077,
+              -6.8671062179654125
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              -2.2878228193171424,
+              -22.675587262143026,
+              -8.675713820132525,
+              -8.089048955265387,
+              -7.414387729372107,
+              -6.8639432965845515
+            ],
+            "median_percent_improvement": -7.751718342318747,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -15.675650541137776,
+              -4.575883057950847
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        },
+        "tight_vs_shell": {
+          "write_s": {
+            "paired_percent_improvement": [
+              -1.493307790340337,
+              4.775689382366433,
+              -10.113055165061425,
+              -0.2766044444850957,
+              -6.158101768273783,
+              3.2372158446407173
+            ],
+            "median_percent_improvement": -0.8849561174127163,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -8.135578466667603,
+              4.0064526135035745
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              -9.82045876911235,
+              -21.999851262997304,
+              -9.702366250982998,
+              -10.43521779773451,
+              -34.26778715790453,
+              -3.9006868113109494
+            ],
+            "median_percent_improvement": -10.12783828342343,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -28.133819210450916,
+              -6.8015265311469735
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              14.90242218038068,
+              19.91897173197471,
+              16.823511337349384,
+              25.107053077100026,
+              21.266406500411783,
+              17.67750191345493
+            ],
+            "median_percent_improvement": 18.79823682271482,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              15.862966758865031,
+              23.186729788755905
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              25.86928892660294,
+              9.38767666486875,
+              22.29430553477719,
+              10.874006016070537,
+              24.934350806865936,
+              17.570509003041668
+            ],
+            "median_percent_improvement": 19.93240726890943,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              10.130841340469644,
+              25.40181986673444
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              -11.203890417071172,
+              -23.432232431317424,
+              -11.226175102964175,
+              -10.928697342944549,
+              -37.15146541909922,
+              -4.675181135613249
+            ],
+            "median_percent_improvement": -11.215032760017674,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -30.29184892520832,
+              -7.801939239278899
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              -8.526982792791626,
+              -20.655201594631745,
+              -8.288160801553502,
+              -9.966873573104372,
+              -31.60790878211408,
+              -3.1748630912118436
+            ],
+            "median_percent_improvement": -9.246928182948,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -26.131555188372914,
+              -5.731511946382673
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        },
+        "repeat_vs_fp32": {
+          "write_s": {
+            "paired_percent_improvement": [
+              -3.868876718826386,
+              22.94278182920714,
+              -7.659755818241298,
+              -10.316639651316528,
+              5.765725413182143,
+              -2.2494639281575024
+            ],
+            "median_percent_improvement": -3.0591703234919443,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -8.988197734778913,
+              14.35425362119464
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              4.984201769936147,
+              21.911025860458267,
+              8.990852313130215,
+              3.8221438654582607,
+              14.0382424383232,
+              11.245115332172318
+            ],
+            "median_percent_improvement": 10.117983822651267,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              4.403172817697204,
+              17.974634149390734
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              -25.87489272071002,
+              -18.805330002526176,
+              -32.446054177831016,
+              -29.12488674369309,
+              -30.688762512409884,
+              -26.979937088965066
+            ],
+            "median_percent_improvement": -28.052411916329078,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -31.567408345120448,
+              -22.3401113616181
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              -27.7866193047807,
+              -31.388277314726064,
+              -29.187181049529244,
+              4.465468037101106,
+              -38.62716884529769,
+              -36.447139738876125
+            ],
+            "median_percent_improvement": -30.287729182127656,
+            "faster_pairs": 1,
+            "bootstrap_median_95_interval": [
+              -37.53715429208691,
+              -11.660575633839798
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              6.598209358910578,
+              22.48570388344988,
+              8.439226575523339,
+              5.076357800915854,
+              14.966137916304268,
+              12.154668568962135
+            ],
+            "median_percent_improvement": 10.296947572242736,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              5.837283579913216,
+              18.725920899877075
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              3.4413723925681317,
+              21.369824475097367,
+              9.508987749216146,
+              2.62004848238383,
+              13.150922087946636,
+              10.371213888936303
+            ],
+            "median_percent_improvement": 9.940100819076225,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              3.030710437475981,
+              17.260373281522
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        },
+        "shell_vs_fp32": {
+          "write_s": {
+            "paired_percent_improvement": [
+              3.373652492544732,
+              17.699005889875252,
+              1.1852188722863422,
+              -14.528382254663995,
+              10.342847853801796,
+              1.973335876365634
+            ],
+            "median_percent_improvement": 2.673494184455183,
+            "faster_pairs": 5,
+            "bootstrap_median_95_interval": [
+              -6.671581691188827,
+              14.020926871838524
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              3.2824777180432863,
+              18.609956710601196,
+              8.515271897032884,
+              7.926803597755461,
+              8.51497384867318,
+              7.551484184091983
+            ],
+            "median_percent_improvement": 8.220888723214319,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              5.416980951067634,
+              13.562614303817039
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              -27.649451668801284,
+              -19.948828959707043,
+              -27.933472727215403,
+              -29.34328370077224,
+              -25.95481054233657,
+              -21.049279083007466
+            ],
+            "median_percent_improvement": -26.802131105568925,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -28.63837821399382,
+              -20.499054021357253
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              -41.76680676896189,
+              -28.616486484965353,
+              -33.43637173144609,
+              -0.16826296545691122,
+              -19.392988397296218,
+              -29.562923292433062
+            ],
+            "median_percent_improvement": -29.08970488869921,
+            "faster_pairs": 0,
+            "bootstrap_median_95_interval": [
+              -37.601589250203986,
+              -9.780625681376565
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              4.376552266627254,
+              18.74350405326245,
+              9.081818915150109,
+              8.389129393655848,
+              10.201075717298702,
+              8.72593581436446
+            ],
+            "median_percent_improvement": 8.903877364757285,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              6.382840830141551,
+              14.472289885280574
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              2.2366521803464323,
+              18.48418888241229,
+              7.983121081211908,
+              7.483689636878188,
+              6.902602049971618,
+              6.4230675799925585
+            ],
+            "median_percent_improvement": 7.193145843424903,
+            "faster_pairs": 6,
+            "bootstrap_median_95_interval": [
+              4.329859880169495,
+              13.2336549818121
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        },
+        "tight_vs_fp32": {
+          "write_s": {
+            "paired_percent_improvement": [
+              1.9307237176945713,
+              21.629445727174513,
+              -8.807974454394053,
+              -14.84517285017728,
+              4.82166918210285,
+              5.146670579348667
+            ],
+            "median_percent_improvement": 3.3761964498987105,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -11.826573652285667,
+              13.38805815326159
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              -6.215626680163311,
+              0.704268244044326,
+              -0.3609114872329622,
+              -1.6812349801546222,
+              -22.8349201942168,
+              3.945357120408144
+            ],
+            "median_percent_improvement": -1.0210732336937922,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -14.525273437190055,
+              2.324812682226235
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              -8.626591470175526,
+              3.9437443736117017,
+              -6.410570438687535,
+              3.13100318964471,
+              0.831251474420236,
+              0.3492095431145703
+            ],
+            "median_percent_improvement": 0.5902305087674031,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -7.518580954431531,
+              3.537373781628206
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              -5.092741923880251,
+              -16.542386596042192,
+              -3.6876593231164323,
+              10.724039975600231,
+              10.376878168486359,
+              -6.798058190732137
+            ],
+            "median_percent_improvement": -4.390200623498341,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -11.670222393387164,
+              10.550459072043296
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              -6.336994030445164,
+              -0.29670694252110774,
+              -1.124815293865189,
+              -1.6227453881480391,
+              -23.160540584312162,
+              4.458707983850108
+            ],
+            "median_percent_improvement": -1.373780341006614,
+            "faster_pairs": 1,
+            "bootstrap_median_95_interval": [
+              -14.748767307378664,
+              2.0810005206645
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              -6.099611665892457,
+              1.6469337645753201,
+              0.3566141918519672,
+              -1.7372940515150148,
+              -22.523538572595104,
+              3.4521280907014895
+            ],
+            "median_percent_improvement": -0.6903399298315238,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -14.31157511924378,
+              2.549530927638405
+            ],
+            "small_sample_caveat": "Only six paired groups; bootstrap interval does not establish host-level control."
+          }
+        }
+      },
+      "resources": {
+        "base": [
+          {
+            "round": "screen-six-1-seed91003",
+            "peak_bytes": 17743872,
+            "shared_device_io_bytes": 9633792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 227236,
+              "user_usec": 162634,
+              "system_usec": 64603,
+              "nr_periods": 6,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-2-seed91011",
+            "peak_bytes": 14249984,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 223471,
+              "user_usec": 171396,
+              "system_usec": 52076,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-3-seed91023",
+            "peak_bytes": 14229504,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 191188,
+              "user_usec": 115957,
+              "system_usec": 75231,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-4-seed91003",
+            "peak_bytes": 14237696,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 190570,
+              "user_usec": 149063,
+              "system_usec": 41507,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-5-seed91011",
+            "peak_bytes": 14229504,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 193413,
+              "user_usec": 142334,
+              "system_usec": 51079,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-6-seed91023",
+            "peak_bytes": 14327808,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 190241,
+              "user_usec": 154777,
+              "system_usec": 35463,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          }
+        ],
+        "repeat": [
+          {
+            "round": "screen-six-1-seed91003",
+            "peak_bytes": 14241792,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 191884,
+              "user_usec": 150022,
+              "system_usec": 41862,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-2-seed91011",
+            "peak_bytes": 14213120,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 187756,
+              "user_usec": 141290,
+              "system_usec": 46467,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-3-seed91023",
+            "peak_bytes": 14237696,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 192485,
+              "user_usec": 143337,
+              "system_usec": 49148,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-4-seed91003",
+            "peak_bytes": 13991936,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 189768,
+              "user_usec": 141634,
+              "system_usec": 48134,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-5-seed91011",
+            "peak_bytes": 14237696,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 184118,
+              "user_usec": 135224,
+              "system_usec": 48895,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-6-seed91023",
+            "peak_bytes": 14483456,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 184251,
+              "user_usec": 102614,
+              "system_usec": 81637,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          }
+        ],
+        "shell": [
+          {
+            "round": "screen-six-1-seed91003",
+            "peak_bytes": 14303232,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 194926,
+              "user_usec": 146211,
+              "system_usec": 48715,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-2-seed91011",
+            "peak_bytes": 14057472,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 194960,
+              "user_usec": 149160,
+              "system_usec": 45799,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-3-seed91023",
+            "peak_bytes": 14446592,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 191147,
+              "user_usec": 137192,
+              "system_usec": 53955,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-4-seed91003",
+            "peak_bytes": 14237696,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 187840,
+              "user_usec": 128161,
+              "system_usec": 59679,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-5-seed91011",
+            "peak_bytes": 14417920,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 200277,
+              "user_usec": 161384,
+              "system_usec": 38893,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-6-seed91023",
+            "peak_bytes": 14233600,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 190050,
+              "user_usec": 164947,
+              "system_usec": 25102,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          }
+        ],
+        "fp32": [
+          {
+            "round": "screen-six-1-seed91003",
+            "peak_bytes": 12828672,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 244933,
+              "user_usec": 200538,
+              "system_usec": 44394,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-2-seed91011",
+            "peak_bytes": 12963840,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 284692,
+              "user_usec": 229671,
+              "system_usec": 55020,
+              "nr_periods": 6,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-3-seed91023",
+            "peak_bytes": 12951552,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 247846,
+              "user_usec": 175652,
+              "system_usec": 72194,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-4-seed91003",
+            "peak_bytes": 13082624,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 251241,
+              "user_usec": 204678,
+              "system_usec": 46562,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-5-seed91011",
+            "peak_bytes": 12722176,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 254898,
+              "user_usec": 213913,
+              "system_usec": 40985,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-6-seed91023",
+            "peak_bytes": 12804096,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 251003,
+              "user_usec": 210401,
+              "system_usec": 40602,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          }
+        ],
+        "tight": [
+          {
+            "round": "screen-six-1-seed91003",
+            "peak_bytes": 13053952,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 248626,
+              "user_usec": 209036,
+              "system_usec": 39590,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-2-seed91011",
+            "peak_bytes": 12693504,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 282812,
+              "user_usec": 240520,
+              "system_usec": 42292,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-3-seed91023",
+            "peak_bytes": 12988416,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 251860,
+              "user_usec": 210512,
+              "system_usec": 41347,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-4-seed91003",
+            "peak_bytes": 13066240,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 252994,
+              "user_usec": 207871,
+              "system_usec": 45124,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-5-seed91011",
+            "peak_bytes": 12935168,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 324251,
+              "user_usec": 263298,
+              "system_usec": 60953,
+              "nr_periods": 6,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "screen-six-6-seed91023",
+            "peak_bytes": 13008896,
+            "shared_device_io_bytes": 6053888,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 245120,
+              "user_usec": 213052,
+              "system_usec": 32068,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          }
+        ]
+      },
+      "limitations": [
+        "Shared WSL device is not official dedicated data device B.",
+        "Guest affinity is not fixed host physical-core/frequency control.",
+        "Complete initial run peak includes preparation and query, not a separately scored write M.",
+        "Six paired groups do not remove environmental confounding."
+      ],
+      "diagnostics": [
+        {
+          "seed": 91003,
+          "variant": "A",
+          "refined": 286419,
+          "rows": 6000000,
+          "refined_percent": 4.77365,
+          "survivors": 230419,
+          "direct_exact": 56000,
+          "heap_merges_excluded": 20000,
+          "checks": 1011
+        },
+        {
+          "seed": 91011,
+          "variant": "A",
+          "refined": 285877,
+          "rows": 6000000,
+          "refined_percent": 4.764616666666667,
+          "survivors": 229877,
+          "direct_exact": 56000,
+          "heap_merges_excluded": 20000,
+          "checks": 1011
+        },
+        {
+          "seed": 91023,
+          "variant": "A",
+          "refined": 285906,
+          "rows": 6000000,
+          "refined_percent": 4.7651,
+          "survivors": 229906,
+          "direct_exact": 56000,
+          "heap_merges_excluded": 20000,
+          "checks": 1011
+        },
+        {
+          "seed": 91003,
+          "variant": "B",
+          "refined": 204175,
+          "rows": 6000000,
+          "refined_percent": 3.4029166666666666,
+          "survivors": 148175,
+          "direct_exact": 56000,
+          "heap_merges_excluded": 20000,
+          "checks": 1011
+        },
+        {
+          "seed": 91011,
+          "variant": "B",
+          "refined": 203855,
+          "rows": 6000000,
+          "refined_percent": 3.3975833333333334,
+          "survivors": 147855,
+          "direct_exact": 56000,
+          "heap_merges_excluded": 20000,
+          "checks": 1011
+        },
+        {
+          "seed": 91023,
+          "variant": "B",
+          "refined": 203390,
+          "rows": 6000000,
+          "refined_percent": 3.3898333333333333,
+          "survivors": 147390,
+          "direct_exact": 56000,
+          "heap_merges_excluded": 20000,
+          "checks": 1011
+        },
+        {
+          "seed": 91003,
+          "variant": "C",
+          "refined": 186519,
+          "rows": 6000000,
+          "refined_percent": 3.10865,
+          "survivors": 130519,
+          "direct_exact": 56000,
+          "heap_merges_excluded": 20000,
+          "checks": 1011
+        },
+        {
+          "seed": 91011,
+          "variant": "C",
+          "refined": 186160,
+          "rows": 6000000,
+          "refined_percent": 3.1026666666666665,
+          "survivors": 130160,
+          "direct_exact": 56000,
+          "heap_merges_excluded": 20000,
+          "checks": 1011
+        },
+        {
+          "seed": 91023,
+          "variant": "C",
+          "refined": 185357,
+          "rows": 6000000,
+          "refined_percent": 3.0892833333333334,
+          "survivors": 129357,
+          "direct_exact": 56000,
+          "heap_merges_excluded": 20000,
+          "checks": 1011
+        }
+      ],
+      "local_evidence_hashes": {
+        "summary.json": {
+          "sha256": "007d77bbb612eb02d0bd4fab9736d4da61c7bb0b04ff9f2ddc9b8a7c7d264351",
+          "bytes": 1238764,
+          "included_in_branch": false
+        },
+        "FINAL_STATE.json": {
+          "sha256": "7f06006860795caeacdc01773fb11efb49fed874d49512907b41fc1b5801693a",
+          "bytes": 3362,
+          "included_in_branch": false
+        }
+      }
+    },
+    "lto-20261114": {
+      "decision": "experimental_only_not_adopted",
+      "comparisons": {
+        "repeat_vs_base": {
+          "write_s": {
+            "paired_percent_improvement": [
+              -1.5967829581050808,
+              3.7222651546355845,
+              1.059602212619093,
+              -6.946718199894164,
+              10.598324530395086,
+              11.7267178557647
+            ],
+            "median_percent_improvement": 2.3909336836273387,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -4.271750578999622,
+              11.162521193079893
+            ]
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              0.8116466917321263,
+              2.518478168867133,
+              -4.12516039235713,
+              3.87327098139969,
+              -4.281918946981134,
+              10.021240462946867
+            ],
+            "median_percent_improvement": 1.6650624302996297,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -4.203539669669132,
+              6.947255722173279
+            ]
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              -28.44317582713851,
+              1.3205749287663826,
+              -4.2290462926866335,
+              2.133191671991752,
+              -6.543376229308806,
+              8.80315800570367
+            ],
+            "median_percent_improvement": -1.4542356819601254,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -17.493276028223658,
+              5.468174838847711
+            ]
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              5.225089574313346,
+              7.130814801827445,
+              -8.17475626480002,
+              -1.5988657626646363,
+              -14.408095792875963,
+              -7.058172549664143
+            ],
+            "median_percent_improvement": -4.32851915616439,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -11.291426028837993,
+              6.177952188070396
+            ]
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              1.8520281019332785,
+              1.9969260473388872,
+              -4.305863462639903,
+              3.906984015707171,
+              -4.491052113503913,
+              9.57834970156879
+            ],
+            "median_percent_improvement": 1.9244770746360829,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -4.398457788071908,
+              6.74266685863798
+            ]
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              -0.1914101221873299,
+              3.002614556977845,
+              -3.958601372423187,
+              3.841782243079339,
+              -4.087771329034928,
+              10.431577511603018
+            ],
+            "median_percent_improvement": 1.4056022173952576,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -4.023186350729057,
+              7.136679877341178
+            ]
+          }
+        },
+        "lto_vs_base": {
+          "write_s": {
+            "paired_percent_improvement": [
+              28.73426120774808,
+              -17.92602246306845,
+              -24.85462407381529,
+              0.3835693402521767,
+              11.16721264559326,
+              3.429278079789355
+            ],
+            "median_percent_improvement": 1.906423710020766,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -21.39032326844187,
+              19.950736926670672
+            ]
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              54.253403380188956,
+              -17.88183947844142,
+              -17.286866854854676,
+              6.577588019339231,
+              -1.9129116838985771,
+              11.64761929523841
+            ],
+            "median_percent_improvement": 2.332338167720327,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -17.58435316664805,
+              32.950511337713685
+            ]
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              9.472440929294878,
+              -1.4888089110817404,
+              -15.506177266325572,
+              -1.5203154518298012,
+              3.077641095130279,
+              3.7960304559097158
+            ],
+            "median_percent_improvement": 0.7944160920242693,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -8.513246359077687,
+              6.634235692602297
+            ]
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              17.072382365068183,
+              -6.809000882488236,
+              -7.021474160796215,
+              2.4059421356600885,
+              -1.5824747585811094,
+              -3.264276042783587
+            ],
+            "median_percent_improvement": -2.4233754006823482,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -6.915237521642226,
+              9.739162250364135
+            ]
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              54.47856624325198,
+              -18.054514117788422,
+              -18.197071030272195,
+              5.926497122470864,
+              -2.0114263663002063,
+              11.160116347131034
+            ],
+            "median_percent_improvement": 1.9575353780853288,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -18.125792574030307,
+              32.819341295191506
+            ]
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              54.036318432474154,
+              -17.7215523800651,
+              -16.44790648102108,
+              7.185721677296564,
+              -1.8214561236016724,
+              12.09928940981725
+            ],
+            "median_percent_improvement": 2.6821327768474457,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -17.08472943054309,
+              33.0678039211457
+            ]
+          }
+        },
+        "lto_vs_repeat": {
+          "write_s": {
+            "paired_percent_improvement": [
+              29.85433522866626,
+              -22.485248175472993,
+              -26.19175469874606,
+              6.854149116053565,
+              0.6363282479997623,
+              -9.399718209658992
+            ],
+            "median_percent_improvement": -4.381694980829615,
+            "faster_pairs": 3,
+            "bootstrap_median_95_interval": [
+              -24.338501437109528,
+              18.354242172359914
+            ]
+          },
+          "query_s": {
+            "paired_percent_improvement": [
+              53.879064331640826,
+              -20.927368863452923,
+              -12.640274850864607,
+              2.8132831165161742,
+              2.271733476909854,
+              1.8075141740777068
+            ],
+            "median_percent_improvement": 2.0396238254937806,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -16.783821857158763,
+              28.3461737240785
+            ]
+          },
+          "first_query_s": {
+            "paired_percent_improvement": [
+              29.51937034588822,
+              -2.8469803485580814,
+              -10.819566497779798,
+              -3.7331422023864747,
+              9.030141210967601,
+              -5.490461555792825
+            ],
+            "median_percent_improvement": -3.290061275472278,
+            "faster_pairs": 2,
+            "bootstrap_median_95_interval": [
+              -8.155014026786311,
+              19.27475577842791
+            ]
+          },
+          "restart_query_s": {
+            "paired_percent_improvement": [
+              12.500452638300663,
+              -15.01016257929868,
+              1.066128682722145,
+              3.9417840625110667,
+              11.210413865741042,
+              3.543771032632359
+            ],
+            "median_percent_improvement": 3.7427775475717127,
+            "faster_pairs": 5,
+            "bootstrap_median_95_interval": [
+              -6.9720169482882675,
+              11.855433252020852
+            ]
+          },
+          "filtered_query_s": {
+            "paired_percent_improvement": [
+              53.61958797882742,
+              -20.46001146332701,
+              -13.31776288166946,
+              2.1016231888213444,
+              2.373050799134657,
+              1.7493229114285302
+            ],
+            "median_percent_improvement": 1.9254730501249373,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -16.888887172498237,
+              27.99631938898104
+            ]
+          },
+          "unfiltered_query_s": {
+            "paired_percent_improvement": [
+              54.1241294922675,
+              -21.365696448814763,
+              -12.013729449721989,
+              3.477538906420252,
+              2.177311682723171,
+              1.8619418003373633
+            ],
+            "median_percent_improvement": 2.019626741530267,
+            "faster_pairs": 4,
+            "bootstrap_median_95_interval": [
+              -16.689712949268376,
+              28.800834199343875
+            ]
+          }
+        }
+      },
+      "resources": {
+        "base": [
+          {
+            "round": "lto-six-1-seed91003",
+            "peak_bytes": 14241792,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 472733,
+              "user_usec": 411967,
+              "system_usec": 60766,
+              "nr_periods": 11,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-2-seed91011",
+            "peak_bytes": 14147584,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 194817,
+              "user_usec": 151766,
+              "system_usec": 43051,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-3-seed91023",
+            "peak_bytes": 14233600,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 192847,
+              "user_usec": 169755,
+              "system_usec": 23091,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-4-seed91003",
+            "peak_bytes": 14245888,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 203956,
+              "user_usec": 153471,
+              "system_usec": 50485,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-5-seed91011",
+            "peak_bytes": 14233600,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 195997,
+              "user_usec": 143176,
+              "system_usec": 52821,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-6-seed91023",
+            "peak_bytes": 14229504,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 213619,
+              "user_usec": 183959,
+              "system_usec": 29660,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          }
+        ],
+        "repeat": [
+          {
+            "round": "lto-six-1-seed91003",
+            "peak_bytes": 14225408,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 388353,
+              "user_usec": 325527,
+              "system_usec": 62826,
+              "nr_periods": 11,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-2-seed91011",
+            "peak_bytes": 14106624,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 186890,
+              "user_usec": 106311,
+              "system_usec": 80580,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-3-seed91023",
+            "peak_bytes": 14254080,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 194630,
+              "user_usec": 158470,
+              "system_usec": 36160,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-4-seed91003",
+            "peak_bytes": 14237696,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 202849,
+              "user_usec": 145243,
+              "system_usec": 57605,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-5-seed91011",
+            "peak_bytes": 14237696,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 198336,
+              "user_usec": 170690,
+              "system_usec": 27645,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-6-seed91023",
+            "peak_bytes": 14233600,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 196547,
+              "user_usec": 154352,
+              "system_usec": 42196,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          }
+        ],
+        "lto": [
+          {
+            "round": "lto-six-1-seed91003",
+            "peak_bytes": 14241792,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 217903,
+              "user_usec": 171794,
+              "system_usec": 46109,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-2-seed91011",
+            "peak_bytes": 14241792,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 229454,
+              "user_usec": 167839,
+              "system_usec": 61616,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-3-seed91023",
+            "peak_bytes": 14213120,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 199681,
+              "user_usec": 157627,
+              "system_usec": 42054,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-4-seed91003",
+            "peak_bytes": 14069760,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 207360,
+              "user_usec": 157907,
+              "system_usec": 49454,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-5-seed91011",
+            "peak_bytes": 14245888,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 195238,
+              "user_usec": 151880,
+              "system_usec": 43357,
+              "nr_periods": 5,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          },
+          {
+            "round": "lto-six-6-seed91023",
+            "peak_bytes": 14290944,
+            "shared_device_io_bytes": 6049792,
+            "settled": true,
+            "query_cpu": {
+              "usage_usec": 196653,
+              "user_usec": 177113,
+              "system_usec": 19539,
+              "nr_periods": 4,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "nr_bursts": 0,
+              "burst_usec": 0
+            }
+          }
+        ]
+      },
+      "limitations": [
+        "Shared WSL device, not dedicated official B.",
+        "Guest CPU affinity, no host fixed-frequency or exclusive-resource guarantee.",
+        "Six paired groups, bootstrap is exploratory."
+      ],
+      "local_evidence_hashes": {
+        "summary.json": {
+          "sha256": "7bad8895392b11d3600eadfe5419e9374f958f77d294e3f30dfcd0a4b0572dad",
+          "bytes": 725832,
+          "included_in_branch": false
+        },
+        "FINAL_STATE.json": {
+          "sha256": "a2ae8cb82fc2b27cb6cf29f87c743fe83e0ef952db1a09b131a2fba725fcbe08",
+          "bytes": 2114,
+          "included_in_branch": false
+        }
+      }
+    }
+  },
+  "teammate_integration": [
+    "This branch adds material and regressions; it does not contain a newly adopted performance optimization.",
+    "Review agent/conversation.json as a whole when integrating: RFC6901 pointers refer to array positions, so blind line-by-line merging can break references.",
+    "Preserve truthful student statements, attribution and known limitations; do not combine tier totals or fabricate new units.",
+    "Re-run python3 tests/test_agent_material.py and relevant CTest/optimization acceptance after resolving conflicts with your branch.",
+    "Review and merge into 2026-competition-round2 only after combined validation; this push does not modify that branch."
+  ],
+  "local_markdown_reports_included": false,
+  "raw_experiment_inputs_outputs_and_failed_candidate_sources": "Preserved locally; not included in this focused branch. Hashes above identify local summaries. Embedded conversation result evidence remains self-contained.",
+  "handoff_validation": {
+    "release_build": true,
+    "ctest_passed": 9,
+    "agent_checks_passed": 8,
+    "optimization_regressions_passed": 17,
+    "public_query_checks_passed": 1000,
+    "runtime_sha256": "97956a87ca4c964a0c69469b0f4cca7e93eb657fd65b349c6ee292ed9e565cbf",
+    "runtime_identical_to_existing_baseline_binary": true,
+    "new_formal_score": null
+  },
+  "selected_file_sha256": {
+    "agent/conversation.json": "6af10a9978f2e5ac5197a4e4ab5719dd2f28e1d2662e6feef57f20ac51bd61b1",
+    "tests/test_agent_material.py": "85bd29c1cf10e9c231980d91035dfe8b4834d6974fd71691e8c96a282a4095dc",
+    "tests/optimization_acceptance.py": "7e906a1cfd1b88ff89c7f9b8d307b811f78f67f233dc1b72f360ecc0d434583e",
+    "tests/test_exact_cache.cpp": "c62c194cfdf4daefd6b00c5749af0429c89f0071fcf6e518dc5b27ff75c3f0fe",
+    "src/engine.cpp": "d87e3ec4f1c425222572454ef4063b58dfbcca7ef8d9eef19eee76b55fced357",
+    "src/exact_cache.hpp": "48e52e25b17f4ab30b81fe65c0413bd58463dfb412c836421813bdb8f6c44f74",
+    "Dockerfile": "6178916e2baf4b9a3b3481c1949fbbee71edca0cdae07ace94feebed19990c32",
+    "CMakeLists.txt": "d9df911862aef590e4b04d8d9b9c195ff84fbf0f3cfa1c5a540bd93bc9d77aad"
+  }
+}

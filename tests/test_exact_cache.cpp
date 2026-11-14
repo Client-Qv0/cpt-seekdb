@@ -293,10 +293,12 @@ void test_quantized_four_row_kernel() {
   if (!exact::available()) return;
   std::mt19937 rng(20261113);
   std::uniform_int_distribution<int> code(-127, 127);
-  for (size_t dim : {size_t(1), size_t(7), size_t(16), size_t(17), size_t(64),
-                     size_t(127), size_t(128), size_t(129)}) {
-    std::vector<int8_t> rows(4 * dim);
-    std::vector<int16_t> query(dim);
+  for (size_t dim : {size_t(0), size_t(1), size_t(7), size_t(15), size_t(16),
+                     size_t(17), size_t(31), size_t(32), size_t(33), size_t(64),
+                     size_t(127), size_t(128), size_t(129), size_t(8191), size_t(8192)}) {
+    // Keep pointers valid even for the zero-length kernel boundary.
+    std::vector<int8_t> rows(std::max<size_t>(1, 4 * dim));
+    std::vector<int16_t> query(std::max<size_t>(1, dim));
     for (auto &value : rows) value = static_cast<int8_t>(code(rng));
     for (auto &value : query) value = static_cast<int16_t>(code(rng));
     uint32_t batch[4];
@@ -311,9 +313,31 @@ void test_quantized_four_row_kernel() {
         exact::quantized_squared_distance_avx2(row1, query.data(), dim),
         exact::quantized_squared_distance_avx2(row2, query.data(), dim),
         exact::quantized_squared_distance_avx2(row3, query.data(), dim)};
-    for (int lane = 0; lane < 4; ++lane)
+    for (int lane = 0; lane < 4; ++lane) {
       require(batch[lane] == single[lane]);
+      uint64_t reference = 0;
+      for (size_t d = 0; d < dim; ++d) {
+        const int64_t delta = int(rows[size_t(lane)*dim+d]) - int(query[d]);
+        reference += uint64_t(delta*delta);
+      }
+      require(batch[lane] == reference);
+    }
   }
+  // Four distinct lane totals catch cross-lane mixing. The first lane reaches
+  // the supported maximum integer sum; the second must stay exactly zero.
+  constexpr size_t dim = 8192;
+  std::vector<int8_t> rows(4*dim);
+  std::vector<int16_t> query(dim,-127);
+  for(size_t d=0;d<dim;++d) {
+    rows[d]=127; rows[dim+d]=-127;
+    rows[2*dim+d]=d%2 ? 127 : -127;
+    rows[3*dim+d]=0;
+  }
+  uint32_t batch[4];
+  exact::quantized_squared_distance4_avx2(rows.data(),rows.data()+dim,
+      rows.data()+2*dim,rows.data()+3*dim,query.data(),dim,batch);
+  require(batch[0]==528515072u && batch[1]==0u &&
+          batch[2]==264257536u && batch[3]==132128768u);
 }
 #endif
 
