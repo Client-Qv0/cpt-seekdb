@@ -84,14 +84,22 @@ struct ScalarColumn {
 struct Plan {
   std::vector<Type> types;
   std::vector<size_t> text_bytes;
+  // Widest stored text per column. The declared VARCHAR width is only an upper
+  // bound on that and is usually far larger, so callers that budget memory per
+  // projected row need the width the rows actually carry.
+  std::vector<size_t> text_max;
   size_t vector_column,dim,count=0;
   Plan(std::vector<Type> t,size_t v,size_t d)
-      :types(std::move(t)),text_bytes(types.size()),vector_column(v),dim(d) {}
+      :types(std::move(t)),text_bytes(types.size()),text_max(types.size()),
+       vector_column(v),dim(d) {}
   void observe(const std::vector<Cell>& row) {
     count=add(count,1);
     for(size_t c=0;c<types.size();++c)
-      if(types[c]==Type::Varchar)
-        text_bytes[c]=add(text_bytes[c],std::get<std::string>(row[c]).size());
+      if(types[c]==Type::Varchar) {
+        const size_t width=std::get<std::string>(row[c]).size();
+        text_bytes[c]=add(text_bytes[c],width);
+        text_max[c]=std::max(text_max[c],width);
+      }
   }
   size_t required_bytes() const {
     // Fixed reserve covers objects, table identity, allocator metadata and the
@@ -99,6 +107,7 @@ struct Plan {
     size_t bytes=4096;
     if(!dim || vector_column>=types.size() || dim>budget || count>budget) return budget+1;
     bytes=add(bytes,mul(types.size(),sizeof(ScalarColumn)+sizeof(Type)+sizeof(size_t)+96));
+    bytes=add(bytes,mul(text_max.size(),sizeof(size_t)));
     bytes=add(bytes,mul(count,sizeof(int64_t)));
     bytes=add(bytes,mul(mul((count+3)/4,dim),4*sizeof(float)));
     for(size_t c=0;c<types.size();++c) {
@@ -117,6 +126,8 @@ struct Compact {
   std::vector<int64_t> keys;
   std::vector<float> vectors;
   std::vector<ScalarColumn> columns;
+  // Widest stored text per column, carried over from the plan that sized it.
+  std::vector<size_t> text_max;
   // Optional row-major screening codes; exact vectors are always retained.
   std::unique_ptr<int8_t[]> quantized_codes;
   double quantized_step=1,quantized_inverse=1;
@@ -131,7 +142,8 @@ struct Compact {
     bool indexed = false;
   };
   static constexpr size_t equality_sort_scratch = 4096;
-  explicit Compact(const Plan& p):dim(p.dim),count(p.count),vector_column(p.vector_column) {
+  explicit Compact(const Plan& p):dim(p.dim),count(p.count),vector_column(p.vector_column),
+                                 text_max(p.text_max) {
     if(!p.fits()) throw Error("RESOURCE","exact cache plan exceeds budget");
     keys.resize(count);
     vectors.resize(((count+3)/4)*dim*4);
@@ -148,6 +160,7 @@ struct Compact {
     size_t bytes=4096+columns.capacity()*(sizeof(ScalarColumn)+sizeof(Type)+sizeof(size_t)+96);
     bytes+=keys.capacity()*sizeof(int64_t)+vectors.capacity()*sizeof(float);
     for(const auto& c:columns) bytes+=c.integers.capacity()*sizeof(int64_t)+c.offsets.capacity()*sizeof(size_t)+c.text.capacity();
+    bytes+=text_max.capacity()*sizeof(size_t);
     if(equality_rows) bytes+=count*sizeof(uint32_t);
     // Reserve the prepared query as well, including during posting-index build.
     if(quantized_codes) bytes+=count*dim+dim*sizeof(int16_t)+64;
@@ -164,6 +177,8 @@ struct Compact {
     const size_t begin=col.offsets[row],end=col.offsets[row+1];
     return begin==end ? std::string() : std::string(col.text.data()+begin,end-begin);
   }
+  // Widest text stored in this column, in bytes.
+  size_t text_width(size_t column) const {return text_max[column];}
   std::vector<float> vector_cell(size_t row,size_t column) const {
     if(column!=vector_column) throw Error("CORRUPTION","invalid exact vector column");
     std::vector<float> result(dim);

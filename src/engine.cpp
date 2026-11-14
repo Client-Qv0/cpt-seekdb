@@ -872,9 +872,22 @@ Result Engine::execute_statement(const Statement &st) {
                                                    : 0);
   }
   constexpr size_t result_budget = 4 * 1024 * 1024;
-  if (st.limit && *st.limit <= 4096 && keys.size() == 1 && !keys[0].desc &&
+  // This bound uses the declared VARCHAR width, so it only caps the text that
+  // could be stored. When the compact view is reachable, the width the rows
+  // actually carry decides instead; see the measured check at the scan.
+  const size_t limit = st.limit ? *st.limit : 0;
+  const bool declared_fits = limit && projection_bound <= result_budget / limit;
+  const bool point_lookup = std::any_of(fs.begin(), fs.end(), [&](const Filter &f) {
+    return f.column == pk && f.op == "=";
+  });
+  // A wide declaration over short text must not push the query onto the
+  // per-row projection path, but measuring needs a view this query can reach
+  // and one that is not already known to be bypassed.
+  const bool measure_actual = exact::available() && !point_lookup &&
+                              st.table.size() <= 1024 && !cache_->exact_bypass;
+  if (limit && limit <= 4096 && keys.size() == 1 && !keys[0].desc &&
       keys[0].projection && ps[keys[0].index].distance &&
-      projection_bound <= result_budget / *st.limit) {
+      (declared_fits || measure_actual)) {
     struct Neighbor {
       double distance;
       int64_t key;
@@ -903,9 +916,6 @@ Result Engine::execute_statement(const Statement &st) {
       if (matches(row, fs))
         consider(nearest, key, std::get<double>(project(projection, row)));
     };
-    const bool point_lookup = std::any_of(fs.begin(), fs.end(), [&](const Filter &f) {
-      return f.column == pk && f.op == "=";
-    });
     const exact::Compact *winner_view = nullptr;
     if (exact::available() && !point_lookup && st.table.size() <= 1024) {
       if (cache_->table != st.table || cache_->exact_column != projection.col ||
@@ -1167,7 +1177,23 @@ Result Engine::execute_statement(const Statement &st) {
             }
           ++exact::parallel_runs();
         };
-        if (fs.empty()) {
+        // What the winners allocate is the text they actually carry, not the
+        // declared VARCHAR width that had to enter this path to be measured.
+        size_t actual_bound = 0;
+        for (const auto &p : ps) {
+          const auto &c = schema.columns[p.col];
+          actual_bound += sizeof(Cell) + 32 +
+                          (p.distance                ? 0
+                           : c.type == Type::Vector  ? size_t(c.size) * 4
+                           : c.type == Type::Varchar ? view.text_width(p.col)
+                                                     : 0);
+        }
+        if (limit && !declared_fits && actual_bound > result_budget / limit) {
+          // The winners would not stay inside the result budget; leave the
+          // answer to the path that accounts and spills row by row.
+          winner_view = nullptr;
+          scan_rows(original_visit);
+        } else if (fs.empty()) {
           run_slices(static_cast<size_t>(view.count),
                      [&](size_t begin, size_t end, Heap &heap) {
                        scan_contiguous(begin, end, heap);
