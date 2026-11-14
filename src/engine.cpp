@@ -885,9 +885,16 @@ Result Engine::execute_statement(const Statement &st) {
   // and one that is not already known to be bypassed.
   const bool measure_actual = exact::available() && !point_lookup &&
                               st.table.size() <= 1024 && !cache_->exact_bypass;
-  if (limit && limit <= 4096 && keys.size() == 1 && !keys[0].desc &&
-      keys[0].projection && ps[keys[0].index].distance &&
-      (declared_fits || measure_actual)) {
+  // A fixed cap here sent every wider TopK onto the per-row projection path for
+  // no memory reason: the winners themselves are what the result budget bounds,
+  // and each one costs a Neighbor in the heap before it is materialized. A wider
+  // limit may only drop the cap when the declared bound already fits, because
+  // without a view the winners are materialized with no width measured.
+  const bool heap_fits = limit <= result_budget / 64;
+  const bool wide_ok = declared_fits && heap_fits;
+  const bool narrow_ok = limit <= 4096 && measure_actual;
+  if (limit && (wide_ok || narrow_ok) && keys.size() == 1 && !keys[0].desc &&
+      keys[0].projection && ps[keys[0].index].distance) {
     struct Neighbor {
       double distance;
       int64_t key;

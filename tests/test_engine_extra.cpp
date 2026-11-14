@@ -114,6 +114,36 @@ int main() {
       check(id(r,0) == 5,"Vector search must remain consistent across restart");
       error(db,"CREATE VECTOR INDEX vi ON t(v)");
     }
+    {
+      // TopK wider than the retired 4096 cap. The data makes the expected order
+      // checkable: distance is i%1000, so ties fall back to ascending id.
+      mvdb::Engine db(path.string() + "-cap");
+      db.execute("CREATE TABLE cap(id BIGINT PRIMARY KEY,v VECTOR(4))");
+      for (int begin = 0; begin < 5000; begin += 100) {
+        std::string values;
+        for (int i = begin; i < begin + 100; ++i) {
+          if (!values.empty()) values += ',';
+          values += "(" + std::to_string(i) + ",'[" + std::to_string(i % 1000) + ",0,0,0]')";
+        }
+        db.execute("INSERT INTO cap VALUES " + values);
+      }
+      auto wide = db.execute("SELECT id,L2_DISTANCE(v,'[0,0,0,0]') AS d FROM cap ORDER BY d LIMIT 5000");
+      check(wide.rows.size() == 5000,"TopK above the retired cap must return every row");
+      bool ordered = true;
+      for (size_t i = 1; i < wide.rows.size(); ++i) {
+        const double a = std::get<double>(wide.rows[i - 1][1]);
+        const double b = std::get<double>(wide.rows[i][1]);
+        if (a > b || (a == b && id(wide, i - 1) > id(wide, i))) { ordered = false; break; }
+      }
+      check(ordered,"TopK above the retired cap must keep distance then key order");
+      auto narrow = db.execute("SELECT id,L2_DISTANCE(v,'[0,0,0,0]') AS d FROM cap ORDER BY d LIMIT 4100");
+      check(narrow.rows.size() == 4100,"A narrower TopK must still cap the result");
+      bool prefix = true;
+      for (size_t i = 0; i < narrow.rows.size(); ++i)
+        if (narrow.rows[i] != wide.rows[i]) { prefix = false; break; }
+      check(prefix,"A narrower TopK must be a prefix of a wider one");
+    }
+    fs::remove_all(path.string() + "-cap");
     fs::remove_all(path);
     std::cout << "engine extra checks passed: " << checks << '\n';
     return 0;
