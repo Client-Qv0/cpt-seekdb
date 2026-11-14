@@ -881,20 +881,16 @@ Result Engine::execute_statement(const Statement &st) {
     return f.column == pk && f.op == "=";
   });
   // A wide declaration over short text must not push the query onto the
-  // per-row projection path, but measuring needs a view this query can reach
-  // and one that is not already known to be bypassed.
+  // per-row projection path. The materialization below spills once it passes the
+  // result budget, so a view this query can reach is enough to decide.
   const bool measure_actual = exact::available() && !point_lookup &&
-                              st.table.size() <= 1024 && !cache_->exact_bypass;
+                              st.table.size() <= 1024;
   // A fixed cap here sent every wider TopK onto the per-row projection path for
   // no memory reason: the winners themselves are what the result budget bounds,
-  // and each one costs a Neighbor in the heap before it is materialized. A wider
-  // limit may only drop the cap when the declared bound already fits, because
-  // without a view the winners are materialized with no width measured.
+  // and each one costs a Neighbor in the heap before it is materialized.
   const bool heap_fits = limit <= result_budget / 64;
-  const bool wide_ok = declared_fits && heap_fits;
-  const bool narrow_ok = limit <= 4096 && measure_actual;
-  if (limit && (wide_ok || narrow_ok) && keys.size() == 1 &&
-      keys[0].projection && ps[keys[0].index].distance) {
+  if (limit && heap_fits && (declared_fits || measure_actual) &&
+      keys.size() == 1 && keys[0].projection && ps[keys[0].index].distance) {
     struct Neighbor {
       double distance;
       int64_t key;
@@ -1310,7 +1306,24 @@ Result Engine::execute_statement(const Statement &st) {
       nearest.pop();
     }
     std::sort(winners.begin(), winners.end(), better_neighbor);
-    result.rows.reserve(winners.size());
+    // Winners stay in memory only while they fit the result budget. Past it they
+    // go through the sorter the per-row path uses, so a wide TopK over wide rows
+    // streams instead of holding every projected row at once.
+    std::unique_ptr<SpillSorter> sorter;
+    auto sort_key = [&](std::string &key, const Neighbor &n) {
+      ordered_cell(key, Cell(n.distance), descending);
+      ordered_u64(key, static_cast<uint64_t>(n.key) ^ (uint64_t(1) << 63));
+    };
+    auto start_spill = [&] {
+      sorter = std::make_unique<SpillSorter>(directory_, result_budget);
+      for (size_t i = 0; i < result.rows.size(); ++i) {
+        std::string key;
+        sort_key(key, winners[i]);
+        sorter->add(std::move(key), row_json(result.rows[i]));
+      }
+      std::vector<std::vector<Cell>>().swap(result.rows);
+    };
+    size_t buffered_bytes = 0;
     for (const auto &n : winners) {
       std::vector<Cell> output;
       output.reserve(ps.size());
@@ -1340,8 +1353,22 @@ Result Engine::execute_statement(const Statement &st) {
         for (auto &p : ps)
           output.push_back(project(p, row));
       }
+      if (!sorter) {
+        size_t bytes = sizeof(Cell) * 2;
+        for (const auto &cell : output) bytes += cell_bytes(cell);
+        if (bytes > result_budget - buffered_bytes) start_spill();
+      }
+      if (sorter) {
+        std::string key;
+        sort_key(key, n);
+        sorter->add(std::move(key), row_json(output));
+        continue;
+      }
+      buffered_bytes += sizeof(Cell) * 2;
+      for (const auto &cell : output) buffered_bytes += cell_bytes(cell);
       result.rows.push_back(std::move(output));
     }
+    if (sorter) result.stream = sorter->finish(st.limit);
     return result;
   }
   struct Candidate {
