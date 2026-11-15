@@ -1,0 +1,40 @@
+Starting revision:
+  git worktree add /home/li/minivectordb-q7-filter-blocks-20261115 \
+    -b perf/q7-filter-blocks-li-20261115 \
+    9d82b2fe3e105b0a19122e972783da5c344b90f8
+
+Build and functional gates:
+  cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
+  cmake --build build-release -j4
+  ctest --test-dir build-release --output-on-failure
+  python3 tests/acceptance.py \
+    --binary "$PWD/build-release/minivectordb" --stress
+  python3 tests/optimization_acceptance.py \
+    --binary "$PWD/build-release/minivectordb" --large
+  python3 tests/public_samples.py \
+    --binary "$PWD/build-release/minivectordb" \
+    --package /home/li/official-git-f4d4e266-20261110/mysqltest \
+    --output /tmp/q7-final-public.json
+
+Paired formal-JSONL performance run:
+  python3 validation/q7-filter-blocks-li-20261115/paired_filter_benchmark.py \
+    --baseline /home/li/minivectordb-self-iterate-20261113/build-release/minivectordb \
+    --candidate /home/li/minivectordb-q7-filter-blocks-20261115/build-release/minivectordb \
+    --pairs 20 --passes 10 \
+    --cpuset 0,1 \
+    --output-dir /var/tmp/q7-filter-blocks-li-20261115-ab-20
+
+Same-binary A/A calibration used the same command with the baseline binary in
+both positions and a separate output directory.
+
+Independent query oracle:
+  python3 tests/audit_performance.py \
+    --binary "$PWD/build-release/minivectordb" \
+    --output /tmp/q7-filter-blocks-audit.json
+
+Final cleanup:
+  git diff -- src tests >
+    validation/q7-filter-blocks-li-20261115/rejected-filter-code-blocks.patch
+  git restore --source=9d82b2fe3e105b0a19122e972783da5c344b90f8 -- src tests
+  cmake --build build-release -j4
+  ctest --test-dir build-release --output-on-failure

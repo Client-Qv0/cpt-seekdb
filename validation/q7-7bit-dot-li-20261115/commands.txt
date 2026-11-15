@@ -1,0 +1,44 @@
+Integrity and kernel tests:
+  g++ -std=c++17 -O3 -mavx2 \
+    -I validation/q7-7bit-dot-li-20261115 -I src \
+    validation/q7-7bit-dot-li-20261115/test_7bit_kernel.cpp \
+    -o /tmp/test_7bit_kernel
+  /tmp/test_7bit_kernel
+
+Microbenchmark:
+  g++ -std=c++17 -O3 -DNDEBUG -mavx2 \
+    -I validation/q7-7bit-dot-li-20261115 -I src \
+    validation/q7-7bit-dot-li-20261115/benchmark_7bit.cpp \
+    -o /tmp/benchmark_7bit
+  taskset -c 0,1 /tmp/benchmark_7bit 7 100000
+
+Full survivor equivalence:
+  python3 validation/q7-7bit-dot-li-20261115/survivor_equivalence.py \
+    --seeds 3179,3181,3187 \
+    --output /var/tmp/q7-7bit-survivor-full.json
+
+Formal JSONL A/A:
+  python3 validation/q7-filter-blocks-li-20261115/paired_filter_benchmark.py \
+    --baseline /home/li/minivectordb-self-iterate-20261113/build-release/minivectordb \
+    --candidate /home/li/minivectordb-self-iterate-20261113/build-release/minivectordb \
+    --pairs 20 --passes 10 \
+    --output-dir /var/tmp/q7-7bit-aa-20
+
+Formal JSONL A/B:
+  python3 validation/q7-filter-blocks-li-20261115/paired_filter_benchmark.py \
+    --baseline /home/li/minivectordb-self-iterate-20261113/build-release/minivectordb \
+    --candidate /home/li/minivectordb-q7-filter-blocks-20261115/build-release/minivectordb \
+    --pairs 20 --passes 10 \
+    --output-dir /var/tmp/q7-7bit-ab-20
+
+Functional gates:
+  cmake --build build-release -j4
+  ctest --test-dir build-release --output-on-failure
+  python3 tests/acceptance.py \
+    --binary "$PWD/build-release/minivectordb" --stress
+  python3 tests/optimization_acceptance.py \
+    --binary "$PWD/build-release/minivectordb" --large
+  python3 tests/public_samples.py \
+    --binary "$PWD/build-release/minivectordb" \
+    --package /home/li/official-git-f4d4e266-20261110/mysqltest \
+    --output /tmp/q7-7bit-public-final.json

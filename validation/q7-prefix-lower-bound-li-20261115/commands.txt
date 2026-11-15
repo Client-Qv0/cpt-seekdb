@@ -1,0 +1,16 @@
+Unit checks:
+  python3 -m unittest -v \
+    validation/q7-prefix-lower-bound-li-20261115/test_probe.py
+
+Full three-seed probe:
+  python3 validation/q7-prefix-lower-bound-li-20261115/probe.py \
+    --seeds 3179,3181,3187 \
+    --output /var/tmp/q7-prefix-lower-bound-full.json
+
+Single-seed smoke run:
+  python3 validation/q7-prefix-lower-bound-li-20261115/probe.py \
+    --seeds 3179 \
+    --output /var/tmp/q7-prefix-lower-bound-pilot.json
+
+Production-source guard:
+  git diff -- src tests
