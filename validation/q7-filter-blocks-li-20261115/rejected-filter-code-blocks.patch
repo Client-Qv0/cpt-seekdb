@@ -1,0 +1,422 @@
+diff --git a/src/engine.cpp b/src/engine.cpp
+index 8f7b5cc..8e69699 100644
+--- a/src/engine.cpp
++++ b/src/engine.cpp
+@@ -1051,7 +1051,8 @@ Result Engine::execute_statement(const Statement &st) {
+         // Batched scan of an explicit candidate list. Non-contiguous rows keep
+         // the gather-based float32 screen for 32 rows at a time; the posting
+         // array stays uint32 and only the active batch is widened.
+-        auto scan_list = [&](const uint32_t *rows, size_t count, Heap &heap) {
++        auto scan_list = [&](const uint32_t *rows, size_t count,
++                             const int8_t *contiguous_codes, Heap &heap) {
+           if (!count) return;
+           // Survivors are scattered over batches, so refining them one by one
+           // leaves the vector kernels unused. Collect them first and refine in
+@@ -1114,15 +1115,27 @@ Result Engine::execute_statement(const Statement &st) {
+               }
+               uint32_t survivors = 0;
+               if (quantized.codes) {
+-                for (size_t offset = 0; offset < 32; offset += 4) {
+-                  uint32_t approximate[4];
+-                  const size_t rows4[4] = {batch[offset], batch[offset + 1],
+-                                           batch[offset + 2], batch[offset + 3]};
+-                  exact::quantized_squared_distance4(view, rows4, quantized,
+-                                                     approximate);
+-                  for (size_t lane = 0; lane < 4; ++lane)
+-                    if (!(double(approximate[lane]) > screen_threshold))
+-                      survivors |= uint32_t(1) << (offset + lane);
++                if (contiguous_codes) {
++                  for (size_t offset = 0; offset < 32; offset += 8) {
++                    uint32_t approximate[8];
++                    exact::quantized_squared_distance8_contiguous(
++                        contiguous_codes + (at + offset) * view.dim,
++                        quantized, view.dim, approximate);
++                    for (size_t lane = 0; lane < 8; ++lane)
++                      if (!(double(approximate[lane]) > screen_threshold))
++                        survivors |= uint32_t(1) << (offset + lane);
++                  }
++                } else {
++                  for (size_t offset = 0; offset < 32; offset += 4) {
++                    uint32_t approximate[4];
++                    const size_t rows4[4] = {batch[offset], batch[offset + 1],
++                                             batch[offset + 2], batch[offset + 3]};
++                    exact::quantized_squared_distance4(view, rows4, quantized,
++                                                       approximate);
++                    for (size_t lane = 0; lane < 4; ++lane)
++                      if (!(double(approximate[lane]) > screen_threshold))
++                        survivors |= uint32_t(1) << (offset + lane);
++                  }
+                 }
+               } else {
+                 float approximate[32];
+@@ -1222,9 +1235,11 @@ Result Engine::execute_statement(const Statement &st) {
+           };
+           exact::Compact::EqualityRange candidates;
+           const Filter *indexed_filter = nullptr;
++          const bool request_blocks =
++              screen && quantized.codes && fs.size() == 1;
+           for (const auto &f : fs) {
+             if (f.op == "=" && f.column != pk) {
+-              auto range = view.equality_range(f.column, f.value);
++              auto range = view.equality_range(f.column, f.value, request_blocks);
+               if (range.indexed) {
+                 candidates = range;
+                 indexed_filter = &f;
+@@ -1236,10 +1251,12 @@ Result Engine::execute_statement(const Statement &st) {
+           // other filter materializes the surviving rows once before scanning.
+           std::vector<uint32_t> hits;
+           const uint32_t *rows = nullptr;
++          const int8_t *contiguous_codes = nullptr;
+           size_t row_count = 0;
+           if (indexed_filter && fs.size() == 1) {
+             rows = candidates.rows;
+             row_count = candidates.size;
++            contiguous_codes = candidates.codes;
+           } else {
+             if (indexed_filter) {
+               hits.reserve(candidates.size);
+@@ -1254,8 +1271,13 @@ Result Engine::execute_statement(const Statement &st) {
+             rows = hits.data();
+             row_count = hits.size();
+           }
++          if (contiguous_codes && row_count)
++            ++exact::filter_code_block_runs();
+           run_slices(row_count, [&](size_t begin, size_t end, Heap &heap) {
+-            scan_list(rows + begin, end - begin, heap);
++            scan_list(rows + begin, end - begin,
++                      contiguous_codes ? contiguous_codes + begin * view.dim
++                                       : nullptr,
++                      heap);
+           });
+         }
+       } else if (cache_->exact_bypass) {
+diff --git a/src/exact_cache.hpp b/src/exact_cache.hpp
+index 1cf3dec..b7b4598 100644
+--- a/src/exact_cache.hpp
++++ b/src/exact_cache.hpp
+@@ -50,6 +50,11 @@ inline size_t &parallel_runs() {
+   static size_t value = 0;
+   return value;
+ }
++// Equality-filtered queries that used posting-aligned contiguous codes.
++inline size_t &filter_code_block_runs() {
++  static size_t value = 0;
++  return value;
++}
+ // The screening bound assumes IEEE binary32/binary64 round-to-nearest with
+ // gradual underflow. Check once per query, never change the caller's FP mode.
+ constexpr size_t fp32_screen_max_dim = 8192;
+@@ -152,12 +157,18 @@ struct Compact {
+   std::unique_ptr<uint32_t[]> equality_rows;
+   size_t equality_column = std::numeric_limits<size_t>::max();
+   bool equality_attempted = false;
++  // Optional codes arranged in equality_rows order, so every equal-value run
++  // becomes one contiguous block. This never replaces the row-major codes.
++  std::unique_ptr<int8_t[]> equality_codes;
++  bool equality_codes_attempted = false;
+   struct EqualityRange {
+     const uint32_t* rows = nullptr;
+     size_t size = 0;
+     bool indexed = false;
++    const int8_t* codes = nullptr;
+   };
+   static constexpr size_t equality_sort_scratch = 4096;
++  static constexpr size_t equality_code_budget = 1536 * 1024;
+   explicit Compact(const Plan& p):dim(p.dim),count(p.count),vector_column(p.vector_column),
+                                  text_max(p.text_max) {
+     if(!p.fits()) throw Error("RESOURCE","exact cache plan exceeds budget");
+@@ -180,6 +191,7 @@ struct Compact {
+     if(equality_rows) bytes+=count*sizeof(uint32_t);
+     // Reserve the prepared query as well, including during posting-index build.
+     if(quantized_codes) bytes+=count*dim+dim*sizeof(int16_t)+64;
++    if(equality_codes) bytes+=count*dim;
+     return bytes;
+   }
+   size_t index(size_t row,size_t dimension=0) const {
+@@ -271,9 +283,25 @@ struct Compact {
+     std::string_view b=std::get<std::string>(value);
+     int cmp=a.compare(b);return (cmp>0)-(cmp<0);
+   }
+-  EqualityRange equality_range(size_t c,const Cell& value) {
++  void prepare_equality_codes() {
++    if(equality_codes_attempted) return;
++    equality_codes_attempted=true;
++    if(!equality_rows || !quantized_codes || !count) return;
++    const size_t payload=mul(count,dim);
++    if(payload>equality_code_budget ||
++       add(allocated_bytes(),payload)>budget()) return;
++    try {
++      std::unique_ptr<int8_t[]> codes(new int8_t[payload]);
++      for(size_t at=0;at<count;++at)
++        std::memcpy(codes.get()+at*dim,
++                    quantized_codes.get()+size_t(equality_rows[at])*dim,
++                    dim);
++      equality_codes=std::move(codes); // publish only after every block is copied
++    } catch(const std::bad_alloc&) {}
++  }
++  EqualityRange equality_range(size_t c,const Cell& value,bool prepare_codes=false) {
+     if(columns[c].type!=Type::BigInt && columns[c].type!=Type::Varchar) return {};
+-    if(!count) return {nullptr,0,true};
++    if(!count) return {nullptr,0,true,nullptr};
+     if(!equality_attempted) {
+       equality_attempted=true;
+       // count is already bounded by the 12MiB view plan. Keep the final array
+@@ -316,7 +344,10 @@ struct Compact {
+       [&](const Cell& v,uint32_t row){return compare_scalar(c,row,v)>0;});
+     // The secondary sort key is row number, so equal-value candidates retain
+     // the original ascending scan order without an additional sort or buffer.
+-    return {begin,static_cast<size_t>(end-begin),true};
++    if(prepare_codes && begin!=end) prepare_equality_codes();
++    const int8_t* codes=equality_codes
++        ? equality_codes.get()+size_t(begin-first)*dim : nullptr;
++    return {begin,static_cast<size_t>(end-begin),true,codes};
+   }
+   double distance(size_t row,const std::vector<float>& q) const {
+     return distance_cell(row,vector_column,q);
+@@ -541,6 +572,47 @@ inline void squared_distances32_fp32_avx2(
+ // accumulators. Per-row arithmetic is unchanged, so the results are identical
+ // to four quantized_squared_distance_avx2 calls.
+ __attribute__((target("avx2,no-fma"),noinline))
++inline uint32_t horizontal_sum_epi32(__m256i value) {
++  __m128i halves=_mm_add_epi32(_mm256_castsi256_si128(value),
++                               _mm256_extracti128_si256(value,1));
++  halves=_mm_hadd_epi32(halves,halves);
++  halves=_mm_hadd_epi32(halves,halves);
++  return static_cast<uint32_t>(_mm_cvtsi128_si32(halves));
++}
++// Eight posting-aligned rows per call. Each query load feeds eight independent
++// accumulators; the scalar lane totals remain exactly those of the one-row
++// kernel, including the short-dimension tail.
++__attribute__((target("avx2,no-fma"),noinline))
++inline void quantized_squared_distance8_contiguous_avx2(
++    const int8_t* codes,const int16_t* query,size_t dim,uint32_t* out) {
++  __m256i s0=_mm256_setzero_si256(),s1=_mm256_setzero_si256();
++  __m256i s2=_mm256_setzero_si256(),s3=_mm256_setzero_si256();
++  __m256i s4=_mm256_setzero_si256(),s5=_mm256_setzero_si256();
++  __m256i s6=_mm256_setzero_si256(),s7=_mm256_setzero_si256();
++  __m256i* sums[8]={&s0,&s1,&s2,&s3,&s4,&s5,&s6,&s7};
++  size_t d=0;
++  for(;d+16<=dim;d+=16) {
++    const __m256i q=_mm256_loadu_si256(
++        reinterpret_cast<const __m256i*>(query+d));
++    for(size_t lane=0;lane<8;++lane) {
++      const __m128i bytes=_mm_loadu_si128(
++          reinterpret_cast<const __m128i*>(codes+lane*dim+d));
++      const __m256i values=_mm256_cvtepi8_epi16(bytes);
++      const __m256i delta=_mm256_sub_epi16(values,q);
++      *sums[lane]=_mm256_add_epi32(
++          *sums[lane],_mm256_madd_epi16(delta,delta));
++    }
++  }
++  for(size_t lane=0;lane<8;++lane) {
++    uint32_t total=horizontal_sum_epi32(*sums[lane]);
++    for(size_t tail=d;tail<dim;++tail) {
++      const int delta=int(codes[lane*dim+tail])-int(query[tail]);
++      total+=uint32_t(delta*delta);
++    }
++    out[lane]=total;
++  }
++}
++__attribute__((target("avx2,no-fma"),noinline))
+ inline void quantized_squared_distance4_avx2(const int8_t* r0,const int8_t* r1,
+                                              const int8_t* r2,const int8_t* r3,
+                                              const int16_t* query,size_t dim,
+@@ -630,6 +702,38 @@ inline void quantized_squared_distance4(const Compact& cache,const size_t* rows,
+     out[lane]=quantized_squared_distance(cache,rows[lane],query);
+ #endif
+ }
++inline void quantized_squared_distance4_contiguous(
++    const int8_t* first,const QuantizedQuery& query,size_t dim,uint32_t* out) {
++#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
++  quantized_squared_distance4_avx2(first,first+dim,first+2*dim,first+3*dim,
++                                   query.codes.get(),dim,out);
++#else
++  for(size_t lane=0;lane<4;++lane) {
++    uint32_t sum=0;
++    for(size_t d=0;d<dim;++d) {
++      const int delta=int(first[lane*dim+d])-int(query.codes[d]);
++      sum+=uint32_t(delta*delta);
++    }
++    out[lane]=sum;
++  }
++#endif
++}
++inline void quantized_squared_distance8_contiguous(
++    const int8_t* first,const QuantizedQuery& query,size_t dim,uint32_t* out) {
++#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
++  quantized_squared_distance8_contiguous_avx2(
++      first,query.codes.get(),dim,out);
++#else
++  for(size_t lane=0;lane<8;++lane) {
++    uint32_t sum=0;
++    for(size_t d=0;d<dim;++d) {
++      const int delta=int(first[lane*dim+d])-int(query.codes[d]);
++      sum+=uint32_t(delta*delta);
++    }
++    out[lane]=sum;
++  }
++#endif
++}
+ inline void distances4(const Compact& cache,const size_t* rows,
+                        const std::vector<float>& q,double* out) {
+ #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+diff --git a/tests/test_engine_extra.cpp b/tests/test_engine_extra.cpp
+index 497953d..9ec060f 100644
+--- a/tests/test_engine_extra.cpp
++++ b/tests/test_engine_extra.cpp
+@@ -1,4 +1,5 @@
+ #include "engine.hpp"
++#include "exact_cache.hpp"
+ #include <chrono>
+ #include <cmath>
+ #include <filesystem>
+@@ -156,8 +157,40 @@ int main() {
+       check(id(desc,0) == 5 && id(desc,1) == 4 && id(desc,2) == 3,
+             "descending TopK must start at the farthest row");
+     }
++    {
++      // A warmed equality-filtered TopK uses the posting-aligned code block.
++      // Keep the observable answer as the oracle and use the existing test-only
++      // query counter only to prove the intended physical path was selected.
++      mvdb::Engine db(path.string() + "-filter-code-blocks");
++      db.execute("CREATE TABLE q7(id BIGINT PRIMARY KEY,bucket BIGINT,v VECTOR(2))");
++      std::string values;
++      for (int i = 0; i < 64; ++i) {
++        if (!values.empty()) values += ",";
++        values += "(" + std::to_string(i) + "," + std::to_string(i % 4) +
++                  ",'[" + std::to_string(i % 7) + ",0]')";
++      }
++      db.execute("INSERT INTO q7 VALUES " + values);
++      const std::string sql =
++          "SELECT id,L2_DISTANCE(v,'[0,0]') AS d FROM q7 "
++          "WHERE bucket=1 ORDER BY d LIMIT 10";
++      const auto first = db.execute(sql);
++      const size_t before = mvdb::exact::filter_code_block_runs();
++      const auto warmed = db.execute(sql);
++      check(first.rows == warmed.rows,
++            "filtered TopK must survive the code-block transition");
++      check(mvdb::exact::filter_code_block_runs() > before,
++            "warmed equality-filtered TopK must use the contiguous code path");
++      db.execute("UPDATE q7 SET v='[1000,0]' WHERE id=29");
++      const auto updated = db.execute(sql);
++      bool updated_row_absent = true;
++      for (const auto& row : updated.rows)
++        if (std::get<int64_t>(row[0]) == 29) updated_row_absent = false;
++      check(updated_row_absent,
++            "updates must invalidate and rebuild the filter-code cache");
++    }
+     fs::remove_all(path.string() + "-desc");
+     fs::remove_all(path.string() + "-cap");
++    fs::remove_all(path.string() + "-filter-code-blocks");
+     fs::remove_all(path);
+     std::cout << "engine extra checks passed: " << checks << '\n';
+     return 0;
+diff --git a/tests/test_exact_cache.cpp b/tests/test_exact_cache.cpp
+index 80cbfa8..c833faf 100644
+--- a/tests/test_exact_cache.cpp
++++ b/tests/test_exact_cache.cpp
+@@ -75,6 +75,62 @@ void test_equality_postings() {
+   std::cout<<"equality posting ordering, strings, one-index policy and budget checks passed\n";
+ }
+ 
++void test_equality_code_blocks() {
++#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
++  if(!exact::available() || std::fegetround()!=FE_TONEAREST) return;
++  exact::Plan plan({Type::BigInt,Type::BigInt,Type::Varchar,Type::Vector},3,128);
++  std::vector<std::vector<Cell>> rows;
++  const std::string text[]={"zero","one","two","three","four"};
++  for(int64_t i=0;i<45;++i) {
++    std::vector<float> vector(128);
++    for(size_t d=0;d<vector.size();++d)
++      vector[d]=float(i*3+d)/(d%2 ? 17.0f : 11.0f);
++    rows.push_back({i,(i*7)%5,text[i%5],std::move(vector)});
++    plan.observe(rows.back());
++  }
++  exact::Compact view(plan);
++  for(size_t i=0;i<rows.size();++i)
++    view.fill(i,std::get<int64_t>(rows[i][0]),rows[i]);
++  view.prepare_quantized_codes();
++  require(bool(view.quantized_codes));
++
++  const size_t before=view.allocated_bytes();
++  auto missing=view.equality_range(1,Cell(int64_t(99)),true);
++  require(missing.indexed && missing.size==0 && !missing.codes);
++  const size_t posting_only=view.allocated_bytes();
++  require(posting_only==before+view.count*sizeof(uint32_t));
++
++  for(int64_t value=0;value<5;++value) {
++    auto range=view.equality_range(1,Cell(value),true);
++    require(range.indexed && range.size && range.codes);
++    for(size_t at=0;at<range.size;++at)
++      require(std::memcmp(range.codes+at*view.dim,
++                          view.quantized_codes.get()+range.rows[at]*view.dim,
++                          view.dim)==0);
++  }
++  require(view.allocated_bytes()==posting_only+view.count*view.dim);
++  const size_t built=view.allocated_bytes();
++  for(int64_t value=0;value<5;++value) {
++    auto first=view.equality_range(1,Cell(value),true);
++    auto second=view.equality_range(1,Cell(value),true);
++    require(first.codes==second.codes && first.size==second.size);
++  }
++  require(view.allocated_bytes()==built);
++
++  exact::Plan over_code_budget({Type::BigInt,Type::BigInt,Type::Vector},2,128);
++  over_code_budget.count=12289; // 1,572,992 bytes, just over the 1.5 MiB cap.
++  require(over_code_budget.fits());
++  exact::Compact full(over_code_budget);
++  full.prepare_quantized_codes();
++  require(bool(full.quantized_codes));
++  const size_t full_before=full.allocated_bytes();
++  auto fallback=full.equality_range(1,Cell(int64_t(0)),true);
++  require(fallback.indexed && fallback.size==full.count && !fallback.codes);
++  require(full.allocated_bytes()==full_before+full.count*sizeof(uint32_t));
++  std::cout<<"equality code blocks preserve posting order and fall back at budget\n";
++#endif
++}
++
+ void test_fp32_screen() {
+ #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+   if(!exact::available()) {
+@@ -339,6 +395,28 @@ void test_quantized_four_row_kernel() {
+   require(batch[0]==528515072u && batch[1]==0u &&
+           batch[2]==264257536u && batch[3]==132128768u);
+ }
++
++void test_quantized_eight_row_contiguous_kernel() {
++  if (!exact::available()) return;
++  std::mt19937 rng(20261115);
++  std::uniform_int_distribution<int> code(-127, 127);
++  for (size_t dim : {size_t(1), size_t(15), size_t(16), size_t(17),
++                     size_t(31), size_t(32), size_t(33), size_t(128),
++                     size_t(8192)}) {
++    std::vector<int8_t> rows(8 * dim);
++    std::vector<int16_t> query(dim);
++    for (auto &value : rows) value = static_cast<int8_t>(code(rng));
++    for (auto &value : query) value = static_cast<int16_t>(code(rng));
++    uint32_t batch[8];
++    exact::quantized_squared_distance8_contiguous_avx2(
++        rows.data(), query.data(), dim, batch);
++    for (size_t lane = 0; lane < 8; ++lane) {
++      const uint32_t expected = exact::quantized_squared_distance_avx2(
++          rows.data() + lane * dim, query.data(), dim);
++      require(batch[lane] == expected);
++    }
++  }
++}
+ #endif
+ 
+ int main() {
+@@ -348,10 +426,12 @@ int main() {
+           exact::budget() <= size_t(48) * 1024 * 1024);
+   test_compact_accessors();
+   test_equality_postings();
++  test_equality_code_blocks();
+   test_fp32_screen();
+   test_quantized_screen();
+ #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+   test_quantized_four_row_kernel();
++  test_quantized_eight_row_contiguous_kernel();
+ #endif
+   for(size_t n: {size_t(0),size_t(1),size_t(3),size_t(4),size_t(5),size_t(9)})
+     for(size_t dim: {size_t(1),size_t(3),size_t(128)}) {
