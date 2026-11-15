@@ -1,0 +1,776 @@
+{
+  "scope": "Offline conservative-prefix rejection probe; no production code, timing claim, ANN approximation, or official score",
+  "rows": 10000,
+  "dimension": 128,
+  "queries": 1000,
+  "top_k": 10,
+  "prefixes": [
+    16,
+    32,
+    64,
+    96
+  ],
+  "scan_shape": "Two independent slices when candidate count >= 1024; 32-row batch thresholds match the current quantized screening loop",
+  "bounds": {
+    "coarse": "step^2 * sum(max(abs(row_code-query_code)-1, 0)^2)",
+    "tight": "sum(max(abs(step*(row_code-query_code)+query_residual) - step/2, 0)^2); row residual bounded by +/-step/2",
+    "rounding": "Squared sums are scaled down by 1e-12; sqrt is moved down one binary64 value; comparison requires more than nextafter(worst)"
+  },
+  "seeds": [
+    3179,
+    3181,
+    3187
+  ],
+  "per_seed": [
+    {
+      "seed": 3179,
+      "data_sha256": "d8deedf511daca83e808424f8f82572c3d4c36adb1bafd1372d4f38837e28513",
+      "quantized_step": 0.015625,
+      "minimum_code": -64,
+      "maximum_code": 64,
+      "query_sign_counts": {
+        "positive": 505,
+        "negative": 495
+      },
+      "filtered": {
+        "coarse": {
+          "16": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 21,
+            "rejection_rate_candidate_weighted": 2.1875e-05,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0010416666666666667,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 159060,
+            "rejection_rate_candidate_weighted": 0.1656875,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.15989583333333332,
+            "query_rejection_rate_minimum": 0.041666666666666664,
+            "query_rejection_rate_maximum": 0.328125,
+            "topk_mismatches": 0
+          }
+        },
+        "tight": {
+          "16": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 27,
+            "rejection_rate_candidate_weighted": 2.8125e-05,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0015625,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 193244,
+            "rejection_rate_candidate_weighted": 0.20129583333333334,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.196875,
+            "query_rejection_rate_minimum": 0.05625,
+            "query_rejection_rate_maximum": 0.371875,
+            "topk_mismatches": 0
+          }
+        }
+      },
+      "unfiltered": {
+        "coarse": {
+          "16": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 1073,
+            "rejection_rate_candidate_weighted": 0.00021633064516129031,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.00010080645161290323,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0030241935483870967,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 1734903,
+            "rejection_rate_candidate_weighted": 0.3497788306451613,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.3471774193548387,
+            "query_rejection_rate_minimum": 0.15564516129032258,
+            "query_rejection_rate_maximum": 0.5600806451612903,
+            "topk_mismatches": 0
+          }
+        },
+        "tight": {
+          "16": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 1674,
+            "rejection_rate_candidate_weighted": 0.0003375,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.00010080645161290323,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.005040322580645161,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 1981212,
+            "rejection_rate_candidate_weighted": 0.39943790322580647,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.39778225806451617,
+            "query_rejection_rate_minimum": 0.18971774193548388,
+            "query_rejection_rate_maximum": 0.6078629032258065,
+            "topk_mismatches": 0
+          }
+        }
+      },
+      "elapsed_seconds": 117.63155427499441
+    },
+    {
+      "seed": 3181,
+      "data_sha256": "aab76df57f6cb92b00d8ebc5cbddca36d8825cf58aeaeb6321f5f5d75e68ccc4",
+      "quantized_step": 0.015625,
+      "minimum_code": -64,
+      "maximum_code": 64,
+      "query_sign_counts": {
+        "positive": 465,
+        "negative": 535
+      },
+      "filtered": {
+        "coarse": {
+          "16": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 23,
+            "rejection_rate_candidate_weighted": 2.3958333333333334e-05,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0010416666666666667,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 158863,
+            "rejection_rate_candidate_weighted": 0.16548229166666667,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.16223958333333333,
+            "query_rejection_rate_minimum": 0.044270833333333336,
+            "query_rejection_rate_maximum": 0.35,
+            "topk_mismatches": 0
+          }
+        },
+        "tight": {
+          "16": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 38,
+            "rejection_rate_candidate_weighted": 3.958333333333333e-05,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0010416666666666667,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 192605,
+            "rejection_rate_candidate_weighted": 0.20063020833333334,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.19791666666666666,
+            "query_rejection_rate_minimum": 0.057291666666666664,
+            "query_rejection_rate_maximum": 0.4015625,
+            "topk_mismatches": 0
+          }
+        }
+      },
+      "unfiltered": {
+        "coarse": {
+          "16": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 997,
+            "rejection_rate_candidate_weighted": 0.00020100806451612904,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.00010080645161290323,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.002116935483870968,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 1753143,
+            "rejection_rate_candidate_weighted": 0.35345625,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.3524697580645161,
+            "query_rejection_rate_minimum": 0.1777217741935484,
+            "query_rejection_rate_maximum": 0.603225806451613,
+            "topk_mismatches": 0
+          }
+        },
+        "tight": {
+          "16": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 1617,
+            "rejection_rate_candidate_weighted": 0.000326008064516129,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.00020161290322580645,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0039314516129032254,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 2000308,
+            "rejection_rate_candidate_weighted": 0.40328790322580643,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.4051411290322581,
+            "query_rejection_rate_minimum": 0.21431451612903227,
+            "query_rejection_rate_maximum": 0.6619959677419355,
+            "topk_mismatches": 0
+          }
+        }
+      },
+      "elapsed_seconds": 118.78578864000156
+    },
+    {
+      "seed": 3187,
+      "data_sha256": "2d84d681ef5172b19c154c966e93a156041fbecb0dcae011a43eb3cef047aa62",
+      "quantized_step": 0.015625,
+      "minimum_code": -64,
+      "maximum_code": 64,
+      "query_sign_counts": {
+        "positive": 522,
+        "negative": 478
+      },
+      "filtered": {
+        "coarse": {
+          "16": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 19,
+            "rejection_rate_candidate_weighted": 1.9791666666666665e-05,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0010416666666666667,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 157957,
+            "rejection_rate_candidate_weighted": 0.16453854166666668,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.1578125,
+            "query_rejection_rate_minimum": 0.051041666666666666,
+            "query_rejection_rate_maximum": 0.3260416666666667,
+            "topk_mismatches": 0
+          }
+        },
+        "tight": {
+          "16": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 26,
+            "rejection_rate_candidate_weighted": 2.7083333333333332e-05,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0010416666666666667,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "screened_candidates": 960000,
+            "rejected_candidates": 191508,
+            "rejection_rate_candidate_weighted": 0.1994875,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.1921875,
+            "query_rejection_rate_minimum": 0.0671875,
+            "query_rejection_rate_maximum": 0.3729166666666667,
+            "topk_mismatches": 0
+          }
+        }
+      },
+      "unfiltered": {
+        "coarse": {
+          "16": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 1219,
+            "rejection_rate_candidate_weighted": 0.00024576612903225804,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.00010080645161290323,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.002116935483870968,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 1726099,
+            "rejection_rate_candidate_weighted": 0.34800383064516127,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.34692540322580645,
+            "query_rejection_rate_minimum": 0.08558467741935484,
+            "query_rejection_rate_maximum": 0.5942540322580645,
+            "topk_mismatches": 0
+          }
+        },
+        "tight": {
+          "16": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 0,
+            "rejection_rate_candidate_weighted": 0.0,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.0,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 1908,
+            "rejection_rate_candidate_weighted": 0.0003846774193548387,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.00020161290322580645,
+            "query_rejection_rate_minimum": 0.0,
+            "query_rejection_rate_maximum": 0.0033266129032258063,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "screened_candidates": 4960000,
+            "rejected_candidates": 1970194,
+            "rejection_rate_candidate_weighted": 0.3972165322580645,
+            "queries_with_screened_batches": 500,
+            "query_rejection_rate_median": 0.3966733870967742,
+            "query_rejection_rate_minimum": 0.11028225806451612,
+            "query_rejection_rate_maximum": 0.6463709677419355,
+            "topk_mismatches": 0
+          }
+        }
+      },
+      "elapsed_seconds": 119.29989072299213
+    }
+  ],
+  "aggregate": {
+    "surfaces": {
+      "filtered": {
+        "coarse": {
+          "16": {
+            "seed_rejection_rates": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_seed_rejection_rate": 0.0,
+            "minimum_seed_rejection_rate": 0.0,
+            "maximum_seed_rejection_rate": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "seed_rejection_rates": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_seed_rejection_rate": 0.0,
+            "minimum_seed_rejection_rate": 0.0,
+            "maximum_seed_rejection_rate": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "seed_rejection_rates": [
+              2.1875e-05,
+              2.3958333333333334e-05,
+              1.9791666666666665e-05
+            ],
+            "median_seed_rejection_rate": 2.1875e-05,
+            "minimum_seed_rejection_rate": 1.9791666666666665e-05,
+            "maximum_seed_rejection_rate": 2.3958333333333334e-05,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "seed_rejection_rates": [
+              0.1656875,
+              0.16548229166666667,
+              0.16453854166666668
+            ],
+            "median_seed_rejection_rate": 0.16548229166666667,
+            "minimum_seed_rejection_rate": 0.16453854166666668,
+            "maximum_seed_rejection_rate": 0.1656875,
+            "topk_mismatches": 0
+          }
+        },
+        "tight": {
+          "16": {
+            "seed_rejection_rates": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_seed_rejection_rate": 0.0,
+            "minimum_seed_rejection_rate": 0.0,
+            "maximum_seed_rejection_rate": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "seed_rejection_rates": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_seed_rejection_rate": 0.0,
+            "minimum_seed_rejection_rate": 0.0,
+            "maximum_seed_rejection_rate": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "seed_rejection_rates": [
+              2.8125e-05,
+              3.958333333333333e-05,
+              2.7083333333333332e-05
+            ],
+            "median_seed_rejection_rate": 2.8125e-05,
+            "minimum_seed_rejection_rate": 2.7083333333333332e-05,
+            "maximum_seed_rejection_rate": 3.958333333333333e-05,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "seed_rejection_rates": [
+              0.20129583333333334,
+              0.20063020833333334,
+              0.1994875
+            ],
+            "median_seed_rejection_rate": 0.20063020833333334,
+            "minimum_seed_rejection_rate": 0.1994875,
+            "maximum_seed_rejection_rate": 0.20129583333333334,
+            "topk_mismatches": 0
+          }
+        }
+      },
+      "unfiltered": {
+        "coarse": {
+          "16": {
+            "seed_rejection_rates": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_seed_rejection_rate": 0.0,
+            "minimum_seed_rejection_rate": 0.0,
+            "maximum_seed_rejection_rate": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "seed_rejection_rates": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_seed_rejection_rate": 0.0,
+            "minimum_seed_rejection_rate": 0.0,
+            "maximum_seed_rejection_rate": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "seed_rejection_rates": [
+              0.00021633064516129031,
+              0.00020100806451612904,
+              0.00024576612903225804
+            ],
+            "median_seed_rejection_rate": 0.00021633064516129031,
+            "minimum_seed_rejection_rate": 0.00020100806451612904,
+            "maximum_seed_rejection_rate": 0.00024576612903225804,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "seed_rejection_rates": [
+              0.3497788306451613,
+              0.35345625,
+              0.34800383064516127
+            ],
+            "median_seed_rejection_rate": 0.3497788306451613,
+            "minimum_seed_rejection_rate": 0.34800383064516127,
+            "maximum_seed_rejection_rate": 0.35345625,
+            "topk_mismatches": 0
+          }
+        },
+        "tight": {
+          "16": {
+            "seed_rejection_rates": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_seed_rejection_rate": 0.0,
+            "minimum_seed_rejection_rate": 0.0,
+            "maximum_seed_rejection_rate": 0.0,
+            "topk_mismatches": 0
+          },
+          "32": {
+            "seed_rejection_rates": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "median_seed_rejection_rate": 0.0,
+            "minimum_seed_rejection_rate": 0.0,
+            "maximum_seed_rejection_rate": 0.0,
+            "topk_mismatches": 0
+          },
+          "64": {
+            "seed_rejection_rates": [
+              0.0003375,
+              0.000326008064516129,
+              0.0003846774193548387
+            ],
+            "median_seed_rejection_rate": 0.0003375,
+            "minimum_seed_rejection_rate": 0.000326008064516129,
+            "maximum_seed_rejection_rate": 0.0003846774193548387,
+            "topk_mismatches": 0
+          },
+          "96": {
+            "seed_rejection_rates": [
+              0.39943790322580647,
+              0.40328790322580643,
+              0.3972165322580645
+            ],
+            "median_seed_rejection_rate": 0.39943790322580647,
+            "minimum_seed_rejection_rate": 0.3972165322580645,
+            "maximum_seed_rejection_rate": 0.40328790322580643,
+            "topk_mismatches": 0
+          }
+        }
+      }
+    },
+    "decision": {
+      "threshold": 0.7,
+      "filtered_tight_64_median": 2.8125e-05,
+      "unfiltered_tight_64_median": 0.0003375,
+      "continue_to_production_kernel": false
+    }
+  }
+}
