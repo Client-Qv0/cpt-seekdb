@@ -1,0 +1,105 @@
+{
+  "scope": "Offline full-workload integer equivalence and survivor-rate check; no production code or timing claim",
+  "conversion": "unsigned = signed_code + 64; candidate_squared = row_norm + query_norm - 2*(unsigned_dot - 64*query_sum)",
+  "seeds": [
+    3179,
+    3181,
+    3187
+  ],
+  "per_seed": [
+    {
+      "seed": 3179,
+      "data_sha256": "d8deedf511daca83e808424f8f82572c3d4c36adb1bafd1372d4f38837e28513",
+      "quantized_step": 0.015625,
+      "row_code_range": [
+        -64,
+        64
+      ],
+      "query_code_range": [
+        -64,
+        64
+      ],
+      "compared_candidate_query_pairs": 6000000,
+      "integer_distance_mismatches": 0,
+      "maximum_absolute_integer_difference": 0,
+      "filtered": {
+        "screened_candidates": 960000,
+        "survivor_candidates": 75766,
+        "survivor_rate_candidate_weighted": 0.07892291666666666,
+        "query_survivor_rate_median": 0.078125,
+        "topk_mismatches": 0
+      },
+      "unfiltered": {
+        "screened_candidates": 4960000,
+        "survivor_candidates": 120188,
+        "survivor_rate_candidate_weighted": 0.024231451612903226,
+        "query_survivor_rate_median": 0.02429435483870968,
+        "topk_mismatches": 0
+      }
+    },
+    {
+      "seed": 3181,
+      "data_sha256": "aab76df57f6cb92b00d8ebc5cbddca36d8825cf58aeaeb6321f5f5d75e68ccc4",
+      "quantized_step": 0.015625,
+      "row_code_range": [
+        -64,
+        64
+      ],
+      "query_code_range": [
+        -64,
+        64
+      ],
+      "compared_candidate_query_pairs": 6000000,
+      "integer_distance_mismatches": 0,
+      "maximum_absolute_integer_difference": 0,
+      "filtered": {
+        "screened_candidates": 960000,
+        "survivor_candidates": 74797,
+        "survivor_rate_candidate_weighted": 0.07791354166666667,
+        "query_survivor_rate_median": 0.07760416666666667,
+        "topk_mismatches": 0
+      },
+      "unfiltered": {
+        "screened_candidates": 4960000,
+        "survivor_candidates": 122678,
+        "survivor_rate_candidate_weighted": 0.024733467741935484,
+        "query_survivor_rate_median": 0.024596774193548387,
+        "topk_mismatches": 0
+      }
+    },
+    {
+      "seed": 3187,
+      "data_sha256": "2d84d681ef5172b19c154c966e93a156041fbecb0dcae011a43eb3cef047aa62",
+      "quantized_step": 0.015625,
+      "row_code_range": [
+        -64,
+        64
+      ],
+      "query_code_range": [
+        -64,
+        64
+      ],
+      "compared_candidate_query_pairs": 6000000,
+      "integer_distance_mismatches": 0,
+      "maximum_absolute_integer_difference": 0,
+      "filtered": {
+        "screened_candidates": 960000,
+        "survivor_candidates": 75873,
+        "survivor_rate_candidate_weighted": 0.079034375,
+        "query_survivor_rate_median": 0.07864583333333333,
+        "topk_mismatches": 0
+      },
+      "unfiltered": {
+        "screened_candidates": 4960000,
+        "survivor_candidates": 122309,
+        "survivor_rate_candidate_weighted": 0.02465907258064516,
+        "query_survivor_rate_median": 0.024596774193548387,
+        "topk_mismatches": 0
+      }
+    }
+  ],
+  "total_compared_pairs": 18000000,
+  "total_integer_distance_mismatches": 0,
+  "survivor_rate_increase_percentage_points": 0.0,
+  "passed": true
+}

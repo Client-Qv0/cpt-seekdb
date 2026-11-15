@@ -1,0 +1,462 @@
+diff --git a/src/engine.cpp b/src/engine.cpp
+index 8f7b5cc..73346d3 100644
+--- a/src/engine.cpp
++++ b/src/engine.cpp
+@@ -939,6 +939,8 @@ Result Engine::execute_statement(const Statement &st) {
+         // the farthest records, so it scans without screening.
+         const bool screen=!descending && exact::fp32_screen_available(view.dim);
+         auto quantized=exact::prepare_quantized_query(view,projection.query,screen);
++        const bool quantized_available=exact::quantized_codes_available(quantized);
++        if(quantized.biased_codes) ++exact::biased_screen_runs();
+         // One contiguous slice of the packed scan. Each slice keeps its own
+         // heap, so slices run on separate threads without shared mutable state.
+         // A slice's screening threshold comes from its own heap and is therefore
+@@ -981,23 +983,38 @@ Result Engine::execute_statement(const Statement &st) {
+               if (i + 32 <= end) batch_count = 32;
+               const double worst = heap.top().distance;
+               if (worst != screened_worst) {
+-                screen_threshold = quantized.codes
++                screen_threshold = quantized_available
+                     ? exact::quantized_threshold(worst, view.quantized_step,
+                                                   quantized.root_dim_upper)
+                     : exact::fp32_screen_threshold(worst, view.dim);
+                 screened_worst = worst;
+               }
+               uint32_t survivors = 0;
+-              if (quantized.codes) {
+-                for (size_t offset = 0; offset < batch_count; offset += 4) {
+-                  uint32_t approximate[4];
+-                  const size_t rows4[4] = {i + offset, i + offset + 1,
+-                                           i + offset + 2, i + offset + 3};
+-                  exact::quantized_squared_distance4(view, rows4, quantized,
+-                                                     approximate);
+-                  for (size_t lane = 0; lane < 4; ++lane)
+-                    if (!(double(approximate[lane]) > screen_threshold))
+-                      survivors |= uint32_t(1) << (offset + lane);
++              if (quantized_available) {
++                if (quantized.biased_codes) {
++                  for (size_t offset = 0; offset < batch_count; offset += 8) {
++                    uint32_t approximate[8];
++                    const size_t rows8[8] = {
++                        i + offset, i + offset + 1, i + offset + 2,
++                        i + offset + 3, i + offset + 4, i + offset + 5,
++                        i + offset + 6, i + offset + 7};
++                    exact::quantized_biased_squared_distance8(
++                        view, rows8, quantized, approximate);
++                    for (size_t lane = 0; lane < 8; ++lane)
++                      if (!(double(approximate[lane]) > screen_threshold))
++                        survivors |= uint32_t(1) << (offset + lane);
++                  }
++                } else {
++                  for (size_t offset = 0; offset < batch_count; offset += 4) {
++                    uint32_t approximate[4];
++                    const size_t rows4[4] = {i + offset, i + offset + 1,
++                                             i + offset + 2, i + offset + 3};
++                    exact::quantized_squared_distance4(view, rows4, quantized,
++                                                       approximate);
++                    for (size_t lane = 0; lane < 4; ++lane)
++                      if (!(double(approximate[lane]) > screen_threshold))
++                        survivors |= uint32_t(1) << (offset + lane);
++                  }
+                 }
+               } else {
+                 float approximate[32];
+@@ -1106,23 +1123,38 @@ Result Engine::execute_statement(const Statement &st) {
+             if (screen && heap.size() == *st.limit) {
+               const double worst = heap.top().distance;
+               if (worst != screened_worst) {
+-                screen_threshold = quantized.codes
++                screen_threshold = quantized_available
+                     ? exact::quantized_threshold(worst, view.quantized_step,
+                                                   quantized.root_dim_upper)
+                     : exact::fp32_screen_threshold(worst, view.dim);
+                 screened_worst = worst;
+               }
+               uint32_t survivors = 0;
+-              if (quantized.codes) {
+-                for (size_t offset = 0; offset < 32; offset += 4) {
+-                  uint32_t approximate[4];
+-                  const size_t rows4[4] = {batch[offset], batch[offset + 1],
+-                                           batch[offset + 2], batch[offset + 3]};
+-                  exact::quantized_squared_distance4(view, rows4, quantized,
+-                                                     approximate);
+-                  for (size_t lane = 0; lane < 4; ++lane)
+-                    if (!(double(approximate[lane]) > screen_threshold))
+-                      survivors |= uint32_t(1) << (offset + lane);
++              if (quantized_available) {
++                if (quantized.biased_codes) {
++                  for (size_t offset = 0; offset < 32; offset += 8) {
++                    uint32_t approximate[8];
++                    const size_t rows8[8] = {
++                        batch[offset], batch[offset + 1], batch[offset + 2],
++                        batch[offset + 3], batch[offset + 4], batch[offset + 5],
++                        batch[offset + 6], batch[offset + 7]};
++                    exact::quantized_biased_squared_distance8(
++                        view, rows8, quantized, approximate);
++                    for (size_t lane = 0; lane < 8; ++lane)
++                      if (!(double(approximate[lane]) > screen_threshold))
++                        survivors |= uint32_t(1) << (offset + lane);
++                  }
++                } else {
++                  for (size_t offset = 0; offset < 32; offset += 4) {
++                    uint32_t approximate[4];
++                    const size_t rows4[4] = {batch[offset], batch[offset + 1],
++                                             batch[offset + 2], batch[offset + 3]};
++                    exact::quantized_squared_distance4(view, rows4, quantized,
++                                                       approximate);
++                    for (size_t lane = 0; lane < 4; ++lane)
++                      if (!(double(approximate[lane]) > screen_threshold))
++                        survivors |= uint32_t(1) << (offset + lane);
++                  }
+                 }
+               } else {
+                 float approximate[32];
+diff --git a/src/exact_cache.hpp b/src/exact_cache.hpp
+index 1cf3dec..a3827e0 100644
+--- a/src/exact_cache.hpp
++++ b/src/exact_cache.hpp
+@@ -50,6 +50,11 @@ inline size_t &parallel_runs() {
+   static size_t value = 0;
+   return value;
+ }
++// Warmed queries that selected the exact biased-dot quantized layout.
++inline size_t &biased_screen_runs() {
++  static size_t value = 0;
++  return value;
++}
+ // The screening bound assumes IEEE binary32/binary64 round-to-nearest with
+ // gradual underflow. Check once per query, never change the caller's FP mode.
+ constexpr size_t fp32_screen_max_dim = 8192;
+@@ -147,6 +152,10 @@ struct Compact {
+   // Optional row-major screening codes; exact vectors are always retained.
+   std::unique_ptr<int8_t[]> quantized_codes;
+   double quantized_step=1,quantized_inverse=1;
++  // When all codes fit [-64,64], the bytes are stored as uint8_t(code+64) and
++  // this row-norm table enables exact unsigned-by-signed AVX2 dot products.
++  bool quantized_biased=false;
++  std::vector<uint32_t> quantized_row_norms;
+   // One optional posting index per view. New object/allocator bookkeeping fits
+   // in the existing 4096-byte fixed reserve; payload is accounted separately.
+   std::unique_ptr<uint32_t[]> equality_rows;
+@@ -180,6 +189,8 @@ struct Compact {
+     if(equality_rows) bytes+=count*sizeof(uint32_t);
+     // Reserve the prepared query as well, including during posting-index build.
+     if(quantized_codes) bytes+=count*dim+dim*sizeof(int16_t)+64;
++    if(!quantized_row_norms.empty())
++      bytes+=quantized_row_norms.capacity()*sizeof(uint32_t);
+     return bytes;
+   }
+   size_t index(size_t row,size_t dimension=0) const {
+@@ -237,7 +248,8 @@ struct Compact {
+        std::fegetround()!=FE_TONEAREST) return;
+     const size_t payload=mul(count,dim);
+     const size_t scratch=add(mul(dim,sizeof(int16_t)),64);
+-    if(add(add(allocated_bytes(),payload),scratch)>budget()) return;
++    const size_t norm_payload=mul(count,sizeof(uint32_t));
++    if(add(add(add(allocated_bytes(),payload),norm_payload),scratch)>budget()) return;
+     double max_abs=0;
+     for(float value:vectors) {
+       if(!std::isfinite(value)) return;
+@@ -253,13 +265,33 @@ struct Compact {
+     }
+     try {
+       std::unique_ptr<int8_t[]> codes(new int8_t[payload]);
++      int minimum_code=127,maximum_code=-127;
+       for(size_t row=0;row<count;++row)for(size_t d=0;d<dim;++d) {
+         // This binary64 power-of-two scaling is exact even for FP32 subnormals.
+         const double rounded=std::nearbyint(double(vectors[index(row,d)])*inverse);
+         if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) return;
+         codes[row*dim+d]=static_cast<int8_t>(rounded); // Never clamp a code.
++        minimum_code=std::min(minimum_code,int(rounded));
++        maximum_code=std::max(maximum_code,int(rounded));
++      }
++      std::vector<uint32_t> norms;
++      const bool biased=minimum_code>=-64 && maximum_code<=64;
++      if(biased) {
++        norms.resize(count);
++        uint8_t* bytes=reinterpret_cast<uint8_t*>(codes.get());
++        for(size_t row=0;row<count;++row) {
++          uint32_t norm=0;
++          for(size_t d=0;d<dim;++d) {
++            const int code=int(codes[row*dim+d]);
++            norm+=uint32_t(code*code);
++            bytes[row*dim+d]=static_cast<uint8_t>(code+64);
++          }
++          norms[row]=norm;
++        }
+       }
+       quantized_step=step;quantized_inverse=inverse;
++      quantized_biased=biased;
++      quantized_row_norms=std::move(norms);
+       quantized_codes=std::move(codes);
+     } catch(const std::bad_alloc&) {} // Keep the complete original exact view.
+   }
+@@ -325,6 +357,9 @@ struct Compact {
+ static_assert(sizeof(Compact)<512,"exact view object exceeds fixed reserve");
+ struct QuantizedQuery {
+   std::unique_ptr<int16_t[]> codes;
++  std::unique_ptr<int8_t[]> biased_codes;
++  int32_t sum_codes=0;
++  int32_t squared_norm=0;
+   double root_dim_upper=0;
+ };
+ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
+@@ -333,6 +368,23 @@ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
+   QuantizedQuery prepared;
+   if(!fp_mode_ok || !cache.quantized_codes || query.size()!=cache.dim ||
+      std::fegetround()!=FE_TONEAREST) return prepared;
++  if(cache.quantized_biased) {
++    try {prepared.biased_codes.reset(new int8_t[cache.dim]);}
++    catch(const std::bad_alloc&) {return prepared;}
++    for(size_t d=0;d<cache.dim;++d) {
++      const double rounded=std::nearbyint(double(query[d])*cache.quantized_inverse);
++      if(!std::isfinite(rounded) || rounded < -64 || rounded > 64) {
++        prepared.biased_codes.reset();return prepared;
++      }
++      const int code=static_cast<int>(rounded);
++      prepared.biased_codes[d]=static_cast<int8_t>(code);
++      prepared.sum_codes+=code;
++      prepared.squared_norm+=code*code;
++    }
++    prepared.root_dim_upper=std::nextafter(std::sqrt(double(cache.dim)),
++                                         std::numeric_limits<double>::infinity());
++    return prepared;
++  }
+   try {prepared.codes.reset(new int16_t[cache.dim]);}
+   catch(const std::bad_alloc&) {return prepared;}
+   for(size_t d=0;d<cache.dim;++d) {
+@@ -602,10 +654,59 @@ inline void quantized_squared_distance4_avx2(const int8_t* r0,const int8_t* r1,
+   }
+ }
+ 
++// Exact unsigned-by-signed biased codes. Callers enable this path only when all
++// row/query codes fit [-64,64], so each pair product fits int16 and maddubs
++// saturation cannot occur. One query load feeds eight independent accumulators.
++__attribute__((target("avx2,no-fma"),noinline))
++inline void quantized_biased_squared_distance8_avx2(
++    const int8_t* const rows[8],const uint32_t* row_norms,
++    const QuantizedQuery& query,size_t dim,uint32_t* out) {
++  __m256i sums[8]={_mm256_setzero_si256(),_mm256_setzero_si256(),
++                   _mm256_setzero_si256(),_mm256_setzero_si256(),
++                   _mm256_setzero_si256(),_mm256_setzero_si256(),
++                   _mm256_setzero_si256(),_mm256_setzero_si256()};
++  const __m256i ones=_mm256_set1_epi16(1);
++  size_t d=0;
++  for(;d+32<=dim;d+=32) {
++    const __m256i q=_mm256_loadu_si256(
++        reinterpret_cast<const __m256i*>(query.biased_codes.get()+d));
++    for(size_t lane=0;lane<8;++lane) {
++      const __m256i bytes=_mm256_loadu_si256(
++          reinterpret_cast<const __m256i*>(rows[lane]+d));
++      const __m256i pairs=_mm256_maddubs_epi16(bytes,q);
++      sums[lane]=_mm256_add_epi32(
++          sums[lane],_mm256_madd_epi16(pairs,ones));
++    }
++  }
++  for(size_t lane=0;lane<8;++lane) {
++    const __m128i halves=_mm_add_epi32(
++        _mm256_castsi256_si128(sums[lane]),
++        _mm256_extracti128_si256(sums[lane],1));
++    const __m128i combined=_mm_hadd_epi32(halves,halves);
++    const __m128i total=_mm_hadd_epi32(combined,combined);
++    int32_t dot=_mm_cvtsi128_si32(total);
++    for(size_t tail=d;tail<dim;++tail)
++      dot+=int32_t(uint8_t(rows[lane][tail]))*int32_t(query.biased_codes[tail]);
++    const int32_t base_dot=dot-64*query.sum_codes;
++    const int64_t squared=int64_t(row_norms[lane])+query.squared_norm-
++                          2*int64_t(base_dot);
++    out[lane]=static_cast<uint32_t>(squared);
++  }
++}
++
+ #endif
+ inline uint32_t quantized_squared_distance(const Compact& cache,size_t row,
+                                           const QuantizedQuery& query) {
+   const int8_t* codes=cache.quantized_codes.get()+row*cache.dim;
++  if(query.biased_codes) {
++    int32_t dot=0;
++    for(size_t d=0;d<cache.dim;++d)
++      dot+=int32_t(uint8_t(codes[d]))*int32_t(query.biased_codes[d]);
++    const int32_t base_dot=dot-64*query.sum_codes;
++    return static_cast<uint32_t>(
++        int64_t(cache.quantized_row_norms[row])+query.squared_norm-
++        2*int64_t(base_dot));
++  }
+ #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+   return quantized_squared_distance_avx2(codes,query.codes.get(),cache.dim);
+ #else
+@@ -630,6 +731,36 @@ inline void quantized_squared_distance4(const Compact& cache,const size_t* rows,
+     out[lane]=quantized_squared_distance(cache,rows[lane],query);
+ #endif
+ }
++inline bool quantized_codes_available(const QuantizedQuery& query) {
++  return bool(query.codes)||bool(query.biased_codes);
++}
++// Preconditions: cache.quantized_biased, query.biased_codes, and eight distinct
++// row indices. This is used for posting-filtered candidates.
++inline void quantized_biased_squared_distance8(
++    const Compact& cache,const size_t* rows,const QuantizedQuery& query,
++    uint32_t* out) {
++#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
++  const int8_t* pointers[8];
++  uint32_t norms[8];
++  for(size_t lane=0;lane<8;++lane) {
++    pointers[lane]=cache.quantized_codes.get()+rows[lane]*cache.dim;
++    norms[lane]=cache.quantized_row_norms[rows[lane]];
++  }
++  quantized_biased_squared_distance8_avx2(
++      pointers,norms,query,cache.dim,out);
++#else
++  for(size_t lane=0;lane<8;++lane) {
++    const int8_t* row=cache.quantized_codes.get()+rows[lane]*cache.dim;
++    int32_t dot=0;
++    for(size_t d=0;d<cache.dim;++d)
++      dot+=int32_t(uint8_t(row[d]))*int32_t(query.biased_codes[d]);
++    const int32_t base_dot=dot-64*query.sum_codes;
++    out[lane]=static_cast<uint32_t>(
++        int64_t(cache.quantized_row_norms[rows[lane]])+
++        query.squared_norm-2*int64_t(base_dot));
++  }
++#endif
++}
+ inline void distances4(const Compact& cache,const size_t* rows,
+                        const std::vector<float>& q,double* out) {
+ #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+diff --git a/tests/test_engine_extra.cpp b/tests/test_engine_extra.cpp
+index 497953d..a7baf5a 100644
+--- a/tests/test_engine_extra.cpp
++++ b/tests/test_engine_extra.cpp
+@@ -1,4 +1,5 @@
+ #include "engine.hpp"
++#include "exact_cache.hpp"
+ #include <chrono>
+ #include <cmath>
+ #include <filesystem>
+@@ -156,8 +157,33 @@ int main() {
+       check(id(desc,0) == 5 && id(desc,1) == 4 && id(desc,2) == 3,
+             "descending TopK must start at the farthest row");
+     }
++    {
++      // All codes fit the biased-dot precondition. The first query builds the
++      // exact view; the second must enter the 7-bit screening kernel.
++      mvdb::Engine db(path.string() + "-biased-screen");
++      db.execute("CREATE TABLE biased(id BIGINT PRIMARY KEY,bucket BIGINT,v VECTOR(2))");
++      db.execute(
++          "INSERT INTO biased VALUES "
++          "(1,1,'[1,0]'),(2,0,'[-1,0]'),(3,1,'[-1,0]'),"
++          "(4,0,'[0,1]'),(5,1,'[0,-1]'),(6,0,'[1,1]')");
++      const std::string sql =
++          "SELECT id,L2_DISTANCE(v,'[0.25,0]') AS d FROM biased "
++          "WHERE bucket=1 ORDER BY d LIMIT 1";
++      const auto first = db.execute(sql);
++      const size_t before = mvdb::exact::biased_screen_runs();
++      const auto warmed = db.execute(sql);
++      check(first.rows == warmed.rows,
++            "biased-dot screening must preserve filtered TopK");
++      check(mvdb::exact::biased_screen_runs() > before,
++            "warmed compatible query must use the biased-dot screen");
++      db.execute("UPDATE biased SET v='[9,9]' WHERE id=1");
++      const auto updated = db.execute(sql);
++      check(updated.rows.size() == 1 && id(updated, 0) == 5,
++            "updates must invalidate and rebuild the biased-dot view");
++    }
+     fs::remove_all(path.string() + "-desc");
+     fs::remove_all(path.string() + "-cap");
++    fs::remove_all(path.string() + "-biased-screen");
+     fs::remove_all(path);
+     std::cout << "engine extra checks passed: " << checks << '\n';
+     return 0;
+diff --git a/tests/test_exact_cache.cpp b/tests/test_exact_cache.cpp
+index 80cbfa8..542916a 100644
+--- a/tests/test_exact_cache.cpp
++++ b/tests/test_exact_cache.cpp
+@@ -229,7 +229,7 @@ void test_quantized_screen() {
+     }
+     std::vector<float> query(dim,0.25f);
+     auto prepared=exact::prepare_quantized_query(cache,query,true);
+-    require(bool(prepared.codes));
++    require(exact::quantized_codes_available(prepared));
+     const double worst=cache.distance(2,query);
+     const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.root_dim_upper);
+     for(size_t i=0;i<vectors.size();++i) {
+@@ -254,7 +254,7 @@ void test_quantized_screen() {
+     require(cache.quantized_step==expected);
+     std::vector<float> query(17,-magnitude);
+     auto prepared=exact::prepare_quantized_query(cache,query,true);
+-    require(bool(prepared.codes));
++    require(exact::quantized_codes_available(prepared));
+     const double threshold=exact::quantized_threshold(0,cache.quantized_step,prepared.root_dim_upper);
+     require(exact::quantized_squared_distance(cache,1,prepared)==0);
+     require(double(exact::quantized_squared_distance(cache,0,prepared))>threshold);
+@@ -285,6 +285,63 @@ void test_quantized_screen() {
+ #endif
+ }
+ 
++void test_biased_screen_layout_and_kernel() {
++#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
++  if(!exact::available() || std::fegetround()!=FE_TONEAREST) return;
++  auto make_cache=[](float scale) {
++    constexpr size_t count=16,dim=17;
++    std::vector<std::vector<Cell>> rows;
++    exact::Plan plan({Type::BigInt,Type::Vector},1,dim);
++    for(size_t row=0;row<count;++row) {
++      std::vector<float> vector(dim);
++      vector[0]=scale;
++      for(size_t d=1;d<dim;++d)
++        vector[d]=scale*float(int(row*7+d*3)%11-5)/5.0f;
++      rows.push_back({int64_t(row),std::move(vector)});
++      plan.observe(rows.back());
++    }
++    exact::Compact cache(plan);
++    for(size_t row=0;row<rows.size();++row)
++      cache.fill(row,std::get<int64_t>(rows[row][0]),rows[row]);
++    cache.prepare_quantized_codes();
++    return cache;
++  };
++
++  auto cache=make_cache(1.0f);
++  require(cache.quantized_biased);
++  require(cache.quantized_row_norms.size()==cache.count);
++  std::vector<float> query(cache.dim);
++  for(size_t d=0;d<query.size();++d)
++    query[d]=float(int(d*5)%9-4)/5.0f;
++  auto prepared=exact::prepare_quantized_query(cache,query,true);
++  require(bool(prepared.biased_codes) && !prepared.codes);
++  for(size_t block=0;block+8<=cache.count;block+=8) {
++    uint32_t actual[8];
++    const size_t rows[8]={block,block+1,block+2,block+3,
++                          block+4,block+5,block+6,block+7};
++    exact::quantized_biased_squared_distance8(cache,rows,prepared,actual);
++    for(size_t lane=0;lane<8;++lane) {
++      uint32_t expected=0;
++      for(size_t d=0;d<cache.dim;++d) {
++        const int row_code=
++            int(reinterpret_cast<const uint8_t*>(cache.quantized_codes.get())
++                [rows[lane]*cache.dim+d])-64;
++        const int delta=row_code-int(prepared.biased_codes[d]);
++        expected+=uint32_t(delta*delta);
++      }
++      require(actual[lane]==expected);
++    }
++  }
++
++  auto fallback=make_cache(0.8f);
++  require(!fallback.quantized_biased);
++  require(fallback.quantized_row_norms.empty());
++  auto signed_query=exact::prepare_quantized_query(fallback,query,true);
++  require(bool(signed_query.codes) && !signed_query.biased_codes);
++  std::cout<<"7-bit biased layout, exact kernel and out-of-range fallback passed\n";
++#endif
++}
++
+ 
+ #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+ // The four-row integer kernel must return exactly what four single-row calls
+@@ -350,6 +407,7 @@ int main() {
+   test_equality_postings();
+   test_fp32_screen();
+   test_quantized_screen();
++  test_biased_screen_layout_and_kernel();
+ #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+   test_quantized_four_row_kernel();
+ #endif
