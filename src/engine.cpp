@@ -3,6 +3,7 @@
 #include "exact_cache.hpp"
 #include "spill.hpp"
 #include <algorithm>
+#include <atomic>
 #include <charconv>
 #include <cmath>
 #include <condition_variable>
@@ -951,11 +952,22 @@ Result Engine::execute_statement(const Statement &st) {
         const bool screen = screen_capable;
         const bool quantized_available = exact::quantized_codes_available(quantized);
         if (quantized.biased_codes) ++exact::biased_screen_runs();
-        // One contiguous slice of the packed scan. Each slice keeps its own
-        // heap, so slices run on separate threads without shared mutable state.
-        // A slice's screening threshold comes from its own heap and is therefore
-        // more permissive than the merged one: extra candidates can survive, but
-        // a row that belongs in the top K is never screened out.
+        // A cutoff from a full local heap is witnessed by K distinct eligible
+        // rows. It can only eliminate rows outside the global top K. Reads
+        // may see an older (looser) value; no heap state is shared.
+        std::atomic<uint32_t> shared_cutoff{UINT32_MAX};
+        bool share_cutoff = false;
+        auto effective_cutoff = [&](double local, bool updated) {
+          if (!share_cutoff) return local;
+          const auto code = static_cast<uint32_t>(std::min(local, double(UINT32_MAX)));
+          auto previous = shared_cutoff.load(std::memory_order_relaxed);
+          if (updated) {
+            while (code < previous &&
+                   !shared_cutoff.compare_exchange_weak(previous, code,
+                       std::memory_order_relaxed, std::memory_order_relaxed)) {}
+          }
+          return double(std::min(code, previous));
+        };
         auto scan_contiguous = [&](size_t begin, size_t end, Heap &heap) {
           // Survivors are scattered over batches, so refining them one by one
           // leaves the vector kernels unused. Collect them first and refine in
@@ -992,7 +1004,8 @@ Result Engine::execute_statement(const Statement &st) {
             if (screen && heap.size() == *st.limit) {
               if (i + 32 <= end) batch_count = 32;
               const double worst = heap.top().distance;
-              if (worst != screened_worst) {
+              const bool updated = worst != screened_worst;
+              if (updated) {
                 screen_threshold = quantized_available
                     ? exact::quantized_threshold(worst, view.quantized_step,
                                                   quantized.root_dim_upper)
@@ -1001,6 +1014,7 @@ Result Engine::execute_statement(const Statement &st) {
               }
               uint32_t survivors = 0;
               if (quantized_available) {
+                const double cutoff = effective_cutoff(screen_threshold, updated);
                 if (quantized.biased_codes) {
                   for (size_t offset = 0; offset < batch_count; offset += 8) {
                     uint32_t approximate[8];
@@ -1011,7 +1025,7 @@ Result Engine::execute_statement(const Statement &st) {
                     exact::quantized_biased_squared_distance8(
                         view, rows8, quantized, approximate);
                     for (size_t lane = 0; lane < 8; ++lane)
-                      if (!(double(approximate[lane]) > screen_threshold))
+                      if (!(double(approximate[lane]) > cutoff))
                         survivors |= uint32_t(1) << (offset + lane);
                   }
                 } else {
@@ -1022,7 +1036,7 @@ Result Engine::execute_statement(const Statement &st) {
                     exact::quantized_squared_distance4(view, rows4, quantized,
                                                        approximate);
                     for (size_t lane = 0; lane < 4; ++lane)
-                      if (!(double(approximate[lane]) > screen_threshold))
+                      if (!(double(approximate[lane]) > cutoff))
                         survivors |= uint32_t(1) << (offset + lane);
                   }
                 }
@@ -1132,7 +1146,8 @@ Result Engine::execute_statement(const Statement &st) {
             for (size_t lane = 0; lane < 32; ++lane) batch[lane] = rows[at + lane];
             if (screen && heap.size() == *st.limit) {
               const double worst = heap.top().distance;
-              if (worst != screened_worst) {
+              const bool updated = worst != screened_worst;
+              if (updated) {
                 screen_threshold = quantized_available
                     ? exact::quantized_threshold(worst, view.quantized_step,
                                                   quantized.root_dim_upper)
@@ -1141,6 +1156,7 @@ Result Engine::execute_statement(const Statement &st) {
               }
               uint32_t survivors = 0;
               if (quantized_available) {
+                const double cutoff = effective_cutoff(screen_threshold, updated);
                 if (quantized.biased_codes) {
                   for (size_t offset = 0; offset < 32; offset += 8) {
                     uint32_t approximate[8];
@@ -1151,7 +1167,7 @@ Result Engine::execute_statement(const Statement &st) {
                     exact::quantized_biased_squared_distance8(
                         view, rows8, quantized, approximate);
                     for (size_t lane = 0; lane < 8; ++lane)
-                      if (!(double(approximate[lane]) > screen_threshold))
+                      if (!(double(approximate[lane]) > cutoff))
                         survivors |= uint32_t(1) << (offset + lane);
                   }
                 } else {
@@ -1162,7 +1178,7 @@ Result Engine::execute_statement(const Statement &st) {
                     exact::quantized_squared_distance4(view, rows4, quantized,
                                                        approximate);
                     for (size_t lane = 0; lane < 4; ++lane)
-                      if (!(double(approximate[lane]) > screen_threshold))
+                      if (!(double(approximate[lane]) > cutoff))
                         survivors |= uint32_t(1) << (offset + lane);
                   }
                 }
@@ -1216,6 +1232,7 @@ Result Engine::execute_statement(const Statement &st) {
             heaps.emplace_back(better_neighbor);
           const size_t per = (total + width - 1) / width;
           const size_t chunk = (per + 31) / 32 * 32;
+          share_cutoff = quantized_available && *st.limit == 10;
           WorkerPool::instance().run(width, [&](size_t index) {
             const size_t begin = std::min(total, index * chunk);
             const size_t end = std::min(total, begin + chunk);

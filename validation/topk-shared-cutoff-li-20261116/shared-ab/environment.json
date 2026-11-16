@@ -1,0 +1,25 @@
+{
+  "args": {
+    "binary": "/tmp/mvdb-shared-20261116/release/minivectordb",
+    "control": "/tmp/mvdb-next-20261116/q7/minivectordb",
+    "output": "/tmp/mvdb-shared-20261116/shared-ab",
+    "modes": [
+      "base",
+      "repeat",
+      "mapped"
+    ],
+    "rounds": 20,
+    "queries": 1000,
+    "cpus": "0,2",
+    "driver_cpu": 4,
+    "mapped_proc": true,
+    "write_only": false
+  },
+  "kernel": "6.18.58.1-microsoft-standard-WSL2",
+  "tmp_device": [
+    8,
+    48
+  ],
+  "binary_sha256": "08911f705de0c0430890613c10314f11c91563cf0bf2afbcbde4891ef6c01580",
+  "control_sha256": "9644e3777b55763c49f66de21e15218e73d9be50c2c589f8b8a3005c9be4efaf"
+}
