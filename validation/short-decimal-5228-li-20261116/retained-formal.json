@@ -1,0 +1,44 @@
+{
+  "tool_sha256": "bed145f5d66ad5da2ef12377a642c77fc3cb1e8ed9bd70657402d25fbf4af070",
+  "status": "PASS",
+  "versions": [
+    {
+      "label": "baseline",
+      "status": "PASS",
+      "binary": "/tmp/mvdb-shared-20261116/release/minivectordb",
+      "binary_sha256": "08911f705de0c0430890613c10314f11c91563cf0bf2afbcbde4891ef6c01580",
+      "cases": [
+        "ready emitted before input",
+        "newline framing and response flush before next request",
+        "error response then Unicode/BIGINT/object-ID continued communication",
+        "large streamed result >4MiB consumed completely without next request",
+        "explicit shutdown response flush then exit0, no extra stdout",
+        "empty EOF after ready exits0",
+        "EOF shutdown rolls back uncommitted transaction and reopens",
+        "closed stdout causes nonzero exit; committed data preserved and uncommitted discarded"
+      ],
+      "broken_stdout_exit_code": -13,
+      "trace_sha256": "2fa0f1ac09a943ecd428e5220feb917dab03b819479a88bdf3ae7e27c0e3fedb",
+      "scope": "Native default formal JSONL entry, correctness only. No Docker or performance claims."
+    },
+    {
+      "label": "candidate",
+      "status": "PASS",
+      "binary": "/tmp/mvdb-decimal-5228-20261116/release/minivectordb",
+      "binary_sha256": "15e76b20b78bf152db8e0fe369c9522ba5a080abcd0cc24d4431eb7d3ce3be2c",
+      "cases": [
+        "ready emitted before input",
+        "newline framing and response flush before next request",
+        "error response then Unicode/BIGINT/object-ID continued communication",
+        "large streamed result >4MiB consumed completely without next request",
+        "explicit shutdown response flush then exit0, no extra stdout",
+        "empty EOF after ready exits0",
+        "EOF shutdown rolls back uncommitted transaction and reopens",
+        "closed stdout causes nonzero exit; committed data preserved and uncommitted discarded"
+      ],
+      "broken_stdout_exit_code": -13,
+      "trace_sha256": "2fa0f1ac09a943ecd428e5220feb917dab03b819479a88bdf3ae7e27c0e3fedb",
+      "scope": "Native default formal JSONL entry, correctness only. No Docker or performance claims."
+    }
+  ]
+}
