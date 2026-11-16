@@ -83,6 +83,10 @@ def check(binary, directory, cgroup):
         mapped(True)
         verify(S(1," WHERE grp='g0'",extra=",v"),[k]+list(range(0,18,2)),[0.0]+[z]*9,1)
         mapped(True)
+        # Code 65 exercises the integer fallback without discarding the map.
+        wide = 65.0/64.0
+        verify(S(wide),expected,[z/64.0]+[math.sqrt(128*wide**2)]*9)
+        mapped(True)
         verify(S(1024),expected,[math.sqrt(128*1023**2)]+[math.sqrt(128*1024**2)]*9)
         mapped(False)
         req("BEGIN;")

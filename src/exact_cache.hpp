@@ -50,6 +50,11 @@ inline size_t &parallel_runs() {
   static size_t value = 0;
   return value;
 }
+// Warmed queries that selected the exact biased-dot quantized layout.
+inline size_t &biased_screen_runs() {
+  static size_t value = 0;
+  return value;
+}
 // The screening bound assumes IEEE binary32/binary64 round-to-nearest with
 // gradual underflow. Check once per query, never change the caller's FP mode.
 constexpr size_t fp32_screen_max_dim = 8192;
@@ -157,6 +162,10 @@ struct Compact {
   // the owned vector array or the immutable committed mapping.
   std::unique_ptr<int8_t[]> quantized_codes;
   double quantized_step=1,quantized_inverse=1;
+  // When all codes fit [-64,64], the bytes are stored as uint8_t(code+64) and
+  // this row-norm table enables exact unsigned-by-signed AVX2 dot products.
+  bool quantized_biased=false;
+  std::vector<uint32_t> quantized_row_norms;
   // One optional posting index per view. New object/allocator bookkeeping fits
   // in the existing 4096-byte fixed reserve; payload is accounted separately.
   std::unique_ptr<uint32_t[]> equality_rows;
@@ -193,6 +202,8 @@ struct Compact {
     if(equality_rows) bytes+=count*sizeof(uint32_t);
     // Reserve the prepared query as well, including during posting-index build.
     if(quantized_codes) bytes+=count*dim+dim*sizeof(int16_t)+64;
+    if(!quantized_row_norms.empty())
+      bytes+=quantized_row_norms.capacity()*sizeof(uint32_t);
     return bytes;
   }
   size_t index(size_t row,size_t dimension=0) const {
@@ -251,6 +262,7 @@ struct Compact {
        std::fegetround()!=FE_TONEAREST) return;
     const size_t payload=mul(count,dim);
     const size_t scratch=add(mul(dim,sizeof(int16_t)),64);
+    const size_t norm_payload=mul(count,sizeof(uint32_t));
     if(add(add(allocated_bytes(),payload),scratch)>budget()) return;
     double max_abs=0;
     for(size_t row=0;row<count;++row) for(size_t d=0;d<dim;++d) {
@@ -268,13 +280,37 @@ struct Compact {
     }
     try {
       std::unique_ptr<int8_t[]> codes(new int8_t[payload]);
+      int minimum_code=127,maximum_code=-127;
       for(size_t row=0;row<count;++row)for(size_t d=0;d<dim;++d) {
         // This binary64 power-of-two scaling is exact even for FP32 subnormals.
         const double rounded=std::nearbyint(double(component(row,d))*inverse);
         if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) return;
         codes[row*dim+d]=static_cast<int8_t>(rounded); // Never clamp a code.
+        minimum_code=std::min(minimum_code,int(rounded));
+        maximum_code=std::max(maximum_code,int(rounded));
+      }
+      std::vector<uint32_t> norms;
+      bool biased=minimum_code>=-64 && maximum_code<=64 &&
+          add(add(add(allocated_bytes(),payload),norm_payload),scratch)<=budget();
+      if(biased) {
+        try { norms.resize(count); }
+        catch(const std::bad_alloc&) { biased=false; }
+      }
+      if(biased) {
+        uint8_t* bytes=reinterpret_cast<uint8_t*>(codes.get());
+        for(size_t row=0;row<count;++row) {
+          uint32_t norm=0;
+          for(size_t d=0;d<dim;++d) {
+            const int code=int(codes[row*dim+d]);
+            norm+=uint32_t(code*code);
+            bytes[row*dim+d]=static_cast<uint8_t>(code+64);
+          }
+          norms[row]=norm;
+        }
       }
       quantized_step=step;quantized_inverse=inverse;
+      quantized_biased=biased;
+      quantized_row_norms=std::move(norms);
       quantized_codes=std::move(codes);
     } catch(const std::bad_alloc&) {} // Keep the complete original exact view.
   }
@@ -340,6 +376,9 @@ struct Compact {
 static_assert(sizeof(Compact)<512,"exact view object exceeds fixed reserve");
 struct QuantizedQuery {
   std::unique_ptr<int16_t[]> codes;
+  std::unique_ptr<int8_t[]> biased_codes;
+  int32_t sum_codes=0;
+  int32_t squared_norm=0;
   double root_dim_upper=0;
 };
 inline QuantizedQuery prepare_quantized_query(const Compact& cache,
@@ -348,6 +387,25 @@ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
   QuantizedQuery prepared;
   if(!fp_mode_ok || !cache.quantized_codes || query.size()!=cache.dim ||
      std::fegetround()!=FE_TONEAREST) return prepared;
+  if(cache.quantized_biased) {
+    try {prepared.biased_codes.reset(new int8_t[cache.dim]);}
+    catch(const std::bad_alloc&) {return prepared;}
+    for(size_t d=0;d<cache.dim;++d) {
+      const double rounded=std::nearbyint(double(query[d])*cache.quantized_inverse);
+      if(!std::isfinite(rounded) || rounded < -64 || rounded > 64) {
+        prepared.biased_codes.reset();break;
+      }
+      const int code=static_cast<int>(rounded);
+      prepared.biased_codes[d]=static_cast<int8_t>(code);
+      prepared.sum_codes+=code;
+      prepared.squared_norm+=code*code;
+    }
+    if(prepared.biased_codes) {
+      prepared.root_dim_upper=std::nextafter(std::sqrt(double(cache.dim)),
+                                           std::numeric_limits<double>::infinity());
+      return prepared;
+    }
+  }
   try {prepared.codes.reset(new int16_t[cache.dim]);}
   catch(const std::bad_alloc&) {return prepared;}
   for(size_t d=0;d<cache.dim;++d) {
@@ -617,10 +675,69 @@ inline void quantized_squared_distance4_avx2(const int8_t* r0,const int8_t* r1,
   }
 }
 
+// Exact unsigned-by-signed biased codes. Callers enable this path only when all
+// row/query codes fit [-64,64], so each pair product fits int16 and maddubs
+// saturation cannot occur. One query load feeds eight independent accumulators.
+__attribute__((target("avx2,no-fma"),noinline))
+inline void quantized_biased_squared_distance8_avx2(
+    const int8_t* const rows[8],const uint32_t* row_norms,
+    const QuantizedQuery& query,size_t dim,uint32_t* out) {
+  __m256i sums[8]={_mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256()};
+  const __m256i ones=_mm256_set1_epi16(1);
+  size_t d=0;
+  for(;d+32<=dim;d+=32) {
+    const __m256i q=_mm256_loadu_si256(
+        reinterpret_cast<const __m256i*>(query.biased_codes.get()+d));
+    for(size_t lane=0;lane<8;++lane) {
+      const __m256i bytes=_mm256_loadu_si256(
+          reinterpret_cast<const __m256i*>(rows[lane]+d));
+      const __m256i pairs=_mm256_maddubs_epi16(bytes,q);
+      sums[lane]=_mm256_add_epi32(
+          sums[lane],_mm256_madd_epi16(pairs,ones));
+    }
+  }
+  for(size_t lane=0;lane<8;++lane) {
+    const __m128i halves=_mm_add_epi32(
+        _mm256_castsi256_si128(sums[lane]),
+        _mm256_extracti128_si256(sums[lane],1));
+    const __m128i combined=_mm_hadd_epi32(halves,halves);
+    const __m128i total=_mm_hadd_epi32(combined,combined);
+    int32_t dot=_mm_cvtsi128_si32(total);
+    for(size_t tail=d;tail<dim;++tail)
+      dot+=int32_t(uint8_t(rows[lane][tail]))*int32_t(query.biased_codes[tail]);
+    const int32_t base_dot=dot-64*query.sum_codes;
+    const int64_t squared=int64_t(row_norms[lane])+query.squared_norm-
+                          2*int64_t(base_dot);
+    out[lane]=static_cast<uint32_t>(squared);
+  }
+}
+
 #endif
 inline uint32_t quantized_squared_distance(const Compact& cache,size_t row,
                                           const QuantizedQuery& query) {
   const int8_t* codes=cache.quantized_codes.get()+row*cache.dim;
+  if(query.biased_codes) {
+    int32_t dot=0;
+    for(size_t d=0;d<cache.dim;++d)
+      dot+=int32_t(uint8_t(codes[d]))*int32_t(query.biased_codes[d]);
+    const int32_t base_dot=dot-64*query.sum_codes;
+    return static_cast<uint32_t>(
+        int64_t(cache.quantized_row_norms[row])+query.squared_norm-
+        2*int64_t(base_dot));
+  }
+  if(cache.quantized_biased) {
+    // An int16 query outside the dot-product range still shares the same
+    // row bytes. Unsigned reading is required for the encoded value 128.
+    uint32_t sum=0;
+    for(size_t d=0;d<cache.dim;++d) {
+      const int delta=int(uint8_t(codes[d]))-64-int(query.codes[d]);
+      sum+=uint32_t(delta*delta);
+    }
+    return sum;
+  }
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
   return quantized_squared_distance_avx2(codes,query.codes.get(),cache.dim);
 #else
@@ -634,6 +751,11 @@ inline uint32_t quantized_squared_distance(const Compact& cache,size_t row,
 inline void quantized_squared_distance4(const Compact& cache,const size_t* rows,
                                         const QuantizedQuery& query,
                                         uint32_t* out) {
+  if(cache.quantized_biased) {
+    for(size_t lane=0;lane<4;++lane)
+      out[lane]=quantized_squared_distance(cache,rows[lane],query);
+    return;
+  }
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
   const int8_t* base=cache.quantized_codes.get();
   const size_t stride=cache.dim;
@@ -673,6 +795,36 @@ inline void distances4_row_major(const Compact& cache,const size_t* rows,
   _mm256_storeu_pd(out,_mm256_sqrt_pd(total));
 }
 #endif
+inline bool quantized_codes_available(const QuantizedQuery& query) {
+  return bool(query.codes)||bool(query.biased_codes);
+}
+// Preconditions: cache.quantized_biased, query.biased_codes, and eight distinct
+// row indices. This is used for posting-filtered candidates.
+inline void quantized_biased_squared_distance8(
+    const Compact& cache,const size_t* rows,const QuantizedQuery& query,
+    uint32_t* out) {
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  const int8_t* pointers[8];
+  uint32_t norms[8];
+  for(size_t lane=0;lane<8;++lane) {
+    pointers[lane]=cache.quantized_codes.get()+rows[lane]*cache.dim;
+    norms[lane]=cache.quantized_row_norms[rows[lane]];
+  }
+  quantized_biased_squared_distance8_avx2(
+      pointers,norms,query,cache.dim,out);
+#else
+  for(size_t lane=0;lane<8;++lane) {
+    const int8_t* row=cache.quantized_codes.get()+rows[lane]*cache.dim;
+    int32_t dot=0;
+    for(size_t d=0;d<cache.dim;++d)
+      dot+=int32_t(uint8_t(row[d]))*int32_t(query.biased_codes[d]);
+    const int32_t base_dot=dot-64*query.sum_codes;
+    out[lane]=static_cast<uint32_t>(
+        int64_t(cache.quantized_row_norms[rows[lane]])+
+        query.squared_norm-2*int64_t(base_dot));
+  }
+#endif
+}
 inline void distances4(const Compact& cache,const size_t* rows,
                        const std::vector<float>& q,double* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)

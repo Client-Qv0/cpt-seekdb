@@ -938,7 +938,7 @@ Result Engine::execute_statement(const Statement &st) {
       // A mapped view relies on the quantized screen. For a query outside its
       // code range (or without screening), use the original exact cache.
       bool require_owned = false;
-      if (cache_->exact_view && cache_->exact_view->mapped && !quantized.codes) {
+      if (cache_->exact_view && cache_->exact_view->mapped && !exact::quantized_codes_available(quantized)) {
         cache_->exact_view.reset();
         require_owned = true;
       }
@@ -949,6 +949,8 @@ Result Engine::execute_statement(const Statement &st) {
         // kept distance, which assumes smaller is better. A descending key keeps
         // the farthest records, so it scans without screening.
         const bool screen = screen_capable;
+        const bool quantized_available = exact::quantized_codes_available(quantized);
+        if (quantized.biased_codes) ++exact::biased_screen_runs();
         // One contiguous slice of the packed scan. Each slice keeps its own
         // heap, so slices run on separate threads without shared mutable state.
         // A slice's screening threshold comes from its own heap and is therefore
@@ -991,23 +993,38 @@ Result Engine::execute_statement(const Statement &st) {
               if (i + 32 <= end) batch_count = 32;
               const double worst = heap.top().distance;
               if (worst != screened_worst) {
-                screen_threshold = quantized.codes
+                screen_threshold = quantized_available
                     ? exact::quantized_threshold(worst, view.quantized_step,
                                                   quantized.root_dim_upper)
                     : exact::fp32_screen_threshold(worst, view.dim);
                 screened_worst = worst;
               }
               uint32_t survivors = 0;
-              if (quantized.codes) {
-                for (size_t offset = 0; offset < batch_count; offset += 4) {
-                  uint32_t approximate[4];
-                  const size_t rows4[4] = {i + offset, i + offset + 1,
-                                           i + offset + 2, i + offset + 3};
-                  exact::quantized_squared_distance4(view, rows4, quantized,
-                                                     approximate);
-                  for (size_t lane = 0; lane < 4; ++lane)
-                    if (!(double(approximate[lane]) > screen_threshold))
-                      survivors |= uint32_t(1) << (offset + lane);
+              if (quantized_available) {
+                if (quantized.biased_codes) {
+                  for (size_t offset = 0; offset < batch_count; offset += 8) {
+                    uint32_t approximate[8];
+                    const size_t rows8[8] = {
+                        i + offset, i + offset + 1, i + offset + 2,
+                        i + offset + 3, i + offset + 4, i + offset + 5,
+                        i + offset + 6, i + offset + 7};
+                    exact::quantized_biased_squared_distance8(
+                        view, rows8, quantized, approximate);
+                    for (size_t lane = 0; lane < 8; ++lane)
+                      if (!(double(approximate[lane]) > screen_threshold))
+                        survivors |= uint32_t(1) << (offset + lane);
+                  }
+                } else {
+                  for (size_t offset = 0; offset < batch_count; offset += 4) {
+                    uint32_t approximate[4];
+                    const size_t rows4[4] = {i + offset, i + offset + 1,
+                                             i + offset + 2, i + offset + 3};
+                    exact::quantized_squared_distance4(view, rows4, quantized,
+                                                       approximate);
+                    for (size_t lane = 0; lane < 4; ++lane)
+                      if (!(double(approximate[lane]) > screen_threshold))
+                        survivors |= uint32_t(1) << (offset + lane);
+                  }
                 }
               } else {
                 float approximate[32];
@@ -1116,23 +1133,38 @@ Result Engine::execute_statement(const Statement &st) {
             if (screen && heap.size() == *st.limit) {
               const double worst = heap.top().distance;
               if (worst != screened_worst) {
-                screen_threshold = quantized.codes
+                screen_threshold = quantized_available
                     ? exact::quantized_threshold(worst, view.quantized_step,
                                                   quantized.root_dim_upper)
                     : exact::fp32_screen_threshold(worst, view.dim);
                 screened_worst = worst;
               }
               uint32_t survivors = 0;
-              if (quantized.codes) {
-                for (size_t offset = 0; offset < 32; offset += 4) {
-                  uint32_t approximate[4];
-                  const size_t rows4[4] = {batch[offset], batch[offset + 1],
-                                           batch[offset + 2], batch[offset + 3]};
-                  exact::quantized_squared_distance4(view, rows4, quantized,
-                                                     approximate);
-                  for (size_t lane = 0; lane < 4; ++lane)
-                    if (!(double(approximate[lane]) > screen_threshold))
-                      survivors |= uint32_t(1) << (offset + lane);
+              if (quantized_available) {
+                if (quantized.biased_codes) {
+                  for (size_t offset = 0; offset < 32; offset += 8) {
+                    uint32_t approximate[8];
+                    const size_t rows8[8] = {
+                        batch[offset], batch[offset + 1], batch[offset + 2],
+                        batch[offset + 3], batch[offset + 4], batch[offset + 5],
+                        batch[offset + 6], batch[offset + 7]};
+                    exact::quantized_biased_squared_distance8(
+                        view, rows8, quantized, approximate);
+                    for (size_t lane = 0; lane < 8; ++lane)
+                      if (!(double(approximate[lane]) > screen_threshold))
+                        survivors |= uint32_t(1) << (offset + lane);
+                  }
+                } else {
+                  for (size_t offset = 0; offset < 32; offset += 4) {
+                    uint32_t approximate[4];
+                    const size_t rows4[4] = {batch[offset], batch[offset + 1],
+                                             batch[offset + 2], batch[offset + 3]};
+                    exact::quantized_squared_distance4(view, rows4, quantized,
+                                                       approximate);
+                    for (size_t lane = 0; lane < 4; ++lane)
+                      if (!(double(approximate[lane]) > screen_threshold))
+                        survivors |= uint32_t(1) << (offset + lane);
+                  }
                 }
               } else {
                 float approximate[32];
@@ -1326,8 +1358,8 @@ Result Engine::execute_statement(const Statement &st) {
               return view;
             };
             auto view = build_view(mapping);
-            if (mapping.data && !exact::prepare_quantized_query(
-                    *view, projection.query, screen_capable).codes) {
+            if (mapping.data && !exact::quantized_codes_available(
+                    exact::prepare_quantized_query(*view, projection.query, screen_capable))) {
               view.reset();
               mapping = {};
               view = build_view(mapping);
