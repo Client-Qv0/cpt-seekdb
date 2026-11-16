@@ -33,7 +33,7 @@ def counters(path):
     return {name: (path/name).read_text().strip() for name in (
         "io.stat", "memory.peak", "memory.stat", "memory.events", "cpu.stat")}
 
-def measure(binary, mode, data, writes, queries, write_only, cpus):
+def measure(binary, mode, data, writes, queries, write_only, cpus, mapped_proc=False):
     data.mkdir()
     cg = CG / ("mvdb-slim-" + data.parent.name + "-" + data.name)
     cg.mkdir()
@@ -87,6 +87,12 @@ def measure(binary, mode, data, writes, queries, write_only, cpus):
                 for sql in queries[:10]:
                     prep.append(request(sql)[0])
                 samples["prepared"] = counters(cg)
+                if mode == "mapped" and mapped_proc:
+                    maps = Path(f"/proc/{proc.pid}/maps").read_text()
+                    actual = [line for line in maps.splitlines()
+                              if line.endswith(str(data/"journal.mvdb"))]
+                    assert actual and all(line.split()[1] == "r--p" for line in actual), actual
+                    samples["journal_mapping"] = actual
                 for i,sql in enumerate(queries):
                     ns,raw,r = request(sql)
                     assert len(r["rows"]) == 10
@@ -100,7 +106,7 @@ def measure(binary, mode, data, writes, queries, write_only, cpus):
             samples["end"] = counters(cg)
             err.seek(0)
             stderr = err.read()
-            if not write_only and mode in ("row", "mapped"):
+            if not write_only and not mapped_proc and mode in ("row", "mapped"):
                 assert "SLIM_PROBE " + mode in stderr, "requested view never ran"
             assert "oom_kill 0" in samples["end"]["memory.events"]
             return dict(mode=mode, write_ns=write, preparation_ns=prep,
@@ -122,6 +128,7 @@ def main():
     p.add_argument("--queries", type=int, default=1000)
     p.add_argument("--cpus", default="0,2")
     p.add_argument("--driver-cpu", type=int)
+    p.add_argument("--mapped-proc", action="store_true")
     p.add_argument("--write-only", action="store_true")
     a = p.parse_args()
     for ctl in ("cpu","io","memory"):
@@ -155,7 +162,7 @@ def main():
             for j,mode in enumerate(modes):
                 binary = a.control if mode in ("base", "repeat") and a.control else a.binary
                 out = measure(binary.resolve(), mode, tmp/(f"{i}-{j}"), writes, queries,
-                              a.write_only, cpus)
+                              a.write_only, cpus, a.mapped_proc)
                 results.append(out)
             assert len({e["output_sha256"] for e in results}) == 1, "ordered output differs"
             (a.output/f"round-{i+1:02}.json").write_text(json.dumps(dict(seed=seed, runs=results),indent=2)+"\n")

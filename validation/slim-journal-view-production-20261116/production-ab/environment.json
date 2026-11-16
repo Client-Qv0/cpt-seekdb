@@ -1,0 +1,25 @@
+{
+  "args": {
+    "binary": "/tmp/mvdb-slim-20261116/production/minivectordb",
+    "control": "/tmp/mvdb-slim-20261116/control/minivectordb",
+    "output": "/tmp/mvdb-slim-20261116/production-ab",
+    "modes": [
+      "base",
+      "repeat",
+      "mapped"
+    ],
+    "rounds": 20,
+    "queries": 1000,
+    "cpus": "0,2",
+    "driver_cpu": 4,
+    "mapped_proc": true,
+    "write_only": false
+  },
+  "kernel": "6.18.58.1-microsoft-standard-WSL2",
+  "tmp_device": [
+    8,
+    48
+  ],
+  "binary_sha256": "40eda7b5d871433f1da50d4e906a759e2b833d3fbc69097f017d43c46169d44c",
+  "control_sha256": "f230d02770de81a2c507fbf6f7d8736fa40776512a0faffbf34eb7cce98d72c8"
+}

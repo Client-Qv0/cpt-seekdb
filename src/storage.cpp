@@ -10,6 +10,7 @@
 #include <limits>
 #include <map>
 #include <sys/file.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
 #include <unistd.h>
@@ -768,9 +769,30 @@ void Store::erase(const std::string &table, int64_t key) {
   auto ref = s.append(kErase, table, key, {});
   s.current.table_rows(table).set(key, ref);
 }
+Store::ReadMapping Store::map_committed() const {
+  const auto &s = *impl_;
+  s.check();
+  if (s.transaction || s.statement || s.end != s.durable_end ||
+      s.end == 0 || s.end > 16 * 1024 * 1024)
+    return {};
+  struct stat st{};
+  if (::fstat(s.fd, &st) != 0 || !S_ISREG(st.st_mode) ||
+      st.st_size < 0 || uint64_t(st.st_size) != s.end)
+    return {};
+  void *address = ::mmap(nullptr, s.end, PROT_READ, MAP_PRIVATE, s.fd, 0);
+  if (address == MAP_FAILED) return {};
+  return {std::shared_ptr<const char>(static_cast<const char *>(address),
+      [size=s.end](const char *p){::munmap(const_cast<char *>(p), size);}), s.end};
+}
 void Store::scan(
     const std::string &table,
     const std::function<void(int64_t, const std::string &)> &fn) const {
+  scan_with_offsets(table, [&](int64_t key, const std::string &data,
+                                         uint64_t){fn(key, data);});
+}
+void Store::scan_with_offsets(
+    const std::string &table,
+    const std::function<void(int64_t, const std::string &, uint64_t)> &fn) const {
   const auto &s = *impl_;
   s.check();
   static const Impl::Rows empty;
@@ -811,7 +833,7 @@ void Store::scan(
       ++c;
     }
     if (!ref.deleted)
-      fn(key, s.load(ref));
+      fn(key, s.load(ref), ref.offset);
   }
 }
 } // namespace mvdb

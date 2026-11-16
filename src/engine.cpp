@@ -586,8 +586,8 @@ Engine::Engine(const std::string &directory)
 Engine::~Engine() = default;
 
 void Engine::prepare_shutdown() {
-  store_.close();
   *cache_ = Cache{};
+  store_.close();
 }
 Result Engine::execute_ann(const Statement &statement) {
   // Explicit correctness-first fallback: no approximate index exists yet.
@@ -931,14 +931,24 @@ Result Engine::execute_statement(const Statement &st) {
         cache_->table = st.table;
         cache_->exact_column = projection.col;
       }
+      const bool screen_capable = !descending && exact::fp32_screen_available(projection.query.size());
+      auto quantized = cache_->exact_view ?
+          exact::prepare_quantized_query(*cache_->exact_view, projection.query, screen_capable) :
+          exact::QuantizedQuery{};
+      // A mapped view relies on the quantized screen. For a query outside its
+      // code range (or without screening), use the original exact cache.
+      bool require_owned = false;
+      if (cache_->exact_view && cache_->exact_view->mapped && !quantized.codes) {
+        cache_->exact_view.reset();
+        require_owned = true;
+      }
       if (cache_->exact_view) {
         auto &view = *cache_->exact_view;
         winner_view = &view;
         // Both screens reject records whose approximation cannot beat the worst
         // kept distance, which assumes smaller is better. A descending key keeps
         // the farthest records, so it scans without screening.
-        const bool screen=!descending && exact::fp32_screen_available(view.dim);
-        auto quantized=exact::prepare_quantized_query(view,projection.query,screen);
+        const bool screen = screen_capable;
         // One contiguous slice of the packed scan. Each slice keeps its own
         // heap, so slices run on separate threads without shared mutable state.
         // A slice's screening threshold comes from its own heap and is therefore
@@ -1276,14 +1286,52 @@ Result Engine::execute_statement(const Statement &st) {
           });
           answered = true;
           if (plan.fits()) {
-            auto view = std::make_unique<exact::Compact>(plan);
-            size_t count = 0;
-            store_.scan(st.table, [&](int64_t key, const std::string &data) {
-              view->fill(count++, key, unpack_row(data, schema));
-            });
-            if (count != plan.count)
-              throw Error("CORRUPTION", "exact cache row count changed");
-            view->prepare_quantized_codes();
+            // Small or unscreened scans keep the interleaved in-memory view.
+            // For screened scans, retain only offsets to the committed vectors.
+            Store::ReadMapping mapping;
+            if (!require_owned && screen_capable && plan.dim == 128 && plan.count >= 4096)
+              mapping = store_.map_committed();
+            auto build_view = [&](const Store::ReadMapping &source) {
+              auto view = std::make_unique<exact::Compact>(plan, source.data);
+              size_t count = 0;
+              auto fill = [&](int64_t key, const std::string &data, uint64_t offset) {
+                if (source.data) {
+                  Reader reader{data};
+                  // Schema validation permits at most one VECTOR, so fields
+                  // before it are fixed integers or length-prefixed text.
+                  for (size_t c = 0; c < projection.col; ++c) {
+                    if (schema.columns[c].type == Type::BigInt) reader.num(8);
+                    else {
+                      const size_t length = reader.num(4);
+                      reader.need(length);
+                      reader.pos += length;
+                    }
+                  }
+                  const size_t length = plan.dim * sizeof(float);
+                  reader.need(length);
+                  if (offset > source.size || reader.pos > source.size - offset ||
+                      length > source.size - offset - reader.pos)
+                    throw Error("CORRUPTION", "mapped vector exceeds journal");
+                  offset += reader.pos;
+                }
+                view->fill(count++, key, unpack_row(data, schema), offset);
+              };
+              if (source.data) store_.scan_with_offsets(st.table, fill);
+              else store_.scan(st.table, [&](int64_t key, const std::string &data) {
+                fill(key, data, 0);
+              });
+              if (count != plan.count)
+                throw Error("CORRUPTION", "exact cache row count changed");
+              view->prepare_quantized_codes();
+              return view;
+            };
+            auto view = build_view(mapping);
+            if (mapping.data && !exact::prepare_quantized_query(
+                    *view, projection.query, screen_capable).codes) {
+              view.reset();
+              mapping = {};
+              view = build_view(mapping);
+            }
             cache_->exact_view = std::move(view); // publish only after full fill
           } else {
             cache_->exact_bypass = true;

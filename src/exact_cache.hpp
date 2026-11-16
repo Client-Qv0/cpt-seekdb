@@ -141,10 +141,20 @@ struct Compact {
   size_t dim,count,vector_column;
   std::vector<int64_t> keys;
   std::vector<float> vectors;
+  std::shared_ptr<const char> mapped;
+  std::vector<uint64_t> vector_offsets;
+  const char *row_bytes(size_t row) const {return mapped.get()+vector_offsets[row];}
+  float component(size_t row,size_t d) const {
+    if(!mapped) return vectors[index(row,d)];
+    float f;
+    std::memcpy(&f,row_bytes(row)+d*sizeof(float),sizeof(float));
+    return f;
+  }
   std::vector<ScalarColumn> columns;
   // Widest stored text per column, carried over from the plan that sized it.
   std::vector<size_t> text_max;
-  // Optional row-major screening codes; exact vectors are always retained.
+  // Optional row-major screening codes. Exact values are still available from
+  // the owned vector array or the immutable committed mapping.
   std::unique_ptr<int8_t[]> quantized_codes;
   double quantized_step=1,quantized_inverse=1;
   // One optional posting index per view. New object/allocator bookkeeping fits
@@ -158,11 +168,13 @@ struct Compact {
     bool indexed = false;
   };
   static constexpr size_t equality_sort_scratch = 4096;
-  explicit Compact(const Plan& p):dim(p.dim),count(p.count),vector_column(p.vector_column),
-                                 text_max(p.text_max) {
+  explicit Compact(const Plan& p,std::shared_ptr<const char> file={})
+      :dim(p.dim),count(p.count),vector_column(p.vector_column),
+       mapped(std::move(file)),text_max(p.text_max) {
     if(!p.fits()) throw Error("RESOURCE","exact cache plan exceeds budget");
     keys.resize(count);
-    vectors.resize(((count+3)/4)*dim*4);
+    if(mapped) vector_offsets.resize(count);
+    else vectors.resize(((count+3)/4)*dim*4);
     columns.resize(p.types.size());
     for(size_t c=0;c<columns.size();++c) {
       auto& col=columns[c];col.type=p.types[c];
@@ -175,6 +187,7 @@ struct Compact {
   size_t allocated_bytes() const {
     size_t bytes=4096+columns.capacity()*(sizeof(ScalarColumn)+sizeof(Type)+sizeof(size_t)+96);
     bytes+=keys.capacity()*sizeof(int64_t)+vectors.capacity()*sizeof(float);
+    bytes+=vector_offsets.capacity()*sizeof(uint64_t);
     for(const auto& c:columns) bytes+=c.integers.capacity()*sizeof(int64_t)+c.offsets.capacity()*sizeof(size_t)+c.text.capacity();
     bytes+=text_max.capacity()*sizeof(size_t);
     if(equality_rows) bytes+=count*sizeof(uint32_t);
@@ -198,7 +211,7 @@ struct Compact {
   std::vector<float> vector_cell(size_t row,size_t column) const {
     if(column!=vector_column) throw Error("CORRUPTION","invalid exact vector column");
     std::vector<float> result(dim);
-    for(size_t d=0;d<dim;++d)result[d]=vectors[index(row,d)];
+    for(size_t d=0;d<dim;++d)result[d]=component(row,d);
     return result;
   }
   double distance_cell(size_t row,size_t column,
@@ -207,17 +220,18 @@ struct Compact {
       throw Error("CORRUPTION","invalid exact distance projection");
     double sum=0;
     for(size_t d=0;d<dim;++d) {
-      const double x=double(vectors[index(row,d)])-double(q[d]);
+      const double x=double(component(row,d))-double(q[d]);
       sum+=x*x;
     }
     return std::sqrt(sum);
   }
-  void fill(size_t i,int64_t key,const std::vector<Cell>& row) {
+  void fill(size_t i,int64_t key,const std::vector<Cell>& row,uint64_t offset=0) {
     if(i>=count) throw Error("CORRUPTION","exact cache row count changed");
     keys[i]=key;
     const auto& v=std::get<std::vector<float>>(row[vector_column]);
     if(v.size()!=dim) throw Error("CORRUPTION","exact cache dimension changed");
-    for(size_t d=0;d<dim;++d) vectors[index(i,d)]=v[d];
+    if(mapped) vector_offsets[i]=offset;
+    else for(size_t d=0;d<dim;++d) vectors[index(i,d)]=v[d];
     for(size_t c=0;c<columns.size();++c) {
       auto& col=columns[c];
       if(col.type==Type::BigInt) col.integers[i]=std::get<int64_t>(row[c]);
@@ -239,7 +253,8 @@ struct Compact {
     const size_t scratch=add(mul(dim,sizeof(int16_t)),64);
     if(add(add(allocated_bytes(),payload),scratch)>budget()) return;
     double max_abs=0;
-    for(float value:vectors) {
+    for(size_t row=0;row<count;++row) for(size_t d=0;d<dim;++d) {
+      const float value=component(row,d);
       if(!std::isfinite(value)) return;
       max_abs=std::max(max_abs,std::abs(double(value)));
     }
@@ -255,7 +270,7 @@ struct Compact {
       std::unique_ptr<int8_t[]> codes(new int8_t[payload]);
       for(size_t row=0;row<count;++row)for(size_t d=0;d<dim;++d) {
         // This binary64 power-of-two scaling is exact even for FP32 subnormals.
-        const double rounded=std::nearbyint(double(vectors[index(row,d)])*inverse);
+        const double rounded=std::nearbyint(double(component(row,d))*inverse);
         if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) return;
         codes[row*dim+d]=static_cast<int8_t>(rounded); // Never clamp a code.
       }
@@ -630,16 +645,53 @@ inline void quantized_squared_distance4(const Compact& cache,const size_t* rows,
     out[lane]=quantized_squared_distance(cache,rows[lane],query);
 #endif
 }
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+__attribute__((target("avx2,no-fma")))
+inline void distances4_row_major(const Compact& cache,const size_t* rows,
+                                 const std::vector<float>& q,double* out) {
+  const char *p[4] = {cache.row_bytes(rows[0]),cache.row_bytes(rows[1]),
+                      cache.row_bytes(rows[2]),cache.row_bytes(rows[3])};
+  __m256d total = _mm256_setzero_pd();
+  size_t d=0;
+  auto add_dimension = [&](const __m128& values,size_t i)
+      __attribute__((target("avx2,no-fma"))) {
+    const __m256d diff = _mm256_sub_pd(_mm256_cvtps_pd(values),_mm256_set1_pd(double(q[i])));
+    total = _mm256_add_pd(total,_mm256_mul_pd(diff,diff));
+  };
+  for(; d+4<=q.size();d+=4) {
+    __m128 a,b,c,e;
+    std::memcpy(&a,p[0]+d*4,sizeof(a)); std::memcpy(&b,p[1]+d*4,sizeof(b));
+    std::memcpy(&c,p[2]+d*4,sizeof(c)); std::memcpy(&e,p[3]+d*4,sizeof(e));
+    _MM_TRANSPOSE4_PS(a,b,c,e);
+    add_dimension(a,d); add_dimension(b,d+1);
+    add_dimension(c,d+2); add_dimension(e,d+3);
+  }
+  for(; d<q.size();++d) {
+    add_dimension(_mm_set_ps(cache.component(rows[3],d),cache.component(rows[2],d),
+                            cache.component(rows[1],d),cache.component(rows[0],d)),d);
+  }
+  _mm256_storeu_pd(out,_mm256_sqrt_pd(total));
+}
+#endif
 inline void distances4(const Compact& cache,const size_t* rows,
                        const std::vector<float>& q,double* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
-  if(available()) {distances4_avx2(cache,rows,q,out);return;}
+  if(available()) {
+    if(cache.mapped) distances4_row_major(cache,rows,q,out);
+    else distances4_avx2(cache,rows,q,out);
+    return;
+  }
 #endif
   distances4_scalar(cache,rows,q,out);
 }
 inline void distances8(const Compact& cache,const size_t* rows,
                        const std::vector<float>& q,double* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  if(cache.mapped) {
+    distances4(cache,rows,q,out);
+    distances4(cache,rows+4,q,out+4);
+    return;
+  }
   if(available()) {distances8_avx2(cache,rows,q,out);return;}
 #endif
   for(size_t lane=0;lane<8;++lane) out[lane]=cache.distance(rows[lane],q);
@@ -648,6 +700,11 @@ inline void distances8(const Compact& cache,const size_t* rows,
 inline void distances8_contiguous(const Compact& cache,size_t row,
                                  const std::vector<float>& q,double* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  if(cache.mapped) {
+    const size_t rows[8]={row,row+1,row+2,row+3,row+4,row+5,row+6,row+7};
+    distances8(cache,rows,q,out);
+    return;
+  }
   distances8_contiguous_avx2(cache,row,q,out);
 #else
   for(size_t lane=0;lane<8;++lane) out[lane]=cache.distance(row+lane,q);
