@@ -37,15 +37,6 @@ public:
   void scan(const std::string &table,
             const std::function<void(int64_t, const std::string &)> &fn) const;
 
-  struct ReadMapping {
-    std::shared_ptr<const char> data;
-    uint64_t size = 0;
-  };
-  // Engine discards this immutable view before starting any mutation or
-  // transaction that could rewrite or truncate the journal.
-  ReadMapping map_committed() const;
-  void scan_with_offsets(const std::string &table,
-      const std::function<void(int64_t, const std::string &, uint64_t)> &fn) const;
 private:
   struct Impl;
   std::unique_ptr<Impl> impl_;

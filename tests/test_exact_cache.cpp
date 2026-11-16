@@ -229,7 +229,7 @@ void test_quantized_screen() {
     }
     std::vector<float> query(dim,0.25f);
     auto prepared=exact::prepare_quantized_query(cache,query,true);
-    require(exact::quantized_codes_available(prepared));
+    require(bool(prepared.codes));
     const double worst=cache.distance(2,query);
     const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.root_dim_upper);
     for(size_t i=0;i<vectors.size();++i) {
@@ -254,7 +254,7 @@ void test_quantized_screen() {
     require(cache.quantized_step==expected);
     std::vector<float> query(17,-magnitude);
     auto prepared=exact::prepare_quantized_query(cache,query,true);
-    require(exact::quantized_codes_available(prepared));
+    require(bool(prepared.codes));
     const double threshold=exact::quantized_threshold(0,cache.quantized_step,prepared.root_dim_upper);
     require(exact::quantized_squared_distance(cache,1,prepared)==0);
     require(double(exact::quantized_squared_distance(cache,0,prepared))>threshold);
@@ -282,79 +282,6 @@ void test_quantized_screen() {
   full.prepare_quantized_codes();
   require(!full.quantized_codes && full.allocated_bytes()<=exact::budget());
   std::cout<<"quantized screen code bounds, exact integer sums, rejection safety and budget fallback passed\n";
-#endif
-}
-
-void test_biased_screen_layout_and_kernel() {
-#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
-  if(!exact::available() || std::fegetround()!=FE_TONEAREST) return;
-  auto make_cache=[](float scale) {
-    constexpr size_t count=16,dim=17;
-    std::vector<std::vector<Cell>> rows;
-    exact::Plan plan({Type::BigInt,Type::Vector},1,dim);
-    for(size_t row=0;row<count;++row) {
-      std::vector<float> vector(dim);
-      vector[0]=scale;
-      for(size_t d=1;d<dim;++d)
-        vector[d]=scale*float(int(row*7+d*3)%11-5)/5.0f;
-      rows.push_back({int64_t(row),std::move(vector)});
-      plan.observe(rows.back());
-    }
-    exact::Compact cache(plan);
-    for(size_t row=0;row<rows.size();++row)
-      cache.fill(row,std::get<int64_t>(rows[row][0]),rows[row]);
-    cache.prepare_quantized_codes();
-    return cache;
-  };
-
-  auto cache=make_cache(1.0f);
-  require(cache.quantized_biased);
-  require(cache.quantized_row_norms.size()==cache.count);
-  std::vector<float> query(cache.dim);
-  for(size_t d=0;d<query.size();++d)
-    query[d]=float(int(d*5)%9-4)/5.0f;
-  auto prepared=exact::prepare_quantized_query(cache,query,true);
-  require(bool(prepared.biased_codes) && !prepared.codes);
-  for(size_t block=0;block+8<=cache.count;block+=8) {
-    uint32_t actual[8];
-    const size_t rows[8]={block,block+1,block+2,block+3,
-                          block+4,block+5,block+6,block+7};
-    exact::quantized_biased_squared_distance8(cache,rows,prepared,actual);
-    for(size_t lane=0;lane<8;++lane) {
-      uint32_t expected=0;
-      for(size_t d=0;d<cache.dim;++d) {
-        const int row_code=
-            int(reinterpret_cast<const uint8_t*>(cache.quantized_codes.get())
-                [rows[lane]*cache.dim+d])-64;
-        const int delta=row_code-int(prepared.biased_codes[d]);
-        expected+=uint32_t(delta*delta);
-      }
-      require(actual[lane]==expected);
-    }
-  }
-
-  // Row +64 is stored as byte 128. A query code of 65 must still screen.
-  const std::vector<float> outside(cache.dim, 65.0f/64.0f);
-  const auto wide=exact::prepare_quantized_query(cache,outside,true);
-  require(bool(wide.codes) && !wide.biased_codes);
-  const size_t rows4[4]={0,5,10,15};
-  uint32_t distances[4];
-  exact::quantized_squared_distance4(cache,rows4,wide,distances);
-  for(size_t j=0;j<4;++j) {
-    uint32_t expected=0;
-    for(size_t d=0;d<cache.dim;++d) {
-      int delta=int(uint8_t(cache.quantized_codes[rows4[j]*cache.dim+d]))-64-65;
-      expected+=uint32_t(delta*delta);
-    }
-    require(distances[j]==expected);
-  }
-
-  auto fallback=make_cache(0.8f);
-  require(!fallback.quantized_biased);
-  require(fallback.quantized_row_norms.empty());
-  auto signed_query=exact::prepare_quantized_query(fallback,query,true);
-  require(bool(signed_query.codes) && !signed_query.biased_codes);
-  std::cout<<"7-bit biased layout, exact kernel and out-of-range fallback passed\n";
 #endif
 }
 
@@ -423,7 +350,6 @@ int main() {
   test_equality_postings();
   test_fp32_screen();
   test_quantized_screen();
-  test_biased_screen_layout_and_kernel();
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
   test_quantized_four_row_kernel();
 #endif

@@ -1,5 +1,4 @@
 #include "engine.hpp"
-#include "exact_cache.hpp"
 #include <chrono>
 #include <cmath>
 #include <filesystem>
@@ -157,33 +156,8 @@ int main() {
       check(id(desc,0) == 5 && id(desc,1) == 4 && id(desc,2) == 3,
             "descending TopK must start at the farthest row");
     }
-    {
-      // All codes fit the biased-dot precondition. The first query builds the
-      // exact view; the second must enter the 7-bit screening kernel.
-      mvdb::Engine db(path.string() + "-biased-screen");
-      db.execute("CREATE TABLE biased(id BIGINT PRIMARY KEY,bucket BIGINT,v VECTOR(2))");
-      db.execute(
-          "INSERT INTO biased VALUES "
-          "(1,1,'[1,0]'),(2,0,'[-1,0]'),(3,1,'[-1,0]'),"
-          "(4,0,'[0,1]'),(5,1,'[0,-1]'),(6,0,'[1,1]')");
-      const std::string sql =
-          "SELECT id,L2_DISTANCE(v,'[0.25,0]') AS d FROM biased "
-          "WHERE bucket=1 ORDER BY d LIMIT 1";
-      const auto first = db.execute(sql);
-      const size_t before = mvdb::exact::biased_screen_runs();
-      const auto warmed = db.execute(sql);
-      check(first.rows == warmed.rows,
-            "biased-dot screening must preserve filtered TopK");
-      check(mvdb::exact::biased_screen_runs() > before,
-            "warmed compatible query must use the biased-dot screen");
-      db.execute("UPDATE biased SET v='[9,9]' WHERE id=1");
-      const auto updated = db.execute(sql);
-      check(updated.rows.size() == 1 && id(updated, 0) == 5,
-            "updates must invalidate and rebuild the biased-dot view");
-    }
     fs::remove_all(path.string() + "-desc");
     fs::remove_all(path.string() + "-cap");
-    fs::remove_all(path.string() + "-biased-screen");
     fs::remove_all(path);
     std::cout << "engine extra checks passed: " << checks << '\n';
     return 0;
