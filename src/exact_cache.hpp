@@ -5,6 +5,8 @@
 #include <cmath>
 #include <cfenv>
 #include <algorithm>
+#include <array>
+#include <functional>
 #include <cstdint>
 #include <memory>
 #include <cstring>
@@ -398,13 +400,77 @@ public:
       quantized_codes=std::move(codes);
     } catch(const std::bad_alloc&) {} // Keep the complete original exact view.
   }
+  static std::string_view posting_text(const ScalarColumn& column, size_t row) {
+    const size_t begin = column.offsets[row];
+    const size_t length = column.offsets[row + 1] - begin;
+    return {length ? column.text.data() + begin : "", length};
+  }
+
+  static bool group_text_postings(const ScalarColumn& column, size_t count,
+                                  uint32_t* rows) {
+    constexpr size_t max_groups = 32;
+    constexpr size_t slot_count = max_groups * 2;
+    constexpr size_t samples = 64;
+    if (count < samples * 4) return false;
+
+    struct Group {
+      std::string_view value;
+      uint32_t end = 0;
+    };
+    std::array<Group, max_groups> groups;
+    std::array<uint8_t, slot_count> slots{};
+    std::array<uint8_t, max_groups> order;
+    static_assert(sizeof(groups) + sizeof(slots) + sizeof(order) < equality_sort_scratch);
+    size_t distinct = 0;
+    auto group_for = [&](std::string_view value) {
+      size_t slot = std::hash<std::string_view>{}(value) & (slot_count - 1);
+      while (slots[slot] != 0) {
+        const size_t group = slots[slot] - 1;
+        if (groups[group].value == value) return group;
+        slot = (slot + 1) & (slot_count - 1);
+      }
+      if (distinct == max_groups) return max_groups;
+      groups[distinct].value = value;
+      slots[slot] = static_cast<uint8_t>(distinct + 1);
+      return distinct++;
+    };
+
+    // Probe across key order before counting every row. A column can still
+    // exceed the limit during counting, so keep the original sort available.
+    for (size_t row = 0, stride = count / samples; row < stride * samples; row += stride)
+      if (group_for(posting_text(column, row)) == max_groups) return false;
+    for (size_t row = 0; row < count; ++row) {
+      const size_t group = group_for(posting_text(column, row));
+      if (group == max_groups) return false;
+      ++groups[group].end;
+    }
+
+    for (size_t group = 0; group < distinct; ++group)
+      order[group] = static_cast<uint8_t>(group);
+    std::sort(order.begin(), order.begin() + distinct, [&](uint8_t a, uint8_t b) {
+      return groups[a].value.compare(groups[b].value) < 0;
+    });
+    uint32_t next = 0;
+    for (size_t i = 0; i < distinct; ++i) {
+      auto& group = groups[order[i]];
+      const uint32_t size = group.end;
+      group.end = next;
+      next += size;
+    }
+    // Every value was already counted. Appending in row order gives the same
+    // order within each value as the original (value, row) comparator.
+    for (size_t row = 0; row < count; ++row) {
+      const size_t group = group_for(posting_text(column, row));
+      rows[groups[group].end++] = static_cast<uint32_t>(row);
+    }
+    return true;
+  }
+
   int compare_scalar(size_t c,size_t row,const Cell& value) const {
     const auto& col=columns[c];
     if(col.type==Type::BigInt) {auto a=col.integers[row],b=std::get<int64_t>(value);return (a>b)-(a<b);}
-    const size_t begin=col.offsets[row],length=col.offsets[row+1]-begin;
-    std::string_view a(length?col.text.data()+begin:"",length);
-    std::string_view b=std::get<std::string>(value);
-    int cmp=a.compare(b);return (cmp>0)-(cmp<0);
+    const int cmp=posting_text(col,row).compare(std::get<std::string>(value));
+    return (cmp>0)-(cmp<0);
   }
   EqualityRange equality_range(size_t c,const Cell& value) {
     if(columns[c].type!=Type::BigInt && columns[c].type!=Type::Varchar) return {};
@@ -418,20 +484,17 @@ public:
       if(add(add(allocated_bytes(),needed),equality_sort_scratch)>budget()) return {};
       try {
         std::unique_ptr<uint32_t[]> rows(new uint32_t[count]);
-        for(size_t i=0;i<count;++i) rows[i]=static_cast<uint32_t>(i);
         const auto& col=columns[c];
         if(col.type==Type::BigInt) {
+          for(size_t i=0;i<count;++i) rows[i]=static_cast<uint32_t>(i);
           std::sort(rows.get(),rows.get()+count,[&](uint32_t a,uint32_t b) {
             const auto x=col.integers[a],y=col.integers[b];
             return x<y || (x==y && a<b);
           });
-        } else {
-          auto text=[&](uint32_t row) {
-            const size_t begin=col.offsets[row],length=col.offsets[row+1]-begin;
-            return std::string_view(length?col.text.data()+begin:"",length);
-          };
+        } else if(!group_text_postings(col,count,rows.get())) {
+          for(size_t i=0;i<count;++i) rows[i]=static_cast<uint32_t>(i);
           std::sort(rows.get(),rows.get()+count,[&](uint32_t a,uint32_t b) {
-            const int cmp=text(a).compare(text(b));
+            const int cmp=posting_text(col,a).compare(posting_text(col,b));
             return cmp<0 || (cmp==0 && a<b);
           });
         }
