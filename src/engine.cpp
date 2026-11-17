@@ -1060,20 +1060,38 @@ Result Engine::execute_statement(const Statement &st) {
         return descending ? a.distance > b.distance : a.distance < b.distance;
       return a.key < b.key;
     };
-    std::priority_queue<Neighbor, std::vector<Neighbor>,
-                        decltype(better_neighbor)>
-        nearest(better_neighbor);
-    using Heap = decltype(nearest);
+    using NeighborQueue = std::priority_queue<
+        Neighbor, std::vector<Neighbor>, decltype(better_neighbor)>;
+    struct Heap : NeighborQueue {
+      Heap(decltype(better_neighbor) better, size_t limit) : NeighborQueue(better) {
+        this->c.reserve(std::min(limit, size_t(16)));
+      }
+      void replace_worst(Neighbor neighbor) {
+        auto &rows = this->c;
+        size_t hole = 0;
+        for (size_t child = 1; child < rows.size(); child = hole * 2 + 1) {
+          if (child + 1 < rows.size() && this->comp(rows[child], rows[child + 1]))
+            ++child;
+          if (!this->comp(neighbor, rows[child])) break;
+          rows[hole] = rows[child];
+          hole = child;
+        }
+        rows[hole] = neighbor;
+      }
+      std::vector<Neighbor> take_ordered() {
+        std::sort_heap(this->c.begin(), this->c.end(), this->comp);
+        return std::move(this->c);
+      }
+    };
+    Heap nearest(better_neighbor, limit);
     const auto &projection = ps[keys[0].index];
     auto consider = [&](Heap &heap, int64_t key, double distance,
                         size_t row = std::numeric_limits<size_t>::max()) {
       Neighbor n{distance, key, row};
       if (heap.size() < *st.limit)
         heap.push(n);
-      else if (better_neighbor(n, heap.top())) {
-        heap.pop();
-        heap.push(n);
-      }
+      else if (better_neighbor(n, heap.top()))
+        heap.replace_worst(n);
     };
     auto original_visit = [&](int64_t key, const std::vector<Cell> &row) {
       if (matches(row, fs))
@@ -1412,7 +1430,7 @@ Result Engine::execute_statement(const Statement &st) {
           std::vector<Heap> heaps;
           heaps.reserve(width);
           for (size_t index = 0; index < width; ++index)
-            heaps.emplace_back(better_neighbor);
+            heaps.emplace_back(better_neighbor, limit);
           const size_t per = (total + width - 1) / width;
           const size_t chunk = (per + 31) / 32 * 32;
           share_cutoff = quantized_available && *st.limit == 10;
@@ -1584,12 +1602,7 @@ Result Engine::execute_statement(const Statement &st) {
     } else {
       scan_rows(original_visit);
     }
-    std::vector<Neighbor> winners;
-    while (!nearest.empty()) {
-      winners.push_back(nearest.top());
-      nearest.pop();
-    }
-    std::sort(winners.begin(), winners.end(), better_neighbor);
+    auto winners = nearest.take_ordered();
     // Winners stay in memory only while they fit the result budget. Past it they
     // go through the sorter the per-row path uses, so a wide TopK over wide rows
     // streams instead of holding every projected row at once.
@@ -1614,7 +1627,8 @@ Result Engine::execute_statement(const Statement &st) {
       if (winner_view) {
         for (const auto &p : ps) {
           if (p.distance) {
-            if (p.col == projection.col && p.query == projection.query)
+            if (&p == &projection ||
+                (p.col == projection.col && p.query == projection.query))
               output.push_back(n.distance);
             else
               output.push_back(
