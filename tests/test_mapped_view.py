@@ -157,8 +157,10 @@ def check(binary, directory, cgroup):
             req(f"UPDATE t SET v='{json.dumps(values)}' WHERE id={i};")
             vectors[i] = fp32(values)
         req("COMMIT;")
-        for i in range(8):
-            values = samples()
+        # Include out-of-code queries and FP32 overflow with finite FP64 sums.
+        scales = [1.0] * 8 + [3.0, -3.0] * 2 + [1e20, -1e20] * 2
+        for i, scale in enumerate(scales):
+            values = [value * scale for value in samples()]
             query = fp32(values)
             reference = []
             for key,row in vectors.items():
@@ -178,7 +180,7 @@ def check(binary, directory, cgroup):
         req()
         assert p.wait(timeout=30)==0
         print(json.dumps({"passed":True,"checkpoint_bytes":[before.st_size,after.st_size],
-                          "wal_replaced":True,"sigkill_rollback":True,"scalar_queries":8}))
+                          "wal_replaced":True,"sigkill_rollback":True,"scalar_queries":len(scales)}))
     finally:
         if p and p.poll() is None:
             p.kill()

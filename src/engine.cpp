@@ -965,8 +965,7 @@ Result Engine::execute_statement(const Statement &st) {
         // Both screens reject records whose approximation cannot beat the worst
         // kept distance, which assumes smaller is better. A descending key keeps
         // the farthest records, so it scans without screening.
-        const bool screen = screen_capable &&
-              (!cache_->exact_view->mapped || exact::quantized_codes_available(quantized));
+        const bool screen = screen_capable;
         const bool quantized_available = exact::quantized_codes_available(quantized);
         if (quantized.biased_codes) ++exact::biased_screen_runs();
         // A cutoff from a full local heap is witnessed by K distinct eligible
@@ -1029,8 +1028,14 @@ Result Engine::execute_statement(const Statement &st) {
                     : exact::fp32_screen_threshold(worst, view.dim);
                 screened_worst = worst;
               }
+              const uint32_t all =
+                  batch_count == 32 ? uint32_t(0xffffffffu) : uint32_t(0xffu);
               uint32_t survivors = 0;
-              if (quantized_available) {
+              // No finite FP32 sum can exceed this cutoff.
+              if (!quantized_available &&
+                  screen_threshold >= std::numeric_limits<float>::max()) {
+                survivors = all;
+              } else if (quantized_available) {
                 const double cutoff = effective_cutoff(screen_threshold, updated);
                 if (quantized.biased_codes) {
                   for (size_t offset = 0; offset < batch_count; offset += 8) {
@@ -1070,8 +1075,6 @@ Result Engine::execute_statement(const Statement &st) {
                                                  screen_threshold))
                     survivors |= uint32_t(1) << lane;
               }
-              const uint32_t all =
-                  batch_count == 32 ? uint32_t(0xffffffffu) : uint32_t(0xffu);
               if (survivors != all) {
                 for (size_t lane = 0; lane < batch_count; ++lane)
                   if (survivors & (uint32_t(1) << lane)) picked[picked_count++] = i + lane;
@@ -1172,7 +1175,10 @@ Result Engine::execute_statement(const Statement &st) {
                 screened_worst = worst;
               }
               uint32_t survivors = 0;
-              if (quantized_available) {
+              if (!quantized_available &&
+                  screen_threshold >= std::numeric_limits<float>::max()) {
+                survivors = uint32_t(0xffffffffu);
+              } else if (quantized_available) {
                 const double cutoff = effective_cutoff(screen_threshold, updated);
                 if (quantized.biased_codes) {
                   for (size_t offset = 0; offset < 32; offset += 8) {

@@ -71,10 +71,12 @@ inline bool fp32_screen_available(size_t dim) {
   return false;
 #endif
 }
-// For D<=8192, a finite FP32 sequential square sum a and the original double
-// sum S obey a <= 1.01*S + 2*D*2^-149. With n=D+3, the relative factor is at
-// most 1/((1-n*2^-24)*(1-n*2^-53)) < 1.00049; 2*D*2^-149 covers FP32 square
-// underflow. A subnormal difference of two FP32 inputs is exactly representable.
+// For D<=8192, a finite FP32 square sum a and the original double sum S obey
+// a <= 1.01*S + 2*D*2^-149. Any tree adding the D nonnegative terms rounds each
+// contribution at most D-1 times, including the mapped kernel's lane reduction.
+// With n=D+3, the relative factor is at most
+// 1/((1-n*2^-24)*(1-n*2^-53)) < 1.00049; 2*D*2^-149 covers FP32 square underflow.
+// A subnormal difference of two FP32 inputs is exactly representable.
 // Use nextup(d)^2, not d^2: distinct sums can round to the same sqrt distance.
 // Every operation forming the rejection threshold is expanded upward.
 inline double fp32_screen_threshold(double worst_distance,size_t dim) {
@@ -610,6 +612,46 @@ inline void squared_distances32_fp32_avx2(
   _mm256_storeu_ps(out+16,sum2);_mm256_storeu_ps(out+24,sum3);
 }
 
+// Use the mapped row layout directly when the query cannot be quantized.
+// These FP32 sums only reject rows; survivors still use ordered FP64 distances.
+__attribute__((target("avx2,no-fma"),noinline))
+inline void squared_distances_fp32_mapped_avx2(
+    const Compact& cache,const size_t* rows,size_t first,size_t count,
+    const std::vector<float>& q,float* out) {
+  for(size_t at=0;at<count;at+=4) {
+    const char* data[4];
+    for(size_t lane=0;lane<4;++lane) {
+      data[lane]=cache.row_bytes(rows ? rows[at+lane] : first+at+lane);
+    }
+    __m256 sums[4]={_mm256_setzero_ps(),_mm256_setzero_ps(),
+                   _mm256_setzero_ps(),_mm256_setzero_ps()};
+    size_t d=0;
+    for(;d+8<=cache.dim;d+=8) {
+      const __m256 query=_mm256_loadu_ps(q.data()+d);
+      for(size_t lane=0;lane<4;++lane) {
+        __m256 values;
+        std::memcpy(&values,data[lane]+d*sizeof(float),sizeof(values));
+        const __m256 delta=_mm256_sub_ps(values,query);
+        sums[lane]=_mm256_add_ps(sums[lane],_mm256_mul_ps(delta,delta));
+      }
+    }
+    const __m256 pairs01=_mm256_hadd_ps(sums[0],sums[1]);
+    const __m256 pairs23=_mm256_hadd_ps(sums[2],sums[3]);
+    const __m256 partial=_mm256_hadd_ps(pairs01,pairs23);
+    const __m128 totals=_mm_add_ps(_mm256_castps256_ps128(partial),
+                                  _mm256_extractf128_ps(partial,1));
+    _mm_storeu_ps(out+at,totals);
+    for(;d<cache.dim;++d) {
+      for(size_t lane=0;lane<4;++lane) {
+        float value;
+        std::memcpy(&value,data[lane]+d*sizeof(float),sizeof(value));
+        const float delta=value-q[d];
+        out[at+lane]+=delta*delta;
+      }
+    }
+  }
+}
+
 // Four rows per call: one query load feeds four independent integer
 // accumulators. Per-row arithmetic is unchanged, so the results are identical
 // to four quantized_squared_distance_avx2 calls.
@@ -883,7 +925,8 @@ inline void distances8_contiguous(const Compact& cache,size_t row,
 inline void squared_distances8_fp32_contiguous(
     const Compact& cache,size_t row,const std::vector<float>& q,float* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
-  squared_distances8_fp32_contiguous_avx2(cache,row,q,out);
+  if(cache.mapped) squared_distances_fp32_mapped_avx2(cache,nullptr,row,8,q,out);
+  else squared_distances8_fp32_contiguous_avx2(cache,row,q,out);
 #else
   (void)cache;(void)row;(void)q;
   for(size_t lane=0;lane<8;++lane) out[lane]=std::numeric_limits<float>::infinity();
@@ -892,7 +935,8 @@ inline void squared_distances8_fp32_contiguous(
 inline void squared_distances32_fp32_contiguous(
     const Compact& cache,size_t row,const std::vector<float>& q,float* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
-  squared_distances32_fp32_contiguous_avx2(cache,row,q,out);
+  if(cache.mapped) squared_distances_fp32_mapped_avx2(cache,nullptr,row,32,q,out);
+  else squared_distances32_fp32_contiguous_avx2(cache,row,q,out);
 #else
   (void)cache;(void)row;(void)q;
   for(size_t lane=0;lane<32;++lane) out[lane]=std::numeric_limits<float>::infinity();
@@ -901,7 +945,8 @@ inline void squared_distances32_fp32_contiguous(
 inline void squared_distances32_fp32(
     const Compact& cache,const size_t* rows,const std::vector<float>& q,float* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
-  squared_distances32_fp32_avx2(cache,rows,q,out);
+  if(cache.mapped) squared_distances_fp32_mapped_avx2(cache,rows,0,32,q,out);
+  else squared_distances32_fp32_avx2(cache,rows,q,out);
 #else
   (void)cache;(void)rows;(void)q;
   for(size_t lane=0;lane<32;++lane) out[lane]=std::numeric_limits<float>::infinity();
