@@ -280,6 +280,8 @@ std::vector<float> vector_literal(const Literal &l, uint32_t dim) {
     throw Error("TYPE", "VECTOR requires a quoted array");
   const auto &s = l.text;
   size_t p = 0;
+  const bool nearest = std::fegetround() == FE_TONEAREST;
+  constexpr double reciprocal[] = {1., .1, .01, .001, .0001, .00001, .000001};
   auto space = [&] {
     while (p < s.size() &&
            (s[p] == ' ' || s[p] == '\t' || s[p] == '\r' || s[p] == '\n'))
@@ -295,21 +297,26 @@ std::vector<float> vector_literal(const Literal &l, uint32_t dim) {
       size_t start = p;
       if (p < s.size() && (s[p] == '-' || s[p] == '+'))
         ++p;
-      size_t digits = 0;
+      size_t digits = 0, fractional_digits = 0;
+      uint32_t mantissa = 0;
       while (p < s.size() && s[p] >= '0' && s[p] <= '9') {
+        mantissa = mantissa * 10 + unsigned(s[p] - '0');
         ++p;
         ++digits;
       }
       if (p < s.size() && s[p] == '.') {
         ++p;
         while (p < s.size() && s[p] >= '0' && s[p] <= '9') {
+          mantissa = mantissa * 10 + unsigned(s[p] - '0');
           ++p;
           ++digits;
+          ++fractional_digits;
         }
       }
       if (!digits)
         throw Error("TYPE", "vector component must be a finite number");
-      if (p < s.size() && (s[p] == 'e' || s[p] == 'E')) {
+      const bool exponent = p < s.size() && (s[p] == 'e' || s[p] == 'E');
+      if (exponent) {
         ++p;
         if (p < s.size() && (s[p] == '-' || s[p] == '+'))
           ++p;
@@ -319,22 +326,33 @@ std::vector<float> vector_literal(const Literal &l, uint32_t dim) {
         if (p == e)
           throw Error("TYPE", "invalid exponent");
       }
-      const char *begin = s.data() + start;
-      const char *last = s.data() + p;
-      // Floating from_chars does not accept a leading '+'. The unchanged
-      // scanner above has already validated the complete decimal token.
-      if (*begin == '+')
-        ++begin;
-      float f = 0;
-      const auto parsed = std::from_chars(begin, last, f, std::chars_format::general);
-      if (parsed.ec != std::errc() || parsed.ptr != last) {
-        // Preserve strtof's existing acceptance and rounding of finite
-        // underflows (including signed zero), and its overflow diagnostics.
-        auto token = s.substr(start, p - start);
-        char *end = nullptr;
-        f = std::strtof(token.c_str(), &end);
-        if (end != token.c_str() + token.size())
-          throw Error("TYPE", "vector component overflows finite float32");
+      float f;
+      if (nearest && !exponent && digits <= 7 && fractional_digits <= 6) {
+        // For n / 10^k in this range, dyadic values have at most 24
+        // significant bits. Non-dyadic values are separated from any FP32
+        // midpoint by a relative gap of at least 1 / (5^6 * 2^25), well
+        // above binary64 reciprocal multiplication error (< 2^-51).
+        // The unsigned accumulation may wrap only on the slow path.
+        const double value = double(mantissa) * reciprocal[fractional_digits];
+        f = static_cast<float>(s[start] == '-' ? -value : value);
+      } else {
+        f = 0;
+        const char *begin = s.data() + start;
+        const char *last = s.data() + p;
+        // Floating from_chars does not accept a leading '+'. The unchanged
+        // scanner above has already validated the complete decimal token.
+        if (*begin == '+')
+          ++begin;
+        const auto parsed = std::from_chars(begin, last, f, std::chars_format::general);
+        if (parsed.ec != std::errc() || parsed.ptr != last) {
+          // Preserve strtof's existing acceptance and rounding of finite
+          // underflows (including signed zero), and its overflow diagnostics.
+          auto token = s.substr(start, p - start);
+          char *end = nullptr;
+          f = std::strtof(token.c_str(), &end);
+          if (end != token.c_str() + token.size())
+            throw Error("TYPE", "vector component overflows finite float32");
+        }
       }
       if (!std::isfinite(f))
         throw Error("TYPE", "vector component overflows finite float32");
