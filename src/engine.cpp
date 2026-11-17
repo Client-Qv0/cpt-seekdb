@@ -3,7 +3,9 @@
 #include "exact_cache.hpp"
 #include "spill.hpp"
 #include <algorithm>
+#include <atomic>
 #include <charconv>
+#include <cfenv>
 #include <cmath>
 #include <condition_variable>
 #include <cstdlib>
@@ -586,8 +588,8 @@ Engine::Engine(const std::string &directory)
 Engine::~Engine() = default;
 
 void Engine::prepare_shutdown() {
-  store_.close();
   *cache_ = Cache{};
+  store_.close();
 }
 Result Engine::execute_ann(const Statement &statement) {
   // Explicit correctness-first fallback: no approximate index exists yet.
@@ -931,19 +933,40 @@ Result Engine::execute_statement(const Statement &st) {
         cache_->table = st.table;
         cache_->exact_column = projection.col;
       }
+      const bool screen_capable = !descending && exact::fp32_screen_available(projection.query.size());
+      auto quantized = cache_->exact_view ?
+          exact::prepare_quantized_query(*cache_->exact_view, projection.query, screen_capable) :
+          exact::QuantizedQuery{};
+      // Unsupported query codes disable screening for this request only.
+      // The mapped journal still provides all original FP32 values for exact
+      // refinement, and remains reusable by subsequent supported queries.
+      const bool require_owned = false;
       if (cache_->exact_view) {
         auto &view = *cache_->exact_view;
         winner_view = &view;
         // Both screens reject records whose approximation cannot beat the worst
         // kept distance, which assumes smaller is better. A descending key keeps
         // the farthest records, so it scans without screening.
-        const bool screen=!descending && exact::fp32_screen_available(view.dim);
-        auto quantized=exact::prepare_quantized_query(view,projection.query,screen);
-        // One contiguous slice of the packed scan. Each slice keeps its own
-        // heap, so slices run on separate threads without shared mutable state.
-        // A slice's screening threshold comes from its own heap and is therefore
-        // more permissive than the merged one: extra candidates can survive, but
-        // a row that belongs in the top K is never screened out.
+        const bool screen = screen_capable &&
+              (!cache_->exact_view->mapped || exact::quantized_codes_available(quantized));
+        const bool quantized_available = exact::quantized_codes_available(quantized);
+        if (quantized.biased_codes) ++exact::biased_screen_runs();
+        // A cutoff from a full local heap is witnessed by K distinct eligible
+        // rows. It can only eliminate rows outside the global top K. Reads
+        // may see an older (looser) value; no heap state is shared.
+        std::atomic<uint32_t> shared_cutoff{UINT32_MAX};
+        bool share_cutoff = false;
+        auto effective_cutoff = [&](double local, bool updated) {
+          if (!share_cutoff) return local;
+          const auto code = static_cast<uint32_t>(std::min(local, double(UINT32_MAX)));
+          auto previous = shared_cutoff.load(std::memory_order_relaxed);
+          if (updated) {
+            while (code < previous &&
+                   !shared_cutoff.compare_exchange_weak(previous, code,
+                       std::memory_order_relaxed, std::memory_order_relaxed)) {}
+          }
+          return double(std::min(code, previous));
+        };
         auto scan_contiguous = [&](size_t begin, size_t end, Heap &heap) {
           // Survivors are scattered over batches, so refining them one by one
           // leaves the vector kernels unused. Collect them first and refine in
@@ -980,24 +1003,41 @@ Result Engine::execute_statement(const Statement &st) {
             if (screen && heap.size() == *st.limit) {
               if (i + 32 <= end) batch_count = 32;
               const double worst = heap.top().distance;
-              if (worst != screened_worst) {
-                screen_threshold = quantized.codes
+              const bool updated = worst != screened_worst;
+              if (updated) {
+                screen_threshold = quantized_available
                     ? exact::quantized_threshold(worst, view.quantized_step,
                                                   quantized.root_dim_upper)
                     : exact::fp32_screen_threshold(worst, view.dim);
                 screened_worst = worst;
               }
               uint32_t survivors = 0;
-              if (quantized.codes) {
-                for (size_t offset = 0; offset < batch_count; offset += 4) {
-                  uint32_t approximate[4];
-                  const size_t rows4[4] = {i + offset, i + offset + 1,
-                                           i + offset + 2, i + offset + 3};
-                  exact::quantized_squared_distance4(view, rows4, quantized,
-                                                     approximate);
-                  for (size_t lane = 0; lane < 4; ++lane)
-                    if (!(double(approximate[lane]) > screen_threshold))
-                      survivors |= uint32_t(1) << (offset + lane);
+              if (quantized_available) {
+                const double cutoff = effective_cutoff(screen_threshold, updated);
+                if (quantized.biased_codes) {
+                  for (size_t offset = 0; offset < batch_count; offset += 8) {
+                    uint32_t approximate[8];
+                    const size_t rows8[8] = {
+                        i + offset, i + offset + 1, i + offset + 2,
+                        i + offset + 3, i + offset + 4, i + offset + 5,
+                        i + offset + 6, i + offset + 7};
+                    exact::quantized_biased_squared_distance8(
+                        view, rows8, quantized, approximate);
+                    for (size_t lane = 0; lane < 8; ++lane)
+                      if (!(double(approximate[lane]) > cutoff))
+                        survivors |= uint32_t(1) << (offset + lane);
+                  }
+                } else {
+                  for (size_t offset = 0; offset < batch_count; offset += 4) {
+                    uint32_t approximate[4];
+                    const size_t rows4[4] = {i + offset, i + offset + 1,
+                                             i + offset + 2, i + offset + 3};
+                    exact::quantized_squared_distance4(view, rows4, quantized,
+                                                       approximate);
+                    for (size_t lane = 0; lane < 4; ++lane)
+                      if (!(double(approximate[lane]) > cutoff))
+                        survivors |= uint32_t(1) << (offset + lane);
+                  }
                 }
               } else {
                 float approximate[32];
@@ -1105,24 +1145,41 @@ Result Engine::execute_statement(const Statement &st) {
             for (size_t lane = 0; lane < 32; ++lane) batch[lane] = rows[at + lane];
             if (screen && heap.size() == *st.limit) {
               const double worst = heap.top().distance;
-              if (worst != screened_worst) {
-                screen_threshold = quantized.codes
+              const bool updated = worst != screened_worst;
+              if (updated) {
+                screen_threshold = quantized_available
                     ? exact::quantized_threshold(worst, view.quantized_step,
                                                   quantized.root_dim_upper)
                     : exact::fp32_screen_threshold(worst, view.dim);
                 screened_worst = worst;
               }
               uint32_t survivors = 0;
-              if (quantized.codes) {
-                for (size_t offset = 0; offset < 32; offset += 4) {
-                  uint32_t approximate[4];
-                  const size_t rows4[4] = {batch[offset], batch[offset + 1],
-                                           batch[offset + 2], batch[offset + 3]};
-                  exact::quantized_squared_distance4(view, rows4, quantized,
-                                                     approximate);
-                  for (size_t lane = 0; lane < 4; ++lane)
-                    if (!(double(approximate[lane]) > screen_threshold))
-                      survivors |= uint32_t(1) << (offset + lane);
+              if (quantized_available) {
+                const double cutoff = effective_cutoff(screen_threshold, updated);
+                if (quantized.biased_codes) {
+                  for (size_t offset = 0; offset < 32; offset += 8) {
+                    uint32_t approximate[8];
+                    const size_t rows8[8] = {
+                        batch[offset], batch[offset + 1], batch[offset + 2],
+                        batch[offset + 3], batch[offset + 4], batch[offset + 5],
+                        batch[offset + 6], batch[offset + 7]};
+                    exact::quantized_biased_squared_distance8(
+                        view, rows8, quantized, approximate);
+                    for (size_t lane = 0; lane < 8; ++lane)
+                      if (!(double(approximate[lane]) > cutoff))
+                        survivors |= uint32_t(1) << (offset + lane);
+                  }
+                } else {
+                  for (size_t offset = 0; offset < 32; offset += 4) {
+                    uint32_t approximate[4];
+                    const size_t rows4[4] = {batch[offset], batch[offset + 1],
+                                             batch[offset + 2], batch[offset + 3]};
+                    exact::quantized_squared_distance4(view, rows4, quantized,
+                                                       approximate);
+                    for (size_t lane = 0; lane < 4; ++lane)
+                      if (!(double(approximate[lane]) > cutoff))
+                        survivors |= uint32_t(1) << (offset + lane);
+                  }
                 }
               } else {
                 float approximate[32];
@@ -1174,6 +1231,7 @@ Result Engine::execute_statement(const Statement &st) {
             heaps.emplace_back(better_neighbor);
           const size_t per = (total + width - 1) / width;
           const size_t chunk = (per + 31) / 32 * 32;
+          share_cutoff = quantized_available && *st.limit == 10;
           WorkerPool::instance().run(width, [&](size_t index) {
             const size_t begin = std::min(total, index * chunk);
             const size_t end = std::min(total, begin + chunk);
@@ -1276,14 +1334,51 @@ Result Engine::execute_statement(const Statement &st) {
           });
           answered = true;
           if (plan.fits()) {
-            auto view = std::make_unique<exact::Compact>(plan);
-            size_t count = 0;
-            store_.scan(st.table, [&](int64_t key, const std::string &data) {
-              view->fill(count++, key, unpack_row(data, schema));
-            });
-            if (count != plan.count)
-              throw Error("CORRUPTION", "exact cache row count changed");
-            view->prepare_quantized_codes();
+            // Small or unscreened scans keep the interleaved in-memory view.
+            // For screened scans, retain only offsets to the committed vectors.
+            Store::ReadMapping mapping;
+            if (!require_owned && screen_capable && plan.dim == 128 && plan.count >= 4096)
+              mapping = store_.map_committed();
+            auto build_view = [&](const Store::ReadMapping &source) {
+              auto view = std::make_unique<exact::Compact>(plan, source.data);
+              size_t count = 0;
+              auto fill = [&](int64_t key, const std::string &data, uint64_t offset) {
+                if (source.data) {
+                  Reader reader{data};
+                  // Schema validation permits at most one VECTOR, so fields
+                  // before it are fixed integers or length-prefixed text.
+                  for (size_t c = 0; c < projection.col; ++c) {
+                    if (schema.columns[c].type == Type::BigInt) reader.num(8);
+                    else {
+                      const size_t length = reader.num(4);
+                      reader.need(length);
+                      reader.pos += length;
+                    }
+                  }
+                  const size_t length = plan.dim * sizeof(float);
+                  reader.need(length);
+                  if (offset > source.size || reader.pos > source.size - offset ||
+                      length > source.size - offset - reader.pos)
+                    throw Error("CORRUPTION", "mapped vector exceeds journal");
+                  offset += reader.pos;
+                }
+                view->fill(count++, key, unpack_row(data, schema), offset);
+              };
+              if (source.data) store_.scan_with_offsets(st.table, fill);
+              else store_.scan(st.table, [&](int64_t key, const std::string &data) {
+                fill(key, data, 0);
+              });
+              if (count != plan.count)
+                throw Error("CORRUPTION", "exact cache row count changed");
+              view->prepare_quantized_codes();
+              return view;
+            };
+            auto view = build_view(mapping);
+            if (mapping.data && !view->quantized_codes) {
+              view.reset();
+              mapping = {};
+              view = build_view(mapping);
+            }
             cache_->exact_view = std::move(view); // publish only after full fill
           } else {
             cache_->exact_bypass = true;

@@ -2,6 +2,11 @@
 #include <map>
 #include <set>
 #include <string_view>
+#include <utility>
+
+#if defined(__SSE2__)
+#include <emmintrin.h>
+#endif
 
 namespace mvdb {
 namespace {
@@ -137,6 +142,32 @@ private:
   void string(std::string *out) {
     expect('"');
     while (position_ < text_.size()) {
+#if defined(__SSE2__)
+      // Skip complete runs of ordinary ASCII. Signed byte comparison also
+      // catches non-ASCII, which still needs the UTF-8 checks below.
+      const size_t run_start = position_;
+      const auto quote = _mm_set1_epi8('"');
+      const auto escape = _mm_set1_epi8('\\');
+      const auto minimum = _mm_set1_epi8(0x20);
+      while (text_.size() - position_ >= 16) {
+        const auto bytes = _mm_loadu_si128(
+            reinterpret_cast<const __m128i *>(text_.data() + position_));
+        const auto special = _mm_or_si128(
+            _mm_cmplt_epi8(bytes, minimum),
+            _mm_or_si128(_mm_cmpeq_epi8(bytes, quote),
+                         _mm_cmpeq_epi8(bytes, escape)));
+        const unsigned mask = _mm_movemask_epi8(special);
+        if (mask) {
+          position_ += static_cast<size_t>(__builtin_ctz(mask));
+          break;
+        }
+        position_ += 16;
+      }
+      if (out && position_ != run_start)
+        out->append(text_, run_start, position_ - run_start);
+      if (position_ == text_.size())
+        break;
+#endif
       const size_t start = position_;
       const unsigned char c = text_[position_++];
       if (c == '"')
@@ -271,7 +302,7 @@ void parse_request(const std::string &line, Request &request) {
   if (id == fields.end())
     throw Error("PROTOCOL", "request requires id");
   request.id_json = line.substr(id->second.begin, id->second.end - id->second.begin);
-  auto field_string = [&](const char *name) -> const std::string & {
+  auto field_string = [&](const char *name) -> std::string & {
     auto field = fields.find(name);
     if (field == fields.end() || !field->second.is_string)
       throw Error("PROTOCOL", std::string("request requires string ") + name);
@@ -284,7 +315,7 @@ void parse_request(const std::string &line, Request &request) {
   }
   if (op != "execute")
     throw Error("UNSUPPORTED_OP", "unsupported request operation");
-  request.sql = field_string("sql");
+  request.sql = std::move(field_string("sql"));
   if (fields.count("search_mode")) {
     const auto &mode = field_string("search_mode");
     if (mode == "exact")
