@@ -12,15 +12,14 @@ import subprocess
 import tempfile
 
 
-def vec(x):
-    return "'[" + ",".join([str(x)]*128) + "]'"
+def check(binary, directory, cgroup, dimension=128):
+    def vec(x):
+        return "'[" + ",".join([str(x)] * dimension) + "]'"
 
+    def select_sql(needle, where="", order="", extra=""):
+        return (f"SELECT id,L2_DISTANCE(v,{vec(needle)}) AS d{extra} "
+                f"FROM t{where} ORDER BY d{order} LIMIT 10;")
 
-S = lambda needle, where="", order="", extra="": (
-    f"SELECT id,L2_DISTANCE(v,{vec(needle)}) AS d{extra} FROM t{where} ORDER BY d{order} LIMIT 10;")
-
-
-def check(binary, directory, cgroup):
     journal = directory/"journal.mvdb"
     count = 4097
     k = count-1
@@ -62,7 +61,7 @@ def check(binary, directory, cgroup):
         assert [r[0] for r in rows]==ids, rows
         assert [struct.pack("<d",r[1]) for r in rows]==[struct.pack("<d",x) for x in distances], rows
         if projected is not None:
-            assert rows[0][2]==[projected]*128, rows[0]
+            assert rows[0][2]==[projected] * dimension, rows[0]
 
     def kill():
         p.kill()
@@ -71,48 +70,48 @@ def check(binary, directory, cgroup):
 
     try:
         start()
-        req("CREATE TABLE t (grp VARCHAR(16), id BIGINT PRIMARY KEY, v VECTOR(128));")
+        req(f"CREATE TABLE t (grp VARCHAR(16), id BIGINT PRIMARY KEY, v VECTOR({dimension}));")
         physical=list(range(count))
         random.Random(3187).shuffle(physical)
         for b in range(0,count,100):
             req("INSERT INTO t VALUES "+",".join(
                 f"('g{i%2}',{i},{vec(1 if i==k else 0)})" for i in physical[b:b+100])+";")
-        z=math.sqrt(128.0)
+        z=math.sqrt(float(dimension))
         expected=[k]+list(range(9))
         # An unsupported query may be the very first query that builds a view.
         # Rejecting its code must not reject an otherwise valid mapped cache.
-        verify(S(1024),expected,[math.sqrt(128*1023**2)]+[math.sqrt(128*1024**2)]*9)
+        verify(select_sql(1024),expected,[math.sqrt(dimension*1023**2)]+[math.sqrt(dimension*1024**2)]*9)
         mapped(True)
-        verify(S(1),expected,[0.0]+[z]*9)
+        verify(select_sql(1),expected,[0.0]+[z]*9)
         mapped(True)
-        verify(S(1," WHERE grp='g0'",extra=",v"),[k]+list(range(0,18,2)),[0.0]+[z]*9,1)
+        verify(select_sql(1," WHERE grp='g0'",extra=",v"),[k]+list(range(0,18,2)),[0.0]+[z]*9,1)
         mapped(True)
-        # Code 65 exercises the integer fallback without discarding the map.
+        # Code 65 is wider than the stored row codes and keeps the map.
         wide = 65.0/64.0
-        verify(S(wide),expected,[z/64.0]+[math.sqrt(128*wide**2)]*9)
+        verify(select_sql(wide),expected,[z/64.0]+[math.sqrt(dimension*wide**2)]*9)
         mapped(True)
-        verify(S(1024),expected,[math.sqrt(128*1023**2)]+[math.sqrt(128*1024**2)]*9)
+        verify(select_sql(1024),expected,[math.sqrt(dimension*1023**2)]+[math.sqrt(dimension*1024**2)]*9)
         mapped(True)
-        verify(S(1),expected,[0.0]+[z]*9)
+        verify(select_sql(1),expected,[0.0]+[z]*9)
         mapped(True)
-        # Repeated unsupported queries must remain exact and keep the mapping.
+        # Wider and out-of-code queries stay exact and retain the mapping.
         for needle in (4, 1024, -1024):
             winners = expected if needle > 0 else list(range(10))
-            distances = ([math.sqrt(128*(needle-1)**2)] +
-                         [math.sqrt(128*needle**2)]*9 if needle > 0 else
-                         [math.sqrt(128*needle**2)]*10)
-            verify(S(needle),winners,distances)
+            distances = ([math.sqrt(dimension*(needle-1)**2)] +
+                         [math.sqrt(dimension*needle**2)]*9 if needle > 0 else
+                         [math.sqrt(dimension*needle**2)]*10)
+            verify(select_sql(needle),winners,distances)
             mapped(True)
         req("BEGIN;")
         req(f"UPDATE t SET v={vec(1)} WHERE id=2;")
-        verify(S(1),[2,k,0,1,3,4,5,6,7,8],[0.0,0.0]+[z]*8)
+        verify(select_sql(1),[2,k,0,1,3,4,5,6,7,8],[0.0,0.0]+[z]*8)
         mapped(False)
         req("ROLLBACK;")
-        verify(S(1),expected,[0.0]+[z]*9)
+        verify(select_sql(1),expected,[0.0]+[z]*9)
         mapped(True)
-        verify(S(1,order=" DESC"),list(range(10)),[z]*10)
+        verify(select_sql(1,order=" DESC"),list(range(10)),[z]*10)
         mapped(True)
-        verify(S(1),expected,[0.0]+[z]*9)
+        verify(select_sql(1),expected,[0.0]+[z]*9)
         mapped(True)
 
         # Grow an obsolete payload beyond the automatic checkpoint threshold.
@@ -130,27 +129,27 @@ def check(binary, directory, cgroup):
         after=journal.stat()
         assert before.st_ino!=after.st_ino and after.st_size<before.st_size
         req("COMMIT;")
-        verify(S(1),expected,[0.0]+[z]*9)
+        verify(select_sql(1),expected,[0.0]+[z]*9)
         mapped(True)
 
         req(f"UPDATE t SET v={vec(1)} WHERE id=4;")
-        verify(S(1),[4,k,0,1,2,3,5,6,7,8],[0.0,0.0]+[z]*8)
+        verify(select_sql(1),[4,k,0,1,2,3,5,6,7,8],[0.0,0.0]+[z]*8)
         mapped(True)
         req("BEGIN;")
         req(f"UPDATE t SET v={vec(1)} WHERE id=6;")
         kill()
         start()
-        verify(S(1),[4,k,0,1,2,3,5,6,7,8],[0.0,0.0]+[z]*8)
+        verify(select_sql(1),[4,k,0,1,2,3,5,6,7,8],[0.0,0.0]+[z]*8)
         mapped(True)
 
         # Vary individual components as well as whole-vector values, and use
         # ordered FP64 accumulation over independently rounded FP32 inputs.
         rng = random.Random(3179)
         def samples():
-            return [round(rng.uniform(-1,1),6) for _ in range(128)]
+            return [round(rng.uniform(-1,1),6) for _ in range(dimension)]
         def fp32(values):
-            return struct.unpack("<128f", struct.pack("<128f", *values))
-        vectors = {i:(float(i in (4,k)),)*128 for i in range(count)}
+            return struct.unpack(f"<{dimension}f", struct.pack(f"<{dimension}f", *values))
+        vectors = {i:(float(i in (4,k)),) * dimension for i in range(count)}
         req("BEGIN;")
         for i in range(100,140):
             values = samples()
@@ -179,7 +178,7 @@ def check(binary, directory, cgroup):
             mapped(True)
         req()
         assert p.wait(timeout=30)==0
-        print(json.dumps({"passed":True,"checkpoint_bytes":[before.st_size,after.st_size],
+        print(json.dumps({"passed":True,"dimension":dimension,"checkpoint_bytes":[before.st_size,after.st_size],
                           "wal_replaced":True,"sigkill_rollback":True,"scalar_queries":len(scales)}))
     finally:
         if p and p.poll() is None:
@@ -193,6 +192,7 @@ if __name__=="__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument("--binary",type=Path,required=True)
     parser.add_argument("--cgroup",type=Path)
+    parser.add_argument("--dimension",type=int,choices=(128,256,257),default=128)
     args=parser.parse_args()
     with tempfile.TemporaryDirectory(prefix="mvdb-mapped-view-") as tmp:
-        check(str(args.binary.resolve()),Path(tmp),args.cgroup)
+        check(str(args.binary.resolve()),Path(tmp),args.cgroup,args.dimension)

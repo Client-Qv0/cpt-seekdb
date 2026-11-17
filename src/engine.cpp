@@ -1530,7 +1530,7 @@ Result Engine::execute_statement(const Statement &st) {
             // Small or unscreened scans keep the interleaved in-memory view.
             // For screened scans, retain only offsets to the committed vectors.
             Store::ReadMapping mapping;
-            if (!require_owned && screen_capable && plan.dim == 128 && plan.count >= 4096)
+            if (!require_owned && screen_capable && plan.dim >= 128 && plan.count >= 4096)
               mapping = store_.map_committed();
             auto build_view = [&](const Store::ReadMapping &source) {
               auto view = std::make_unique<exact::Compact>(plan, source.data);
