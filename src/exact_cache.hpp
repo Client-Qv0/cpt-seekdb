@@ -967,9 +967,15 @@ inline void quantized_squared_distance4_avx2(const int8_t* r0,const int8_t* r1,
   }
 }
 
+struct ContiguousCodeRows {
+  const int8_t* first;
+  size_t stride;
+  const int8_t* operator[](size_t lane) const {return first+lane*stride;}
+};
+template<class Rows>
 __attribute__((target("avx2,no-fma"),always_inline))
 inline void finish_quantized_biased_distances8(
-    const __m256i (&sums)[8],const int8_t* const rows[8],const uint32_t* row_norms,
+    const __m256i (&sums)[8],const Rows& rows,const uint32_t* row_norms,
     const QuantizedQuery& query,size_t d,size_t dim,uint32_t* out) {
   if(d==dim) {
     // Pair different rows to sum four dots at a time. HADD stays within
@@ -1007,9 +1013,10 @@ inline void finish_quantized_biased_distances8(
 // The biased row bytes are in [0,128] and query codes are in [-127,127].
 // Each pair sum has magnitude at most 2*128*127 = 32512, so maddubs cannot
 // saturate. One query load feeds eight independent accumulators.
-__attribute__((target("avx2,no-fma"),noinline))
-inline void quantized_biased_squared_distance8_avx2(
-    const int8_t* const rows[8],const uint32_t* row_norms,
+template<class Rows>
+__attribute__((target("avx2,no-fma"),always_inline))
+inline void biased_distances8_avx2(
+    const Rows& rows,const uint32_t* row_norms,
     const QuantizedQuery& query,size_t dim,uint32_t* out) {
   __m256i sums[8]={_mm256_setzero_si256(),_mm256_setzero_si256(),
                    _mm256_setzero_si256(),_mm256_setzero_si256(),
@@ -1031,12 +1038,29 @@ inline void quantized_biased_squared_distance8_avx2(
   finish_quantized_biased_distances8(sums,rows,row_norms,query,d,dim,out);
 }
 
+__attribute__((target("avx2,no-fma"),noinline))
+inline void quantized_biased_squared_distance8_avx2(
+    const int8_t* const rows[8],const uint32_t* row_norms,
+    const QuantizedQuery& query,size_t dim,uint32_t* out) {
+  biased_distances8_avx2(rows,row_norms,query,dim,out);
+}
+
+__attribute__((target("avx2,no-fma"),noinline))
+inline void biased_distances32_contiguous_avx2(
+    const int8_t* base,const uint32_t* row_norms,const QuantizedQuery& query,
+    size_t dim,uint32_t* out) {
+  for(size_t at=0;at<32;at+=8)
+    biased_distances8_avx2(ContiguousCodeRows{base+at*dim,dim},
+                              row_norms+at,query,dim,out+at);
+}
+
 #ifdef MVDB_HAVE_AVXVNNI
 // VEX VPDPBUSD accumulates four unsigned-by-signed products per 32-bit lane.
 // The AVX2 path builds the same partial sum in three steps.
-__attribute__((target("avx2,avxvnni,no-fma"),noinline))
-inline void quantized_biased_squared_distance8_avxvnni(
-    const int8_t* const rows[8],const uint32_t* row_norms,
+template<class Rows>
+__attribute__((target("avx2,avxvnni,no-fma"),always_inline))
+inline void biased_distances8_avxvnni(
+    const Rows& rows,const uint32_t* row_norms,
     const QuantizedQuery& query,size_t dim,uint32_t* out) {
   __m256i sums[8]={_mm256_setzero_si256(),_mm256_setzero_si256(),
                    _mm256_setzero_si256(),_mm256_setzero_si256(),
@@ -1053,6 +1077,22 @@ inline void quantized_biased_squared_distance8_avxvnni(
     }
   }
   finish_quantized_biased_distances8(sums,rows,row_norms,query,d,dim,out);
+}
+
+__attribute__((target("avx2,avxvnni,no-fma"),noinline))
+inline void quantized_biased_squared_distance8_avxvnni(
+    const int8_t* const rows[8],const uint32_t* row_norms,
+    const QuantizedQuery& query,size_t dim,uint32_t* out) {
+  biased_distances8_avxvnni(rows,row_norms,query,dim,out);
+}
+
+__attribute__((target("avx2,avxvnni,no-fma"),noinline))
+inline void biased_distances32_contiguous_avxvnni(
+    const int8_t* base,const uint32_t* row_norms,const QuantizedQuery& query,
+    size_t dim,uint32_t* out) {
+  for(size_t at=0;at<32;at+=8)
+    biased_distances8_avxvnni(ContiguousCodeRows{base+at*dim,dim},
+                              row_norms+at,query,dim,out+at);
 }
 #endif
 
@@ -1154,6 +1194,24 @@ inline void quantized_biased_squared_distance8(
       dot+=int32_t(uint8_t(row[d]))*int32_t(query.biased_codes[d]);
     out[lane]=biased_quantized_score(cache.quantized_row_norms[rows[lane]],dot,query);
   }
+#endif
+}
+// A complete contiguous batch already has a contiguous row-norm array.
+inline void quantized_biased_distances32_contiguous(
+    const Compact& cache,size_t first,const QuantizedQuery& query,uint32_t* out) {
+#if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  const int8_t* codes=cache.quantized_codes.get()+first*cache.dim;
+  const uint32_t* norms=cache.quantized_row_norms.data()+first;
+#ifdef MVDB_HAVE_AVXVNNI
+  if(query.use_avxvnni) {
+    biased_distances32_contiguous_avxvnni(codes,norms,query,cache.dim,out);
+    return;
+  }
+#endif
+  biased_distances32_contiguous_avx2(codes,norms,query,cache.dim,out);
+#else
+  for(size_t lane=0;lane<32;++lane)
+    out[lane]=quantized_squared_distance(cache,first+lane,query);
 #endif
 }
 // Sample the integer scores to avoid serializing scans whose exact refinement
