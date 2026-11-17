@@ -1703,8 +1703,29 @@ Result Engine::execute_statement(const Statement &st) {
     std::vector<Candidate>().swap(all);
     buffered_bytes = 0;
   };
+  const bool can_compare_before_projection = st.limit && std::all_of(
+      keys.begin(), keys.end(), [&](const SortKey &k) {
+        return !k.projection || !ps[k.index].distance;
+      });
+  auto beats_worst = [&](int64_t key, const std::vector<Cell> &row) {
+    const auto &worst = heap.top();
+    for (size_t i = 0; i < keys.size(); ++i) {
+      const auto &k = keys[i];
+      const size_t column = k.projection ? ps[k.index].col : k.index;
+      const int order = compare(row[column], worst.sort[i]);
+      if (order)
+        return k.desc ? order > 0 : order < 0;
+    }
+    return key < worst.pk;
+  };
   scan_rows([&](int64_t key, const std::vector<Cell> &row) {
     if (!matches(row, fs))
+      return;
+    // With scalar order keys the row already contains everything needed to
+    // reject it. Avoid projecting wide columns and computing unused distances.
+    const bool compare_early =
+        can_compare_before_projection && !sorter && heap.size() == *st.limit;
+    if (compare_early && !beats_worst(key, row))
       return;
     Candidate c;
     c.pk = key;
@@ -1726,7 +1747,7 @@ Result Engine::execute_statement(const Statement &st) {
         }
         buffered_bytes += bytes;
         heap.push(std::move(c));
-      } else if (better(c, heap.top())) {
+      } else if (compare_early || better(c, heap.top())) {
         buffered_bytes -= weight(heap.top());
         heap.pop();
         if (bytes > result_budget - buffered_bytes) {
