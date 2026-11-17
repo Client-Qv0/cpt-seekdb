@@ -1005,7 +1005,8 @@ Result Engine::execute_statement(const Statement &st) {
   // actually carry decides instead; see the measured check at the scan.
   const size_t limit = st.limit ? *st.limit : 0;
   const bool declared_fits = limit && projection_bound <= result_budget / limit;
-  const bool primary_order = keys.size() == 1 && (keys[0].projection
+  // A leading primary key already determines the full order (keys are unique).
+  const bool primary_order = !keys.empty() && (keys[0].projection
       ? !ps[keys[0].index].distance && ps[keys[0].index].col == pk
       : keys[0].index == pk);
   if (declared_fits && primary_order) {
