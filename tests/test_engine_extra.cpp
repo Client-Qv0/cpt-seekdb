@@ -204,6 +204,38 @@ int main() {
       check(updated.rows.size() == 1 && id(updated, 0) == 5,
             "updates must invalidate and rebuild the biased-dot view");
     }
+    {
+      mvdb::Engine db(path.string() + "-shared");
+      db.execute("CREATE TABLE same(id BIGINT PRIMARY KEY,grp VARCHAR(8),v VECTOR(2))");
+      db.execute("INSERT INTO same VALUES "
+                 "(9,'half','[1,0]'),(7,'rare','[1,0]'),"
+                 "(-3,'rare','[1,0]'),(2,'rest','[1,0]')");
+      const std::string select = "SELECT id,L2_DISTANCE(v,'[0,0]') AS d FROM same";
+      const std::string asc = select + " ORDER BY d LIMIT 2";
+      const auto first = db.execute(asc);
+      const auto warmed = db.execute(asc);
+      check(warmed.rows == first.rows && warmed.rows.size() == 2 &&
+                id(warmed,0) == -3 && id(warmed,1) == 2,
+            "a shared distance must keep the least visible keys");
+      const std::string filtered_desc =
+          select + " WHERE grp='rare' ORDER BY d DESC LIMIT 2";
+      const auto posting = db.execute(filtered_desc);
+      check(posting.rows.size() == 2 && id(posting,0) == -3 && id(posting,1) == 7 &&
+                std::get<double>(posting.rows[0][1]) == 1.0,
+            "filtered shared distance must preserve primary-key tie order");
+      check(db.execute(select + " WHERE grp='missing' ORDER BY d LIMIT 2").rows.empty(),
+            "empty shared-vector posting must return no rows");
+
+      db.execute("UPDATE same SET v='[0,0]' WHERE id=9");
+      db.execute("UPDATE same SET v='[-1,0]' WHERE id=-3");
+      const auto updated = db.execute(asc);
+      check(db.execute(asc).rows == updated.rows && updated.rows.size() == 2 &&
+                id(updated,0) == 9 && id(updated,1) == -3,
+            "mutations must invalidate the shared vector and preserve distinct equidistant rows");
+      check(db.execute(filtered_desc).rows == posting.rows,
+            "an equality posting of distinct equidistant rows keeps the same ties");
+    }
+    fs::remove_all(path.string() + "-shared");
     fs::remove_all(path.string() + "-desc");
     fs::remove_all(path.string() + "-cap");
     fs::remove_all(path.string() + "-biased-screen");

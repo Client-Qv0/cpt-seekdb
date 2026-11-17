@@ -197,6 +197,8 @@ struct Compact {
   std::vector<ScalarColumn> columns;
   // Widest stored text per column, carried over from the plan that sized it.
   std::vector<size_t> text_max;
+  // A single finite vector shared by all rows, in strictly ascending key order.
+  bool shared_vector=false;
   // Optional row-major screening codes. Exact values are still available from
   // the owned vector array or the immutable committed mapping.
   std::unique_ptr<int8_t[]> quantized_codes;
@@ -294,6 +296,23 @@ struct Compact {
         col.offsets[i+1]=offset+s.size();
       }
     }
+  }
+  // Call after filling the view. A differing component usually ends the
+  // check on the second row. Bitwise equality ensures exact distances match.
+  void prepare_shared_vector() {
+    if(!count) return;
+    for(size_t row=1;row<count;++row) {
+      if(keys[row-1]>=keys[row]) return;
+      if(mapped) {
+        if(std::memcmp(row_bytes(0),row_bytes(row),dim*sizeof(float))!=0) return;
+      } else {
+        for(size_t d=0;d<dim;++d)
+          if(std::memcmp(&vectors[index(0,d)],&vectors[index(row,d)],sizeof(float))!=0) return;
+      }
+    }
+    for(size_t d=0;d<dim;++d)
+      if(!std::isfinite(component(0,d))) return;
+    shared_vector=true;
   }
   // Call once after every exact row has been filled, before publishing the view.
   // Bypassed views never pay this scan; an optional-budget failure returns before

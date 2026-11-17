@@ -1297,6 +1297,18 @@ Result Engine::execute_statement(const Statement &st) {
             }
           ++exact::parallel_runs();
         };
+        // With a shared vector, all distances tie. Store scans and posting
+        // lists visit increasing row keys, so only the first K eligible
+        // rows can win in either sort direction.
+        auto collect_shared = [&](const uint32_t *rows, size_t count) {
+          if (!count) return;
+          const double distance = view.distance(rows ? rows[0] : 0,
+                                                projection.query);
+          for (size_t i = 0; i < std::min(count, limit); ++i) {
+            const size_t row = rows ? rows[i] : i;
+            consider(nearest, view.keys[row], distance, row);
+          }
+        };
         // What the winners allocate is the text they actually carry, not the
         // declared VARCHAR width that had to enter this path to be measured.
         size_t actual_bound = 0;
@@ -1314,10 +1326,13 @@ Result Engine::execute_statement(const Statement &st) {
           winner_view = nullptr;
           scan_rows(original_visit);
         } else if (fs.empty()) {
-          run_slices(static_cast<size_t>(view.count),
-                     [&](size_t begin, size_t end, Heap &heap) {
-                       scan_contiguous(begin, end, heap);
-                     });
+          if (view.shared_vector)
+            collect_shared(nullptr, view.count);
+          else
+            run_slices(static_cast<size_t>(view.count),
+                       [&](size_t begin, size_t end, Heap &heap) {
+                         scan_contiguous(begin, end, heap);
+                       });
         } else {
           auto eligible = [&](size_t i, const Filter *satisfied) {
             for (const auto &f : fs) {
@@ -1364,9 +1379,12 @@ Result Engine::execute_statement(const Statement &st) {
             rows = hits.data();
             row_count = hits.size();
           }
-          run_slices(row_count, [&](size_t begin, size_t end, Heap &heap) {
-            scan_list(rows + begin, end - begin, heap);
-          });
+          if (view.shared_vector)
+            collect_shared(rows, row_count);
+          else
+            run_slices(row_count, [&](size_t begin, size_t end, Heap &heap) {
+              scan_list(rows + begin, end - begin, heap);
+            });
         }
       } else if (cache_->exact_bypass) {
         // Remember this view's budget bypass until existing invalidation clears it.
@@ -1422,11 +1440,12 @@ Result Engine::execute_statement(const Statement &st) {
               });
               if (count != plan.count)
                 throw Error("CORRUPTION", "exact cache row count changed");
-              view->prepare_quantized_codes();
+              view->prepare_shared_vector();
+              if (!view->shared_vector) view->prepare_quantized_codes();
               return view;
             };
             auto view = build_view(mapping);
-            if (mapping.data && !view->quantized_codes) {
+            if (mapping.data && !view->shared_vector && !view->quantized_codes) {
               view.reset();
               mapping = {};
               view = build_view(mapping);
