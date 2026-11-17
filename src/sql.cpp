@@ -21,9 +21,19 @@ bool space(char c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c
   throw Error("SYNTAX", reason + " at byte " + std::to_string(offset));
 }
 
-std::vector<Token> tokenize(const std::string& sql) {
-  std::vector<Token> tokens;
-  size_t i = 0;
+class Lexer {
+ public:
+  explicit Lexer(const std::string& sql) : sql_(sql) {}
+  Token next();
+
+ private:
+  const std::string& sql_;
+  size_t position_ = 0;
+};
+
+Token Lexer::next() {
+  const auto& sql = sql_;
+  size_t& i = position_;
   while (i < sql.size()) {
     const char c = sql[i];
     if (space(c)) { ++i; continue; }
@@ -92,15 +102,14 @@ std::vector<Token> tokenize(const std::string& sql) {
       if (!closed) syntax(start, "Unterminated quoted value");
       if (c == '`') {
         if (value.empty()) syntax(start, "Empty identifier");
-        tokens.push_back({TokenKind::Identifier, lower(std::move(value)), start});
-      } else tokens.push_back({TokenKind::String, std::move(value), start});
-      continue;
+        return {TokenKind::Identifier, lower(std::move(value)), start};
+      }
+      return {TokenKind::String, std::move(value), start};
     }
     if (alpha(c) || c == '_') {
       ++i;
       while (i < sql.size() && (alpha(sql[i]) || digit(sql[i]) || sql[i] == '_' || sql[i] == '$')) ++i;
-      tokens.push_back({TokenKind::Word, lower(sql.substr(start, i - start)), start});
-      continue;
+      return {TokenKind::Word, lower(sql.substr(start, i - start)), start};
     }
     if (digit(c) || c == '.' || c == '+' || c == '-') {
       if (c == '+' || c == '-') ++i;
@@ -120,21 +129,18 @@ std::vector<Token> tokenize(const std::string& sql) {
       }
       if (i < sql.size() && (alpha(sql[i]) || sql[i] == '_' || sql[i] == '.'))
         syntax(start, "Invalid numeric literal");
-      tokens.push_back({TokenKind::Number, sql.substr(start, i - start), start});
-      continue;
+      return {TokenKind::Number, sql.substr(start, i - start), start};
     }
     if (std::string_view("(),;*=<>").find(c) != std::string_view::npos) {
       ++i;
       if ((c == '<' || c == '>') && i < sql.size() && sql[i] == '=') ++i;
       else if (c == '<' && i < sql.size() && sql[i] == '>')
         syntax(start, "Not-equal comparison is unsupported");
-      tokens.push_back({TokenKind::Symbol, sql.substr(start, i - start), start});
-      continue;
+      return {TokenKind::Symbol, sql.substr(start, i - start), start};
     }
     syntax(start, "Unexpected character");
   }
-  tokens.push_back({TokenKind::End, "", sql.size()});
-  return tokens;
+  return {TokenKind::End, "", sql.size()};
 }
 
 bool reserved(const std::string& word) {
@@ -150,7 +156,7 @@ bool reserved(const std::string& word) {
 
 class Parser {
  public:
-  explicit Parser(const std::string& sql) : tokens_(tokenize(sql)) {}
+  explicit Parser(const std::string& sql) : lexer_(sql), token_(lexer_.next()) {}
   Statement parse() {
     Statement s;
     if (accept("create")) create(s);
@@ -167,23 +173,29 @@ class Parser {
     return s;
   }
  private:
-  std::vector<Token> tokens_;
-  size_t pos_ = 0;
-  const Token& current() const { return tokens_[pos_]; }
-  bool is(const std::string& value) const {
-    return (current().kind == TokenKind::Word || current().kind == TokenKind::Symbol)
-      && current().text == value;
+  Lexer lexer_;
+  Token token_;
+  const Token& current() const { return token_; }
+  void advance() { token_ = lexer_.next(); }
+  bool is(std::string_view value) const {
+    return (token_.kind == TokenKind::Word || token_.kind == TokenKind::Symbol)
+      && token_.text == value;
   }
-  bool accept(const std::string& value) { if (!is(value)) return false; ++pos_; return true; }
-  void expect(const std::string& value) {
-    if (!accept(value)) syntax(current().offset, "Expected '" + value + "'");
+  bool accept(std::string_view value) {
+    if (!is(value)) return false;
+    advance();
+    return true;
+  }
+  void expect(std::string_view value) {
+    if (!accept(value)) syntax(current().offset, "Expected '" + std::string(value) + "'");
   }
   std::string identifier() {
-    const Token& t = current();
-    if (t.kind != TokenKind::Identifier && (t.kind != TokenKind::Word || reserved(t.text)))
-      syntax(t.offset, "Expected identifier");
-    ++pos_;
-    return t.text;
+    if (token_.kind != TokenKind::Identifier &&
+        (token_.kind != TokenKind::Word || reserved(token_.text)))
+      syntax(token_.offset, "Expected identifier");
+    auto text = std::move(token_.text);
+    advance();
+    return text;
   }
   uint64_t uint_literal() {
     const Token& t = current();
@@ -196,15 +208,15 @@ class Parser {
         syntax(t.offset, "Integer exceeds uint64 range");
       n = n * 10 + d;
     }
-    ++pos_;
+    advance();
     return n;
   }
   Literal literal() {
-    const Token& t = current();
-    if (t.kind != TokenKind::String && t.kind != TokenKind::Number)
-      syntax(t.offset, "Expected string or numeric literal");
-    ++pos_;
-    return {t.text, t.kind == TokenKind::String};
+    if (token_.kind != TokenKind::String && token_.kind != TokenKind::Number)
+      syntax(token_.offset, "Expected string or numeric literal");
+    Literal literal{std::move(token_.text), token_.kind == TokenKind::String};
+    advance();
+    return literal;
   }
   void create(Statement& s) {
     if (accept("vector")) {
@@ -287,7 +299,8 @@ class Parser {
         c.column = identifier();
         if (!(is("=") || is("<") || is("<=") || is(">") || is(">=")))
           syntax(current().offset, "Expected supported comparison operator");
-        c.op = current().text; ++pos_;
+        c.op = std::move(token_.text);
+        advance();
         c.value = literal(); out.push_back(std::move(c));
       }
     } while (accept("and"));
@@ -320,5 +333,15 @@ class Parser {
   }
 };
 }
-Statement parse_sql(const std::string& sql) { return Parser(sql).parse(); }
+Statement parse_sql(const std::string& sql) {
+  try {
+    return Parser(sql).parse();
+  } catch (const Error&) {
+    // The eager lexer reported a lexical error anywhere in the input before
+    // reporting a grammar error. Preserve that precedence on the error path.
+    Lexer lexer(sql);
+    while (lexer.next().kind != TokenKind::End) {}
+    throw;
+  }
+}
 }
