@@ -291,6 +291,16 @@ struct Compact {
     if(v.size()!=dim) throw Error("CORRUPTION","exact cache dimension changed");
     if(mapped) vector_offsets[i]=offset;
     else for(size_t d=0;d<dim;++d) vectors[index(i,d)]=v[d];
+    fill_scalars(i,row);
+  }
+  void fill_mapped(size_t i,int64_t key,const std::vector<Cell>& row,uint64_t offset) {
+    if(!mapped || i>=count) throw Error("CORRUPTION","invalid mapped exact row");
+    keys[i]=key;
+    vector_offsets[i]=offset;
+    fill_scalars(i,row);
+  }
+private:
+  void fill_scalars(size_t i,const std::vector<Cell>& row) {
     for(size_t c=0;c<columns.size();++c) {
       auto& col=columns[c];
       if(col.type==Type::BigInt) col.integers[i]=std::get<int64_t>(row[c]);
@@ -302,6 +312,7 @@ struct Compact {
       }
     }
   }
+public:
   // Call after filling the view. A differing component usually ends the
   // check on the second row. Bitwise equality ensures exact distances match.
   void prepare_shared_vector() {

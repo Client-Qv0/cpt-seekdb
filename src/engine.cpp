@@ -20,6 +20,7 @@
 #include <queue>
 #include <set>
 #include <sstream>
+#include <string_view>
 #include <thread>
 #if defined(__linux__)
 #include <sched.h>
@@ -175,7 +176,7 @@ void bytes(std::string &out, const std::string &s) {
   out += s;
 }
 struct Reader {
-  const std::string &s;
+  std::string_view s;
   size_t pos = 0;
   void need(size_t n) {
     if (n > s.size() - pos)
@@ -191,7 +192,7 @@ struct Reader {
   std::string str() {
     auto n = num(4);
     need(n);
-    auto t = s.substr(pos, n);
+    std::string t(s.substr(pos, n));
     pos += n;
     return t;
   }
@@ -434,7 +435,9 @@ std::string pack_row(const std::vector<Cell> &row, const Schema &s) {
   }
   return out;
 }
-std::vector<Cell> unpack_row(const std::string &data, const Schema &s) {
+template<bool Mapped = false>
+std::vector<Cell> unpack_row(std::string_view data, const Schema &s,
+                             size_t *vector_offset = nullptr) {
   Reader r{data};
   std::vector<Cell> row;
   row.reserve(s.columns.size());
@@ -446,7 +449,13 @@ std::vector<Cell> unpack_row(const std::string &data, const Schema &s) {
       row.emplace_back(v);
     } else if (c.type == Type::Varchar)
       row.emplace_back(r.str());
-    else {
+    else if constexpr (Mapped) {
+      *vector_offset = r.pos;
+      const size_t length = size_t(c.size) * 4;
+      r.need(length);
+      r.pos += length;
+      row.emplace_back(std::vector<float>{});
+    } else {
       std::vector<float> v;
       v.reserve(c.size);
       for (uint32_t j = 0; j < c.size; ++j) {
@@ -1533,34 +1542,20 @@ Result Engine::execute_statement(const Statement &st) {
             if (!require_owned && screen_capable && plan.dim >= 128 && plan.count >= 4096)
               mapping = store_.map_committed();
             auto build_view = [&](const Store::ReadMapping &source) {
-              auto view = std::make_unique<exact::Compact>(plan, source.data);
+              auto view = std::make_unique<exact::Compact>(plan, source.data());
               size_t count = 0;
-              auto fill = [&](int64_t key, const std::string &data, uint64_t offset) {
-                if (source.data) {
-                  Reader reader{data};
-                  // Schema validation permits at most one VECTOR, so fields
-                  // before it are fixed integers or length-prefixed text.
-                  for (size_t c = 0; c < projection.col; ++c) {
-                    if (schema.columns[c].type == Type::BigInt) reader.num(8);
-                    else {
-                      const size_t length = reader.num(4);
-                      reader.need(length);
-                      reader.pos += length;
-                    }
-                  }
-                  const size_t length = plan.dim * sizeof(float);
-                  reader.need(length);
-                  if (offset > source.size || reader.pos > source.size - offset ||
-                      length > source.size - offset - reader.pos)
-                    throw Error("CORRUPTION", "mapped vector exceeds journal");
-                  offset += reader.pos;
-                }
-                view->fill(count++, key, unpack_row(data, schema), offset);
-              };
-              if (source.data) store_.scan_with_offsets(st.table, fill);
-              else store_.scan(st.table, [&](int64_t key, const std::string &data) {
-                fill(key, data, 0);
-              });
+              if (source.data()) {
+                store_.scan_mapped(st.table, source,
+                    [&](int64_t key, std::string_view data, uint64_t offset) {
+                  size_t vector_offset = 0;
+                  auto row = unpack_row<true>(data, schema, &vector_offset);
+                  view->fill_mapped(count++, key, row, offset + vector_offset);
+                });
+              } else {
+                store_.scan(st.table, [&](int64_t key, const std::string &data) {
+                  view->fill(count++, key, unpack_row(data, schema));
+                });
+              }
               if (count != plan.count)
                 throw Error("CORRUPTION", "exact cache row count changed");
               view->prepare_shared_vector();
@@ -1568,7 +1563,7 @@ Result Engine::execute_statement(const Statement &st) {
               return view;
             };
             auto view = build_view(mapping);
-            if (mapping.data && !view->shared_vector && !view->quantized_codes) {
+            if (mapping.data() && !view->shared_vector && !view->quantized_codes) {
               view.reset();
               mapping = {};
               view = build_view(mapping);

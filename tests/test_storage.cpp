@@ -40,6 +40,64 @@ std::vector<std::pair<int64_t, std::string>> all(Store &s) {
   });
   return result;
 }
+void committed_mapped_scan() {
+  Temp primary, other;
+  Store s(primary.path), foreign(other.path);
+  const std::string bytes("a\0b", 3);
+  for (auto *store : {&s, &foreign}) {
+    put(*store, 9, bytes);
+    put(*store, -1, "");
+    put(*store, 9, "new");
+    put(*store, 2, bytes);
+  }
+  s.begin_statement();
+  s.erase("t", 9);
+  s.finish_statement();
+  foreign.begin_statement();
+  foreign.erase("t", 9);
+  foreign.finish_statement();
+
+  auto mapping = s.map_committed();
+  auto foreign_mapping = foreign.map_committed();
+  assert(mapping.data() && foreign_mapping.data());
+  assert(fs::file_size(fs::path(primary.path) / "journal.mvdb") ==
+         fs::file_size(fs::path(other.path) / "journal.mvdb"));
+  auto rejected = [&](const Store::ReadMapping &source) {
+    try {
+      s.scan_mapped("t", source,
+          [](int64_t, std::string_view, uint64_t) { assert(false); });
+      assert(false);
+    } catch (const mvdb::Error &e) {
+      assert(e.code == "CORRUPT");
+    }
+  };
+  rejected(foreign_mapping);
+  s.begin();
+  rejected(mapping);
+  s.rollback();
+  s.begin_statement();
+  rejected(mapping);
+  s.abort_statement();
+
+  const auto expected = all(s);
+  assert(expected.size() == 2);
+  size_t i = 0;
+  s.scan_mapped("t", mapping,
+      [&](int64_t id, std::string_view payload, uint64_t offset) {
+    assert(i < expected.size());
+    assert(id == expected[i].first && payload == expected[i].second);
+    assert(payload.data() == mapping.data().get() + offset);
+    ++i;
+  });
+  assert(i == expected.size());
+
+  put(s, 2, "modified");
+  rejected(mapping);
+  mapping = s.map_committed();
+  assert(mapping.data());
+  s.checkpoint();
+  rejected(mapping);
+}
 void basics() {
   Temp t;
   {
@@ -598,6 +656,6 @@ int main() {
   checkpoint_correctness();
   automatic_checkpoint();
   checkpoint_crash_boundaries();
-  std::cout << "storage: 11 suites passed (including commit truncation, "
+  std::cout << "storage: 12 suites passed (including commit truncation, "
                "recovery interruption, and checkpoint crash boundaries)\n";
 }

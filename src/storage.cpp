@@ -697,7 +697,7 @@ struct Store::Impl {
       sync_fd(fd);
   }
   template<bool Descending, class Visitor>
-  void scan_visible(const std::string &table, KeyRange range, Visitor fn) const {
+  void scan_visible_refs(const std::string &table, KeyRange range, Visitor fn) const {
     check();
     if (range.first > range.last)
       return;
@@ -752,9 +752,15 @@ struct Store::Impl {
       take(a, a_end);
       take(b, b_end);
       take(c, c_end);
-      if (!ref.deleted && !fn(key, load(ref), ref.offset))
+      if (!ref.deleted && !fn(key, ref))
         return;
     }
+  }
+  template<bool Descending, class Visitor>
+  void scan_visible(const std::string &table, KeyRange range, Visitor fn) const {
+    scan_visible_refs<Descending>(table, range, [&](int64_t key, const Ref &ref) {
+      return fn(key, load(ref), ref.offset);
+    });
   }
   std::optional<Ref> find_row(const Layer &layer, const std::string &table,
                               int64_t key) const {
@@ -932,8 +938,33 @@ Store::ReadMapping Store::map_committed() const {
     return {};
   void *address = ::mmap(nullptr, s.end, PROT_READ, MAP_PRIVATE, s.fd, 0);
   if (address == MAP_FAILED) return {};
-  return {std::shared_ptr<const char>(static_cast<const char *>(address),
-      [size=s.end](const char *p){::munmap(const_cast<char *>(p), size);}), s.end};
+  ReadMapping mapping;
+  mapping.data_ = std::shared_ptr<const char>(static_cast<const char *>(address),
+      [size=s.end](const char *p){::munmap(const_cast<char *>(p), size);});
+  mapping.size_ = s.end;
+  mapping.device_ = uint64_t(st.st_dev);
+  mapping.inode_ = uint64_t(st.st_ino);
+  return mapping;
+}
+void Store::scan_mapped(const std::string &table, const ReadMapping &mapping,
+    const std::function<void(int64_t, std::string_view, uint64_t)> &fn) const {
+  const auto &s = *impl_;
+  s.check();
+  const auto data = mapping.data_;
+  const uint64_t extent = mapping.size_;
+  struct stat st{};
+  if (!data || s.transaction || s.statement || s.end != s.durable_end ||
+      extent != s.end || ::fstat(s.fd, &st) != 0 || !S_ISREG(st.st_mode) ||
+      st.st_size < 0 || uint64_t(st.st_size) != extent ||
+      uint64_t(st.st_dev) != mapping.device_ || uint64_t(st.st_ino) != mapping.inode_)
+    throw Error("CORRUPT", "mapped journal is no longer current");
+
+  s.scan_visible_refs<false>(table, {}, [&](int64_t key, const Impl::Ref &ref) {
+    if (ref.offset > extent || ref.size > extent - ref.offset)
+      throw Error("CORRUPT", "mapped frame range is invalid");
+    fn(key, std::string_view(data.get() + ref.offset, ref.size), ref.offset);
+    return true;
+  });
 }
 void Store::scan(
     const std::string &table,
