@@ -4,6 +4,7 @@
 #include "spill.hpp"
 #include <algorithm>
 #include <atomic>
+#include <bitset>
 #include <charconv>
 #include <cfenv>
 #include <cmath>
@@ -26,6 +27,25 @@
 
 namespace mvdb {
 namespace {
+// A mapped FP32 pass reads the same vectors again for survivors. Stop using
+// it within this slice if a window of batches rejects fewer than half the rows.
+class MappedScreenTrial {
+public:
+  bool observe(size_t count, uint32_t survivors) {
+    tested_ += count;
+    rejected_ += count - std::bitset<32>(survivors).count();
+    if (tested_ < 128)
+      return true;
+    const bool worthwhile = rejected_ * 2 >= tested_;
+    tested_ = rejected_ = 0;
+    return worthwhile;
+  }
+
+private:
+  size_t tested_ = 0;
+  size_t rejected_ = 0;
+};
+
 // Statements execute one at a time, so a fixed pool of idle workers is enough:
 // a query publishes one body and waits for the participating workers.
 class WorkerPool {
@@ -955,9 +975,8 @@ Result Engine::execute_statement(const Statement &st) {
       auto quantized = cache_->exact_view ?
           exact::prepare_quantized_query(*cache_->exact_view, projection.query, screen_capable) :
           exact::QuantizedQuery{};
-      // Unsupported query codes disable screening for this request only.
-      // The mapped journal still provides all original FP32 values for exact
-      // refinement, and remains reusable by subsequent supported queries.
+      // Keep the mapped journal reusable when the query cannot be quantized.
+      // Screen its original FP32 values when this request can use a lower bound.
       const bool require_owned = false;
       if (cache_->exact_view) {
         auto &view = *cache_->exact_view;
@@ -967,6 +986,7 @@ Result Engine::execute_statement(const Statement &st) {
         // the farthest records, so it scans without screening.
         const bool screen = screen_capable;
         const bool quantized_available = exact::quantized_codes_available(quantized);
+        const bool mapped_fp32 = view.mapped && !quantized_available;
         if (quantized.biased_codes) ++exact::biased_screen_runs();
         // A cutoff from a full local heap is witnessed by K distinct eligible
         // rows. It can only eliminate rows outside the global top K. Reads
@@ -1014,10 +1034,12 @@ Result Engine::execute_statement(const Statement &st) {
           };
           constexpr size_t picked_flush = 8;
           double screened_worst = -1, screen_threshold = 0;
+          bool screen_enabled = screen;
+          MappedScreenTrial mapped_screen_trial;
           size_t i = begin;
           for (; i + 8 <= end;) {
             size_t batch_count = 8;
-            if (screen && heap.size() == *st.limit) {
+            if (screen_enabled && heap.size() == *st.limit) {
               if (i + 32 <= end) batch_count = 32;
               const double worst = heap.top().distance;
               const bool updated = worst != screened_worst;
@@ -1074,6 +1096,8 @@ Result Engine::execute_statement(const Statement &st) {
                   if (!exact::fp32_screen_reject(approximate[lane],
                                                  screen_threshold))
                     survivors |= uint32_t(1) << lane;
+                if (mapped_fp32)
+                  screen_enabled = mapped_screen_trial.observe(batch_count, survivors);
               }
               if (survivors != all) {
                 for (size_t lane = 0; lane < batch_count; ++lane)
@@ -1143,6 +1167,8 @@ Result Engine::execute_statement(const Statement &st) {
           };
           constexpr size_t picked_flush = 8;
           double screened_worst = -1, screen_threshold = 0;
+          bool screen_enabled = screen;
+          MappedScreenTrial mapped_screen_trial;
           auto refine = [&](const size_t *batch, size_t lanes) {
             size_t offset = 0;
             for (; offset + 8 <= lanes; offset += 8) {
@@ -1164,7 +1190,7 @@ Result Engine::execute_statement(const Statement &st) {
           for (; at + 32 <= count; at += 32) {
             size_t batch[32];
             for (size_t lane = 0; lane < 32; ++lane) batch[lane] = rows[at + lane];
-            if (screen && heap.size() == *st.limit) {
+            if (screen_enabled && heap.size() == *st.limit) {
               const double worst = heap.top().distance;
               const bool updated = worst != screened_worst;
               if (updated) {
@@ -1213,6 +1239,8 @@ Result Engine::execute_statement(const Statement &st) {
                   if (!exact::fp32_screen_reject(approximate[lane],
                                                  screen_threshold))
                     survivors |= uint32_t(1) << lane;
+                if (mapped_fp32)
+                  screen_enabled = mapped_screen_trial.observe(32, survivors);
               }
               if (survivors != uint32_t(0xffffffffu)) {
                 for (size_t lane = 0; lane < 32; ++lane)
