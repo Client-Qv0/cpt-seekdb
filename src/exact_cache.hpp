@@ -162,6 +162,7 @@ struct Compact {
   // the owned vector array or the immutable committed mapping.
   std::unique_ptr<int8_t[]> quantized_codes;
   double quantized_step=1,quantized_inverse=1;
+  double quantized_max_abs=0;
   // When all codes fit [-64,64], the bytes are stored as uint8_t(code+64) and
   // this row-norm table enables exact unsigned-by-signed AVX2 dot products.
   bool quantized_biased=false;
@@ -309,6 +310,7 @@ struct Compact {
         }
       }
       quantized_step=step;quantized_inverse=inverse;
+      quantized_max_abs=max_abs;
       quantized_biased=biased;
       quantized_row_norms=std::move(norms);
       quantized_codes=std::move(codes);
@@ -812,6 +814,38 @@ inline void distances4_row_major(const Compact& cache,const size_t* rows,
   }
   _mm256_storeu_pd(out,_mm256_sqrt_pd(total));
 }
+// Screening for mapped vectors when the query cannot be represented by the
+// optional integer codes. Accumulate each row in dimension order, without FMA,
+// so the existing FP32 upper-error threshold continues to apply.
+__attribute__((target("avx2,no-fma"),noinline))
+inline void squared_distances8_fp32_row_major(
+    const Compact& cache,const size_t* rows,const std::vector<float>& q,float* out) {
+  const char* p[8];
+  for(size_t lane=0;lane<8;++lane)p[lane]=cache.row_bytes(rows[lane]);
+  __m256 sum=_mm256_setzero_ps();
+  auto add=[&](const __m128& lo,const __m128& hi,size_t d)
+      __attribute__((target("avx2,no-fma"))) {
+    const __m256 values=_mm256_insertf128_ps(_mm256_castps128_ps256(lo),hi,1);
+    const __m256 delta=_mm256_sub_ps(values,_mm256_set1_ps(q[d]));
+    sum=_mm256_add_ps(sum,_mm256_mul_ps(delta,delta));
+  };
+  size_t d=0;
+  for(;d+4<=q.size();d+=4) {
+    __m128 a,b,c,e,f,g,h,j;
+    std::memcpy(&a,p[0]+d*4,16);std::memcpy(&b,p[1]+d*4,16);
+    std::memcpy(&c,p[2]+d*4,16);std::memcpy(&e,p[3]+d*4,16);
+    std::memcpy(&f,p[4]+d*4,16);std::memcpy(&g,p[5]+d*4,16);
+    std::memcpy(&h,p[6]+d*4,16);std::memcpy(&j,p[7]+d*4,16);
+    _MM_TRANSPOSE4_PS(a,b,c,e);_MM_TRANSPOSE4_PS(f,g,h,j);
+    add(a,f,d);add(b,g,d+1);add(c,h,d+2);add(e,j,d+3);
+  }
+  for(;d<q.size();++d)
+    add(_mm_set_ps(cache.component(rows[3],d),cache.component(rows[2],d),
+                   cache.component(rows[1],d),cache.component(rows[0],d)),
+        _mm_set_ps(cache.component(rows[7],d),cache.component(rows[6],d),
+                   cache.component(rows[5],d),cache.component(rows[4],d)),d);
+  _mm256_storeu_ps(out,sum);
+}
 #endif
 inline bool quantized_codes_available(const QuantizedQuery& query) {
   return bool(query.codes)||bool(query.biased_codes);
@@ -883,6 +917,11 @@ inline void distances8_contiguous(const Compact& cache,size_t row,
 inline void squared_distances8_fp32_contiguous(
     const Compact& cache,size_t row,const std::vector<float>& q,float* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  if(cache.mapped) {
+    const size_t rows[8]={row,row+1,row+2,row+3,row+4,row+5,row+6,row+7};
+    squared_distances8_fp32_row_major(cache,rows,q,out);
+    return;
+  }
   squared_distances8_fp32_contiguous_avx2(cache,row,q,out);
 #else
   (void)cache;(void)row;(void)q;
@@ -892,6 +931,11 @@ inline void squared_distances8_fp32_contiguous(
 inline void squared_distances32_fp32_contiguous(
     const Compact& cache,size_t row,const std::vector<float>& q,float* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  if(cache.mapped) {
+    for(size_t at=0;at<32;at+=8)
+      squared_distances8_fp32_contiguous(cache,row+at,q,out+at);
+    return;
+  }
   squared_distances32_fp32_contiguous_avx2(cache,row,q,out);
 #else
   (void)cache;(void)row;(void)q;
@@ -901,6 +945,11 @@ inline void squared_distances32_fp32_contiguous(
 inline void squared_distances32_fp32(
     const Compact& cache,const size_t* rows,const std::vector<float>& q,float* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
+  if(cache.mapped) {
+    for(size_t at=0;at<32;at+=8)
+      squared_distances8_fp32_row_major(cache,rows+at,q,out+at);
+    return;
+  }
   squared_distances32_fp32_avx2(cache,rows,q,out);
 #else
   (void)cache;(void)rows;(void)q;
