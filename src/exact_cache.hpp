@@ -128,11 +128,16 @@ inline double quantized_residual_norm_upper(double squared) {
   const double upper = std::nextafter(squared * 1.00000000001, inf);
   return std::nextafter(std::sqrt(upper), inf);
 }
-inline double quantized_error_upper(double row_error, double query_error_squared, size_t dim) {
+inline double quantized_error_upper(double row_error,double query_error_squared,
+                                    size_t dim,int query_scale=1) {
   const double inf = std::numeric_limits<double>::infinity();
   const double residual = std::nextafter(
       row_error + quantized_residual_norm_upper(query_error_squared), inf);
-  const double worst_case = std::nextafter(std::sqrt(double(dim)), inf);
+  // In row-step units each row residual is at most 1/2, while each
+  // query residual is at most query_scale/2.
+  const double root_dim = std::nextafter(std::sqrt(double(dim)), inf);
+  const double worst_case = query_scale==1 ? root_dim
+      : std::nextafter(root_dim*1.5, inf);
   return std::min(residual, worst_case);
 }
 struct ScalarColumn {
@@ -447,6 +452,8 @@ struct QuantizedQuery {
   std::unique_ptr<int8_t[]> biased_codes;
   int32_t sum_codes=0;
   int32_t squared_norm=0;
+  int32_t biased_score_offset=0;
+  int code_scale=1;
   double error_upper=0;
   bool use_avxvnni=false;
 };
@@ -459,24 +466,38 @@ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
   if(cache.quantized_biased) {
     try {prepared.biased_codes.reset(new int8_t[cache.dim]);}
     catch(const std::bad_alloc&) {return prepared;}
-    double squared_error=0;
-    for(size_t d=0;d<cache.dim;++d) {
-      const double scaled=double(query[d])*cache.quantized_inverse;
-      const double rounded=std::nearbyint(scaled);
-      if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) {
-        prepared.biased_codes.reset();
-        return prepared;
+    auto encode = [&](double inverse,int code_scale) {
+      int32_t sum_codes=0, squared_norm=0;
+      double squared_error=0;
+      for(size_t d=0;d<cache.dim;++d) {
+        const double scaled=double(query[d])*inverse;
+        const double rounded=std::nearbyint(scaled);
+        if(!std::isfinite(rounded) || rounded < -127 || rounded > 127)
+          return false;
+        const int code=static_cast<int>(rounded);
+        prepared.biased_codes[d]=static_cast<int8_t>(code);
+        sum_codes+=code;
+        squared_norm+=code*code;
+        const double error=(scaled-rounded)*double(code_scale);
+        squared_error+=error*error;
       }
-      const int code=static_cast<int>(rounded);
-      prepared.biased_codes[d]=static_cast<int8_t>(code);
-      prepared.sum_codes+=code;
-      prepared.squared_norm+=code*code;
-      const double error=scaled-rounded;
-      squared_error+=error*error;
+      prepared.code_scale=code_scale;
+      prepared.sum_codes=sum_codes;
+      prepared.squared_norm=squared_norm;
+      prepared.biased_score_offset=code_scale*code_scale*squared_norm+
+                                    128*code_scale*sum_codes;
+      prepared.error_upper=quantized_error_upper(cache.quantized_row_error_upper,
+                                                 squared_error,cache.dim,code_scale);
+      return true;
+    };
+    // If a query cannot use the row step, double only its step. Both
+    // passes round to their own grid without clamping any component.
+    if(!encode(cache.quantized_inverse,1) &&
+       !encode(cache.quantized_inverse*0.5,2)) {
+      prepared.biased_codes.reset();
+      return prepared;
     }
     prepared.use_avxvnni=cache.dim>=32 && avxvnni_available();
-    prepared.error_upper=quantized_error_upper(cache.quantized_row_error_upper,
-                                               squared_error,cache.dim);
     return prepared;
   }
   try {prepared.codes.reset(new int16_t[cache.dim]);}
@@ -497,8 +518,7 @@ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
   return prepared;
 }
 // By the triangle inequality, sqrt(I) <= r/step + error_upper, where r is
-// the real distance and I the exact integer square sum. The combined residual
-// norm is also bounded by sqrt(D) since each code rounds by at most 1/2.
+// the real distance and I the exact integer square sum in row-step units.
 // Original double accumulation differs from the real square sum by relative
 // error <1e-12 for D<=8192. The factor 1.000001 and nextup(d) cover that
 // error and sqrt rounding ties. Only an integer sum strictly above the
@@ -513,6 +533,13 @@ inline double quantized_threshold(double worst_distance,double step,
   const double units_upper=std::nextafter(distance_upper/step,inf);
   const double radius_upper=std::nextafter(units_upper+error_upper,inf);
   return std::nextafter(radius_upper*radius_upper,inf);
+}
+inline uint32_t biased_quantized_score(uint32_t row_norm,int32_t biased_dot,
+                                       const QuantizedQuery& query) {
+  const int32_t dot=biased_dot-64*query.sum_codes;
+  const int32_t k=query.code_scale;
+  return static_cast<uint32_t>(row_norm + int64_t(k)*k*query.squared_norm -
+                               2*int64_t(k)*dot);
 }
 inline void distances4_scalar(const Compact& cache,const size_t* rows,
                               const std::vector<float>& q,double* out) {
@@ -801,9 +828,10 @@ inline void finish_quantized_biased_distances8(
   if(d==dim) {
     // Pair different rows to sum four dots at a time. HADD stays within
     // each 128-bit half; add the halves to get the whole dot for each row.
-    // At 8192 dimensions, the absolute dot is at most 8192*128*127.
-    // The norms, bias correction and doubled dot also fit in int32_t.
-    const __m128i bias=_mm_set1_epi32(query.squared_norm+128*query.sum_codes);
+    // Add the precomputed query norm and bias correction before subtracting
+    // 2*k*dot. k is 1 or 2, and all terms fit in int32_t at D<=8192.
+    const __m128i bias=_mm_set1_epi32(query.biased_score_offset);
+    const __m128i shift=_mm_cvtsi32_si128(query.code_scale);
     for(size_t lane=0;lane<8;lane+=4) {
       const __m256i paired=_mm256_hadd_epi32(
           _mm256_hadd_epi32(sums[lane],sums[lane+1]),
@@ -812,7 +840,7 @@ inline void finish_quantized_biased_distances8(
                                       _mm256_extracti128_si256(paired,1));
       const __m128i norms=_mm_loadu_si128(reinterpret_cast<const __m128i*>(row_norms+lane));
       const __m128i distances=_mm_sub_epi32(_mm_add_epi32(norms,bias),
-                                            _mm_slli_epi32(dots,1));
+                                            _mm_sll_epi32(dots,shift));
       _mm_storeu_si128(reinterpret_cast<__m128i*>(out+lane),distances);
     }
     return;
@@ -826,10 +854,7 @@ inline void finish_quantized_biased_distances8(
     int32_t dot=_mm_cvtsi128_si32(total);
     for(size_t tail=d;tail<dim;++tail)
       dot+=int32_t(uint8_t(rows[lane][tail]))*int32_t(query.biased_codes[tail]);
-    const int32_t base_dot=dot-64*query.sum_codes;
-    const int64_t squared=int64_t(row_norms[lane])+query.squared_norm-
-                          2*int64_t(base_dot);
-    out[lane]=static_cast<uint32_t>(squared);
+    out[lane]=biased_quantized_score(row_norms[lane],dot,query);
   }
 }
 
@@ -893,10 +918,7 @@ inline uint32_t quantized_squared_distance(const Compact& cache,size_t row,
     int32_t dot=0;
     for(size_t d=0;d<cache.dim;++d)
       dot+=int32_t(uint8_t(codes[d]))*int32_t(query.biased_codes[d]);
-    const int32_t base_dot=dot-64*query.sum_codes;
-    return static_cast<uint32_t>(
-        int64_t(cache.quantized_row_norms[row])+query.squared_norm-
-        2*int64_t(base_dot));
+    return biased_quantized_score(cache.quantized_row_norms[row],dot,query);
   }
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
   return quantized_squared_distance_avx2(codes,query.codes.get(),cache.dim);
@@ -984,10 +1006,7 @@ inline void quantized_biased_squared_distance8(
     int32_t dot=0;
     for(size_t d=0;d<cache.dim;++d)
       dot+=int32_t(uint8_t(row[d]))*int32_t(query.biased_codes[d]);
-    const int32_t base_dot=dot-64*query.sum_codes;
-    out[lane]=static_cast<uint32_t>(
-        int64_t(cache.quantized_row_norms[rows[lane]])+
-        query.squared_norm-2*int64_t(base_dot));
+    out[lane]=biased_quantized_score(cache.quantized_row_norms[rows[lane]],dot,query);
   }
 #endif
 }

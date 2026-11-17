@@ -309,6 +309,20 @@ void test_quantized_screen() {
     }
   }
   {
+    // Both residuals can oppose each other at a half step. With the
+    // old sqrt(D) cap this exact tie would be incorrectly screened out.
+    const size_t dim=8192;
+    auto cache=make_cache({std::vector<float>(dim,0.5f/64),std::vector<float>(dim,1)});
+    const std::vector<float> query(dim,251.0f/64);
+    const auto prepared=exact::prepare_quantized_query(cache,query,true);
+    require(bool(prepared.biased_codes) && prepared.code_scale==2);
+    const double worst=cache.distance(0,query);
+    const double cutoff=exact::quantized_threshold(worst,cache.quantized_step,prepared.error_upper);
+    const double old=exact::quantized_threshold(worst,cache.quantized_step,std::sqrt(double(dim)));
+    const double score=exact::quantized_squared_distance(cache,0,prepared);
+    require(score<=cutoff && score>old);
+  }
+  {
     // Mixing the largest power-of-two FP32 value with the smallest
     // subnormal still leaves a representable nonzero squared residual.
     const float tiny=std::numeric_limits<float>::denorm_min();
@@ -373,7 +387,7 @@ void test_biased_screen_layout_and_kernel() {
       uint32_t expected=0;
       for(size_t d=0;d<cache.dim;++d) {
         const int row_code=int(uint8_t(cache.quantized_codes[rows[lane]*cache.dim+d]))-64;
-        const int delta=row_code-int(prepared.biased_codes[d]);
+        const int delta=row_code-prepared.code_scale*int(prepared.biased_codes[d]);
         expected+=uint32_t(delta*delta);
       }
       require(actual[lane]==expected && fallback[lane]==expected);
@@ -397,11 +411,23 @@ void test_biased_screen_layout_and_kernel() {
     for(int code : {-127,65,127}) {
       std::fill(input.begin(),input.end(),float(code)/64);
       auto wide=exact::prepare_quantized_query(other,input,true);
-      require(bool(wide.biased_codes) && !wide.codes);
+      require(bool(wide.biased_codes) && !wide.codes && wide.code_scale==1);
       check_distances(other,wide,contiguous);
       check_distances(other,wide,scattered);
     }
-    for(float code : {-127.5f,127.5f}) {
+    for(float code : {-254.0f,-192.0f,-127.5f,127.5f,192.0f,254.0f}) {
+      std::fill(input.begin(),input.end(),code/64);
+      auto wide=exact::prepare_quantized_query(other,input,true);
+      require(bool(wide.biased_codes) && !wide.codes && wide.code_scale==2);
+      check_distances(other,wide,contiguous);
+      check_distances(other,wide,scattered);
+      const double worst=other.distance(7,input);
+      const double cutoff=exact::quantized_threshold(worst,other.quantized_step,wide.error_upper);
+      for(size_t row=0;row<other.count;++row)
+        if(double(exact::quantized_squared_distance(other,row,wide))>cutoff)
+          require(other.distance(row,input)>worst);
+    }
+    for(float code : {-255.0f,255.0f,std::numeric_limits<float>::max()}) {
       std::fill(input.begin(),input.end(),code/64);
       require(!exact::quantized_codes_available(
           exact::prepare_quantized_query(other,input,true)));
