@@ -2,6 +2,7 @@
 #include "exact_cache.hpp"
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <limits>
@@ -40,6 +41,28 @@ int main() {
       r = db.execute("SELECT id,v,L2_DISTANCE(v,'[16777216,0]') AS d FROM t WHERE id=-9223372036854775808");
       check(std::get<std::vector<float>>(r.rows[0][1])[0] == 16777216.0f,"Vector must round to float32 before storage");
       check(std::get<double>(r.rows[0][2]) == 0.0,"L2 distance must use stored float32, not original decimal");
+      db.execute("CREATE TABLE decimals(id BIGINT PRIMARY KEY,v VECTOR(11))");
+      const std::vector<std::string> decimal_tokens = {
+          "0.123456", "+1.", "-.5", "-0.000000", "0000001", "9999999",
+          "1.234567", ".0000001", "+1e-39", "-1e-100", "16777217"};
+      std::string decimal_literal = "[";
+      for (const auto &token : decimal_tokens) {
+        if (decimal_literal.size() > 1) decimal_literal += ",";
+        decimal_literal += token;
+      }
+      decimal_literal += "]";
+      db.execute("INSERT INTO decimals VALUES (1,'" + decimal_literal + "')");
+      r = db.execute("SELECT v,L2_DISTANCE(v,'" + decimal_literal +
+                     "') AS d FROM decimals");
+      const auto &stored = std::get<std::vector<float>>(r.rows.at(0).at(0));
+      check(stored.size() == decimal_tokens.size(), "Decimal vector dimension");
+      for (size_t i = 0; i < stored.size(); ++i) {
+        const float expected = std::strtof(decimal_tokens[i].c_str(), nullptr);
+        check(stored[i] == expected && std::signbit(stored[i]) == std::signbit(expected),
+              "Decimal vector rounding or zero sign differs for " + decimal_tokens[i]);
+      }
+      check(std::get<double>(r.rows.at(0).at(1)) == 0.0,
+            "Query literal must parse like the stored decimal vector");
       r = db.execute("SELECT id,L2_DISTANCE(v,'[0,0]') AS d FROM t ORDER BY d LIMIT 2");
       check(r.rows.size() == 2 && id(r,0) == 3 && id(r,1) == 4,"Distance ties must use ascending primary key");
       r = db.execute("SELECT id,L2_DISTANCE(v,'[0,0]') AS d FROM t WHERE s='中' ORDER BY d LIMIT 1");
@@ -97,6 +120,23 @@ int main() {
       db.execute("UPDATE t SET s='x',v='[1,1]' WHERE id=5");
       db.execute("COMMIT");
       db.execute("CREATE VECTOR INDEX vi ON t(v)");
+      db.execute("SELECT id FROM t WHERE id=5");
+      db.execute("BEGIN");
+      db.execute("CREATE VECTOR INDEX temporary_index ON t(v)");
+      error(db,"CREATE VECTOR INDEX temporary_index ON t(v)");
+      db.execute("CREATE TABLE temporary_table(id BIGINT PRIMARY KEY,x BIGINT)");
+      db.execute("SELECT x FROM temporary_table");
+      db.execute("ROLLBACK");
+      error(db,"SELECT x FROM temporary_table");
+      db.execute("CREATE TABLE temporary_table(id BIGINT PRIMARY KEY,s VARCHAR(4))");
+      db.execute("INSERT INTO temporary_table VALUES(1,'old')");
+      error(db,"INSERT INTO temporary_table VALUES(2,'new'),(1,'dupe')");
+      r = db.execute("SELECT s FROM temporary_table");
+      check(r.rows.size() == 1 && std::get<std::string>(r.rows[0][0]) == "old",
+            "Recreated schema and rows must survive a failed statement");
+      db.execute("CREATE VECTOR INDEX temporary_index ON t(v)");
+      db.execute("SELECT id FROM t WHERE id=5");
+      error(db,"CREATE VECTOR INDEX temporary_index ON t(v)");
       db.execute("BEGIN");
       db.execute("DELETE FROM t WHERE id=5");
       db.execute("UPDATE t SET v='[9,9]' WHERE id=3");
@@ -181,6 +221,77 @@ int main() {
       check(updated.rows.size() == 1 && id(updated, 0) == 5,
             "updates must invalidate and rebuild the biased-dot view");
     }
+    {
+      mvdb::Engine db(path.string() + "-shared");
+      db.execute("CREATE TABLE same(id BIGINT PRIMARY KEY,grp VARCHAR(8),v VECTOR(2))");
+      db.execute("INSERT INTO same VALUES "
+                 "(9,'half','[1,0]'),(7,'rare','[1,0]'),"
+                 "(-3,'rare','[1,0]'),(2,'rest','[1,0]')");
+      const std::string select = "SELECT id,L2_DISTANCE(v,'[0,0]') AS d FROM same";
+      const std::string asc = select + " ORDER BY d LIMIT 2";
+      const auto first = db.execute(asc);
+      const auto warmed = db.execute(asc);
+      check(warmed.rows == first.rows && warmed.rows.size() == 2 &&
+                id(warmed,0) == -3 && id(warmed,1) == 2,
+            "a shared distance must keep the least visible keys");
+      const std::string filtered_desc =
+          select + " WHERE grp='rare' ORDER BY d DESC LIMIT 2";
+      const auto posting = db.execute(filtered_desc);
+      check(posting.rows.size() == 2 && id(posting,0) == -3 && id(posting,1) == 7 &&
+                std::get<double>(posting.rows[0][1]) == 1.0,
+            "filtered shared distance must preserve primary-key tie order");
+      check(db.execute(select + " WHERE grp='missing' ORDER BY d LIMIT 2").rows.empty(),
+            "empty shared-vector posting must return no rows");
+
+      db.execute("UPDATE same SET v='[0,0]' WHERE id=9");
+      db.execute("UPDATE same SET v='[-1,0]' WHERE id=-3");
+      const auto updated = db.execute(asc);
+      check(db.execute(asc).rows == updated.rows && updated.rows.size() == 2 &&
+                id(updated,0) == 9 && id(updated,1) == -3,
+            "mutations must invalidate the shared vector and preserve distinct equidistant rows");
+      check(db.execute(filtered_desc).rows == posting.rows,
+            "an equality posting of distinct equidistant rows keeps the same ties");
+    }
+    {
+      mvdb::Engine db(path.string() + "-key-range");
+      db.execute("CREATE TABLE t(tag BIGINT,id BIGINT PRIMARY KEY,v VECTOR(2))");
+      db.execute("INSERT INTO t VALUES (0,9223372036854775807,'[5,0]'),"
+                 "(2,12,'[3,0]'),(2,-9223372036854775808,'[0,0]'),"
+                 "(2,-5,'[4,0]'),(1,0,'[9,0]'),(2,4,'[1,0]')");
+      auto keys = [&](const std::string &sql) {
+        auto result = db.execute(sql);
+        std::vector<int64_t> got;
+        for (size_t n = 0; n < result.rows.size(); ++n)
+          got.push_back(id(result,n));
+        return got;
+      };
+      check(keys("SELECT id FROM t WHERE id < -9223372036854775808 LIMIT 3").empty() &&
+            keys("SELECT id FROM t WHERE id > 9223372036854775807 ORDER BY id DESC LIMIT 3").empty(),
+            "exclusive endpoint bounds should produce empty scans");
+      check(keys("SELECT id AS k FROM t WHERE (id >= -5 AND id < 12) AND tag = 2 ORDER BY k DESC LIMIT 2")
+                == std::vector<int64_t>{4,-5},
+            "bounded reverse scans should apply residual filters");
+      check(keys("SELECT id,L2_DISTANCE(v,'[0,0]') AS d FROM t WHERE id >= -5 AND id < 12 ORDER BY d LIMIT 2")
+                == std::vector<int64_t>{4,-5},
+            "a bounded distance query keeps exact TopK");
+      db.execute("BEGIN");
+      check(db.execute("UPDATE t SET tag=7 WHERE id >= -5 AND id <= 4").affected == 3,
+            "bounded UPDATE should affect the exact interval");
+      check(db.execute("DELETE FROM t WHERE id >= 0 AND id < 12 AND tag=7").affected == 2,
+            "bounded DELETE should see previous updates");
+      db.execute("INSERT INTO t VALUES (7,2,'[0,1]')");
+      check(keys("SELECT id FROM t WHERE id >= -5 AND id < 12 AND tag=7 ORDER BY id DESC LIMIT 8")
+                == std::vector<int64_t>{2,-5},
+            "reverse scan should see pending inserts and deletes");
+      db.execute("ROLLBACK");
+      check(keys("SELECT id FROM t ORDER BY id ASC LIMIT 2")
+                == std::vector<int64_t>{INT64_MIN,-5} &&
+            keys("SELECT id FROM t ORDER BY id DESC LIMIT 2")
+                == std::vector<int64_t>{INT64_MAX,12},
+            "rollback should restore the signed endpoint order");
+    }
+    fs::remove_all(path.string() + "-key-range");
+    fs::remove_all(path.string() + "-shared");
     fs::remove_all(path.string() + "-desc");
     fs::remove_all(path.string() + "-cap");
     fs::remove_all(path.string() + "-biased-screen");

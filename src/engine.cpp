@@ -4,6 +4,7 @@
 #include "spill.hpp"
 #include <algorithm>
 #include <atomic>
+#include <bitset>
 #include <charconv>
 #include <cfenv>
 #include <cmath>
@@ -19,6 +20,7 @@
 #include <queue>
 #include <set>
 #include <sstream>
+#include <string_view>
 #include <thread>
 #if defined(__linux__)
 #include <sched.h>
@@ -26,6 +28,25 @@
 
 namespace mvdb {
 namespace {
+// A mapped FP32 pass reads the same vectors again for survivors. Stop using
+// it within this slice if a window of batches rejects fewer than half the rows.
+class MappedScreenTrial {
+public:
+  bool observe(size_t count, uint32_t survivors) {
+    tested_ += count;
+    rejected_ += count - std::bitset<32>(survivors).count();
+    if (tested_ < 128)
+      return true;
+    const bool worthwhile = rejected_ * 2 >= tested_;
+    tested_ = rejected_ = 0;
+    return worthwhile;
+  }
+
+private:
+  size_t tested_ = 0;
+  size_t rejected_ = 0;
+};
+
 // Statements execute one at a time, so a fixed pool of idle workers is enough:
 // a query publishes one body and waits for the participating workers.
 class WorkerPool {
@@ -155,7 +176,7 @@ void bytes(std::string &out, const std::string &s) {
   out += s;
 }
 struct Reader {
-  const std::string &s;
+  std::string_view s;
   size_t pos = 0;
   void need(size_t n) {
     if (n > s.size() - pos)
@@ -171,7 +192,7 @@ struct Reader {
   std::string str() {
     auto n = num(4);
     need(n);
-    auto t = s.substr(pos, n);
+    std::string t(s.substr(pos, n));
     pos += n;
     return t;
   }
@@ -414,7 +435,9 @@ std::string pack_row(const std::vector<Cell> &row, const Schema &s) {
   }
   return out;
 }
-std::vector<Cell> unpack_row(const std::string &data, const Schema &s) {
+template<bool Mapped = false>
+std::vector<Cell> unpack_row(std::string_view data, const Schema &s,
+                             size_t *vector_offset = nullptr) {
   Reader r{data};
   std::vector<Cell> row;
   row.reserve(s.columns.size());
@@ -426,7 +449,13 @@ std::vector<Cell> unpack_row(const std::string &data, const Schema &s) {
       row.emplace_back(v);
     } else if (c.type == Type::Varchar)
       row.emplace_back(r.str());
-    else {
+    else if constexpr (Mapped) {
+      *vector_offset = r.pos;
+      const size_t length = size_t(c.size) * 4;
+      r.need(length);
+      r.pos += length;
+      row.emplace_back(std::vector<float>{});
+    } else {
       std::vector<float> v;
       v.reserve(c.size);
       for (uint32_t j = 0; j < c.size; ++j) {
@@ -486,6 +515,33 @@ bool matches(const std::vector<Cell> &row, const std::vector<Filter> &f) {
       return false;
   }
   return true;
+}
+std::optional<Store::KeyRange> primary_key_range(const std::vector<Filter> &filters, size_t pk) {
+  Store::KeyRange range;
+  constexpr int64_t minimum = std::numeric_limits<int64_t>::min();
+  constexpr int64_t maximum = std::numeric_limits<int64_t>::max();
+  for (const auto &filter : filters) {
+    if (filter.column != pk)
+      continue;
+    const auto value = std::get<int64_t>(filter.value);
+    if (filter.op == "=" || filter.op == "<=") {
+      range.last = std::min(range.last, value);
+    } else if (filter.op == "<") {
+      if (value == minimum)
+        return Store::KeyRange{1, 0};
+      range.last = std::min(range.last, value - 1);
+    }
+    if (filter.op == "=" || filter.op == ">=") {
+      range.first = std::max(range.first, value);
+    } else if (filter.op == ">") {
+      if (value == maximum)
+        return Store::KeyRange{1, 0};
+      range.first = std::max(range.first, value + 1);
+    }
+  }
+  if (range.first == minimum && range.last == maximum)
+    return std::nullopt;
+  return range;
 }
 struct Projection {
   size_t col;
@@ -600,6 +656,14 @@ struct Engine::Cache {
   size_t bytes = 0;
   static constexpr size_t budget = 12 * 1024 * 1024;
 };
+struct Engine::SchemaCache {
+  static constexpr size_t metadata_limit = 16 * 1024;
+  static constexpr size_t table_name_limit = 1024;
+  std::string table;
+  Schema schema;
+  size_t primary;
+};
+
 Engine::Engine(const std::string &directory)
     : store_(directory), directory_(directory),
       cache_(std::make_unique<Cache>()) {}
@@ -607,6 +671,7 @@ Engine::~Engine() = default;
 
 void Engine::prepare_shutdown() {
   *cache_ = Cache{};
+  schema_cache_.reset();
   store_.close();
 }
 Result Engine::execute_ann(const Statement &statement) {
@@ -623,6 +688,12 @@ Result Engine::execute(const std::string &sql, SearchMode mode) {
   // statements also invalidate: their intermediate writes must not be reused.
   if (st.kind != Statement::Select)
     *cache_ = Cache{};
+  // Only DDL changes metadata. Discard the committed copy before DDL or a
+  // transaction boundary, including a failed attempt.
+  if (st.kind == Statement::CreateTable || st.kind == Statement::CreateIndex ||
+      st.kind == Statement::Begin || st.kind == Statement::Commit ||
+      st.kind == Statement::Rollback)
+    schema_cache_.reset();
   if (st.kind == Statement::Begin) {
     store_.begin();
     return {};
@@ -680,12 +751,37 @@ Result Engine::execute_statement(const Statement &st) {
     store_.set_metadata(st.table, pack_schema(s));
     return result;
   }
-  auto meta = store_.metadata(st.table);
-  if (!meta)
-    throw Error("TABLE", "unknown table: " + st.table);
-  auto schema = unpack_schema(*meta);
-  auto pk = primary_index(schema);
+  // Explicit transactions read the visible metadata layers. Outside them,
+  // row writes and statement aborts leave committed metadata unchanged.
+  const bool cacheable = st.kind != Statement::CreateIndex &&
+                         !store_.in_transaction() &&
+                         st.table.size() <= SchemaCache::table_name_limit;
+  std::optional<Schema> loaded;
+  size_t pk;
+  if (cacheable && schema_cache_ && schema_cache_->table == st.table) {
+    store_.check_available();
+    pk = schema_cache_->primary;
+  } else {
+    auto meta = store_.metadata(st.table);
+    if (!meta)
+      throw Error("TABLE", "unknown table: " + st.table);
+    loaded.emplace(unpack_schema(*meta));
+    pk = primary_index(*loaded);
+    if (cacheable) {
+      schema_cache_.reset();
+      if (meta->size() <= SchemaCache::metadata_limit) {
+        try {
+          schema_cache_.reset(
+              new SchemaCache{st.table, std::move(*loaded), pk});
+          loaded.reset();
+        } catch (const std::bad_alloc &) {
+          // Keep the decoded schema for this statement if caching fails.
+        }
+      }
+    }
+  }
   if (st.kind == Statement::CreateIndex) {
+    auto &schema = *loaded;
     auto ci = col_index(schema, st.index_column);
     if (schema.columns[ci].type != Type::Vector)
       throw Error("TYPE", "vector index requires VECTOR column");
@@ -697,6 +793,7 @@ Result Engine::execute_statement(const Statement &st) {
     store_.set_metadata(st.table, pack_schema(schema));
     return result;
   }
+  const Schema &schema = loaded ? *loaded : schema_cache_->schema;
   if (st.kind == Statement::Insert) {
     std::vector<size_t> mapping;
     if (st.insert_columns.empty()) {
@@ -749,6 +846,7 @@ Result Engine::execute_statement(const Statement &st) {
     return result;
   }
   auto fs = filters(st, schema);
+  const auto key_range = primary_key_range(fs, pk);
   if (st.kind == Statement::Update || st.kind == Statement::Delete) {
     std::vector<std::pair<size_t, Cell>> assignments;
     std::set<size_t> seen;
@@ -780,6 +878,11 @@ Result Engine::execute_statement(const Statement &st) {
       const auto key = std::get<int64_t>(equality->value);
       if (auto data = store_.get(st.table, key))
         mutate(key, *data);
+    } else if (key_range) {
+      store_.scan_until(st.table, *key_range, false, [&](int64_t key, const std::string &data) {
+        mutate(key, data);
+        return true;
+      });
     } else
       store_.scan(st.table, mutate);
     return result;
@@ -844,8 +947,22 @@ Result Engine::execute_statement(const Statement &st) {
       return;
     }
     if (cache_->table == st.table && cache_->complete) {
-      for (const auto &entry : cache_->rows)
-        visitor(entry.key, entry.row);
+      auto begin = cache_->rows.begin();
+      if (key_range)
+        begin = std::lower_bound(begin, cache_->rows.end(), key_range->first,
+            [](const Cache::Entry &entry, int64_t key) { return entry.key < key; });
+      for (auto it = begin; it != cache_->rows.end(); ++it) {
+        if (key_range && it->key > key_range->last)
+          break;
+        visitor(it->key, it->row);
+      }
+      return;
+    }
+    if (key_range) {
+      store_.scan_until(st.table, *key_range, false, [&](int64_t key, const std::string &data) {
+        visitor(key, unpack_row(data, schema));
+        return true;
+      });
       return;
     }
     bool collecting = cache_->table != st.table;
@@ -897,6 +1014,25 @@ Result Engine::execute_statement(const Statement &st) {
   // actually carry decides instead; see the measured check at the scan.
   const size_t limit = st.limit ? *st.limit : 0;
   const bool declared_fits = limit && projection_bound <= result_budget / limit;
+  // A leading primary key already determines the full order (keys are unique).
+  const bool primary_order = !keys.empty() && (keys[0].projection
+      ? !ps[keys[0].index].distance && ps[keys[0].index].col == pk
+      : keys[0].index == pk);
+  if (declared_fits && primary_order) {
+    store_.scan_until(st.table, key_range.value_or(Store::KeyRange{}), keys[0].desc,
+        [&](int64_t, const std::string &data) {
+          auto row = unpack_row(data, schema);
+          if (!matches(row, fs))
+            return true;
+          std::vector<Cell> projected;
+          projected.reserve(ps.size());
+          for (const auto &p : ps)
+            projected.push_back(project(p, row));
+          result.rows.push_back(std::move(projected));
+          return result.rows.size() < limit;
+        });
+    return result;
+  }
   const bool point_lookup = std::any_of(fs.begin(), fs.end(), [&](const Filter &f) {
     return f.column == pk && f.op == "=";
   });
@@ -924,27 +1060,50 @@ Result Engine::execute_statement(const Statement &st) {
         return descending ? a.distance > b.distance : a.distance < b.distance;
       return a.key < b.key;
     };
-    std::priority_queue<Neighbor, std::vector<Neighbor>,
-                        decltype(better_neighbor)>
-        nearest(better_neighbor);
-    using Heap = decltype(nearest);
+    using NeighborQueue = std::priority_queue<
+        Neighbor, std::vector<Neighbor>, decltype(better_neighbor)>;
+    struct Heap : NeighborQueue {
+      Heap(decltype(better_neighbor) better, size_t limit) : NeighborQueue(better) {
+        this->c.reserve(std::min(limit, size_t(16)));
+      }
+      void replace_worst(Neighbor neighbor) {
+        auto &rows = this->c;
+        size_t hole = 0;
+        for (size_t child = 1; child < rows.size(); child = hole * 2 + 1) {
+          if (child + 1 < rows.size() && this->comp(rows[child], rows[child + 1]))
+            ++child;
+          if (!this->comp(neighbor, rows[child])) break;
+          rows[hole] = rows[child];
+          hole = child;
+        }
+        rows[hole] = neighbor;
+      }
+      std::vector<Neighbor> take_ordered() {
+        std::sort_heap(this->c.begin(), this->c.end(), this->comp);
+        return std::move(this->c);
+      }
+    };
+    Heap nearest(better_neighbor, limit);
     const auto &projection = ps[keys[0].index];
     auto consider = [&](Heap &heap, int64_t key, double distance,
                         size_t row = std::numeric_limits<size_t>::max()) {
       Neighbor n{distance, key, row};
       if (heap.size() < *st.limit)
         heap.push(n);
-      else if (better_neighbor(n, heap.top())) {
-        heap.pop();
-        heap.push(n);
-      }
+      else if (better_neighbor(n, heap.top()))
+        heap.replace_worst(n);
     };
     auto original_visit = [&](int64_t key, const std::vector<Cell> &row) {
       if (matches(row, fs))
         consider(nearest, key, std::get<double>(project(projection, row)));
     };
     const exact::Compact *winner_view = nullptr;
-    if (exact::available() && !point_lookup && st.table.size() <= 1024) {
+    const bool bounded_scan = key_range && (key_range->first > key_range->last ||
+        uint64_t(key_range->last) - uint64_t(key_range->first) < parallel_scan_min_rows);
+    const bool have_exact_view = cache_->table == st.table &&
+        cache_->exact_column == projection.col && cache_->exact_view;
+    if (exact::available() && !point_lookup && (!bounded_scan || have_exact_view) &&
+        st.table.size() <= 1024) {
       if (cache_->table != st.table || cache_->exact_column != projection.col ||
           cache_->complete) {
         *cache_ = Cache{};
@@ -955,13 +1114,9 @@ Result Engine::execute_statement(const Statement &st) {
       auto quantized = cache_->exact_view ?
           exact::prepare_quantized_query(*cache_->exact_view, projection.query, screen_capable) :
           exact::QuantizedQuery{};
-      // A mapped view relies on the quantized screen. For a query outside its
-      // code range (or without screening), use the original exact cache.
-      bool require_owned = false;
-      if (cache_->exact_view && cache_->exact_view->mapped && !exact::quantized_codes_available(quantized)) {
-        cache_->exact_view.reset();
-        require_owned = true;
-      }
+      // Keep the mapped journal reusable when the query cannot be quantized.
+      // Screen its original FP32 values when this request can use a lower bound.
+      const bool require_owned = false;
       if (cache_->exact_view) {
         auto &view = *cache_->exact_view;
         winner_view = &view;
@@ -970,6 +1125,7 @@ Result Engine::execute_statement(const Statement &st) {
         // the farthest records, so it scans without screening.
         const bool screen = screen_capable;
         const bool quantized_available = exact::quantized_codes_available(quantized);
+        const bool mapped_fp32 = view.mapped && !quantized_available;
         if (quantized.biased_codes) ++exact::biased_screen_runs();
         // A cutoff from a full local heap is witnessed by K distinct eligible
         // rows. It can only eliminate rows outside the global top K. Reads
@@ -1017,36 +1173,45 @@ Result Engine::execute_statement(const Statement &st) {
           };
           constexpr size_t picked_flush = 8;
           double screened_worst = -1, screen_threshold = 0;
+          bool screen_enabled = screen;
+          MappedScreenTrial mapped_screen_trial;
           size_t i = begin;
           for (; i + 8 <= end;) {
             size_t batch_count = 8;
-            if (screen && heap.size() == *st.limit) {
+            if (screen_enabled && heap.size() == *st.limit) {
               if (i + 32 <= end) batch_count = 32;
               const double worst = heap.top().distance;
               const bool updated = worst != screened_worst;
               if (updated) {
                 screen_threshold = quantized_available
                     ? exact::quantized_threshold(worst, view.quantized_step,
-                                                  quantized.root_dim_upper)
+                                                  quantized.error_upper)
                     : exact::fp32_screen_threshold(worst, view.dim);
                 screened_worst = worst;
               }
+              const uint32_t all =
+                  batch_count == 32 ? uint32_t(0xffffffffu) : uint32_t(0xffu);
               uint32_t survivors = 0;
-              if (quantized_available) {
+              // No finite FP32 sum can exceed this cutoff.
+              if (!quantized_available &&
+                  screen_threshold >= std::numeric_limits<float>::max()) {
+                survivors = all;
+              } else if (quantized_available) {
                 const double cutoff = effective_cutoff(screen_threshold, updated);
                 if (quantized.biased_codes) {
-                  for (size_t offset = 0; offset < batch_count; offset += 8) {
-                    uint32_t approximate[8];
-                    const size_t rows8[8] = {
-                        i + offset, i + offset + 1, i + offset + 2,
-                        i + offset + 3, i + offset + 4, i + offset + 5,
-                        i + offset + 6, i + offset + 7};
+                  uint32_t approximate[32];
+                  if (batch_count == 32) {
+                    exact::quantized_biased_distances32_contiguous(
+                        view, i, quantized, approximate);
+                  } else {
+                    const size_t rows8[8] = {i, i + 1, i + 2, i + 3,
+                                             i + 4, i + 5, i + 6, i + 7};
                     exact::quantized_biased_squared_distance8(
                         view, rows8, quantized, approximate);
-                    for (size_t lane = 0; lane < 8; ++lane)
-                      if (!(double(approximate[lane]) > cutoff))
-                        survivors |= uint32_t(1) << (offset + lane);
                   }
+                  for (size_t lane = 0; lane < batch_count; ++lane)
+                    if (!(double(approximate[lane]) > cutoff))
+                      survivors |= uint32_t(1) << lane;
                 } else {
                   for (size_t offset = 0; offset < batch_count; offset += 4) {
                     uint32_t approximate[4];
@@ -1071,9 +1236,9 @@ Result Engine::execute_statement(const Statement &st) {
                   if (!exact::fp32_screen_reject(approximate[lane],
                                                  screen_threshold))
                     survivors |= uint32_t(1) << lane;
+                if (mapped_fp32)
+                  screen_enabled = mapped_screen_trial.observe(batch_count, survivors);
               }
-              const uint32_t all =
-                  batch_count == 32 ? uint32_t(0xffffffffu) : uint32_t(0xffu);
               if (survivors != all) {
                 for (size_t lane = 0; lane < batch_count; ++lane)
                   if (survivors & (uint32_t(1) << lane)) picked[picked_count++] = i + lane;
@@ -1142,6 +1307,8 @@ Result Engine::execute_statement(const Statement &st) {
           };
           constexpr size_t picked_flush = 8;
           double screened_worst = -1, screen_threshold = 0;
+          bool screen_enabled = screen;
+          MappedScreenTrial mapped_screen_trial;
           auto refine = [&](const size_t *batch, size_t lanes) {
             size_t offset = 0;
             for (; offset + 8 <= lanes; offset += 8) {
@@ -1163,18 +1330,21 @@ Result Engine::execute_statement(const Statement &st) {
           for (; at + 32 <= count; at += 32) {
             size_t batch[32];
             for (size_t lane = 0; lane < 32; ++lane) batch[lane] = rows[at + lane];
-            if (screen && heap.size() == *st.limit) {
+            if (screen_enabled && heap.size() == *st.limit) {
               const double worst = heap.top().distance;
               const bool updated = worst != screened_worst;
               if (updated) {
                 screen_threshold = quantized_available
                     ? exact::quantized_threshold(worst, view.quantized_step,
-                                                  quantized.root_dim_upper)
+                                                  quantized.error_upper)
                     : exact::fp32_screen_threshold(worst, view.dim);
                 screened_worst = worst;
               }
               uint32_t survivors = 0;
-              if (quantized_available) {
+              if (!quantized_available &&
+                  screen_threshold >= std::numeric_limits<float>::max()) {
+                survivors = uint32_t(0xffffffffu);
+              } else if (quantized_available) {
                 const double cutoff = effective_cutoff(screen_threshold, updated);
                 if (quantized.biased_codes) {
                   for (size_t offset = 0; offset < 32; offset += 8) {
@@ -1209,6 +1379,8 @@ Result Engine::execute_statement(const Statement &st) {
                   if (!exact::fp32_screen_reject(approximate[lane],
                                                  screen_threshold))
                     survivors |= uint32_t(1) << lane;
+                if (mapped_fp32)
+                  screen_enabled = mapped_screen_trial.observe(32, survivors);
               }
               if (survivors != uint32_t(0xffffffffu)) {
                 for (size_t lane = 0; lane < 32; ++lane)
@@ -1230,9 +1402,20 @@ Result Engine::execute_statement(const Statement &st) {
         // Neighbor comparison is a total order on (distance, primary key), so
         // the merged top K is identical to the serial one at every width.
         auto run_slices = [&](
-            size_t total,
+            size_t total, const uint32_t *rows,
             const std::function<void(size_t, size_t, Heap &)> &body) {
           size_t width = scan_width(total);
+          if (width > 1 && quantized.biased_codes && exact::thread_limit() == 0) {
+            // Dot products over cache-resident codes can cost less than waking
+            // another worker. Leave L2 space for row norms and refinement, and
+            // allow at least one cache line of work per row for the reduction.
+            const size_t cache_bytes = cpu::l2_cache_bytes();
+            const size_t work_per_row = std::max(view.dim, size_t(64));
+            if (total <= (cache_bytes - cache_bytes / 4) / work_per_row &&
+                limit <= total / 64 &&
+                exact::quantized_sample_is_selective(view, quantized, rows, total))
+              width = 1;
+          }
           if (width < 2) {
             body(0, total, nearest);
             return;
@@ -1248,7 +1431,7 @@ Result Engine::execute_statement(const Statement &st) {
           std::vector<Heap> heaps;
           heaps.reserve(width);
           for (size_t index = 0; index < width; ++index)
-            heaps.emplace_back(better_neighbor);
+            heaps.emplace_back(better_neighbor, limit);
           const size_t per = (total + width - 1) / width;
           const size_t chunk = (per + 31) / 32 * 32;
           share_cutoff = quantized_available && *st.limit == 10;
@@ -1264,6 +1447,18 @@ Result Engine::execute_statement(const Statement &st) {
               consider(nearest, neighbor.key, neighbor.distance, neighbor.row);
             }
           ++exact::parallel_runs();
+        };
+        // With a shared vector, all distances tie. Store scans and posting
+        // lists visit increasing row keys, so only the first K eligible
+        // rows can win in either sort direction.
+        auto collect_shared = [&](const uint32_t *rows, size_t count) {
+          if (!count) return;
+          const double distance = view.distance(rows ? rows[0] : 0,
+                                                projection.query);
+          for (size_t i = 0; i < std::min(count, limit); ++i) {
+            const size_t row = rows ? rows[i] : i;
+            consider(nearest, view.keys[row], distance, row);
+          }
         };
         // What the winners allocate is the text they actually carry, not the
         // declared VARCHAR width that had to enter this path to be measured.
@@ -1282,10 +1477,13 @@ Result Engine::execute_statement(const Statement &st) {
           winner_view = nullptr;
           scan_rows(original_visit);
         } else if (fs.empty()) {
-          run_slices(static_cast<size_t>(view.count),
-                     [&](size_t begin, size_t end, Heap &heap) {
-                       scan_contiguous(begin, end, heap);
-                     });
+          if (view.shared_vector)
+            collect_shared(nullptr, view.count);
+          else
+            run_slices(view.count, nullptr,
+                       [&](size_t begin, size_t end, Heap &heap) {
+                         scan_contiguous(begin, end, heap);
+                       });
         } else {
           auto eligible = [&](size_t i, const Filter *satisfied) {
             for (const auto &f : fs) {
@@ -1332,9 +1530,12 @@ Result Engine::execute_statement(const Statement &st) {
             rows = hits.data();
             row_count = hits.size();
           }
-          run_slices(row_count, [&](size_t begin, size_t end, Heap &heap) {
-            scan_list(rows + begin, end - begin, heap);
-          });
+          if (view.shared_vector)
+            collect_shared(rows, row_count);
+          else
+            run_slices(row_count, rows, [&](size_t begin, size_t end, Heap &heap) {
+              scan_list(rows + begin, end - begin, heap);
+            });
         }
       } else if (cache_->exact_bypass) {
         // Remember this view's budget bypass until existing invalidation clears it.
@@ -1357,45 +1558,31 @@ Result Engine::execute_statement(const Statement &st) {
             // Small or unscreened scans keep the interleaved in-memory view.
             // For screened scans, retain only offsets to the committed vectors.
             Store::ReadMapping mapping;
-            if (!require_owned && screen_capable && plan.dim == 128 && plan.count >= 4096)
+            if (!require_owned && screen_capable && plan.dim >= 128 && plan.count >= 4096)
               mapping = store_.map_committed();
             auto build_view = [&](const Store::ReadMapping &source) {
-              auto view = std::make_unique<exact::Compact>(plan, source.data);
+              auto view = std::make_unique<exact::Compact>(plan, source.data());
               size_t count = 0;
-              auto fill = [&](int64_t key, const std::string &data, uint64_t offset) {
-                if (source.data) {
-                  Reader reader{data};
-                  // Schema validation permits at most one VECTOR, so fields
-                  // before it are fixed integers or length-prefixed text.
-                  for (size_t c = 0; c < projection.col; ++c) {
-                    if (schema.columns[c].type == Type::BigInt) reader.num(8);
-                    else {
-                      const size_t length = reader.num(4);
-                      reader.need(length);
-                      reader.pos += length;
-                    }
-                  }
-                  const size_t length = plan.dim * sizeof(float);
-                  reader.need(length);
-                  if (offset > source.size || reader.pos > source.size - offset ||
-                      length > source.size - offset - reader.pos)
-                    throw Error("CORRUPTION", "mapped vector exceeds journal");
-                  offset += reader.pos;
-                }
-                view->fill(count++, key, unpack_row(data, schema), offset);
-              };
-              if (source.data) store_.scan_with_offsets(st.table, fill);
-              else store_.scan(st.table, [&](int64_t key, const std::string &data) {
-                fill(key, data, 0);
-              });
+              if (source.data()) {
+                store_.scan_mapped(st.table, source,
+                    [&](int64_t key, std::string_view data, uint64_t offset) {
+                  size_t vector_offset = 0;
+                  auto row = unpack_row<true>(data, schema, &vector_offset);
+                  view->fill_mapped(count++, key, row, offset + vector_offset);
+                });
+              } else {
+                store_.scan(st.table, [&](int64_t key, const std::string &data) {
+                  view->fill(count++, key, unpack_row(data, schema));
+                });
+              }
               if (count != plan.count)
                 throw Error("CORRUPTION", "exact cache row count changed");
-              view->prepare_quantized_codes();
+              view->prepare_shared_vector();
+              if (!view->shared_vector) view->prepare_quantized_codes();
               return view;
             };
             auto view = build_view(mapping);
-            if (mapping.data && !exact::quantized_codes_available(
-                    exact::prepare_quantized_query(*view, projection.query, screen_capable))) {
+            if (mapping.data() && !view->shared_vector && !view->quantized_codes) {
               view.reset();
               mapping = {};
               view = build_view(mapping);
@@ -1416,12 +1603,7 @@ Result Engine::execute_statement(const Statement &st) {
     } else {
       scan_rows(original_visit);
     }
-    std::vector<Neighbor> winners;
-    while (!nearest.empty()) {
-      winners.push_back(nearest.top());
-      nearest.pop();
-    }
-    std::sort(winners.begin(), winners.end(), better_neighbor);
+    auto winners = nearest.take_ordered();
     // Winners stay in memory only while they fit the result budget. Past it they
     // go through the sorter the per-row path uses, so a wide TopK over wide rows
     // streams instead of holding every projected row at once.
@@ -1446,7 +1628,8 @@ Result Engine::execute_statement(const Statement &st) {
       if (winner_view) {
         for (const auto &p : ps) {
           if (p.distance) {
-            if (p.col == projection.col && p.query == projection.query)
+            if (&p == &projection ||
+                (p.col == projection.col && p.query == projection.query))
               output.push_back(n.distance);
             else
               output.push_back(
@@ -1531,8 +1714,29 @@ Result Engine::execute_statement(const Statement &st) {
     std::vector<Candidate>().swap(all);
     buffered_bytes = 0;
   };
+  const bool can_compare_before_projection = st.limit && std::all_of(
+      keys.begin(), keys.end(), [&](const SortKey &k) {
+        return !k.projection || !ps[k.index].distance;
+      });
+  auto beats_worst = [&](int64_t key, const std::vector<Cell> &row) {
+    const auto &worst = heap.top();
+    for (size_t i = 0; i < keys.size(); ++i) {
+      const auto &k = keys[i];
+      const size_t column = k.projection ? ps[k.index].col : k.index;
+      const int order = compare(row[column], worst.sort[i]);
+      if (order)
+        return k.desc ? order > 0 : order < 0;
+    }
+    return key < worst.pk;
+  };
   scan_rows([&](int64_t key, const std::vector<Cell> &row) {
     if (!matches(row, fs))
+      return;
+    // With scalar order keys the row already contains everything needed to
+    // reject it. Avoid projecting wide columns and computing unused distances.
+    const bool compare_early =
+        can_compare_before_projection && !sorter && heap.size() == *st.limit;
+    if (compare_early && !beats_worst(key, row))
       return;
     Candidate c;
     c.pk = key;
@@ -1554,7 +1758,7 @@ Result Engine::execute_statement(const Statement &st) {
         }
         buffered_bytes += bytes;
         heap.push(std::move(c));
-      } else if (better(c, heap.top())) {
+      } else if (compare_early || better(c, heap.top())) {
         buffered_bytes -= weight(heap.top());
         heap.pop();
         if (bytes > result_budget - buffered_bytes) {

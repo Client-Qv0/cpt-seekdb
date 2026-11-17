@@ -231,7 +231,7 @@ void test_quantized_screen() {
     auto prepared=exact::prepare_quantized_query(cache,query,true);
     require(exact::quantized_codes_available(prepared));
     const double worst=cache.distance(2,query);
-    const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.root_dim_upper);
+    const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.error_upper);
     for(size_t i=0;i<vectors.size();++i) {
       uint32_t scalar=0;
       for(size_t d=0;d<dim;++d) {
@@ -255,7 +255,7 @@ void test_quantized_screen() {
     std::vector<float> query(17,-magnitude);
     auto prepared=exact::prepare_quantized_query(cache,query,true);
     require(exact::quantized_codes_available(prepared));
-    const double threshold=exact::quantized_threshold(0,cache.quantized_step,prepared.root_dim_upper);
+    const double threshold=exact::quantized_threshold(0,cache.quantized_step,prepared.error_upper);
     require(exact::quantized_squared_distance(cache,1,prepared)==0);
     require(double(exact::quantized_squared_distance(cache,0,prepared))>threshold);
     require(std::isfinite(cache.distance(0,query)));
@@ -272,8 +272,69 @@ void test_quantized_screen() {
     auto prepared=exact::prepare_quantized_query(cache,query,true);
     const double worst=cache.distance(0,query);
     require(worst==cache.distance(1,query));
-    const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.root_dim_upper);
+    const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.error_upper);
     require(!(double(exact::quantized_squared_distance(cache,1,prepared))>threshold));
+  }
+  {
+    const size_t dim=128;
+    auto cache=make_cache({std::vector<float>(dim,0.5f),
+                           std::vector<float>(dim,33.0f/64),
+                           std::vector<float>(dim,1)});
+    std::vector<float> query(dim,0);
+    auto prepared=exact::prepare_quantized_query(cache,query,true);
+    require(bool(prepared.biased_codes));
+    const double worst=cache.distance(0,query);
+    const double tight=exact::quantized_threshold(worst,cache.quantized_step,prepared.error_upper);
+    const double old=exact::quantized_threshold(worst,cache.quantized_step,std::sqrt(double(dim)));
+    const double next_score=exact::quantized_squared_distance(cache,1,prepared);
+    require(next_score>tight && next_score<=old);
+    require(double(exact::quantized_squared_distance(cache,0,prepared))<=tight);
+  }
+  {
+    // Half-step row and query errors can point in opposite directions in
+    // every dimension. Preserve a cutoff tie in both query layouts.
+    const size_t dim=8192;
+    for(float maximum:{1.0f,1.5f}) {
+      auto cache=make_cache({std::vector<float>(dim,0.5f/64),
+                             std::vector<float>(dim,maximum)});
+      for(float code:{1.5f,65.5f}) {
+        const std::vector<float> query(dim,code/64);
+        auto prepared=exact::prepare_quantized_query(cache,query,true);
+        require(maximum==1.0f ? bool(prepared.biased_codes) : bool(prepared.codes));
+        require(prepared.error_upper>=std::sqrt(double(dim)));
+        const double worst=cache.distance(0,query);
+        const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.error_upper);
+        require(double(exact::quantized_squared_distance(cache,0,prepared))<=threshold);
+      }
+    }
+  }
+  {
+    // Both residuals can oppose each other at a half step. With the
+    // preceding grid's cap this exact tie would be incorrectly screened out.
+    const size_t dim=8192;
+    auto cache=make_cache({std::vector<float>(dim,0.5f/64),std::vector<float>(dim,1)});
+    for(int scale : {2,4}) {
+      const std::vector<float> query(dim,125.5f*scale/64);
+      const auto prepared=exact::prepare_quantized_query(cache,query,true);
+      require(bool(prepared.biased_codes) && prepared.code_scale==scale);
+      const double worst=cache.distance(0,query);
+      const double cutoff=exact::quantized_threshold(worst,cache.quantized_step,prepared.error_upper);
+      const double preceding_cap=std::sqrt(double(dim))*(0.5*(scale/2+1));
+      const double old=exact::quantized_threshold(worst,cache.quantized_step,preceding_cap);
+      const double score=exact::quantized_squared_distance(cache,0,prepared);
+      require(score<=cutoff && score>old);
+    }
+  }
+  {
+    // Mixing the largest power-of-two FP32 value with the smallest
+    // subnormal still leaves a representable nonzero squared residual.
+    const float tiny=std::numeric_limits<float>::denorm_min();
+    auto cache=make_cache({{0x1p+127f,0},{0,tiny}});
+    const std::vector<float> query{0,tiny};
+    auto prepared=exact::prepare_quantized_query(cache,query,true);
+    require(bool(prepared.biased_codes));
+    require(cache.quantized_row_error_upper>=double(tiny)*cache.quantized_inverse);
+    require(prepared.error_upper>=2*double(tiny)*cache.quantized_inverse);
   }
   exact::Plan full_plan({Type::BigInt,Type::Vector},1,128);
   full_plan.count=22000;
@@ -288,15 +349,15 @@ void test_quantized_screen() {
 void test_biased_screen_layout_and_kernel() {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
   if(!exact::available() || std::fegetround()!=FE_TONEAREST) return;
-  auto make_cache=[](float scale) {
-    constexpr size_t count=16,dim=17;
+  auto make_cache=[](float scale,size_t dim=17) {
+    constexpr size_t count=16;
     std::vector<std::vector<Cell>> rows;
     exact::Plan plan({Type::BigInt,Type::Vector},1,dim);
     for(size_t row=0;row<count;++row) {
       std::vector<float> vector(dim);
       vector[0]=scale;
       for(size_t d=1;d<dim;++d)
-        vector[d]=scale*float(int(row*7+d*3)%11-5)/5.0f;
+        vector[d]=row==0 ? scale : scale*float(int(row*7+d*3)%11-5)/5.0f;
       rows.push_back({int64_t(row),std::move(vector)});
       plan.observe(rows.back());
     }
@@ -315,38 +376,81 @@ void test_biased_screen_layout_and_kernel() {
     query[d]=float(int(d*5)%9-4)/5.0f;
   auto prepared=exact::prepare_quantized_query(cache,query,true);
   require(bool(prepared.biased_codes) && !prepared.codes);
-  for(size_t block=0;block+8<=cache.count;block+=8) {
-    uint32_t actual[8];
-    const size_t rows[8]={block,block+1,block+2,block+3,
-                          block+4,block+5,block+6,block+7};
+  auto check_distances=[](const exact::Compact &cache,
+                          exact::QuantizedQuery &prepared,
+                          const size_t *rows) {
+    const bool uses_avxvnni=prepared.use_avxvnni;
+    require(uses_avxvnni==(cache.dim>=32 && exact::avxvnni_available()));
+    uint32_t actual[8],fallback[8];
     exact::quantized_biased_squared_distance8(cache,rows,prepared,actual);
+    prepared.use_avxvnni=false;
+    exact::quantized_biased_squared_distance8(cache,rows,prepared,fallback);
+    prepared.use_avxvnni=uses_avxvnni;
     for(size_t lane=0;lane<8;++lane) {
       uint32_t expected=0;
       for(size_t d=0;d<cache.dim;++d) {
-        const int row_code=
-            int(reinterpret_cast<const uint8_t*>(cache.quantized_codes.get())
-                [rows[lane]*cache.dim+d])-64;
-        const int delta=row_code-int(prepared.biased_codes[d]);
+        const int row_code=int(uint8_t(cache.quantized_codes[rows[lane]*cache.dim+d]))-64;
+        const int delta=row_code-prepared.code_scale*int(prepared.biased_codes[d]);
         expected+=uint32_t(delta*delta);
       }
-      require(actual[lane]==expected);
+      require(actual[lane]==expected && fallback[lane]==expected);
+      require(exact::quantized_squared_distance(cache,rows[lane],prepared)==expected);
     }
-  }
+  };
+  const size_t contiguous[8]={0,1,2,3,4,5,6,7};
+  check_distances(cache,prepared,contiguous);
+  const size_t scattered[8]={9,1,6,13,5,0,15,12};
+  for(size_t dim : {size_t(32),size_t(128),size_t(129),size_t(8191),size_t(8192)}) {
+    auto other=make_cache(1.0f,dim);
+    std::vector<float> input(dim);
+    for(size_t d=0;d<dim;++d) input[d]=query[d%query.size()];
+    auto codes=exact::prepare_quantized_query(other,input,true);
+    require(other.quantized_biased && bool(codes.biased_codes));
+    check_distances(other,codes,contiguous);
+    check_distances(other,codes,scattered);
 
-  // Row +64 is stored as byte 128. A query code of 65 must still screen.
-  const std::vector<float> outside(cache.dim, 65.0f/64.0f);
-  const auto wide=exact::prepare_quantized_query(cache,outside,true);
-  require(bool(wide.codes) && !wide.biased_codes);
-  const size_t rows4[4]={0,5,10,15};
-  uint32_t distances[4];
-  exact::quantized_squared_distance4(cache,rows4,wide,distances);
-  for(size_t j=0;j<4;++j) {
-    uint32_t expected=0;
-    for(size_t d=0;d<cache.dim;++d) {
-      int delta=int(uint8_t(cache.quantized_codes[rows4[j]*cache.dim+d]))-64-65;
-      expected+=uint32_t(delta*delta);
+    // Row zero contains byte 128 in every coordinate. Pairing it with
+    // uniform extremal query codes approaches both signed saturation limits.
+    for(int code : {-127,65,127}) {
+      std::fill(input.begin(),input.end(),float(code)/64);
+      auto wide=exact::prepare_quantized_query(other,input,true);
+      require(bool(wide.biased_codes) && !wide.codes && wide.code_scale==1);
+      check_distances(other,wide,contiguous);
+      check_distances(other,wide,scattered);
     }
-    require(distances[j]==expected);
+    for(float code : {-254.0f,-192.0f,-127.5f,127.5f,192.0f,254.0f}) {
+      std::fill(input.begin(),input.end(),code/64);
+      auto wide=exact::prepare_quantized_query(other,input,true);
+      require(bool(wide.biased_codes) && !wide.codes && wide.code_scale==2);
+      check_distances(other,wide,contiguous);
+      check_distances(other,wide,scattered);
+      const double worst=other.distance(7,input);
+      const double cutoff=exact::quantized_threshold(worst,other.quantized_step,wide.error_upper);
+      for(size_t row=0;row<other.count;++row)
+        if(double(exact::quantized_squared_distance(other,row,wide))>cutoff)
+          require(other.distance(row,input)>worst);
+    }
+    const float limit=std::nextafter(510.0f,0.0f);
+    for(float code : {-limit,-508.0f,-320.0f,-255.0f,255.0f,320.0f,508.0f,limit}) {
+      std::fill(input.begin(),input.end(),code/64);
+      auto wide=exact::prepare_quantized_query(other,input,true);
+      require(bool(wide.biased_codes) && !wide.codes && wide.code_scale==4);
+      check_distances(other,wide,contiguous);
+      check_distances(other,wide,scattered);
+      if(code==-508.0f && dim>=8191)
+        require(exact::quantized_squared_distance(other,0,wide)==572u*572u*dim &&
+                exact::quantized_squared_distance(other,0,wide)>uint32_t(INT32_MAX));
+      const double worst=other.distance(7,input);
+      const double cutoff=exact::quantized_threshold(worst,other.quantized_step,wide.error_upper);
+      for(size_t row=0;row<other.count;++row)
+        if(double(exact::quantized_squared_distance(other,row,wide))>cutoff)
+          require(other.distance(row,input)>worst);
+    }
+    for(float code : {-510.0f,510.0f,std::numeric_limits<float>::max()}) {
+      std::fill(input.begin(),input.end(),code/64);
+      require(!exact::quantized_codes_available(
+          exact::prepare_quantized_query(other,input,true)));
+    }
   }
 
   auto fallback=make_cache(0.8f);

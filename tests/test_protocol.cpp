@@ -16,10 +16,13 @@ mvdb::Request parse(const std::string &line) {
   mvdb::parse_request(line, request);
   return request;
 }
-void rejected(const std::string &line) {
+void rejected(const std::string &line, const std::string &message = {}) {
   try { parse(line); }
   catch (const mvdb::Error &e) {
     check(!e.code.empty(), "missing error code");
+    if (!message.empty())
+      check(e.code == "PROTOCOL" && e.what() == message,
+            "wrong protocol diagnostic or byte offset");
     return;
   }
   throw std::runtime_error("accepted invalid request: " + line);
@@ -50,10 +53,18 @@ int main() {
       check(parse(head+"\\n\\\"\\\\\\u4e2d\"}").sql==prefix+"\n\"\\"+u8"中", "string boundary escapes");
       check(parse(head+u8"中🙂\"}").sql==prefix+u8"中🙂", "string boundary UTF-8");
       check(parse(head+std::string(1,char(0x7f))+"\"}").sql==prefix+char(0x7f), "DEL is valid JSON text");
-      rejected(head+char(0x1f)+"\"}");
-      rejected(head+char(0x80)+"\"}");
-      rejected(head+"\\q\"}");
-      rejected(head);
+      const auto position = head.size();
+      rejected(head+char(0x1f)+"\"}", "unescaped control character at byte " +
+               std::to_string(position+1));
+      rejected(head+char(0x80)+"\"}", "invalid UTF-8 lead byte at byte " +
+               std::to_string(position+1));
+      rejected(head+"\\q\"}", "invalid JSON escape at byte " +
+               std::to_string(position+2));
+      rejected(head, "unterminated JSON string at byte " +
+               std::to_string(position));
+      const auto ignored = "{\"id\":1,\"op\":\"shutdown\",\"ignored\":[\"" + prefix;
+      rejected(ignored+char(0x1f)+"\"]}", "unescaped control character at byte " +
+               std::to_string(ignored.size()+1));
     }
     check(parse(R"({"id":1,"op":"execute","sql":"SELECT id FROM t"})").search_mode
           == mvdb::SearchMode::Exact, "default exact");

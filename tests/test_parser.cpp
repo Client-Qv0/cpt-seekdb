@@ -8,9 +8,13 @@ void check(bool condition) {
   ++checks;
   if (!condition) throw std::runtime_error("Parser assertion failed at check " + std::to_string(checks));
 }
-void reject(const std::string& sql) {
+void reject(const std::string& sql, const std::string& message = {}) {
   try { mvdb::parse_sql(sql); }
-  catch (const mvdb::Error& e) { check(e.code == "SYNTAX"); return; }
+  catch (const mvdb::Error& e) {
+    check(e.code == "SYNTAX");
+    if (!message.empty()) check(e.what() == message);
+    return;
+  }
   throw std::runtime_error("Unexpectedly accepted: " + sql);
 }
 }
@@ -95,5 +99,10 @@ int main() {
     "SELECT /*+ index(t) */ * FROM t", "BEGIN TRANSACTION", "ALTER TABLE t ADD COLUMN x BIGINT",
     "SELECT null FROM t", "SELECT * FROM t WHERE id=", "UPDATE t SET id=id+1", "SELECT * FROM ``"
   }) reject(sql);
+  // A lexical failure later in the statement takes precedence over an
+  // earlier grammar failure, and a valid lexical tail leaves the error intact.
+  reject("SELECT FROM t @", "Unexpected character at byte 14");
+  reject("SELECT FROM t 'open", "Unterminated quoted value at byte 14");
+  reject("SELECT FROM t", "Expected identifier at byte 7");
   std::cout << "parser checks passed: " << checks << '\n';
 }

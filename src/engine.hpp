@@ -28,6 +28,8 @@ private:
   std::string directory_;
   struct Cache;
   std::unique_ptr<Cache> cache_;
+  struct SchemaCache;
+  std::unique_ptr<SchemaCache> schema_cache_;
   Result execute_statement(const Statement &statement);
   Result execute_ann(const Statement &statement);
 };

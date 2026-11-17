@@ -1,4 +1,5 @@
 #include "storage.hpp"
+#include "crc32_ieee.hpp"
 #include "compact_rows.hpp"
 
 #include <algorithm>
@@ -48,22 +49,8 @@ void set64(unsigned char *p, uint64_t v) {
   for (unsigned i = 0; i < 8; ++i)
     p[i] = static_cast<unsigned char>(v >> (i * 8));
 }
-uint32_t crc_update(uint32_t crc, const void *data, size_t length) {
-  static const std::array<uint32_t, 256> table = [] {
-    std::array<uint32_t, 256> result{};
-    for (uint32_t i = 0; i < 256; ++i) {
-      uint32_t c = i;
-      for (unsigned j = 0; j < 8; ++j)
-        c = (c >> 1) ^ (0xedb88320u & (0u - (c & 1u)));
-      result[i] = c;
-    }
-    return result;
-  }();
-  const auto *p = static_cast<const unsigned char *>(data);
-  for (size_t i = 0; i < length; ++i)
-    crc = table[(crc ^ p[i]) & 255] ^ (crc >> 8);
-  return crc;
-}
+using storage_detail::crc_update;
+
 void read_all(int fd, void *buffer, size_t size, uint64_t offset) {
   auto *p = static_cast<unsigned char *>(buffer);
   while (size) {
@@ -80,6 +67,49 @@ void read_all(int fd, void *buffer, size_t size, uint64_t offset) {
     offset += static_cast<size_t>(n);
   }
 }
+// Replay can validate a sequence of short frames from one bounded window.
+class RecoveryReader {
+public:
+  struct Slice {
+    const unsigned char *data;
+    size_t size;
+  };
+
+  RecoveryReader(int fd, uint64_t size) : fd_(fd), size_(size) {}
+
+  Slice read_slice(uint64_t offset, uint64_t count) {
+    if (offset >= size_)
+      throw Error("CORRUPT", "unexpected end of journal");
+    if (offset < start_ || offset - start_ >= loaded_) {
+      const auto length = static_cast<size_t>(
+          std::min<uint64_t>(buffer_.size(), size_ - offset));
+      read_all(fd_, buffer_.data(), length, offset);
+      start_ = offset;
+      loaded_ = length;
+    }
+    const auto within = static_cast<size_t>(offset - start_);
+    return {buffer_.data() + within,
+            static_cast<size_t>(std::min<uint64_t>(count, loaded_ - within))};
+  }
+
+  void copy(uint64_t offset, unsigned char *dest, size_t size) {
+    while (size) {
+      const auto slice = read_slice(offset, size);
+      std::memcpy(dest, slice.data, slice.size);
+      offset += slice.size;
+      dest += slice.size;
+      size -= slice.size;
+    }
+  }
+
+private:
+  int fd_;
+  uint64_t size_;
+  uint64_t start_ = 0;
+  size_t loaded_ = 0;
+  std::array<unsigned char, 64 * 1024> buffer_;
+};
+
 void write_all(int fd, const void *buffer, size_t size, uint64_t offset) {
   const auto *p = static_cast<const unsigned char *>(buffer);
   while (size) {
@@ -96,6 +126,45 @@ void write_all(int fd, const void *buffer, size_t size, uint64_t offset) {
     offset += static_cast<size_t>(n);
   }
 }
+// The temporary checkpoint journal is sequential and is synced only once.
+class CheckpointWriter {
+public:
+  explicit CheckpointWriter(int fd) : fd_(fd) {}
+
+  void append(const void *data, size_t size) {
+    const auto *source = static_cast<const unsigned char *>(data);
+    while (size) {
+      if (!used_ && size >= buffer_.size()) {
+        const size_t direct = size - size % buffer_.size();
+        write_all(fd_, source, direct, written_);
+        written_ += direct;
+        source += direct;
+        size -= direct;
+        continue;
+      }
+      const size_t copied = std::min(size, buffer_.size() - used_);
+      std::memcpy(buffer_.data() + used_, source, copied);
+      used_ += copied;
+      source += copied;
+      size -= copied;
+      if (used_ == buffer_.size())
+        flush();
+    }
+  }
+
+  void flush() {
+    write_all(fd_, buffer_.data(), used_, written_);
+    written_ += used_;
+    used_ = 0;
+  }
+
+private:
+  int fd_;
+  uint64_t written_ = 0;
+  size_t used_ = 0;
+  std::array<unsigned char, 64 * 1024> buffer_;
+};
+
 void write_all_dsync(int fd, const void *buffer, size_t size,
                      uint64_t offset) {
   struct iovec part{const_cast<void *>(buffer), size};
@@ -317,7 +386,8 @@ struct Store::Impl {
   }
   static Ref append_to(int target_fd, uint64_t &position, uint32_t kind,
                        const std::string &table, int64_t key,
-                       const std::string &value) {
+                       const std::string &value,
+                       CheckpointWriter *checkpoint_writer = nullptr) {
     if (table.size() > 1024 * 1024 ||
         value.size() > std::numeric_limits<uint32_t>::max())
       throw Error("LIMIT", "record or table identifier is too large");
@@ -338,17 +408,23 @@ struct Store::Impl {
     set32(h.data() + 24, crc);
     const Ref ref{position + kFrameHeader + table.size(),
                   static_cast<uint32_t>(value.size()), kind == kErase};
-    struct iovec parts[3];
-    int part_count = 0;
-    auto add_part = [&](const void *data, size_t size) {
-      if (!size)
-        return;
-      parts[part_count++] = {const_cast<void *>(data), size};
-    };
-    add_part(h.data(), h.size());
-    add_part(table.data(), table.size());
-    add_part(value.data(), value.size());
-    writev_all(target_fd, parts, part_count, position);
+    if (checkpoint_writer) {
+      checkpoint_writer->append(h.data(), h.size());
+      checkpoint_writer->append(table.data(), table.size());
+      checkpoint_writer->append(value.data(), value.size());
+    } else {
+      struct iovec parts[3];
+      int part_count = 0;
+      auto add_part = [&](const void *data, size_t size) {
+        if (!size)
+          return;
+        parts[part_count++] = {const_cast<void *>(data), size};
+      };
+      add_part(h.data(), h.size());
+      add_part(table.data(), table.size());
+      add_part(value.data(), value.size());
+      writev_all(target_fd, parts, part_count, position);
+    }
 
     position += bytes;
     return ref;
@@ -481,16 +557,18 @@ struct Store::Impl {
         io_error("create checkpoint");
       if (::flock(target_fd, LOCK_EX | LOCK_NB) != 0)
         io_error("lock checkpoint");
-      write_all(target_fd, kHeader.data(), kHeader.size(), 0);
+      CheckpointWriter writer(target_fd);
+      writer.append(kHeader.data(), kHeader.size());
       uint64_t position = kFileHeader;
       for (const auto &entry : committed.meta)
         append_to(target_fd, position, kMeta, entry.first, 0,
-                  load(entry.second));
+                  load(entry.second), &writer);
       for (const auto &table : committed.rows)
         for (const auto &entry : table.second)
           append_to(target_fd, position, kPut, table.first, entry.first,
-                    load(entry.second));
-      append_to(target_fd, position, kCommit, {}, 0, {});
+                    load(entry.second), &writer);
+      append_to(target_fd, position, kCommit, {}, 0, {}, &writer);
+      writer.flush();
       sync_fd(target_fd);
       if (::renameat(dirfd, "journal.checkpoint.tmp", dirfd, "journal.mvdb") !=
           0)
@@ -542,20 +620,21 @@ struct Store::Impl {
       checkpoint();
   }
   void recover() {
-    std::array<unsigned char, kFileHeader> header{};
-    read_all(fd, header.data(), header.size(), 0);
-    if (header != kHeader)
-      throw Error("CORRUPT", "unsupported journal header");
     struct stat st {};
     if (::fstat(fd, &st) != 0)
       io_error("stat journal");
     const uint64_t total = static_cast<uint64_t>(st.st_size);
+    RecoveryReader reader(fd, total);
+    std::array<unsigned char, kFileHeader> header;
+    reader.copy(0, header.data(), header.size());
+    if (header != kHeader)
+      throw Error("CORRUPT", "unsupported journal header");
     Layer replay(arena);
     uint64_t offset = kFileHeader;
-    std::array<unsigned char, 64 * 1024> buffer{};
+    std::array<char, 256> small_name;
     while (total - offset >= kFrameHeader) {
-      std::array<unsigned char, kFrameHeader> h{};
-      read_all(fd, h.data(), h.size(), offset);
+      std::array<unsigned char, kFrameHeader> h;
+      reader.copy(offset, h.data(), h.size());
       const uint32_t kind = u32(h.data() + 4), namesize = u32(h.data() + 8),
                      size = u32(h.data() + 12);
       const uint64_t bytes = kFrameHeader + uint64_t(namesize) + uint64_t(size);
@@ -569,15 +648,20 @@ struct Store::Impl {
       const uint32_t expected = u32(h.data() + 24);
       set32(h.data() + 24, 0);
       uint32_t crc = crc_update(0xffffffffu, h.data(), h.size());
-      uint64_t remaining = namesize + uint64_t(size),
-               pos = offset + kFrameHeader;
+      const uint64_t body = offset + kFrameHeader;
+      const bool keep_name = namesize <= small_name.size();
+      uint64_t remaining = namesize + uint64_t(size), pos = body;
       while (remaining) {
-        size_t n =
-            static_cast<size_t>(std::min<uint64_t>(remaining, buffer.size()));
-        read_all(fd, buffer.data(), n, pos);
-        crc = crc_update(crc, buffer.data(), n);
-        pos += n;
-        remaining -= n;
+        const auto slice = reader.read_slice(pos, remaining);
+        crc = crc_update(crc, slice.data, slice.size);
+        const uint64_t in_body = pos - body;
+        if (keep_name && in_body < namesize) {
+          const auto length = static_cast<size_t>(
+              std::min<uint64_t>(slice.size, namesize - in_body));
+          std::memcpy(small_name.data() + in_body, slice.data, length);
+        }
+        pos += slice.size;
+        remaining -= slice.size;
       }
       if ((crc ^ 0xffffffffu) != expected)
         break;
@@ -586,8 +670,14 @@ struct Store::Impl {
         overlay(committed, replay, true);
         durable_end = offset + bytes;
       } else {
-        std::string table(namesize, '\0');
-        read_all(fd, table.data(), table.size(), offset + kFrameHeader);
+        // Allocate the table name only after the record passes CRC.
+        std::string table;
+        if (keep_name) {
+          table.assign(small_name.data(), namesize);
+        } else {
+          table.resize(namesize);
+          read_all(fd, table.data(), table.size(), body);
+        }
         uint64_t key_bits = u64(h.data() + 16);
         int64_t key;
         std::memcpy(&key, &key_bits, sizeof key);
@@ -606,6 +696,72 @@ struct Store::Impl {
     if (total != durable_end)
       sync_fd(fd);
   }
+  template<bool Descending, class Visitor>
+  void scan_visible_refs(const std::string &table, KeyRange range, Visitor fn) const {
+    check();
+    if (range.first > range.last)
+      return;
+    static const Rows empty;
+    auto rows = [&](const Layer &layer) -> const Rows & {
+      auto it = layer.rows.find(table);
+      return it == layer.rows.end() ? empty : it->second;
+    };
+    const auto &base = rows(committed);
+    const auto &transaction = rows(pending);
+    // Callbacks may stage writes. Keep this statement's initial overlay
+    // stable while walking it, as with an unbounded scan.
+    const Rows statement = rows(current);
+    auto start = [&](const Rows &index) {
+      if constexpr (Descending)
+        return index.seek<true>(range.last);
+      if (range.first == std::numeric_limits<int64_t>::min())
+        return index.begin();
+      return index.seek<false>(range.first);
+    };
+    auto a = start(base), b = start(transaction), c = start(statement);
+    const auto a_end = base.end(), b_end = transaction.end(), c_end = statement.end();
+    struct Guard {
+      const Impl &store;
+      explicit Guard(const Impl &s) : store(s) { ++store.scans; }
+      ~Guard() { --store.scans; }
+    } guard(*this);
+    while (a != a_end || b != b_end || c != c_end) {
+      int64_t key = Descending ? std::numeric_limits<int64_t>::min()
+                               : std::numeric_limits<int64_t>::max();
+      auto choose = [&](Rows::Iterator position, Rows::Iterator end) {
+        if (position != end)
+          key = Descending ? std::max(key, position.key())
+                           : std::min(key, position.key());
+      };
+      choose(a, a_end);
+      choose(b, b_end);
+      choose(c, c_end);
+      if (Descending ? key < range.first : key > range.last)
+        return;
+      Ref ref;
+      auto take = [&](Rows::Iterator &position, Rows::Iterator end) {
+        if (position != end && position.key() == key) {
+          ref = position.ref();
+          if constexpr (Descending)
+            position.retreat();
+          else
+            ++position;
+        }
+      };
+      // Later layers override earlier versions, including tombstones.
+      take(a, a_end);
+      take(b, b_end);
+      take(c, c_end);
+      if (!ref.deleted && !fn(key, ref))
+        return;
+    }
+  }
+  template<bool Descending, class Visitor>
+  void scan_visible(const std::string &table, KeyRange range, Visitor fn) const {
+    scan_visible_refs<Descending>(table, range, [&](int64_t key, const Ref &ref) {
+      return fn(key, load(ref), ref.offset);
+    });
+  }
   std::optional<Ref> find_row(const Layer &layer, const std::string &table,
                               int64_t key) const {
     auto t = layer.rows.find(table);
@@ -620,6 +776,7 @@ Store::Store(const std::string &directory)
     : impl_(std::make_unique<Impl>(directory)) {}
 Store::~Store() = default;
 bool Store::in_transaction() const { return impl_->transaction; }
+void Store::check_available() const { impl_->check(); }
 void Store::checkpoint() { impl_->checkpoint(); }
 void Store::begin() {
   auto &s = *impl_;
@@ -781,59 +938,59 @@ Store::ReadMapping Store::map_committed() const {
     return {};
   void *address = ::mmap(nullptr, s.end, PROT_READ, MAP_PRIVATE, s.fd, 0);
   if (address == MAP_FAILED) return {};
-  return {std::shared_ptr<const char>(static_cast<const char *>(address),
-      [size=s.end](const char *p){::munmap(const_cast<char *>(p), size);}), s.end};
+  ReadMapping mapping;
+  mapping.data_ = std::shared_ptr<const char>(static_cast<const char *>(address),
+      [size=s.end](const char *p){::munmap(const_cast<char *>(p), size);});
+  mapping.size_ = s.end;
+  mapping.device_ = uint64_t(st.st_dev);
+  mapping.inode_ = uint64_t(st.st_ino);
+  return mapping;
+}
+void Store::scan_mapped(const std::string &table, const ReadMapping &mapping,
+    const std::function<void(int64_t, std::string_view, uint64_t)> &fn) const {
+  const auto &s = *impl_;
+  s.check();
+  const auto data = mapping.data_;
+  const uint64_t extent = mapping.size_;
+  struct stat st{};
+  if (!data || s.transaction || s.statement || s.end != s.durable_end ||
+      extent != s.end || ::fstat(s.fd, &st) != 0 || !S_ISREG(st.st_mode) ||
+      st.st_size < 0 || uint64_t(st.st_size) != extent ||
+      uint64_t(st.st_dev) != mapping.device_ || uint64_t(st.st_ino) != mapping.inode_)
+    throw Error("CORRUPT", "mapped journal is no longer current");
+
+  s.scan_visible_refs<false>(table, {}, [&](int64_t key, const Impl::Ref &ref) {
+    if (ref.offset > extent || ref.size > extent - ref.offset)
+      throw Error("CORRUPT", "mapped frame range is invalid");
+    fn(key, std::string_view(data.get() + ref.offset, ref.size), ref.offset);
+    return true;
+  });
 }
 void Store::scan(
     const std::string &table,
     const std::function<void(int64_t, const std::string &)> &fn) const {
-  scan_with_offsets(table, [&](int64_t key, const std::string &data,
-                                         uint64_t){fn(key, data);});
+  impl_->scan_visible<false>(table, {}, [&](int64_t key, const std::string &data, uint64_t) {
+    fn(key, data);
+    return true;
+  });
 }
 void Store::scan_with_offsets(
     const std::string &table,
     const std::function<void(int64_t, const std::string &, uint64_t)> &fn) const {
-  const auto &s = *impl_;
-  s.check();
-  static const Impl::Rows empty;
-  auto rows = [&](const Impl::Layer &layer) -> const Impl::Rows & {
-    auto it = layer.rows.find(table);
-    return it == layer.rows.end() ? empty : it->second;
+  impl_->scan_visible<false>(table, {}, [&](int64_t key, const std::string &data, uint64_t offset) {
+    fn(key, data, offset);
+    return true;
+  });
+}
+void Store::scan_until(
+    const std::string &table, KeyRange range, bool descending,
+    const std::function<bool(int64_t, const std::string &)> &fn) const {
+  auto visit = [&](int64_t key, const std::string &data, uint64_t) {
+    return fn(key, data);
   };
-  const auto &base = rows(s.committed);
-  const auto &transaction = rows(s.pending);
-  // Current statement writes may be changed by the callback. Freeze only that
-  // small overlay; committed/transaction indexes remain stable during a scan.
-  const Impl::Rows statement = rows(s.current);
-  auto a = base.begin(), b = transaction.begin(), c = statement.begin();
-  struct Guard {
-    const Impl &s;
-    Guard(const Impl &x) : s(x) { ++s.scans; }
-    ~Guard() { --s.scans; }
-  } guard(s);
-  while (a != base.end() || b != transaction.end() || c != statement.end()) {
-    int64_t key = std::numeric_limits<int64_t>::max();
-    if (a != base.end())
-      key = std::min(key, a.key());
-    if (b != transaction.end())
-      key = std::min(key, b.key());
-    if (c != statement.end())
-      key = std::min(key, c.key());
-    Impl::Ref ref;
-    if (a != base.end() && a.key() == key) {
-      ref = a.ref();
-      ++a;
-    }
-    if (b != transaction.end() && b.key() == key) {
-      ref = b.ref();
-      ++b;
-    }
-    if (c != statement.end() && c.key() == key) {
-      ref = c.ref();
-      ++c;
-    }
-    if (!ref.deleted)
-      fn(key, s.load(ref), ref.offset);
-  }
+  if (descending)
+    impl_->scan_visible<true>(table, range, visit);
+  else
+    impl_->scan_visible<false>(table, range, visit);
 }
 } // namespace mvdb

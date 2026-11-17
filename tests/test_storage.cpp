@@ -40,6 +40,64 @@ std::vector<std::pair<int64_t, std::string>> all(Store &s) {
   });
   return result;
 }
+void committed_mapped_scan() {
+  Temp primary, other;
+  Store s(primary.path), foreign(other.path);
+  const std::string bytes("a\0b", 3);
+  for (auto *store : {&s, &foreign}) {
+    put(*store, 9, bytes);
+    put(*store, -1, "");
+    put(*store, 9, "new");
+    put(*store, 2, bytes);
+  }
+  s.begin_statement();
+  s.erase("t", 9);
+  s.finish_statement();
+  foreign.begin_statement();
+  foreign.erase("t", 9);
+  foreign.finish_statement();
+
+  auto mapping = s.map_committed();
+  auto foreign_mapping = foreign.map_committed();
+  assert(mapping.data() && foreign_mapping.data());
+  assert(fs::file_size(fs::path(primary.path) / "journal.mvdb") ==
+         fs::file_size(fs::path(other.path) / "journal.mvdb"));
+  auto rejected = [&](const Store::ReadMapping &source) {
+    try {
+      s.scan_mapped("t", source,
+          [](int64_t, std::string_view, uint64_t) { assert(false); });
+      assert(false);
+    } catch (const mvdb::Error &e) {
+      assert(e.code == "CORRUPT");
+    }
+  };
+  rejected(foreign_mapping);
+  s.begin();
+  rejected(mapping);
+  s.rollback();
+  s.begin_statement();
+  rejected(mapping);
+  s.abort_statement();
+
+  const auto expected = all(s);
+  assert(expected.size() == 2);
+  size_t i = 0;
+  s.scan_mapped("t", mapping,
+      [&](int64_t id, std::string_view payload, uint64_t offset) {
+    assert(i < expected.size());
+    assert(id == expected[i].first && payload == expected[i].second);
+    assert(payload.data() == mapping.data().get() + offset);
+    ++i;
+  });
+  assert(i == expected.size());
+
+  put(s, 2, "modified");
+  rejected(mapping);
+  mapping = s.map_committed();
+  assert(mapping.data());
+  s.checkpoint();
+  rejected(mapping);
+}
 void basics() {
   Temp t;
   {
@@ -251,6 +309,38 @@ void locking() {
     rejected = e.code == "BUSY";
   }
   assert(rejected);
+}
+void replay_across_read_windows() {
+  Temp t;
+  constexpr size_t window = 64 * 1024;
+  constexpr size_t frame = 32;
+  constexpr size_t journal_header = 16;
+  const auto journal = fs::path(t.path) / "journal.mvdb";
+  const std::string split_table = "split-table";
+  const std::string long_table(300, 'n');
+  const std::string payload(window * 2 + 117, 'x');
+
+  {
+    Store s(t.path);
+    // Position the next frame so only the first two bytes of its table
+    // name fit in the initial read window.
+    std::string padding(window - (frame + 2) - journal_header - 2 * frame - 1,
+                        'p');
+    put(s, 1, padding);
+    assert(fs::file_size(journal) == window - frame - 2);
+    s.begin_statement();
+    s.set_metadata(split_table, "schema");
+    s.put(split_table, 2, payload);
+    s.put(long_table, 3, payload);
+    s.finish_statement();
+    put(s, 4, "after long names and payloads");
+  }
+
+  Store reopened(t.path);
+  assert(reopened.metadata(split_table) == "schema");
+  assert(reopened.get(split_table, 2) == payload);
+  assert(reopened.get(long_table, 3) == payload);
+  assert(reopened.get("t", 4) == "after long names and payloads");
 }
 void interrupted_recovery() {
   Temp t;
@@ -561,10 +651,11 @@ int main() {
   crash_recovery();
   every_truncated_commit();
   locking();
+  replay_across_read_windows();
   interrupted_recovery();
   checkpoint_correctness();
   automatic_checkpoint();
   checkpoint_crash_boundaries();
-  std::cout << "storage: 10 suites passed (including commit truncation, "
+  std::cout << "storage: 12 suites passed (including commit truncation, "
                "recovery interruption, and checkpoint crash boundaries)\n";
 }
