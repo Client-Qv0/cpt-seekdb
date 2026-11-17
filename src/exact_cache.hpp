@@ -360,19 +360,27 @@ public:
       std::unique_ptr<int8_t[]> codes(new int8_t[payload]);
       int minimum_code=127,maximum_code=-127;
       double max_squared_error=0;
-      for(size_t row=0;row<count;++row) {
-        double squared_error=0;
-        for(size_t d=0;d<dim;++d) {
-          const double scaled=double(component(row,d))*inverse;
-          const double rounded=std::nearbyint(scaled);
-          if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) return;
-          codes[row*dim+d]=static_cast<int8_t>(rounded); // Never clamp a code.
-          minimum_code=std::min(minimum_code,int(rounded));
-          maximum_code=std::max(maximum_code,int(rounded));
-          const double error=scaled-rounded;
-          squared_error+=error*error;
+#if defined(__x86_64__) && defined(__GNUC__)
+      if (mapped) {
+        if (!fill_mapped_quantized_codes(codes.get(), inverse, minimum_code,
+                                         maximum_code, max_squared_error)) return;
+      } else
+#endif
+      {
+        for(size_t row=0;row<count;++row) {
+          double squared_error=0;
+          for(size_t d=0;d<dim;++d) {
+            const double scaled=double(component(row,d))*inverse;
+            const double rounded=std::nearbyint(scaled);
+            if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) return;
+            codes[row*dim+d]=static_cast<int8_t>(rounded); // Never clamp a code.
+            minimum_code=std::min(minimum_code,int(rounded));
+            maximum_code=std::max(maximum_code,int(rounded));
+            const double error=scaled-rounded;
+            squared_error+=error*error;
+          }
+          max_squared_error=std::max(max_squared_error,squared_error);
         }
-        max_squared_error=std::max(max_squared_error,squared_error);
       }
       std::vector<uint32_t> norms;
       bool biased=minimum_code>=-64 && maximum_code<=64 &&
@@ -400,6 +408,65 @@ public:
       quantized_codes=std::move(codes);
     } catch(const std::bad_alloc&) {} // Keep the complete original exact view.
   }
+#if defined(__x86_64__) && defined(__GNUC__)
+private:
+  // The caller checks the FP environment and AVX2. A mapped row holds
+  // contiguous FP32 values. Round and square in lanes, then add residuals
+  // in dimension order to preserve the scalar bound bit for bit.
+  __attribute__((target("avx2,no-fma"),noinline))
+  bool fill_mapped_quantized_codes(int8_t* codes, double inverse, int& minimum_code,
+                                   int& maximum_code, double& max_squared_error) const {
+    const __m256d scale = _mm256_set1_pd(inverse);
+    __m128i min_lanes = _mm_set1_epi32(127);
+    __m128i max_lanes = _mm_set1_epi32(-127);
+    for (size_t row = 0; row < count; ++row) {
+      const char* bytes = row_bytes(row);
+      int8_t* row_codes = codes + row * dim;
+      double squared_error = 0;
+      size_t d = 0;
+      for (; d + 4 <= dim; d += 4) {
+        __m128 source;
+        std::memcpy(&source, bytes + d * sizeof(float), sizeof(source));
+        const __m256d scaled = _mm256_mul_pd(_mm256_cvtps_pd(source), scale);
+        const __m256d rounded = _mm256_round_pd(
+            scaled, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
+        const __m128i integers = _mm256_cvttpd_epi32(rounded);
+        min_lanes = _mm_min_epi32(min_lanes, integers);
+        max_lanes = _mm_max_epi32(max_lanes, integers);
+        const __m128i halves = _mm_packs_epi32(integers, integers);
+        const int packed = _mm_cvtsi128_si32(_mm_packs_epi16(halves, halves));
+        std::memcpy(row_codes + d, &packed, sizeof(packed));
+        const __m256d error = _mm256_sub_pd(scaled, rounded);
+        double squares[4];
+        _mm256_storeu_pd(squares, _mm256_mul_pd(error, error));
+        for (double square : squares) squared_error += square;
+      }
+      for (; d < dim; ++d) {
+        const double scaled = double(component(row,d)) * inverse;
+        const double rounded = std::nearbyint(scaled);
+        if (!std::isfinite(rounded) || rounded < -127 || rounded > 127) return false;
+        const int code = static_cast<int>(rounded);
+        row_codes[d] = static_cast<int8_t>(code);
+        minimum_code = std::min(minimum_code, code);
+        maximum_code = std::max(maximum_code, code);
+        const double error = scaled - rounded;
+        squared_error += error * error;
+      }
+      max_squared_error = std::max(max_squared_error, squared_error);
+    }
+    int minima[4], maxima[4];
+    std::memcpy(minima, &min_lanes, sizeof(minima));
+    std::memcpy(maxima, &max_lanes, sizeof(maxima));
+    for (size_t lane = 0; lane < 4; ++lane) {
+      minimum_code = std::min(minimum_code, minima[lane]);
+      maximum_code = std::max(maximum_code, maxima[lane]);
+    }
+    // The conversion's invalid sentinel also falls outside the code range.
+    // Publish only when the original full-precision codes all fit.
+    return minimum_code >= -127 && maximum_code <= 127;
+  }
+public:
+#endif
   static std::string_view posting_text(const ScalarColumn& column, size_t row) {
     const size_t begin = column.offsets[row];
     const size_t length = column.offsets[row + 1] - begin;
