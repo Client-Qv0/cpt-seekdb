@@ -667,6 +667,7 @@ Store::Store(const std::string &directory)
     : impl_(std::make_unique<Impl>(directory)) {}
 Store::~Store() = default;
 bool Store::in_transaction() const { return impl_->transaction; }
+void Store::check_available() const { impl_->check(); }
 void Store::checkpoint() { impl_->checkpoint(); }
 void Store::begin() {
   auto &s = *impl_;

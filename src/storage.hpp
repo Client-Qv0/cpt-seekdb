@@ -18,6 +18,8 @@ public:
   Store(const Store &) = delete;
   Store &operator=(const Store &) = delete;
   bool in_transaction() const;
+  // Preserve the storage health check when serving cached metadata.
+  void check_available() const;
   void begin();
   void commit();
   void rollback();

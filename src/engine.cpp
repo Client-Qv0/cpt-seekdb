@@ -647,6 +647,14 @@ struct Engine::Cache {
   size_t bytes = 0;
   static constexpr size_t budget = 12 * 1024 * 1024;
 };
+struct Engine::SchemaCache {
+  static constexpr size_t metadata_limit = 16 * 1024;
+  static constexpr size_t table_name_limit = 1024;
+  std::string table;
+  Schema schema;
+  size_t primary;
+};
+
 Engine::Engine(const std::string &directory)
     : store_(directory), directory_(directory),
       cache_(std::make_unique<Cache>()) {}
@@ -654,6 +662,7 @@ Engine::~Engine() = default;
 
 void Engine::prepare_shutdown() {
   *cache_ = Cache{};
+  schema_cache_.reset();
   store_.close();
 }
 Result Engine::execute_ann(const Statement &statement) {
@@ -670,6 +679,12 @@ Result Engine::execute(const std::string &sql, SearchMode mode) {
   // statements also invalidate: their intermediate writes must not be reused.
   if (st.kind != Statement::Select)
     *cache_ = Cache{};
+  // Only DDL changes metadata. Discard the committed copy before DDL or a
+  // transaction boundary, including a failed attempt.
+  if (st.kind == Statement::CreateTable || st.kind == Statement::CreateIndex ||
+      st.kind == Statement::Begin || st.kind == Statement::Commit ||
+      st.kind == Statement::Rollback)
+    schema_cache_.reset();
   if (st.kind == Statement::Begin) {
     store_.begin();
     return {};
@@ -727,12 +742,37 @@ Result Engine::execute_statement(const Statement &st) {
     store_.set_metadata(st.table, pack_schema(s));
     return result;
   }
-  auto meta = store_.metadata(st.table);
-  if (!meta)
-    throw Error("TABLE", "unknown table: " + st.table);
-  auto schema = unpack_schema(*meta);
-  auto pk = primary_index(schema);
+  // Explicit transactions read the visible metadata layers. Outside them,
+  // row writes and statement aborts leave committed metadata unchanged.
+  const bool cacheable = st.kind != Statement::CreateIndex &&
+                         !store_.in_transaction() &&
+                         st.table.size() <= SchemaCache::table_name_limit;
+  std::optional<Schema> loaded;
+  size_t pk;
+  if (cacheable && schema_cache_ && schema_cache_->table == st.table) {
+    store_.check_available();
+    pk = schema_cache_->primary;
+  } else {
+    auto meta = store_.metadata(st.table);
+    if (!meta)
+      throw Error("TABLE", "unknown table: " + st.table);
+    loaded.emplace(unpack_schema(*meta));
+    pk = primary_index(*loaded);
+    if (cacheable) {
+      schema_cache_.reset();
+      if (meta->size() <= SchemaCache::metadata_limit) {
+        try {
+          schema_cache_.reset(
+              new SchemaCache{st.table, std::move(*loaded), pk});
+          loaded.reset();
+        } catch (const std::bad_alloc &) {
+          // Keep the decoded schema for this statement if caching fails.
+        }
+      }
+    }
+  }
   if (st.kind == Statement::CreateIndex) {
+    auto &schema = *loaded;
     auto ci = col_index(schema, st.index_column);
     if (schema.columns[ci].type != Type::Vector)
       throw Error("TYPE", "vector index requires VECTOR column");
@@ -744,6 +784,7 @@ Result Engine::execute_statement(const Statement &st) {
     store_.set_metadata(st.table, pack_schema(schema));
     return result;
   }
+  const Schema &schema = loaded ? *loaded : schema_cache_->schema;
   if (st.kind == Statement::Insert) {
     std::vector<size_t> mapping;
     if (st.insert_columns.empty()) {

@@ -120,6 +120,23 @@ int main() {
       db.execute("UPDATE t SET s='x',v='[1,1]' WHERE id=5");
       db.execute("COMMIT");
       db.execute("CREATE VECTOR INDEX vi ON t(v)");
+      db.execute("SELECT id FROM t WHERE id=5");
+      db.execute("BEGIN");
+      db.execute("CREATE VECTOR INDEX temporary_index ON t(v)");
+      error(db,"CREATE VECTOR INDEX temporary_index ON t(v)");
+      db.execute("CREATE TABLE temporary_table(id BIGINT PRIMARY KEY,x BIGINT)");
+      db.execute("SELECT x FROM temporary_table");
+      db.execute("ROLLBACK");
+      error(db,"SELECT x FROM temporary_table");
+      db.execute("CREATE TABLE temporary_table(id BIGINT PRIMARY KEY,s VARCHAR(4))");
+      db.execute("INSERT INTO temporary_table VALUES(1,'old')");
+      error(db,"INSERT INTO temporary_table VALUES(2,'new'),(1,'dupe')");
+      r = db.execute("SELECT s FROM temporary_table");
+      check(r.rows.size() == 1 && std::get<std::string>(r.rows[0][0]) == "old",
+            "Recreated schema and rows must survive a failed statement");
+      db.execute("CREATE VECTOR INDEX temporary_index ON t(v)");
+      db.execute("SELECT id FROM t WHERE id=5");
+      error(db,"CREATE VECTOR INDEX temporary_index ON t(v)");
       db.execute("BEGIN");
       db.execute("DELETE FROM t WHERE id=5");
       db.execute("UPDATE t SET v='[9,9]' WHERE id=3");
