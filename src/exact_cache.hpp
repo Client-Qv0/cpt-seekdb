@@ -98,6 +98,24 @@ inline size_t add(size_t a,size_t b) {
 inline size_t mul(size_t a,size_t b) {
   return b && a>budget()/b ? budget()+1 : a*b;
 }
+// Power-of-two scaling is exact for finite float inputs. Subtracting the
+// nearest nonzero code is exact by Sterbenz's lemma; subtracting zero is also
+// exact. Nonzero squares are normal in double even with the widest scale.
+// For at most 8192 terms, rounding in the squares and additions can lower the
+// sum by less than 1e-12 relative to the real value.
+inline double quantized_residual_norm_upper(double squared) {
+  if (squared == 0) return 0;
+  const double inf = std::numeric_limits<double>::infinity();
+  const double upper = std::nextafter(squared * 1.00000000001, inf);
+  return std::nextafter(std::sqrt(upper), inf);
+}
+inline double quantized_error_upper(double row_error, double query_error_squared, size_t dim) {
+  const double inf = std::numeric_limits<double>::infinity();
+  const double residual = std::nextafter(
+      row_error + quantized_residual_norm_upper(query_error_squared), inf);
+  const double worst_case = std::nextafter(std::sqrt(double(dim)), inf);
+  return std::min(residual, worst_case);
+}
 struct ScalarColumn {
   Type type;
   std::vector<int64_t> integers;
@@ -164,6 +182,8 @@ struct Compact {
   // the owned vector array or the immutable committed mapping.
   std::unique_ptr<int8_t[]> quantized_codes;
   double quantized_step=1,quantized_inverse=1;
+  // Largest row residual norm, rounded up in units of quantized_step.
+  double quantized_row_error_upper=0;
   // When all codes fit [-64,64], the bytes are stored as uint8_t(code+64) and
   // this row-norm table enables exact unsigned-by-signed AVX2 dot products.
   bool quantized_biased=false;
@@ -283,13 +303,20 @@ struct Compact {
     try {
       std::unique_ptr<int8_t[]> codes(new int8_t[payload]);
       int minimum_code=127,maximum_code=-127;
-      for(size_t row=0;row<count;++row)for(size_t d=0;d<dim;++d) {
-        // This binary64 power-of-two scaling is exact even for FP32 subnormals.
-        const double rounded=std::nearbyint(double(component(row,d))*inverse);
-        if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) return;
-        codes[row*dim+d]=static_cast<int8_t>(rounded); // Never clamp a code.
-        minimum_code=std::min(minimum_code,int(rounded));
-        maximum_code=std::max(maximum_code,int(rounded));
+      double max_squared_error=0;
+      for(size_t row=0;row<count;++row) {
+        double squared_error=0;
+        for(size_t d=0;d<dim;++d) {
+          const double scaled=double(component(row,d))*inverse;
+          const double rounded=std::nearbyint(scaled);
+          if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) return;
+          codes[row*dim+d]=static_cast<int8_t>(rounded); // Never clamp a code.
+          minimum_code=std::min(minimum_code,int(rounded));
+          maximum_code=std::max(maximum_code,int(rounded));
+          const double error=scaled-rounded;
+          squared_error+=error*error;
+        }
+        max_squared_error=std::max(max_squared_error,squared_error);
       }
       std::vector<uint32_t> norms;
       bool biased=minimum_code>=-64 && maximum_code<=64 &&
@@ -311,6 +338,7 @@ struct Compact {
         }
       }
       quantized_step=step;quantized_inverse=inverse;
+      quantized_row_error_upper=quantized_residual_norm_upper(max_squared_error);
       quantized_biased=biased;
       quantized_row_norms=std::move(norms);
       quantized_codes=std::move(codes);
@@ -381,7 +409,7 @@ struct QuantizedQuery {
   std::unique_ptr<int8_t[]> biased_codes;
   int32_t sum_codes=0;
   int32_t squared_norm=0;
-  double root_dim_upper=0;
+  double error_upper=0;
 };
 inline QuantizedQuery prepare_quantized_query(const Compact& cache,
                                              const std::vector<float>& query,
@@ -392,8 +420,10 @@ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
   if(cache.quantized_biased) {
     try {prepared.biased_codes.reset(new int8_t[cache.dim]);}
     catch(const std::bad_alloc&) {return prepared;}
+    double squared_error=0;
     for(size_t d=0;d<cache.dim;++d) {
-      const double rounded=std::nearbyint(double(query[d])*cache.quantized_inverse);
+      const double scaled=double(query[d])*cache.quantized_inverse;
+      const double rounded=std::nearbyint(scaled);
       if(!std::isfinite(rounded) || rounded < -64 || rounded > 64) {
         prepared.biased_codes.reset();break;
       }
@@ -401,40 +431,48 @@ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
       prepared.biased_codes[d]=static_cast<int8_t>(code);
       prepared.sum_codes+=code;
       prepared.squared_norm+=code*code;
+      const double error=scaled-rounded;
+      squared_error+=error*error;
     }
     if(prepared.biased_codes) {
-      prepared.root_dim_upper=std::nextafter(std::sqrt(double(cache.dim)),
-                                           std::numeric_limits<double>::infinity());
+      prepared.error_upper=quantized_error_upper(cache.quantized_row_error_upper,
+                                                 squared_error,cache.dim);
       return prepared;
     }
   }
   try {prepared.codes.reset(new int16_t[cache.dim]);}
   catch(const std::bad_alloc&) {return prepared;}
+  double squared_error=0;
   for(size_t d=0;d<cache.dim;++d) {
-    const double rounded=std::nearbyint(double(query[d])*cache.quantized_inverse);
+    const double scaled=double(query[d])*cache.quantized_inverse;
+    const double rounded=std::nearbyint(scaled);
     if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) {
       prepared.codes.reset();return prepared;
     }
     prepared.codes[d]=static_cast<int16_t>(rounded);
+    const double error=scaled-rounded;
+    squared_error+=error*error;
   }
-  prepared.root_dim_upper=std::nextafter(std::sqrt(double(cache.dim)),
-                                       std::numeric_limits<double>::infinity());
+  prepared.error_upper=quantized_error_upper(cache.quantized_row_error_upper,
+                                             squared_error,cache.dim);
   return prepared;
 }
-// If r is the real distance and I the exact integer square sum, quantization
-// gives step*sqrt(I) <= r+step*sqrt(D). Original double accumulation differs
-// from the real square sum by relative error <1e-12 for D<=8192. The factor 1.000001 and
-// nextup(d) cover that error and every sqrt rounding tie. Expand each operation
-// upward; only an integer sum strictly above this bound may be discarded.
+// By the triangle inequality, sqrt(I) <= r/step + error_upper, where r is
+// the real distance and I the exact integer square sum. The combined residual
+// norm is also bounded by sqrt(D) since each code rounds by at most 1/2.
+// Original double accumulation differs from the real square sum by relative
+// error <1e-12 for D<=8192. The factor 1.000001 and nextup(d) cover that
+// error and sqrt rounding ties. Only an integer sum strictly above the
+// upward-rounded cutoff can be discarded.
 inline double quantized_threshold(double worst_distance,double step,
-                                  double root_dim_upper) {
+                                  double error_upper) {
   const double inf=std::numeric_limits<double>::infinity();
   if(!std::isfinite(worst_distance) || worst_distance<0 ||
      !std::isfinite(step) || step<=0) return inf;
   const double next=std::nextafter(worst_distance,inf);
   const double distance_upper=std::nextafter(next*1.000001,inf);
   const double units_upper=std::nextafter(distance_upper/step,inf);
-  const double radius_upper=std::nextafter(units_upper+root_dim_upper,inf);
+  const double radius_upper=std::nextafter(units_upper+error_upper,inf);
   return std::nextafter(radius_upper*radius_upper,inf);
 }
 inline void distances4_scalar(const Compact& cache,const size_t* rows,

@@ -1046,7 +1046,7 @@ Result Engine::execute_statement(const Statement &st) {
               if (updated) {
                 screen_threshold = quantized_available
                     ? exact::quantized_threshold(worst, view.quantized_step,
-                                                  quantized.root_dim_upper)
+                                                  quantized.error_upper)
                     : exact::fp32_screen_threshold(worst, view.dim);
                 screened_worst = worst;
               }
@@ -1196,7 +1196,7 @@ Result Engine::execute_statement(const Statement &st) {
               if (updated) {
                 screen_threshold = quantized_available
                     ? exact::quantized_threshold(worst, view.quantized_step,
-                                                  quantized.root_dim_upper)
+                                                  quantized.error_upper)
                     : exact::fp32_screen_threshold(worst, view.dim);
                 screened_worst = worst;
               }

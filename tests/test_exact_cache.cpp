@@ -231,7 +231,7 @@ void test_quantized_screen() {
     auto prepared=exact::prepare_quantized_query(cache,query,true);
     require(exact::quantized_codes_available(prepared));
     const double worst=cache.distance(2,query);
-    const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.root_dim_upper);
+    const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.error_upper);
     for(size_t i=0;i<vectors.size();++i) {
       uint32_t scalar=0;
       for(size_t d=0;d<dim;++d) {
@@ -255,7 +255,7 @@ void test_quantized_screen() {
     std::vector<float> query(17,-magnitude);
     auto prepared=exact::prepare_quantized_query(cache,query,true);
     require(exact::quantized_codes_available(prepared));
-    const double threshold=exact::quantized_threshold(0,cache.quantized_step,prepared.root_dim_upper);
+    const double threshold=exact::quantized_threshold(0,cache.quantized_step,prepared.error_upper);
     require(exact::quantized_squared_distance(cache,1,prepared)==0);
     require(double(exact::quantized_squared_distance(cache,0,prepared))>threshold);
     require(std::isfinite(cache.distance(0,query)));
@@ -272,8 +272,49 @@ void test_quantized_screen() {
     auto prepared=exact::prepare_quantized_query(cache,query,true);
     const double worst=cache.distance(0,query);
     require(worst==cache.distance(1,query));
-    const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.root_dim_upper);
+    const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.error_upper);
     require(!(double(exact::quantized_squared_distance(cache,1,prepared))>threshold));
+  }
+  {
+    const size_t dim=128;
+    auto cache=make_cache({std::vector<float>(dim,0.5f),
+                           std::vector<float>(dim,33.0f/64),
+                           std::vector<float>(dim,1)});
+    std::vector<float> query(dim,0);
+    auto prepared=exact::prepare_quantized_query(cache,query,true);
+    require(bool(prepared.biased_codes));
+    const double worst=cache.distance(0,query);
+    const double tight=exact::quantized_threshold(worst,cache.quantized_step,prepared.error_upper);
+    const double old=exact::quantized_threshold(worst,cache.quantized_step,std::sqrt(double(dim)));
+    const double next_score=exact::quantized_squared_distance(cache,1,prepared);
+    require(next_score>tight && next_score<=old);
+    require(double(exact::quantized_squared_distance(cache,0,prepared))<=tight);
+  }
+  {
+    // Half-step row and query errors can point in opposite directions in
+    // every dimension. Preserve a cutoff tie in both query layouts.
+    const size_t dim=8192;
+    auto cache=make_cache({std::vector<float>(dim,0.5f/64),std::vector<float>(dim,1)});
+    for(float code:{1.5f,65.5f}) {
+      const std::vector<float> query(dim,code/64);
+      auto prepared=exact::prepare_quantized_query(cache,query,true);
+      require(code<64 ? bool(prepared.biased_codes) : bool(prepared.codes));
+      require(prepared.error_upper>=std::sqrt(double(dim)));
+      const double worst=cache.distance(0,query);
+      const double threshold=exact::quantized_threshold(worst,cache.quantized_step,prepared.error_upper);
+      require(double(exact::quantized_squared_distance(cache,0,prepared))<=threshold);
+    }
+  }
+  {
+    // Mixing the largest power-of-two FP32 value with the smallest
+    // subnormal still leaves a representable nonzero squared residual.
+    const float tiny=std::numeric_limits<float>::denorm_min();
+    auto cache=make_cache({{0x1p+127f,0},{0,tiny}});
+    const std::vector<float> query{0,tiny};
+    auto prepared=exact::prepare_quantized_query(cache,query,true);
+    require(bool(prepared.biased_codes));
+    require(cache.quantized_row_error_upper>=double(tiny)*cache.quantized_inverse);
+    require(prepared.error_upper>=2*double(tiny)*cache.quantized_inverse);
   }
   exact::Plan full_plan({Type::BigInt,Type::Vector},1,128);
   full_plan.count=22000;
