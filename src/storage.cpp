@@ -67,6 +67,49 @@ void read_all(int fd, void *buffer, size_t size, uint64_t offset) {
     offset += static_cast<size_t>(n);
   }
 }
+// Replay can validate a sequence of short frames from one bounded window.
+class RecoveryReader {
+public:
+  struct Slice {
+    const unsigned char *data;
+    size_t size;
+  };
+
+  RecoveryReader(int fd, uint64_t size) : fd_(fd), size_(size) {}
+
+  Slice read_slice(uint64_t offset, uint64_t count) {
+    if (offset >= size_)
+      throw Error("CORRUPT", "unexpected end of journal");
+    if (offset < start_ || offset - start_ >= loaded_) {
+      const auto length = static_cast<size_t>(
+          std::min<uint64_t>(buffer_.size(), size_ - offset));
+      read_all(fd_, buffer_.data(), length, offset);
+      start_ = offset;
+      loaded_ = length;
+    }
+    const auto within = static_cast<size_t>(offset - start_);
+    return {buffer_.data() + within,
+            static_cast<size_t>(std::min<uint64_t>(count, loaded_ - within))};
+  }
+
+  void copy(uint64_t offset, unsigned char *dest, size_t size) {
+    while (size) {
+      const auto slice = read_slice(offset, size);
+      std::memcpy(dest, slice.data, slice.size);
+      offset += slice.size;
+      dest += slice.size;
+      size -= slice.size;
+    }
+  }
+
+private:
+  int fd_;
+  uint64_t size_;
+  uint64_t start_ = 0;
+  size_t loaded_ = 0;
+  std::array<unsigned char, 64 * 1024> buffer_;
+};
+
 void write_all(int fd, const void *buffer, size_t size, uint64_t offset) {
   const auto *p = static_cast<const unsigned char *>(buffer);
   while (size) {
@@ -529,20 +572,21 @@ struct Store::Impl {
       checkpoint();
   }
   void recover() {
-    std::array<unsigned char, kFileHeader> header{};
-    read_all(fd, header.data(), header.size(), 0);
-    if (header != kHeader)
-      throw Error("CORRUPT", "unsupported journal header");
     struct stat st {};
     if (::fstat(fd, &st) != 0)
       io_error("stat journal");
     const uint64_t total = static_cast<uint64_t>(st.st_size);
+    RecoveryReader reader(fd, total);
+    std::array<unsigned char, kFileHeader> header;
+    reader.copy(0, header.data(), header.size());
+    if (header != kHeader)
+      throw Error("CORRUPT", "unsupported journal header");
     Layer replay(arena);
     uint64_t offset = kFileHeader;
-    std::array<unsigned char, 64 * 1024> buffer{};
+    std::array<char, 256> small_name;
     while (total - offset >= kFrameHeader) {
-      std::array<unsigned char, kFrameHeader> h{};
-      read_all(fd, h.data(), h.size(), offset);
+      std::array<unsigned char, kFrameHeader> h;
+      reader.copy(offset, h.data(), h.size());
       const uint32_t kind = u32(h.data() + 4), namesize = u32(h.data() + 8),
                      size = u32(h.data() + 12);
       const uint64_t bytes = kFrameHeader + uint64_t(namesize) + uint64_t(size);
@@ -556,15 +600,20 @@ struct Store::Impl {
       const uint32_t expected = u32(h.data() + 24);
       set32(h.data() + 24, 0);
       uint32_t crc = crc_update(0xffffffffu, h.data(), h.size());
-      uint64_t remaining = namesize + uint64_t(size),
-               pos = offset + kFrameHeader;
+      const uint64_t body = offset + kFrameHeader;
+      const bool keep_name = namesize <= small_name.size();
+      uint64_t remaining = namesize + uint64_t(size), pos = body;
       while (remaining) {
-        size_t n =
-            static_cast<size_t>(std::min<uint64_t>(remaining, buffer.size()));
-        read_all(fd, buffer.data(), n, pos);
-        crc = crc_update(crc, buffer.data(), n);
-        pos += n;
-        remaining -= n;
+        const auto slice = reader.read_slice(pos, remaining);
+        crc = crc_update(crc, slice.data, slice.size);
+        const uint64_t in_body = pos - body;
+        if (keep_name && in_body < namesize) {
+          const auto length = static_cast<size_t>(
+              std::min<uint64_t>(slice.size, namesize - in_body));
+          std::memcpy(small_name.data() + in_body, slice.data, length);
+        }
+        pos += slice.size;
+        remaining -= slice.size;
       }
       if ((crc ^ 0xffffffffu) != expected)
         break;
@@ -573,8 +622,14 @@ struct Store::Impl {
         overlay(committed, replay, true);
         durable_end = offset + bytes;
       } else {
-        std::string table(namesize, '\0');
-        read_all(fd, table.data(), table.size(), offset + kFrameHeader);
+        // Allocate the table name only after the record passes CRC.
+        std::string table;
+        if (keep_name) {
+          table.assign(small_name.data(), namesize);
+        } else {
+          table.resize(namesize);
+          read_all(fd, table.data(), table.size(), body);
+        }
         uint64_t key_bits = u64(h.data() + 16);
         int64_t key;
         std::memcpy(&key, &key_bits, sizeof key);

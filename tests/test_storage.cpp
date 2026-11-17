@@ -252,6 +252,38 @@ void locking() {
   }
   assert(rejected);
 }
+void replay_across_read_windows() {
+  Temp t;
+  constexpr size_t window = 64 * 1024;
+  constexpr size_t frame = 32;
+  constexpr size_t journal_header = 16;
+  const auto journal = fs::path(t.path) / "journal.mvdb";
+  const std::string split_table = "split-table";
+  const std::string long_table(300, 'n');
+  const std::string payload(window * 2 + 117, 'x');
+
+  {
+    Store s(t.path);
+    // Position the next frame so only the first two bytes of its table
+    // name fit in the initial read window.
+    std::string padding(window - (frame + 2) - journal_header - 2 * frame - 1,
+                        'p');
+    put(s, 1, padding);
+    assert(fs::file_size(journal) == window - frame - 2);
+    s.begin_statement();
+    s.set_metadata(split_table, "schema");
+    s.put(split_table, 2, payload);
+    s.put(long_table, 3, payload);
+    s.finish_statement();
+    put(s, 4, "after long names and payloads");
+  }
+
+  Store reopened(t.path);
+  assert(reopened.metadata(split_table) == "schema");
+  assert(reopened.get(split_table, 2) == payload);
+  assert(reopened.get(long_table, 3) == payload);
+  assert(reopened.get("t", 4) == "after long names and payloads");
+}
 void interrupted_recovery() {
   Temp t;
   {
@@ -561,10 +593,11 @@ int main() {
   crash_recovery();
   every_truncated_commit();
   locking();
+  replay_across_read_windows();
   interrupted_recovery();
   checkpoint_correctness();
   automatic_checkpoint();
   checkpoint_crash_boundaries();
-  std::cout << "storage: 10 suites passed (including commit truncation, "
+  std::cout << "storage: 11 suites passed (including commit truncation, "
                "recovery interruption, and checkpoint crash boundaries)\n";
 }
