@@ -205,8 +205,8 @@ struct Compact {
   double quantized_step=1,quantized_inverse=1;
   // Largest row residual norm, rounded up in units of quantized_step.
   double quantized_row_error_upper=0;
-  // When all codes fit [-64,64], the bytes are stored as uint8_t(code+64) and
-  // this row-norm table enables exact unsigned-by-signed AVX2 dot products.
+  // When the row codes fit [-64,64], store them as uint8_t(code+64).
+  // Row norms enable exact unsigned-by-signed dots with query codes in [-127,127].
   bool quantized_biased=false;
   std::vector<uint32_t> quantized_row_norms;
   // One optional posting index per view. New object/allocator bookkeeping fits
@@ -463,8 +463,9 @@ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
     for(size_t d=0;d<cache.dim;++d) {
       const double scaled=double(query[d])*cache.quantized_inverse;
       const double rounded=std::nearbyint(scaled);
-      if(!std::isfinite(rounded) || rounded < -64 || rounded > 64) {
-        prepared.biased_codes.reset();break;
+      if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) {
+        prepared.biased_codes.reset();
+        return prepared;
       }
       const int code=static_cast<int>(rounded);
       prepared.biased_codes[d]=static_cast<int8_t>(code);
@@ -473,12 +474,10 @@ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
       const double error=scaled-rounded;
       squared_error+=error*error;
     }
-    if(prepared.biased_codes) {
-      prepared.use_avxvnni=cache.dim>=32 && avxvnni_available();
-      prepared.error_upper=quantized_error_upper(cache.quantized_row_error_upper,
-                                                 squared_error,cache.dim);
-      return prepared;
-    }
+    prepared.use_avxvnni=cache.dim>=32 && avxvnni_available();
+    prepared.error_upper=quantized_error_upper(cache.quantized_row_error_upper,
+                                               squared_error,cache.dim);
+    return prepared;
   }
   try {prepared.codes.reset(new int16_t[cache.dim]);}
   catch(const std::bad_alloc&) {return prepared;}
@@ -802,7 +801,8 @@ inline void finish_quantized_biased_distances8(
   if(d==dim) {
     // Pair different rows to sum four dots at a time. HADD stays within
     // each 128-bit half; add the halves to get the whole dot for each row.
-    // With dim <= 8192 and codes in [-64,64], all values fit in int32_t.
+    // At 8192 dimensions, the absolute dot is at most 8192*128*127.
+    // The norms, bias correction and doubled dot also fit in int32_t.
     const __m128i bias=_mm_set1_epi32(query.squared_norm+128*query.sum_codes);
     for(size_t lane=0;lane<8;lane+=4) {
       const __m256i paired=_mm256_hadd_epi32(
@@ -833,9 +833,9 @@ inline void finish_quantized_biased_distances8(
   }
 }
 
-// Exact unsigned-by-signed biased codes. Callers enable this path only when all
-// row/query codes fit [-64,64], so each pair product fits int16 and maddubs
-// saturation cannot occur. One query load feeds eight independent accumulators.
+// The biased row bytes are in [0,128] and query codes are in [-127,127].
+// Each pair sum has magnitude at most 2*128*127 = 32512, so maddubs cannot
+// saturate. One query load feeds eight independent accumulators.
 __attribute__((target("avx2,no-fma"),noinline))
 inline void quantized_biased_squared_distance8_avx2(
     const int8_t* const rows[8],const uint32_t* row_norms,
@@ -862,8 +862,7 @@ inline void quantized_biased_squared_distance8_avx2(
 
 #ifdef MVDB_HAVE_AVXVNNI
 // VEX VPDPBUSD accumulates four unsigned-by-signed products per 32-bit lane.
-// The AVX2 path builds the same partial sum in three steps. The largest
-// possible whole dot at 8192 dimensions is 8192 * 128 * 64, which fits int32_t.
+// The AVX2 path builds the same partial sum in three steps.
 __attribute__((target("avx2,avxvnni,no-fma"),noinline))
 inline void quantized_biased_squared_distance8_avxvnni(
     const int8_t* const rows[8],const uint32_t* row_norms,
@@ -899,16 +898,6 @@ inline uint32_t quantized_squared_distance(const Compact& cache,size_t row,
         int64_t(cache.quantized_row_norms[row])+query.squared_norm-
         2*int64_t(base_dot));
   }
-  if(cache.quantized_biased) {
-    // An int16 query outside the dot-product range still shares the same
-    // row bytes. Unsigned reading is required for the encoded value 128.
-    uint32_t sum=0;
-    for(size_t d=0;d<cache.dim;++d) {
-      const int delta=int(uint8_t(codes[d]))-64-int(query.codes[d]);
-      sum+=uint32_t(delta*delta);
-    }
-    return sum;
-  }
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
   return quantized_squared_distance_avx2(codes,query.codes.get(),cache.dim);
 #else
@@ -922,7 +911,7 @@ inline uint32_t quantized_squared_distance(const Compact& cache,size_t row,
 inline void quantized_squared_distance4(const Compact& cache,const size_t* rows,
                                         const QuantizedQuery& query,
                                         uint32_t* out) {
-  if(cache.quantized_biased) {
+  if(query.biased_codes) {
     for(size_t lane=0;lane<4;++lane)
       out[lane]=quantized_squared_distance(cache,rows[lane],query);
     return;
