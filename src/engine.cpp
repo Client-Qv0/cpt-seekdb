@@ -1265,6 +1265,14 @@ Result Engine::execute_statement(const Statement &st) {
             size_t total,
             const std::function<void(size_t, size_t, Heap &)> &body) {
           size_t width = scan_width(total);
+          if (width > 1 && quantized.use_avxvnni && exact::thread_limit() == 0) {
+            // Fused dot products over cache-resident codes are cheap enough
+            // that waking another worker can take longer than scanning them.
+            // Leave L2 capacity for row norms and exact refinement.
+            const size_t cache_bytes = cpu::l2_cache_bytes();
+            if (total <= (cache_bytes - cache_bytes / 4) / view.dim)
+              width = 1;
+          }
           if (width < 2) {
             body(0, total, nearest);
             return;

@@ -10,6 +10,7 @@
 #include <thread>
 #if defined(__linux__)
 #include <sched.h>
+#include <unistd.h>
 #endif
 
 namespace mvdb::cpu {
@@ -116,6 +117,18 @@ inline size_t effective_width(size_t affinity, double quota, size_t cap) {
 inline size_t budget_cpus() {
   static const size_t width = effective_width(affinity_cpus(), cgroup_quota_cpus(), 64);
   return width;
+}
+// Size of one core's L2 cache, or zero when the system cannot report it.
+inline size_t l2_cache_bytes() {
+#if defined(__linux__) && defined(_SC_LEVEL2_CACHE_SIZE)
+  static const size_t bytes = [] {
+    const long value = ::sysconf(_SC_LEVEL2_CACHE_SIZE);
+    return value > 0 ? static_cast<size_t>(value) : size_t(0);
+  }();
+  return bytes;
+#else
+  return 0;
+#endif
 }
 // Bytes this process may use, or 0 when no limit is known. cgroup v2 keeps the
 // limit in memory.max with "max" meaning unlimited; v1 has its own hierarchy and
