@@ -310,17 +310,20 @@ void test_quantized_screen() {
   }
   {
     // Both residuals can oppose each other at a half step. With the
-    // old sqrt(D) cap this exact tie would be incorrectly screened out.
+    // preceding grid's cap this exact tie would be incorrectly screened out.
     const size_t dim=8192;
     auto cache=make_cache({std::vector<float>(dim,0.5f/64),std::vector<float>(dim,1)});
-    const std::vector<float> query(dim,251.0f/64);
-    const auto prepared=exact::prepare_quantized_query(cache,query,true);
-    require(bool(prepared.biased_codes) && prepared.code_scale==2);
-    const double worst=cache.distance(0,query);
-    const double cutoff=exact::quantized_threshold(worst,cache.quantized_step,prepared.error_upper);
-    const double old=exact::quantized_threshold(worst,cache.quantized_step,std::sqrt(double(dim)));
-    const double score=exact::quantized_squared_distance(cache,0,prepared);
-    require(score<=cutoff && score>old);
+    for(int scale : {2,4}) {
+      const std::vector<float> query(dim,125.5f*scale/64);
+      const auto prepared=exact::prepare_quantized_query(cache,query,true);
+      require(bool(prepared.biased_codes) && prepared.code_scale==scale);
+      const double worst=cache.distance(0,query);
+      const double cutoff=exact::quantized_threshold(worst,cache.quantized_step,prepared.error_upper);
+      const double preceding_cap=std::sqrt(double(dim))*(0.5*(scale/2+1));
+      const double old=exact::quantized_threshold(worst,cache.quantized_step,preceding_cap);
+      const double score=exact::quantized_squared_distance(cache,0,prepared);
+      require(score<=cutoff && score>old);
+    }
   }
   {
     // Mixing the largest power-of-two FP32 value with the smallest
@@ -397,7 +400,7 @@ void test_biased_screen_layout_and_kernel() {
   const size_t contiguous[8]={0,1,2,3,4,5,6,7};
   check_distances(cache,prepared,contiguous);
   const size_t scattered[8]={9,1,6,13,5,0,15,12};
-  for(size_t dim : {size_t(32),size_t(128),size_t(129),size_t(8192)}) {
+  for(size_t dim : {size_t(32),size_t(128),size_t(129),size_t(8191),size_t(8192)}) {
     auto other=make_cache(1.0f,dim);
     std::vector<float> input(dim);
     for(size_t d=0;d<dim;++d) input[d]=query[d%query.size()];
@@ -427,7 +430,23 @@ void test_biased_screen_layout_and_kernel() {
         if(double(exact::quantized_squared_distance(other,row,wide))>cutoff)
           require(other.distance(row,input)>worst);
     }
-    for(float code : {-255.0f,255.0f,std::numeric_limits<float>::max()}) {
+    const float limit=std::nextafter(510.0f,0.0f);
+    for(float code : {-limit,-508.0f,-320.0f,-255.0f,255.0f,320.0f,508.0f,limit}) {
+      std::fill(input.begin(),input.end(),code/64);
+      auto wide=exact::prepare_quantized_query(other,input,true);
+      require(bool(wide.biased_codes) && !wide.codes && wide.code_scale==4);
+      check_distances(other,wide,contiguous);
+      check_distances(other,wide,scattered);
+      if(code==-508.0f && dim>=8191)
+        require(exact::quantized_squared_distance(other,0,wide)==572u*572u*dim &&
+                exact::quantized_squared_distance(other,0,wide)>uint32_t(INT32_MAX));
+      const double worst=other.distance(7,input);
+      const double cutoff=exact::quantized_threshold(worst,other.quantized_step,wide.error_upper);
+      for(size_t row=0;row<other.count;++row)
+        if(double(exact::quantized_squared_distance(other,row,wide))>cutoff)
+          require(other.distance(row,input)>worst);
+    }
+    for(float code : {-510.0f,510.0f,std::numeric_limits<float>::max()}) {
       std::fill(input.begin(),input.end(),code/64);
       require(!exact::quantized_codes_available(
           exact::prepare_quantized_query(other,input,true)));

@@ -137,7 +137,7 @@ inline double quantized_error_upper(double row_error,double query_error_squared,
   // query residual is at most query_scale/2.
   const double root_dim = std::nextafter(std::sqrt(double(dim)), inf);
   const double worst_case = query_scale==1 ? root_dim
-      : std::nextafter(root_dim*1.5, inf);
+      : std::nextafter(root_dim*(0.5*(query_scale+1)), inf);
   return std::min(residual, worst_case);
 }
 struct ScalarColumn {
@@ -452,10 +452,11 @@ struct QuantizedQuery {
   std::unique_ptr<int8_t[]> biased_codes;
   int32_t sum_codes=0;
   int32_t squared_norm=0;
-  int32_t biased_score_offset=0;
+  int32_t biased_score_bits=0;
   int code_scale=1;
   double error_upper=0;
   bool use_avxvnni=false;
+  int dot_shift=1;
 };
 inline QuantizedQuery prepare_quantized_query(const Compact& cache,
                                              const std::vector<float>& query,
@@ -484,16 +485,20 @@ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
       prepared.code_scale=code_scale;
       prepared.sum_codes=sum_codes;
       prepared.squared_norm=squared_norm;
-      prepared.biased_score_offset=code_scale*code_scale*squared_norm+
-                                    128*code_scale*sum_codes;
+      prepared.dot_shift=code_scale==4 ? 3 : code_scale;
+      const int64_t offset=int64_t(code_scale)*code_scale*squared_norm+
+                           128*int64_t(code_scale)*sum_codes;
+      const uint32_t bits=static_cast<uint32_t>(offset);
+      std::memcpy(&prepared.biased_score_bits,&bits,sizeof(bits));
       prepared.error_upper=quantized_error_upper(cache.quantized_row_error_upper,
                                                  squared_error,cache.dim,code_scale);
       return true;
     };
-    // If a query cannot use the row step, double only its step. Both
-    // passes round to their own grid without clamping any component.
+    // Widen only the query's step when a finer grid cannot encode it.
+    // Each attempt rounds without clamping any component.
     if(!encode(cache.quantized_inverse,1) &&
-       !encode(cache.quantized_inverse*0.5,2)) {
+       !encode(cache.quantized_inverse*0.5,2) &&
+       !encode(cache.quantized_inverse*0.25,4)) {
       prepared.biased_codes.reset();
       return prepared;
     }
@@ -828,10 +833,10 @@ inline void finish_quantized_biased_distances8(
   if(d==dim) {
     // Pair different rows to sum four dots at a time. HADD stays within
     // each 128-bit half; add the halves to get the whole dot for each row.
-    // Add the precomputed query norm and bias correction before subtracting
-    // 2*k*dot. k is 1 or 2, and all terms fit in int32_t at D<=8192.
-    const __m128i bias=_mm_set1_epi32(query.biased_score_offset);
-    const __m128i shift=_mm_cvtsi32_si128(query.code_scale);
+    // SIMD adds/subtracts modulo 2^32. The exact squared score is at most
+    // 8192*(64+4*127)^2 = 2680291328 and therefore fits its uint32_t output.
+    const __m128i bias=_mm_set1_epi32(query.biased_score_bits);
+    const __m128i shift=_mm_cvtsi32_si128(query.dot_shift);
     for(size_t lane=0;lane<8;lane+=4) {
       const __m256i paired=_mm256_hadd_epi32(
           _mm256_hadd_epi32(sums[lane],sums[lane+1]),
