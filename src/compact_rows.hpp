@@ -113,6 +113,20 @@ class Rows {
       id = left(id);
     return id;
   }
+  Id previous(Id id) const noexcept {
+    if (left(id)) {
+      id = left(id);
+      while (right(id))
+        id = right(id);
+      return id;
+    }
+    Id p = parent(id);
+    while (p && id == left(p)) {
+      id = p;
+      p = parent(p);
+    }
+    return p;
+  }
   Id next(Id id) const noexcept {
     if (right(id))
       return minimum(right(id));
@@ -394,6 +408,9 @@ public:
       id_ = owner_->next(id_);
       return *this;
     }
+    // The caller holds a valid row iterator. The predecessor of the first
+    // row is the end sentinel when walking the tree in descending order.
+    void retreat() noexcept { id_ = owner_->previous(id_); }
     Iterator operator++(int) noexcept {
       auto old = *this;
       ++*this;
@@ -448,6 +465,21 @@ public:
   size_t size() const noexcept { return size_; }
   Iterator begin() const noexcept { return Iterator(this, minimum(root_)); }
   Iterator end() const noexcept { return Iterator(this, 0); }
+  template<bool Descending>
+  Iterator seek(int64_t key) const noexcept {
+    Id found = 0;
+    Id id = root_;
+    while (id) {
+      const auto &row = node(id);
+      if (Descending ? row.key <= key : row.key >= key) {
+        found = id;
+        id = Descending ? row.right : row.left;
+      } else {
+        id = Descending ? row.left : row.right;
+      }
+    }
+    return Iterator(this, found);
+  }
   Iterator find(int64_t key) const noexcept {
     return Iterator(this, find_id(key));
   }

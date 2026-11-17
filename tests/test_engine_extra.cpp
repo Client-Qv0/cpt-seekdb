@@ -235,6 +235,45 @@ int main() {
       check(db.execute(filtered_desc).rows == posting.rows,
             "an equality posting of distinct equidistant rows keeps the same ties");
     }
+    {
+      mvdb::Engine db(path.string() + "-key-range");
+      db.execute("CREATE TABLE t(tag BIGINT,id BIGINT PRIMARY KEY,v VECTOR(2))");
+      db.execute("INSERT INTO t VALUES (0,9223372036854775807,'[5,0]'),"
+                 "(2,12,'[3,0]'),(2,-9223372036854775808,'[0,0]'),"
+                 "(2,-5,'[4,0]'),(1,0,'[9,0]'),(2,4,'[1,0]')");
+      auto keys = [&](const std::string &sql) {
+        auto result = db.execute(sql);
+        std::vector<int64_t> got;
+        for (size_t n = 0; n < result.rows.size(); ++n)
+          got.push_back(id(result,n));
+        return got;
+      };
+      check(keys("SELECT id FROM t WHERE id < -9223372036854775808 LIMIT 3").empty() &&
+            keys("SELECT id FROM t WHERE id > 9223372036854775807 ORDER BY id DESC LIMIT 3").empty(),
+            "exclusive endpoint bounds should produce empty scans");
+      check(keys("SELECT id AS k FROM t WHERE (id >= -5 AND id < 12) AND tag = 2 ORDER BY k DESC LIMIT 2")
+                == std::vector<int64_t>{4,-5},
+            "bounded reverse scans should apply residual filters");
+      check(keys("SELECT id,L2_DISTANCE(v,'[0,0]') AS d FROM t WHERE id >= -5 AND id < 12 ORDER BY d LIMIT 2")
+                == std::vector<int64_t>{4,-5},
+            "a bounded distance query keeps exact TopK");
+      db.execute("BEGIN");
+      check(db.execute("UPDATE t SET tag=7 WHERE id >= -5 AND id <= 4").affected == 3,
+            "bounded UPDATE should affect the exact interval");
+      check(db.execute("DELETE FROM t WHERE id >= 0 AND id < 12 AND tag=7").affected == 2,
+            "bounded DELETE should see previous updates");
+      db.execute("INSERT INTO t VALUES (7,2,'[0,1]')");
+      check(keys("SELECT id FROM t WHERE id >= -5 AND id < 12 AND tag=7 ORDER BY id DESC LIMIT 8")
+                == std::vector<int64_t>{2,-5},
+            "reverse scan should see pending inserts and deletes");
+      db.execute("ROLLBACK");
+      check(keys("SELECT id FROM t ORDER BY id ASC LIMIT 2")
+                == std::vector<int64_t>{INT64_MIN,-5} &&
+            keys("SELECT id FROM t ORDER BY id DESC LIMIT 2")
+                == std::vector<int64_t>{INT64_MAX,12},
+            "rollback should restore the signed endpoint order");
+    }
+    fs::remove_all(path.string() + "-key-range");
     fs::remove_all(path.string() + "-shared");
     fs::remove_all(path.string() + "-desc");
     fs::remove_all(path.string() + "-cap");

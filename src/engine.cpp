@@ -507,6 +507,33 @@ bool matches(const std::vector<Cell> &row, const std::vector<Filter> &f) {
   }
   return true;
 }
+std::optional<Store::KeyRange> primary_key_range(const std::vector<Filter> &filters, size_t pk) {
+  Store::KeyRange range;
+  constexpr int64_t minimum = std::numeric_limits<int64_t>::min();
+  constexpr int64_t maximum = std::numeric_limits<int64_t>::max();
+  for (const auto &filter : filters) {
+    if (filter.column != pk)
+      continue;
+    const auto value = std::get<int64_t>(filter.value);
+    if (filter.op == "=" || filter.op == "<=") {
+      range.last = std::min(range.last, value);
+    } else if (filter.op == "<") {
+      if (value == minimum)
+        return Store::KeyRange{1, 0};
+      range.last = std::min(range.last, value - 1);
+    }
+    if (filter.op == "=" || filter.op == ">=") {
+      range.first = std::max(range.first, value);
+    } else if (filter.op == ">") {
+      if (value == maximum)
+        return Store::KeyRange{1, 0};
+      range.first = std::max(range.first, value + 1);
+    }
+  }
+  if (range.first == minimum && range.last == maximum)
+    return std::nullopt;
+  return range;
+}
 struct Projection {
   size_t col;
   bool distance = false;
@@ -769,6 +796,7 @@ Result Engine::execute_statement(const Statement &st) {
     return result;
   }
   auto fs = filters(st, schema);
+  const auto key_range = primary_key_range(fs, pk);
   if (st.kind == Statement::Update || st.kind == Statement::Delete) {
     std::vector<std::pair<size_t, Cell>> assignments;
     std::set<size_t> seen;
@@ -800,6 +828,11 @@ Result Engine::execute_statement(const Statement &st) {
       const auto key = std::get<int64_t>(equality->value);
       if (auto data = store_.get(st.table, key))
         mutate(key, *data);
+    } else if (key_range) {
+      store_.scan_until(st.table, *key_range, false, [&](int64_t key, const std::string &data) {
+        mutate(key, data);
+        return true;
+      });
     } else
       store_.scan(st.table, mutate);
     return result;
@@ -864,8 +897,22 @@ Result Engine::execute_statement(const Statement &st) {
       return;
     }
     if (cache_->table == st.table && cache_->complete) {
-      for (const auto &entry : cache_->rows)
-        visitor(entry.key, entry.row);
+      auto begin = cache_->rows.begin();
+      if (key_range)
+        begin = std::lower_bound(begin, cache_->rows.end(), key_range->first,
+            [](const Cache::Entry &entry, int64_t key) { return entry.key < key; });
+      for (auto it = begin; it != cache_->rows.end(); ++it) {
+        if (key_range && it->key > key_range->last)
+          break;
+        visitor(it->key, it->row);
+      }
+      return;
+    }
+    if (key_range) {
+      store_.scan_until(st.table, *key_range, false, [&](int64_t key, const std::string &data) {
+        visitor(key, unpack_row(data, schema));
+        return true;
+      });
       return;
     }
     bool collecting = cache_->table != st.table;
@@ -917,6 +964,24 @@ Result Engine::execute_statement(const Statement &st) {
   // actually carry decides instead; see the measured check at the scan.
   const size_t limit = st.limit ? *st.limit : 0;
   const bool declared_fits = limit && projection_bound <= result_budget / limit;
+  const bool primary_order = keys.size() == 1 && (keys[0].projection
+      ? !ps[keys[0].index].distance && ps[keys[0].index].col == pk
+      : keys[0].index == pk);
+  if (declared_fits && primary_order) {
+    store_.scan_until(st.table, key_range.value_or(Store::KeyRange{}), keys[0].desc,
+        [&](int64_t, const std::string &data) {
+          auto row = unpack_row(data, schema);
+          if (!matches(row, fs))
+            return true;
+          std::vector<Cell> projected;
+          projected.reserve(ps.size());
+          for (const auto &p : ps)
+            projected.push_back(project(p, row));
+          result.rows.push_back(std::move(projected));
+          return result.rows.size() < limit;
+        });
+    return result;
+  }
   const bool point_lookup = std::any_of(fs.begin(), fs.end(), [&](const Filter &f) {
     return f.column == pk && f.op == "=";
   });
@@ -964,7 +1029,12 @@ Result Engine::execute_statement(const Statement &st) {
         consider(nearest, key, std::get<double>(project(projection, row)));
     };
     const exact::Compact *winner_view = nullptr;
-    if (exact::available() && !point_lookup && st.table.size() <= 1024) {
+    const bool bounded_scan = key_range && (key_range->first > key_range->last ||
+        uint64_t(key_range->last) - uint64_t(key_range->first) < parallel_scan_min_rows);
+    const bool have_exact_view = cache_->table == st.table &&
+        cache_->exact_column == projection.col && cache_->exact_view;
+    if (exact::available() && !point_lookup && (!bounded_scan || have_exact_view) &&
+        st.table.size() <= 1024) {
       if (cache_->table != st.table || cache_->exact_column != projection.col ||
           cache_->complete) {
         *cache_ = Cache{};

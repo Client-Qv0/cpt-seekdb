@@ -593,6 +593,66 @@ struct Store::Impl {
     if (total != durable_end)
       sync_fd(fd);
   }
+  template<bool Descending, class Visitor>
+  void scan_visible(const std::string &table, KeyRange range, Visitor fn) const {
+    check();
+    if (range.first > range.last)
+      return;
+    static const Rows empty;
+    auto rows = [&](const Layer &layer) -> const Rows & {
+      auto it = layer.rows.find(table);
+      return it == layer.rows.end() ? empty : it->second;
+    };
+    const auto &base = rows(committed);
+    const auto &transaction = rows(pending);
+    // Callbacks may stage writes. Keep this statement's initial overlay
+    // stable while walking it, as with an unbounded scan.
+    const Rows statement = rows(current);
+    auto start = [&](const Rows &index) {
+      if constexpr (Descending)
+        return index.seek<true>(range.last);
+      if (range.first == std::numeric_limits<int64_t>::min())
+        return index.begin();
+      return index.seek<false>(range.first);
+    };
+    auto a = start(base), b = start(transaction), c = start(statement);
+    const auto a_end = base.end(), b_end = transaction.end(), c_end = statement.end();
+    struct Guard {
+      const Impl &store;
+      explicit Guard(const Impl &s) : store(s) { ++store.scans; }
+      ~Guard() { --store.scans; }
+    } guard(*this);
+    while (a != a_end || b != b_end || c != c_end) {
+      int64_t key = Descending ? std::numeric_limits<int64_t>::min()
+                               : std::numeric_limits<int64_t>::max();
+      auto choose = [&](Rows::Iterator position, Rows::Iterator end) {
+        if (position != end)
+          key = Descending ? std::max(key, position.key())
+                           : std::min(key, position.key());
+      };
+      choose(a, a_end);
+      choose(b, b_end);
+      choose(c, c_end);
+      if (Descending ? key < range.first : key > range.last)
+        return;
+      Ref ref;
+      auto take = [&](Rows::Iterator &position, Rows::Iterator end) {
+        if (position != end && position.key() == key) {
+          ref = position.ref();
+          if constexpr (Descending)
+            position.retreat();
+          else
+            ++position;
+        }
+      };
+      // Later layers override earlier versions, including tombstones.
+      take(a, a_end);
+      take(b, b_end);
+      take(c, c_end);
+      if (!ref.deleted && !fn(key, load(ref), ref.offset))
+        return;
+    }
+  }
   std::optional<Ref> find_row(const Layer &layer, const std::string &table,
                               int64_t key) const {
     auto t = layer.rows.find(table);
@@ -774,53 +834,28 @@ Store::ReadMapping Store::map_committed() const {
 void Store::scan(
     const std::string &table,
     const std::function<void(int64_t, const std::string &)> &fn) const {
-  scan_with_offsets(table, [&](int64_t key, const std::string &data,
-                                         uint64_t){fn(key, data);});
+  impl_->scan_visible<false>(table, {}, [&](int64_t key, const std::string &data, uint64_t) {
+    fn(key, data);
+    return true;
+  });
 }
 void Store::scan_with_offsets(
     const std::string &table,
     const std::function<void(int64_t, const std::string &, uint64_t)> &fn) const {
-  const auto &s = *impl_;
-  s.check();
-  static const Impl::Rows empty;
-  auto rows = [&](const Impl::Layer &layer) -> const Impl::Rows & {
-    auto it = layer.rows.find(table);
-    return it == layer.rows.end() ? empty : it->second;
+  impl_->scan_visible<false>(table, {}, [&](int64_t key, const std::string &data, uint64_t offset) {
+    fn(key, data, offset);
+    return true;
+  });
+}
+void Store::scan_until(
+    const std::string &table, KeyRange range, bool descending,
+    const std::function<bool(int64_t, const std::string &)> &fn) const {
+  auto visit = [&](int64_t key, const std::string &data, uint64_t) {
+    return fn(key, data);
   };
-  const auto &base = rows(s.committed);
-  const auto &transaction = rows(s.pending);
-  // Current statement writes may be changed by the callback. Freeze only that
-  // small overlay; committed/transaction indexes remain stable during a scan.
-  const Impl::Rows statement = rows(s.current);
-  auto a = base.begin(), b = transaction.begin(), c = statement.begin();
-  struct Guard {
-    const Impl &s;
-    Guard(const Impl &x) : s(x) { ++s.scans; }
-    ~Guard() { --s.scans; }
-  } guard(s);
-  while (a != base.end() || b != transaction.end() || c != statement.end()) {
-    int64_t key = std::numeric_limits<int64_t>::max();
-    if (a != base.end())
-      key = std::min(key, a.key());
-    if (b != transaction.end())
-      key = std::min(key, b.key());
-    if (c != statement.end())
-      key = std::min(key, c.key());
-    Impl::Ref ref;
-    if (a != base.end() && a.key() == key) {
-      ref = a.ref();
-      ++a;
-    }
-    if (b != transaction.end() && b.key() == key) {
-      ref = b.ref();
-      ++b;
-    }
-    if (c != statement.end() && c.key() == key) {
-      ref = c.ref();
-      ++c;
-    }
-    if (!ref.deleted)
-      fn(key, s.load(ref), ref.offset);
-  }
+  if (descending)
+    impl_->scan_visible<true>(table, range, visit);
+  else
+    impl_->scan_visible<false>(table, range, visit);
 }
 } // namespace mvdb

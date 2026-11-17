@@ -2,6 +2,7 @@
 #include "sql.hpp"
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
@@ -36,6 +37,15 @@ public:
   // writes.
   void scan(const std::string &table,
             const std::function<void(int64_t, const std::string &)> &fn) const;
+
+  struct KeyRange {
+    int64_t first = std::numeric_limits<int64_t>::min();
+    int64_t last = std::numeric_limits<int64_t>::max();
+  };
+  // Visits visible rows within a closed primary-key interval. A false return
+  // from the callback stops the scan, after consuming that row.
+  void scan_until(const std::string &table, KeyRange range, bool descending,
+      const std::function<bool(int64_t, const std::string &)> &fn) const;
 
   struct ReadMapping {
     std::shared_ptr<const char> data;
