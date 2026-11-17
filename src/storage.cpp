@@ -1,4 +1,5 @@
 #include "storage.hpp"
+#include "crc32_ieee.hpp"
 #include "compact_rows.hpp"
 
 #include <algorithm>
@@ -10,6 +11,7 @@
 #include <limits>
 #include <map>
 #include <sys/file.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
 #include <unistd.h>
@@ -47,22 +49,8 @@ void set64(unsigned char *p, uint64_t v) {
   for (unsigned i = 0; i < 8; ++i)
     p[i] = static_cast<unsigned char>(v >> (i * 8));
 }
-uint32_t crc_update(uint32_t crc, const void *data, size_t length) {
-  static const std::array<uint32_t, 256> table = [] {
-    std::array<uint32_t, 256> result{};
-    for (uint32_t i = 0; i < 256; ++i) {
-      uint32_t c = i;
-      for (unsigned j = 0; j < 8; ++j)
-        c = (c >> 1) ^ (0xedb88320u & (0u - (c & 1u)));
-      result[i] = c;
-    }
-    return result;
-  }();
-  const auto *p = static_cast<const unsigned char *>(data);
-  for (size_t i = 0; i < length; ++i)
-    crc = table[(crc ^ p[i]) & 255] ^ (crc >> 8);
-  return crc;
-}
+using storage_detail::crc_update;
+
 void read_all(int fd, void *buffer, size_t size, uint64_t offset) {
   auto *p = static_cast<unsigned char *>(buffer);
   while (size) {
@@ -768,9 +756,30 @@ void Store::erase(const std::string &table, int64_t key) {
   auto ref = s.append(kErase, table, key, {});
   s.current.table_rows(table).set(key, ref);
 }
+Store::ReadMapping Store::map_committed() const {
+  const auto &s = *impl_;
+  s.check();
+  if (s.transaction || s.statement || s.end != s.durable_end ||
+      s.end == 0 || s.end > 16 * 1024 * 1024)
+    return {};
+  struct stat st{};
+  if (::fstat(s.fd, &st) != 0 || !S_ISREG(st.st_mode) ||
+      st.st_size < 0 || uint64_t(st.st_size) != s.end)
+    return {};
+  void *address = ::mmap(nullptr, s.end, PROT_READ, MAP_PRIVATE, s.fd, 0);
+  if (address == MAP_FAILED) return {};
+  return {std::shared_ptr<const char>(static_cast<const char *>(address),
+      [size=s.end](const char *p){::munmap(const_cast<char *>(p), size);}), s.end};
+}
 void Store::scan(
     const std::string &table,
     const std::function<void(int64_t, const std::string &)> &fn) const {
+  scan_with_offsets(table, [&](int64_t key, const std::string &data,
+                                         uint64_t){fn(key, data);});
+}
+void Store::scan_with_offsets(
+    const std::string &table,
+    const std::function<void(int64_t, const std::string &, uint64_t)> &fn) const {
   const auto &s = *impl_;
   s.check();
   static const Impl::Rows empty;
@@ -811,7 +820,7 @@ void Store::scan(
       ++c;
     }
     if (!ref.deleted)
-      fn(key, s.load(ref));
+      fn(key, s.load(ref), ref.offset);
   }
 }
 } // namespace mvdb
