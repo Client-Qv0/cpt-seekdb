@@ -126,6 +126,45 @@ void write_all(int fd, const void *buffer, size_t size, uint64_t offset) {
     offset += static_cast<size_t>(n);
   }
 }
+// The temporary checkpoint journal is sequential and is synced only once.
+class CheckpointWriter {
+public:
+  explicit CheckpointWriter(int fd) : fd_(fd) {}
+
+  void append(const void *data, size_t size) {
+    const auto *source = static_cast<const unsigned char *>(data);
+    while (size) {
+      if (!used_ && size >= buffer_.size()) {
+        const size_t direct = size - size % buffer_.size();
+        write_all(fd_, source, direct, written_);
+        written_ += direct;
+        source += direct;
+        size -= direct;
+        continue;
+      }
+      const size_t copied = std::min(size, buffer_.size() - used_);
+      std::memcpy(buffer_.data() + used_, source, copied);
+      used_ += copied;
+      source += copied;
+      size -= copied;
+      if (used_ == buffer_.size())
+        flush();
+    }
+  }
+
+  void flush() {
+    write_all(fd_, buffer_.data(), used_, written_);
+    written_ += used_;
+    used_ = 0;
+  }
+
+private:
+  int fd_;
+  uint64_t written_ = 0;
+  size_t used_ = 0;
+  std::array<unsigned char, 64 * 1024> buffer_;
+};
+
 void write_all_dsync(int fd, const void *buffer, size_t size,
                      uint64_t offset) {
   struct iovec part{const_cast<void *>(buffer), size};
@@ -347,7 +386,8 @@ struct Store::Impl {
   }
   static Ref append_to(int target_fd, uint64_t &position, uint32_t kind,
                        const std::string &table, int64_t key,
-                       const std::string &value) {
+                       const std::string &value,
+                       CheckpointWriter *checkpoint_writer = nullptr) {
     if (table.size() > 1024 * 1024 ||
         value.size() > std::numeric_limits<uint32_t>::max())
       throw Error("LIMIT", "record or table identifier is too large");
@@ -368,17 +408,23 @@ struct Store::Impl {
     set32(h.data() + 24, crc);
     const Ref ref{position + kFrameHeader + table.size(),
                   static_cast<uint32_t>(value.size()), kind == kErase};
-    struct iovec parts[3];
-    int part_count = 0;
-    auto add_part = [&](const void *data, size_t size) {
-      if (!size)
-        return;
-      parts[part_count++] = {const_cast<void *>(data), size};
-    };
-    add_part(h.data(), h.size());
-    add_part(table.data(), table.size());
-    add_part(value.data(), value.size());
-    writev_all(target_fd, parts, part_count, position);
+    if (checkpoint_writer) {
+      checkpoint_writer->append(h.data(), h.size());
+      checkpoint_writer->append(table.data(), table.size());
+      checkpoint_writer->append(value.data(), value.size());
+    } else {
+      struct iovec parts[3];
+      int part_count = 0;
+      auto add_part = [&](const void *data, size_t size) {
+        if (!size)
+          return;
+        parts[part_count++] = {const_cast<void *>(data), size};
+      };
+      add_part(h.data(), h.size());
+      add_part(table.data(), table.size());
+      add_part(value.data(), value.size());
+      writev_all(target_fd, parts, part_count, position);
+    }
 
     position += bytes;
     return ref;
@@ -511,16 +557,18 @@ struct Store::Impl {
         io_error("create checkpoint");
       if (::flock(target_fd, LOCK_EX | LOCK_NB) != 0)
         io_error("lock checkpoint");
-      write_all(target_fd, kHeader.data(), kHeader.size(), 0);
+      CheckpointWriter writer(target_fd);
+      writer.append(kHeader.data(), kHeader.size());
       uint64_t position = kFileHeader;
       for (const auto &entry : committed.meta)
         append_to(target_fd, position, kMeta, entry.first, 0,
-                  load(entry.second));
+                  load(entry.second), &writer);
       for (const auto &table : committed.rows)
         for (const auto &entry : table.second)
           append_to(target_fd, position, kPut, table.first, entry.first,
-                    load(entry.second));
-      append_to(target_fd, position, kCommit, {}, 0, {});
+                    load(entry.second), &writer);
+      append_to(target_fd, position, kCommit, {}, 0, {}, &writer);
+      writer.flush();
       sync_fd(target_fd);
       if (::renameat(dirfd, "journal.checkpoint.tmp", dirfd, "journal.mvdb") !=
           0)
