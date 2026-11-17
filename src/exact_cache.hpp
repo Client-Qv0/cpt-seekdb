@@ -699,6 +699,24 @@ inline void quantized_biased_squared_distance8_avx2(
           sums[lane],_mm256_madd_epi16(pairs,ones));
     }
   }
+  if(d==dim) {
+    // Pair different rows to sum four dots at a time. HADD stays within
+    // each 128-bit half; add the halves to get the whole dot for each row.
+    // With dim <= 8192 and codes in [-64,64], all values fit in int32_t.
+    const __m128i bias=_mm_set1_epi32(query.squared_norm+128*query.sum_codes);
+    for(size_t lane=0;lane<8;lane+=4) {
+      const __m256i paired=_mm256_hadd_epi32(
+          _mm256_hadd_epi32(sums[lane],sums[lane+1]),
+          _mm256_hadd_epi32(sums[lane+2],sums[lane+3]));
+      const __m128i dots=_mm_add_epi32(_mm256_castsi256_si128(paired),
+                                      _mm256_extracti128_si256(paired,1));
+      const __m128i norms=_mm_loadu_si128(reinterpret_cast<const __m128i*>(row_norms+lane));
+      const __m128i distances=_mm_sub_epi32(_mm_add_epi32(norms,bias),
+                                            _mm_slli_epi32(dots,1));
+      _mm_storeu_si128(reinterpret_cast<__m128i*>(out+lane),distances);
+    }
+    return;
+  }
   for(size_t lane=0;lane<8;++lane) {
     const __m128i halves=_mm_add_epi32(
         _mm256_castsi256_si128(sums[lane]),

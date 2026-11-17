@@ -288,8 +288,8 @@ void test_quantized_screen() {
 void test_biased_screen_layout_and_kernel() {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
   if(!exact::available() || std::fegetround()!=FE_TONEAREST) return;
-  auto make_cache=[](float scale) {
-    constexpr size_t count=16,dim=17;
+  auto make_cache=[](float scale,size_t dim=17) {
+    constexpr size_t count=16;
     std::vector<std::vector<Cell>> rows;
     exact::Plan plan({Type::BigInt,Type::Vector},1,dim);
     for(size_t row=0;row<count;++row) {
@@ -315,22 +315,32 @@ void test_biased_screen_layout_and_kernel() {
     query[d]=float(int(d*5)%9-4)/5.0f;
   auto prepared=exact::prepare_quantized_query(cache,query,true);
   require(bool(prepared.biased_codes) && !prepared.codes);
-  for(size_t block=0;block+8<=cache.count;block+=8) {
+  auto check_distances=[](const exact::Compact &cache,
+                          const exact::QuantizedQuery &prepared,
+                          const size_t *rows) {
     uint32_t actual[8];
-    const size_t rows[8]={block,block+1,block+2,block+3,
-                          block+4,block+5,block+6,block+7};
     exact::quantized_biased_squared_distance8(cache,rows,prepared,actual);
     for(size_t lane=0;lane<8;++lane) {
       uint32_t expected=0;
       for(size_t d=0;d<cache.dim;++d) {
-        const int row_code=
-            int(reinterpret_cast<const uint8_t*>(cache.quantized_codes.get())
-                [rows[lane]*cache.dim+d])-64;
+        const int row_code=int(uint8_t(cache.quantized_codes[rows[lane]*cache.dim+d]))-64;
         const int delta=row_code-int(prepared.biased_codes[d]);
         expected+=uint32_t(delta*delta);
       }
       require(actual[lane]==expected);
     }
+  };
+  const size_t contiguous[8]={0,1,2,3,4,5,6,7};
+  check_distances(cache,prepared,contiguous);
+  const size_t scattered[8]={9,1,6,13,5,0,15,12};
+  for(size_t dim : {size_t(32),size_t(128),size_t(129)}) {
+    auto other=make_cache(1.0f,dim);
+    std::vector<float> input(dim);
+    for(size_t d=0;d<dim;++d) input[d]=query[d%query.size()];
+    auto codes=exact::prepare_quantized_query(other,input,true);
+    require(other.quantized_biased && bool(codes.biased_codes));
+    check_distances(other,codes,contiguous);
+    check_distances(other,codes,scattered);
   }
 
   // Row +64 is stored as byte 128. A query code of 65 must still screen.
