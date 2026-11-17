@@ -1262,7 +1262,7 @@ Result Engine::execute_statement(const Statement &st) {
         // Neighbor comparison is a total order on (distance, primary key), so
         // the merged top K is identical to the serial one at every width.
         auto run_slices = [&](
-            size_t total,
+            size_t total, const uint32_t *rows,
             const std::function<void(size_t, size_t, Heap &)> &body) {
           size_t width = scan_width(total);
           if (width > 1 && quantized.biased_codes && exact::thread_limit() == 0) {
@@ -1271,7 +1271,9 @@ Result Engine::execute_statement(const Statement &st) {
             // allow at least one cache line of work per row for the reduction.
             const size_t cache_bytes = cpu::l2_cache_bytes();
             const size_t work_per_row = std::max(view.dim, size_t(64));
-            if (total <= (cache_bytes - cache_bytes / 4) / work_per_row)
+            if (total <= (cache_bytes - cache_bytes / 4) / work_per_row &&
+                limit <= total / 64 &&
+                exact::quantized_sample_is_selective(view, quantized, rows, total))
               width = 1;
           }
           if (width < 2) {
@@ -1338,7 +1340,7 @@ Result Engine::execute_statement(const Statement &st) {
           if (view.shared_vector)
             collect_shared(nullptr, view.count);
           else
-            run_slices(static_cast<size_t>(view.count),
+            run_slices(view.count, nullptr,
                        [&](size_t begin, size_t end, Heap &heap) {
                          scan_contiguous(begin, end, heap);
                        });
@@ -1391,7 +1393,7 @@ Result Engine::execute_statement(const Statement &st) {
           if (view.shared_vector)
             collect_shared(rows, row_count);
           else
-            run_slices(row_count, [&](size_t begin, size_t end, Heap &heap) {
+            run_slices(row_count, rows, [&](size_t begin, size_t end, Heap &heap) {
               scan_list(rows + begin, end - begin, heap);
             });
         }

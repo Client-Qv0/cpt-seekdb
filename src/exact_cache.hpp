@@ -991,6 +991,31 @@ inline void quantized_biased_squared_distance8(
   }
 #endif
 }
+// Sample the integer scores to avoid serializing scans whose exact refinement
+// dominates their cost. Call with biased codes and at least 16 rows.
+// Truly equidistant rows' code distances differ by at
+// most twice the residual bound, so they cannot pass this selectivity check.
+inline bool quantized_sample_is_selective(const Compact& cache,
+                                          const QuantizedQuery& query,
+                                          const uint32_t* rows,size_t count) {
+  constexpr size_t sample_count=16;
+  const size_t stride=count/sample_count;
+  uint32_t scores[sample_count];
+  for (size_t offset=0;offset<sample_count;offset+=8) {
+    size_t sample[8];
+    for (size_t lane=0;lane<8;++lane) {
+      const size_t index=(offset+lane)*stride;
+      sample[lane]=rows ? rows[index] : index;
+    }
+    quantized_biased_squared_distance8(cache,sample,query,scores+offset);
+  }
+  const double nearest=std::sqrt(double(*std::min_element(scores,scores+sample_count)))
+                       *cache.quantized_step;
+  const double cutoff=quantized_threshold(nearest,cache.quantized_step,2*query.error_upper);
+  const auto separated=std::count_if(scores,scores+sample_count,
+                       [cutoff](uint32_t score) {return double(score)>cutoff;});
+  return static_cast<size_t>(separated)>=sample_count/2;
+}
 inline void distances4(const Compact& cache,const size_t* rows,
                        const std::vector<float>& q,double* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
