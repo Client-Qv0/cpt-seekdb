@@ -12,6 +12,10 @@
 #include <string_view>
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
 #include <immintrin.h>
+#if defined(__x86_64__) && (defined(_AVXVNNIINTRIN_H_INCLUDED) || defined(__AVXVNNIINTRIN_H))
+#include <cpuid.h>
+#define MVDB_HAVE_AVXVNNI 1
+#endif
 #endif
 
 namespace mvdb::exact {
@@ -34,6 +38,21 @@ inline size_t budget() {
 inline bool available() {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
   return __builtin_cpu_supports("avx2");
+#else
+  return false;
+#endif
+}
+inline bool avxvnni_available() {
+#ifdef MVDB_HAVE_AVXVNNI
+  static const bool supported=[] {
+    // The AVX2 check includes operating-system support for YMM registers.
+    // CPUID leaf 7.1 distinguishes AVX-VNNI from the AVX-512 extension.
+    if(!available()) return false;
+    unsigned eax,ebx,ecx,edx;
+    if(!__get_cpuid_count(7,0,&eax,&ebx,&ecx,&edx) || eax<1) return false;
+    return __get_cpuid_count(7,1,&eax,&ebx,&ecx,&edx) && (eax&(1u<<4))!=0;
+  }();
+  return supported;
 #else
   return false;
 #endif
@@ -71,10 +90,12 @@ inline bool fp32_screen_available(size_t dim) {
   return false;
 #endif
 }
-// For D<=8192, a finite FP32 sequential square sum a and the original double
-// sum S obey a <= 1.01*S + 2*D*2^-149. With n=D+3, the relative factor is at
-// most 1/((1-n*2^-24)*(1-n*2^-53)) < 1.00049; 2*D*2^-149 covers FP32 square
-// underflow. A subnormal difference of two FP32 inputs is exactly representable.
+// For D<=8192, a finite FP32 square sum a and the original double sum S obey
+// a <= 1.01*S + 2*D*2^-149. Any tree adding the D nonnegative terms rounds each
+// contribution at most D-1 times, including the mapped kernel's lane reduction.
+// With n=D+3, the relative factor is at most
+// 1/((1-n*2^-24)*(1-n*2^-53)) < 1.00049; 2*D*2^-149 covers FP32 square underflow.
+// A subnormal difference of two FP32 inputs is exactly representable.
 // Use nextup(d)^2, not d^2: distinct sums can round to the same sqrt distance.
 // Every operation forming the rejection threshold is expanded upward.
 inline double fp32_screen_threshold(double worst_distance,size_t dim) {
@@ -95,6 +116,24 @@ inline size_t add(size_t a,size_t b) {
 }
 inline size_t mul(size_t a,size_t b) {
   return b && a>budget()/b ? budget()+1 : a*b;
+}
+// Power-of-two scaling is exact for finite float inputs. Subtracting the
+// nearest nonzero code is exact by Sterbenz's lemma; subtracting zero is also
+// exact. Nonzero squares are normal in double even with the widest scale.
+// For at most 8192 terms, rounding in the squares and additions can lower the
+// sum by less than 1e-12 relative to the real value.
+inline double quantized_residual_norm_upper(double squared) {
+  if (squared == 0) return 0;
+  const double inf = std::numeric_limits<double>::infinity();
+  const double upper = std::nextafter(squared * 1.00000000001, inf);
+  return std::nextafter(std::sqrt(upper), inf);
+}
+inline double quantized_error_upper(double row_error, double query_error_squared, size_t dim) {
+  const double inf = std::numeric_limits<double>::infinity();
+  const double residual = std::nextafter(
+      row_error + quantized_residual_norm_upper(query_error_squared), inf);
+  const double worst_case = std::nextafter(std::sqrt(double(dim)), inf);
+  return std::min(residual, worst_case);
 }
 struct ScalarColumn {
   Type type;
@@ -158,10 +197,14 @@ struct Compact {
   std::vector<ScalarColumn> columns;
   // Widest stored text per column, carried over from the plan that sized it.
   std::vector<size_t> text_max;
+  // A single finite vector shared by all rows, in strictly ascending key order.
+  bool shared_vector=false;
   // Optional row-major screening codes. Exact values are still available from
   // the owned vector array or the immutable committed mapping.
   std::unique_ptr<int8_t[]> quantized_codes;
   double quantized_step=1,quantized_inverse=1;
+  // Largest row residual norm, rounded up in units of quantized_step.
+  double quantized_row_error_upper=0;
   // When all codes fit [-64,64], the bytes are stored as uint8_t(code+64) and
   // this row-norm table enables exact unsigned-by-signed AVX2 dot products.
   bool quantized_biased=false;
@@ -254,6 +297,23 @@ struct Compact {
       }
     }
   }
+  // Call after filling the view. A differing component usually ends the
+  // check on the second row. Bitwise equality ensures exact distances match.
+  void prepare_shared_vector() {
+    if(!count) return;
+    for(size_t row=1;row<count;++row) {
+      if(keys[row-1]>=keys[row]) return;
+      if(mapped) {
+        if(std::memcmp(row_bytes(0),row_bytes(row),dim*sizeof(float))!=0) return;
+      } else {
+        for(size_t d=0;d<dim;++d)
+          if(std::memcmp(&vectors[index(0,d)],&vectors[index(row,d)],sizeof(float))!=0) return;
+      }
+    }
+    for(size_t d=0;d<dim;++d)
+      if(!std::isfinite(component(0,d))) return;
+    shared_vector=true;
+  }
   // Call once after every exact row has been filled, before publishing the view.
   // Bypassed views never pay this scan; an optional-budget failure returns before
   // reading vectors. Only a complete code array is published.
@@ -281,13 +341,20 @@ struct Compact {
     try {
       std::unique_ptr<int8_t[]> codes(new int8_t[payload]);
       int minimum_code=127,maximum_code=-127;
-      for(size_t row=0;row<count;++row)for(size_t d=0;d<dim;++d) {
-        // This binary64 power-of-two scaling is exact even for FP32 subnormals.
-        const double rounded=std::nearbyint(double(component(row,d))*inverse);
-        if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) return;
-        codes[row*dim+d]=static_cast<int8_t>(rounded); // Never clamp a code.
-        minimum_code=std::min(minimum_code,int(rounded));
-        maximum_code=std::max(maximum_code,int(rounded));
+      double max_squared_error=0;
+      for(size_t row=0;row<count;++row) {
+        double squared_error=0;
+        for(size_t d=0;d<dim;++d) {
+          const double scaled=double(component(row,d))*inverse;
+          const double rounded=std::nearbyint(scaled);
+          if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) return;
+          codes[row*dim+d]=static_cast<int8_t>(rounded); // Never clamp a code.
+          minimum_code=std::min(minimum_code,int(rounded));
+          maximum_code=std::max(maximum_code,int(rounded));
+          const double error=scaled-rounded;
+          squared_error+=error*error;
+        }
+        max_squared_error=std::max(max_squared_error,squared_error);
       }
       std::vector<uint32_t> norms;
       bool biased=minimum_code>=-64 && maximum_code<=64 &&
@@ -309,6 +376,7 @@ struct Compact {
         }
       }
       quantized_step=step;quantized_inverse=inverse;
+      quantized_row_error_upper=quantized_residual_norm_upper(max_squared_error);
       quantized_biased=biased;
       quantized_row_norms=std::move(norms);
       quantized_codes=std::move(codes);
@@ -379,7 +447,8 @@ struct QuantizedQuery {
   std::unique_ptr<int8_t[]> biased_codes;
   int32_t sum_codes=0;
   int32_t squared_norm=0;
-  double root_dim_upper=0;
+  double error_upper=0;
+  bool use_avxvnni=false;
 };
 inline QuantizedQuery prepare_quantized_query(const Compact& cache,
                                              const std::vector<float>& query,
@@ -390,8 +459,10 @@ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
   if(cache.quantized_biased) {
     try {prepared.biased_codes.reset(new int8_t[cache.dim]);}
     catch(const std::bad_alloc&) {return prepared;}
+    double squared_error=0;
     for(size_t d=0;d<cache.dim;++d) {
-      const double rounded=std::nearbyint(double(query[d])*cache.quantized_inverse);
+      const double scaled=double(query[d])*cache.quantized_inverse;
+      const double rounded=std::nearbyint(scaled);
       if(!std::isfinite(rounded) || rounded < -64 || rounded > 64) {
         prepared.biased_codes.reset();break;
       }
@@ -399,40 +470,49 @@ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
       prepared.biased_codes[d]=static_cast<int8_t>(code);
       prepared.sum_codes+=code;
       prepared.squared_norm+=code*code;
+      const double error=scaled-rounded;
+      squared_error+=error*error;
     }
     if(prepared.biased_codes) {
-      prepared.root_dim_upper=std::nextafter(std::sqrt(double(cache.dim)),
-                                           std::numeric_limits<double>::infinity());
+      prepared.use_avxvnni=cache.dim>=32 && avxvnni_available();
+      prepared.error_upper=quantized_error_upper(cache.quantized_row_error_upper,
+                                                 squared_error,cache.dim);
       return prepared;
     }
   }
   try {prepared.codes.reset(new int16_t[cache.dim]);}
   catch(const std::bad_alloc&) {return prepared;}
+  double squared_error=0;
   for(size_t d=0;d<cache.dim;++d) {
-    const double rounded=std::nearbyint(double(query[d])*cache.quantized_inverse);
+    const double scaled=double(query[d])*cache.quantized_inverse;
+    const double rounded=std::nearbyint(scaled);
     if(!std::isfinite(rounded) || rounded < -127 || rounded > 127) {
       prepared.codes.reset();return prepared;
     }
     prepared.codes[d]=static_cast<int16_t>(rounded);
+    const double error=scaled-rounded;
+    squared_error+=error*error;
   }
-  prepared.root_dim_upper=std::nextafter(std::sqrt(double(cache.dim)),
-                                       std::numeric_limits<double>::infinity());
+  prepared.error_upper=quantized_error_upper(cache.quantized_row_error_upper,
+                                             squared_error,cache.dim);
   return prepared;
 }
-// If r is the real distance and I the exact integer square sum, quantization
-// gives step*sqrt(I) <= r+step*sqrt(D). Original double accumulation differs
-// from the real square sum by relative error <1e-12 for D<=8192. The factor 1.000001 and
-// nextup(d) cover that error and every sqrt rounding tie. Expand each operation
-// upward; only an integer sum strictly above this bound may be discarded.
+// By the triangle inequality, sqrt(I) <= r/step + error_upper, where r is
+// the real distance and I the exact integer square sum. The combined residual
+// norm is also bounded by sqrt(D) since each code rounds by at most 1/2.
+// Original double accumulation differs from the real square sum by relative
+// error <1e-12 for D<=8192. The factor 1.000001 and nextup(d) cover that
+// error and sqrt rounding ties. Only an integer sum strictly above the
+// upward-rounded cutoff can be discarded.
 inline double quantized_threshold(double worst_distance,double step,
-                                  double root_dim_upper) {
+                                  double error_upper) {
   const double inf=std::numeric_limits<double>::infinity();
   if(!std::isfinite(worst_distance) || worst_distance<0 ||
      !std::isfinite(step) || step<=0) return inf;
   const double next=std::nextafter(worst_distance,inf);
   const double distance_upper=std::nextafter(next*1.000001,inf);
   const double units_upper=std::nextafter(distance_upper/step,inf);
-  const double radius_upper=std::nextafter(units_upper+root_dim_upper,inf);
+  const double radius_upper=std::nextafter(units_upper+error_upper,inf);
   return std::nextafter(radius_upper*radius_upper,inf);
 }
 inline void distances4_scalar(const Compact& cache,const size_t* rows,
@@ -610,6 +690,46 @@ inline void squared_distances32_fp32_avx2(
   _mm256_storeu_ps(out+16,sum2);_mm256_storeu_ps(out+24,sum3);
 }
 
+// Use the mapped row layout directly when the query cannot be quantized.
+// These FP32 sums only reject rows; survivors still use ordered FP64 distances.
+__attribute__((target("avx2,no-fma"),noinline))
+inline void squared_distances_fp32_mapped_avx2(
+    const Compact& cache,const size_t* rows,size_t first,size_t count,
+    const std::vector<float>& q,float* out) {
+  for(size_t at=0;at<count;at+=4) {
+    const char* data[4];
+    for(size_t lane=0;lane<4;++lane) {
+      data[lane]=cache.row_bytes(rows ? rows[at+lane] : first+at+lane);
+    }
+    __m256 sums[4]={_mm256_setzero_ps(),_mm256_setzero_ps(),
+                   _mm256_setzero_ps(),_mm256_setzero_ps()};
+    size_t d=0;
+    for(;d+8<=cache.dim;d+=8) {
+      const __m256 query=_mm256_loadu_ps(q.data()+d);
+      for(size_t lane=0;lane<4;++lane) {
+        __m256 values;
+        std::memcpy(&values,data[lane]+d*sizeof(float),sizeof(values));
+        const __m256 delta=_mm256_sub_ps(values,query);
+        sums[lane]=_mm256_add_ps(sums[lane],_mm256_mul_ps(delta,delta));
+      }
+    }
+    const __m256 pairs01=_mm256_hadd_ps(sums[0],sums[1]);
+    const __m256 pairs23=_mm256_hadd_ps(sums[2],sums[3]);
+    const __m256 partial=_mm256_hadd_ps(pairs01,pairs23);
+    const __m128 totals=_mm_add_ps(_mm256_castps256_ps128(partial),
+                                  _mm256_extractf128_ps(partial,1));
+    _mm_storeu_ps(out+at,totals);
+    for(;d<cache.dim;++d) {
+      for(size_t lane=0;lane<4;++lane) {
+        float value;
+        std::memcpy(&value,data[lane]+d*sizeof(float),sizeof(value));
+        const float delta=value-q[d];
+        out[at+lane]+=delta*delta;
+      }
+    }
+  }
+}
+
 // Four rows per call: one query load feeds four independent integer
 // accumulators. Per-row arithmetic is unchanged, so the results are identical
 // to four quantized_squared_distance_avx2 calls.
@@ -675,30 +795,10 @@ inline void quantized_squared_distance4_avx2(const int8_t* r0,const int8_t* r1,
   }
 }
 
-// Exact unsigned-by-signed biased codes. Callers enable this path only when all
-// row/query codes fit [-64,64], so each pair product fits int16 and maddubs
-// saturation cannot occur. One query load feeds eight independent accumulators.
-__attribute__((target("avx2,no-fma"),noinline))
-inline void quantized_biased_squared_distance8_avx2(
-    const int8_t* const rows[8],const uint32_t* row_norms,
-    const QuantizedQuery& query,size_t dim,uint32_t* out) {
-  __m256i sums[8]={_mm256_setzero_si256(),_mm256_setzero_si256(),
-                   _mm256_setzero_si256(),_mm256_setzero_si256(),
-                   _mm256_setzero_si256(),_mm256_setzero_si256(),
-                   _mm256_setzero_si256(),_mm256_setzero_si256()};
-  const __m256i ones=_mm256_set1_epi16(1);
-  size_t d=0;
-  for(;d+32<=dim;d+=32) {
-    const __m256i q=_mm256_loadu_si256(
-        reinterpret_cast<const __m256i*>(query.biased_codes.get()+d));
-    for(size_t lane=0;lane<8;++lane) {
-      const __m256i bytes=_mm256_loadu_si256(
-          reinterpret_cast<const __m256i*>(rows[lane]+d));
-      const __m256i pairs=_mm256_maddubs_epi16(bytes,q);
-      sums[lane]=_mm256_add_epi32(
-          sums[lane],_mm256_madd_epi16(pairs,ones));
-    }
-  }
+__attribute__((target("avx2,no-fma"),always_inline))
+inline void finish_quantized_biased_distances8(
+    const __m256i (&sums)[8],const int8_t* const rows[8],const uint32_t* row_norms,
+    const QuantizedQuery& query,size_t d,size_t dim,uint32_t* out) {
   if(d==dim) {
     // Pair different rows to sum four dots at a time. HADD stays within
     // each 128-bit half; add the halves to get the whole dot for each row.
@@ -732,6 +832,59 @@ inline void quantized_biased_squared_distance8_avx2(
     out[lane]=static_cast<uint32_t>(squared);
   }
 }
+
+// Exact unsigned-by-signed biased codes. Callers enable this path only when all
+// row/query codes fit [-64,64], so each pair product fits int16 and maddubs
+// saturation cannot occur. One query load feeds eight independent accumulators.
+__attribute__((target("avx2,no-fma"),noinline))
+inline void quantized_biased_squared_distance8_avx2(
+    const int8_t* const rows[8],const uint32_t* row_norms,
+    const QuantizedQuery& query,size_t dim,uint32_t* out) {
+  __m256i sums[8]={_mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256()};
+  const __m256i ones=_mm256_set1_epi16(1);
+  size_t d=0;
+  for(;d+32<=dim;d+=32) {
+    const __m256i q=_mm256_loadu_si256(
+        reinterpret_cast<const __m256i*>(query.biased_codes.get()+d));
+    for(size_t lane=0;lane<8;++lane) {
+      const __m256i bytes=_mm256_loadu_si256(
+          reinterpret_cast<const __m256i*>(rows[lane]+d));
+      const __m256i pairs=_mm256_maddubs_epi16(bytes,q);
+      sums[lane]=_mm256_add_epi32(
+          sums[lane],_mm256_madd_epi16(pairs,ones));
+    }
+  }
+  finish_quantized_biased_distances8(sums,rows,row_norms,query,d,dim,out);
+}
+
+#ifdef MVDB_HAVE_AVXVNNI
+// VEX VPDPBUSD accumulates four unsigned-by-signed products per 32-bit lane.
+// The AVX2 path builds the same partial sum in three steps. The largest
+// possible whole dot at 8192 dimensions is 8192 * 128 * 64, which fits int32_t.
+__attribute__((target("avx2,avxvnni,no-fma"),noinline))
+inline void quantized_biased_squared_distance8_avxvnni(
+    const int8_t* const rows[8],const uint32_t* row_norms,
+    const QuantizedQuery& query,size_t dim,uint32_t* out) {
+  __m256i sums[8]={_mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256()};
+  size_t d=0;
+  for(;d+32<=dim;d+=32) {
+    const __m256i q=_mm256_loadu_si256(
+        reinterpret_cast<const __m256i*>(query.biased_codes.get()+d));
+    for(size_t lane=0;lane<8;++lane) {
+      const __m256i bytes=_mm256_loadu_si256(
+          reinterpret_cast<const __m256i*>(rows[lane]+d));
+      sums[lane]=_mm256_dpbusd_avx_epi32(sums[lane],bytes,q);
+    }
+  }
+  finish_quantized_biased_distances8(sums,rows,row_norms,query,d,dim,out);
+}
+#endif
 
 #endif
 inline uint32_t quantized_squared_distance(const Compact& cache,size_t row,
@@ -828,6 +981,12 @@ inline void quantized_biased_squared_distance8(
     pointers[lane]=cache.quantized_codes.get()+rows[lane]*cache.dim;
     norms[lane]=cache.quantized_row_norms[rows[lane]];
   }
+#ifdef MVDB_HAVE_AVXVNNI
+  if(query.use_avxvnni) {
+    quantized_biased_squared_distance8_avxvnni(pointers,norms,query,cache.dim,out);
+    return;
+  }
+#endif
   quantized_biased_squared_distance8_avx2(
       pointers,norms,query,cache.dim,out);
 #else
@@ -883,7 +1042,8 @@ inline void distances8_contiguous(const Compact& cache,size_t row,
 inline void squared_distances8_fp32_contiguous(
     const Compact& cache,size_t row,const std::vector<float>& q,float* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
-  squared_distances8_fp32_contiguous_avx2(cache,row,q,out);
+  if(cache.mapped) squared_distances_fp32_mapped_avx2(cache,nullptr,row,8,q,out);
+  else squared_distances8_fp32_contiguous_avx2(cache,row,q,out);
 #else
   (void)cache;(void)row;(void)q;
   for(size_t lane=0;lane<8;++lane) out[lane]=std::numeric_limits<float>::infinity();
@@ -892,7 +1052,8 @@ inline void squared_distances8_fp32_contiguous(
 inline void squared_distances32_fp32_contiguous(
     const Compact& cache,size_t row,const std::vector<float>& q,float* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
-  squared_distances32_fp32_contiguous_avx2(cache,row,q,out);
+  if(cache.mapped) squared_distances_fp32_mapped_avx2(cache,nullptr,row,32,q,out);
+  else squared_distances32_fp32_contiguous_avx2(cache,row,q,out);
 #else
   (void)cache;(void)row;(void)q;
   for(size_t lane=0;lane<32;++lane) out[lane]=std::numeric_limits<float>::infinity();
@@ -901,10 +1062,13 @@ inline void squared_distances32_fp32_contiguous(
 inline void squared_distances32_fp32(
     const Compact& cache,const size_t* rows,const std::vector<float>& q,float* out) {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
-  squared_distances32_fp32_avx2(cache,rows,q,out);
+  if(cache.mapped) squared_distances_fp32_mapped_avx2(cache,rows,0,32,q,out);
+  else squared_distances32_fp32_avx2(cache,rows,q,out);
 #else
   (void)cache;(void)rows;(void)q;
   for(size_t lane=0;lane<32;++lane) out[lane]=std::numeric_limits<float>::infinity();
 #endif
 }
 } // namespace mvdb::exact
+
+#undef MVDB_HAVE_AVXVNNI

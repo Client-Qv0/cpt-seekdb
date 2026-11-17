@@ -4,6 +4,7 @@
 #include "spill.hpp"
 #include <algorithm>
 #include <atomic>
+#include <bitset>
 #include <charconv>
 #include <cfenv>
 #include <cmath>
@@ -26,6 +27,25 @@
 
 namespace mvdb {
 namespace {
+// A mapped FP32 pass reads the same vectors again for survivors. Stop using
+// it within this slice if a window of batches rejects fewer than half the rows.
+class MappedScreenTrial {
+public:
+  bool observe(size_t count, uint32_t survivors) {
+    tested_ += count;
+    rejected_ += count - std::bitset<32>(survivors).count();
+    if (tested_ < 128)
+      return true;
+    const bool worthwhile = rejected_ * 2 >= tested_;
+    tested_ = rejected_ = 0;
+    return worthwhile;
+  }
+
+private:
+  size_t tested_ = 0;
+  size_t rejected_ = 0;
+};
+
 // Statements execute one at a time, so a fixed pool of idle workers is enough:
 // a query publishes one body and waits for the participating workers.
 class WorkerPool {
@@ -280,6 +300,8 @@ std::vector<float> vector_literal(const Literal &l, uint32_t dim) {
     throw Error("TYPE", "VECTOR requires a quoted array");
   const auto &s = l.text;
   size_t p = 0;
+  const bool nearest = std::fegetround() == FE_TONEAREST;
+  constexpr double reciprocal[] = {1., .1, .01, .001, .0001, .00001, .000001};
   auto space = [&] {
     while (p < s.size() &&
            (s[p] == ' ' || s[p] == '\t' || s[p] == '\r' || s[p] == '\n'))
@@ -295,21 +317,26 @@ std::vector<float> vector_literal(const Literal &l, uint32_t dim) {
       size_t start = p;
       if (p < s.size() && (s[p] == '-' || s[p] == '+'))
         ++p;
-      size_t digits = 0;
+      size_t digits = 0, fractional_digits = 0;
+      uint32_t mantissa = 0;
       while (p < s.size() && s[p] >= '0' && s[p] <= '9') {
+        mantissa = mantissa * 10 + unsigned(s[p] - '0');
         ++p;
         ++digits;
       }
       if (p < s.size() && s[p] == '.') {
         ++p;
         while (p < s.size() && s[p] >= '0' && s[p] <= '9') {
+          mantissa = mantissa * 10 + unsigned(s[p] - '0');
           ++p;
           ++digits;
+          ++fractional_digits;
         }
       }
       if (!digits)
         throw Error("TYPE", "vector component must be a finite number");
-      if (p < s.size() && (s[p] == 'e' || s[p] == 'E')) {
+      const bool exponent = p < s.size() && (s[p] == 'e' || s[p] == 'E');
+      if (exponent) {
         ++p;
         if (p < s.size() && (s[p] == '-' || s[p] == '+'))
           ++p;
@@ -319,22 +346,33 @@ std::vector<float> vector_literal(const Literal &l, uint32_t dim) {
         if (p == e)
           throw Error("TYPE", "invalid exponent");
       }
-      const char *begin = s.data() + start;
-      const char *last = s.data() + p;
-      // Floating from_chars does not accept a leading '+'. The unchanged
-      // scanner above has already validated the complete decimal token.
-      if (*begin == '+')
-        ++begin;
-      float f = 0;
-      const auto parsed = std::from_chars(begin, last, f, std::chars_format::general);
-      if (parsed.ec != std::errc() || parsed.ptr != last) {
-        // Preserve strtof's existing acceptance and rounding of finite
-        // underflows (including signed zero), and its overflow diagnostics.
-        auto token = s.substr(start, p - start);
-        char *end = nullptr;
-        f = std::strtof(token.c_str(), &end);
-        if (end != token.c_str() + token.size())
-          throw Error("TYPE", "vector component overflows finite float32");
+      float f;
+      if (nearest && !exponent && digits <= 7 && fractional_digits <= 6) {
+        // For n / 10^k in this range, dyadic values have at most 24
+        // significant bits. Non-dyadic values are separated from any FP32
+        // midpoint by a relative gap of at least 1 / (5^6 * 2^25), well
+        // above binary64 reciprocal multiplication error (< 2^-51).
+        // The unsigned accumulation may wrap only on the slow path.
+        const double value = double(mantissa) * reciprocal[fractional_digits];
+        f = static_cast<float>(s[start] == '-' ? -value : value);
+      } else {
+        f = 0;
+        const char *begin = s.data() + start;
+        const char *last = s.data() + p;
+        // Floating from_chars does not accept a leading '+'. The unchanged
+        // scanner above has already validated the complete decimal token.
+        if (*begin == '+')
+          ++begin;
+        const auto parsed = std::from_chars(begin, last, f, std::chars_format::general);
+        if (parsed.ec != std::errc() || parsed.ptr != last) {
+          // Preserve strtof's existing acceptance and rounding of finite
+          // underflows (including signed zero), and its overflow diagnostics.
+          auto token = s.substr(start, p - start);
+          char *end = nullptr;
+          f = std::strtof(token.c_str(), &end);
+          if (end != token.c_str() + token.size())
+            throw Error("TYPE", "vector component overflows finite float32");
+        }
       }
       if (!std::isfinite(f))
         throw Error("TYPE", "vector component overflows finite float32");
@@ -937,9 +975,8 @@ Result Engine::execute_statement(const Statement &st) {
       auto quantized = cache_->exact_view ?
           exact::prepare_quantized_query(*cache_->exact_view, projection.query, screen_capable) :
           exact::QuantizedQuery{};
-      // Unsupported query codes disable screening for this request only.
-      // The mapped journal still provides all original FP32 values for exact
-      // refinement, and remains reusable by subsequent supported queries.
+      // Keep the mapped journal reusable when the query cannot be quantized.
+      // Screen its original FP32 values when this request can use a lower bound.
       const bool require_owned = false;
       if (cache_->exact_view) {
         auto &view = *cache_->exact_view;
@@ -947,9 +984,9 @@ Result Engine::execute_statement(const Statement &st) {
         // Both screens reject records whose approximation cannot beat the worst
         // kept distance, which assumes smaller is better. A descending key keeps
         // the farthest records, so it scans without screening.
-        const bool screen = screen_capable &&
-              (!cache_->exact_view->mapped || exact::quantized_codes_available(quantized));
+        const bool screen = screen_capable;
         const bool quantized_available = exact::quantized_codes_available(quantized);
+        const bool mapped_fp32 = view.mapped && !quantized_available;
         if (quantized.biased_codes) ++exact::biased_screen_runs();
         // A cutoff from a full local heap is witnessed by K distinct eligible
         // rows. It can only eliminate rows outside the global top K. Reads
@@ -997,22 +1034,30 @@ Result Engine::execute_statement(const Statement &st) {
           };
           constexpr size_t picked_flush = 8;
           double screened_worst = -1, screen_threshold = 0;
+          bool screen_enabled = screen;
+          MappedScreenTrial mapped_screen_trial;
           size_t i = begin;
           for (; i + 8 <= end;) {
             size_t batch_count = 8;
-            if (screen && heap.size() == *st.limit) {
+            if (screen_enabled && heap.size() == *st.limit) {
               if (i + 32 <= end) batch_count = 32;
               const double worst = heap.top().distance;
               const bool updated = worst != screened_worst;
               if (updated) {
                 screen_threshold = quantized_available
                     ? exact::quantized_threshold(worst, view.quantized_step,
-                                                  quantized.root_dim_upper)
+                                                  quantized.error_upper)
                     : exact::fp32_screen_threshold(worst, view.dim);
                 screened_worst = worst;
               }
+              const uint32_t all =
+                  batch_count == 32 ? uint32_t(0xffffffffu) : uint32_t(0xffu);
               uint32_t survivors = 0;
-              if (quantized_available) {
+              // No finite FP32 sum can exceed this cutoff.
+              if (!quantized_available &&
+                  screen_threshold >= std::numeric_limits<float>::max()) {
+                survivors = all;
+              } else if (quantized_available) {
                 const double cutoff = effective_cutoff(screen_threshold, updated);
                 if (quantized.biased_codes) {
                   for (size_t offset = 0; offset < batch_count; offset += 8) {
@@ -1051,9 +1096,9 @@ Result Engine::execute_statement(const Statement &st) {
                   if (!exact::fp32_screen_reject(approximate[lane],
                                                  screen_threshold))
                     survivors |= uint32_t(1) << lane;
+                if (mapped_fp32)
+                  screen_enabled = mapped_screen_trial.observe(batch_count, survivors);
               }
-              const uint32_t all =
-                  batch_count == 32 ? uint32_t(0xffffffffu) : uint32_t(0xffu);
               if (survivors != all) {
                 for (size_t lane = 0; lane < batch_count; ++lane)
                   if (survivors & (uint32_t(1) << lane)) picked[picked_count++] = i + lane;
@@ -1122,6 +1167,8 @@ Result Engine::execute_statement(const Statement &st) {
           };
           constexpr size_t picked_flush = 8;
           double screened_worst = -1, screen_threshold = 0;
+          bool screen_enabled = screen;
+          MappedScreenTrial mapped_screen_trial;
           auto refine = [&](const size_t *batch, size_t lanes) {
             size_t offset = 0;
             for (; offset + 8 <= lanes; offset += 8) {
@@ -1143,18 +1190,21 @@ Result Engine::execute_statement(const Statement &st) {
           for (; at + 32 <= count; at += 32) {
             size_t batch[32];
             for (size_t lane = 0; lane < 32; ++lane) batch[lane] = rows[at + lane];
-            if (screen && heap.size() == *st.limit) {
+            if (screen_enabled && heap.size() == *st.limit) {
               const double worst = heap.top().distance;
               const bool updated = worst != screened_worst;
               if (updated) {
                 screen_threshold = quantized_available
                     ? exact::quantized_threshold(worst, view.quantized_step,
-                                                  quantized.root_dim_upper)
+                                                  quantized.error_upper)
                     : exact::fp32_screen_threshold(worst, view.dim);
                 screened_worst = worst;
               }
               uint32_t survivors = 0;
-              if (quantized_available) {
+              if (!quantized_available &&
+                  screen_threshold >= std::numeric_limits<float>::max()) {
+                survivors = uint32_t(0xffffffffu);
+              } else if (quantized_available) {
                 const double cutoff = effective_cutoff(screen_threshold, updated);
                 if (quantized.biased_codes) {
                   for (size_t offset = 0; offset < 32; offset += 8) {
@@ -1189,6 +1239,8 @@ Result Engine::execute_statement(const Statement &st) {
                   if (!exact::fp32_screen_reject(approximate[lane],
                                                  screen_threshold))
                     survivors |= uint32_t(1) << lane;
+                if (mapped_fp32)
+                  screen_enabled = mapped_screen_trial.observe(32, survivors);
               }
               if (survivors != uint32_t(0xffffffffu)) {
                 for (size_t lane = 0; lane < 32; ++lane)
@@ -1245,6 +1297,18 @@ Result Engine::execute_statement(const Statement &st) {
             }
           ++exact::parallel_runs();
         };
+        // With a shared vector, all distances tie. Store scans and posting
+        // lists visit increasing row keys, so only the first K eligible
+        // rows can win in either sort direction.
+        auto collect_shared = [&](const uint32_t *rows, size_t count) {
+          if (!count) return;
+          const double distance = view.distance(rows ? rows[0] : 0,
+                                                projection.query);
+          for (size_t i = 0; i < std::min(count, limit); ++i) {
+            const size_t row = rows ? rows[i] : i;
+            consider(nearest, view.keys[row], distance, row);
+          }
+        };
         // What the winners allocate is the text they actually carry, not the
         // declared VARCHAR width that had to enter this path to be measured.
         size_t actual_bound = 0;
@@ -1262,10 +1326,13 @@ Result Engine::execute_statement(const Statement &st) {
           winner_view = nullptr;
           scan_rows(original_visit);
         } else if (fs.empty()) {
-          run_slices(static_cast<size_t>(view.count),
-                     [&](size_t begin, size_t end, Heap &heap) {
-                       scan_contiguous(begin, end, heap);
-                     });
+          if (view.shared_vector)
+            collect_shared(nullptr, view.count);
+          else
+            run_slices(static_cast<size_t>(view.count),
+                       [&](size_t begin, size_t end, Heap &heap) {
+                         scan_contiguous(begin, end, heap);
+                       });
         } else {
           auto eligible = [&](size_t i, const Filter *satisfied) {
             for (const auto &f : fs) {
@@ -1312,9 +1379,12 @@ Result Engine::execute_statement(const Statement &st) {
             rows = hits.data();
             row_count = hits.size();
           }
-          run_slices(row_count, [&](size_t begin, size_t end, Heap &heap) {
-            scan_list(rows + begin, end - begin, heap);
-          });
+          if (view.shared_vector)
+            collect_shared(rows, row_count);
+          else
+            run_slices(row_count, [&](size_t begin, size_t end, Heap &heap) {
+              scan_list(rows + begin, end - begin, heap);
+            });
         }
       } else if (cache_->exact_bypass) {
         // Remember this view's budget bypass until existing invalidation clears it.
@@ -1370,11 +1440,12 @@ Result Engine::execute_statement(const Statement &st) {
               });
               if (count != plan.count)
                 throw Error("CORRUPTION", "exact cache row count changed");
-              view->prepare_quantized_codes();
+              view->prepare_shared_vector();
+              if (!view->shared_vector) view->prepare_quantized_codes();
               return view;
             };
             auto view = build_view(mapping);
-            if (mapping.data && !view->quantized_codes) {
+            if (mapping.data && !view->shared_vector && !view->quantized_codes) {
               view.reset();
               mapping = {};
               view = build_view(mapping);
