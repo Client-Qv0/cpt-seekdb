@@ -12,6 +12,10 @@
 #include <string_view>
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
 #include <immintrin.h>
+#if defined(__x86_64__) && (defined(_AVXVNNIINTRIN_H_INCLUDED) || defined(__AVXVNNIINTRIN_H))
+#include <cpuid.h>
+#define MVDB_HAVE_AVXVNNI 1
+#endif
 #endif
 
 namespace mvdb::exact {
@@ -34,6 +38,21 @@ inline size_t budget() {
 inline bool available() {
 #if (defined(__x86_64__) || defined(__i386__)) && defined(__GNUC__)
   return __builtin_cpu_supports("avx2");
+#else
+  return false;
+#endif
+}
+inline bool avxvnni_available() {
+#ifdef MVDB_HAVE_AVXVNNI
+  static const bool supported=[] {
+    // The AVX2 check includes operating-system support for YMM registers.
+    // CPUID leaf 7.1 distinguishes AVX-VNNI from the AVX-512 extension.
+    if(!available()) return false;
+    unsigned eax,ebx,ecx,edx;
+    if(!__get_cpuid_count(7,0,&eax,&ebx,&ecx,&edx) || eax<1) return false;
+    return __get_cpuid_count(7,1,&eax,&ebx,&ecx,&edx) && (eax&(1u<<4))!=0;
+  }();
+  return supported;
 #else
   return false;
 #endif
@@ -410,6 +429,7 @@ struct QuantizedQuery {
   int32_t sum_codes=0;
   int32_t squared_norm=0;
   double error_upper=0;
+  bool use_avxvnni=false;
 };
 inline QuantizedQuery prepare_quantized_query(const Compact& cache,
                                              const std::vector<float>& query,
@@ -435,6 +455,7 @@ inline QuantizedQuery prepare_quantized_query(const Compact& cache,
       squared_error+=error*error;
     }
     if(prepared.biased_codes) {
+      prepared.use_avxvnni=cache.dim>=32 && avxvnni_available();
       prepared.error_upper=quantized_error_upper(cache.quantized_row_error_upper,
                                                  squared_error,cache.dim);
       return prepared;
@@ -755,30 +776,10 @@ inline void quantized_squared_distance4_avx2(const int8_t* r0,const int8_t* r1,
   }
 }
 
-// Exact unsigned-by-signed biased codes. Callers enable this path only when all
-// row/query codes fit [-64,64], so each pair product fits int16 and maddubs
-// saturation cannot occur. One query load feeds eight independent accumulators.
-__attribute__((target("avx2,no-fma"),noinline))
-inline void quantized_biased_squared_distance8_avx2(
-    const int8_t* const rows[8],const uint32_t* row_norms,
-    const QuantizedQuery& query,size_t dim,uint32_t* out) {
-  __m256i sums[8]={_mm256_setzero_si256(),_mm256_setzero_si256(),
-                   _mm256_setzero_si256(),_mm256_setzero_si256(),
-                   _mm256_setzero_si256(),_mm256_setzero_si256(),
-                   _mm256_setzero_si256(),_mm256_setzero_si256()};
-  const __m256i ones=_mm256_set1_epi16(1);
-  size_t d=0;
-  for(;d+32<=dim;d+=32) {
-    const __m256i q=_mm256_loadu_si256(
-        reinterpret_cast<const __m256i*>(query.biased_codes.get()+d));
-    for(size_t lane=0;lane<8;++lane) {
-      const __m256i bytes=_mm256_loadu_si256(
-          reinterpret_cast<const __m256i*>(rows[lane]+d));
-      const __m256i pairs=_mm256_maddubs_epi16(bytes,q);
-      sums[lane]=_mm256_add_epi32(
-          sums[lane],_mm256_madd_epi16(pairs,ones));
-    }
-  }
+__attribute__((target("avx2,no-fma"),always_inline))
+inline void finish_quantized_biased_distances8(
+    const __m256i (&sums)[8],const int8_t* const rows[8],const uint32_t* row_norms,
+    const QuantizedQuery& query,size_t d,size_t dim,uint32_t* out) {
   if(d==dim) {
     // Pair different rows to sum four dots at a time. HADD stays within
     // each 128-bit half; add the halves to get the whole dot for each row.
@@ -812,6 +813,59 @@ inline void quantized_biased_squared_distance8_avx2(
     out[lane]=static_cast<uint32_t>(squared);
   }
 }
+
+// Exact unsigned-by-signed biased codes. Callers enable this path only when all
+// row/query codes fit [-64,64], so each pair product fits int16 and maddubs
+// saturation cannot occur. One query load feeds eight independent accumulators.
+__attribute__((target("avx2,no-fma"),noinline))
+inline void quantized_biased_squared_distance8_avx2(
+    const int8_t* const rows[8],const uint32_t* row_norms,
+    const QuantizedQuery& query,size_t dim,uint32_t* out) {
+  __m256i sums[8]={_mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256()};
+  const __m256i ones=_mm256_set1_epi16(1);
+  size_t d=0;
+  for(;d+32<=dim;d+=32) {
+    const __m256i q=_mm256_loadu_si256(
+        reinterpret_cast<const __m256i*>(query.biased_codes.get()+d));
+    for(size_t lane=0;lane<8;++lane) {
+      const __m256i bytes=_mm256_loadu_si256(
+          reinterpret_cast<const __m256i*>(rows[lane]+d));
+      const __m256i pairs=_mm256_maddubs_epi16(bytes,q);
+      sums[lane]=_mm256_add_epi32(
+          sums[lane],_mm256_madd_epi16(pairs,ones));
+    }
+  }
+  finish_quantized_biased_distances8(sums,rows,row_norms,query,d,dim,out);
+}
+
+#ifdef MVDB_HAVE_AVXVNNI
+// VEX VPDPBUSD accumulates four unsigned-by-signed products per 32-bit lane.
+// The AVX2 path builds the same partial sum in three steps. The largest
+// possible whole dot at 8192 dimensions is 8192 * 128 * 64, which fits int32_t.
+__attribute__((target("avx2,avxvnni,no-fma"),noinline))
+inline void quantized_biased_squared_distance8_avxvnni(
+    const int8_t* const rows[8],const uint32_t* row_norms,
+    const QuantizedQuery& query,size_t dim,uint32_t* out) {
+  __m256i sums[8]={_mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256(),
+                   _mm256_setzero_si256(),_mm256_setzero_si256()};
+  size_t d=0;
+  for(;d+32<=dim;d+=32) {
+    const __m256i q=_mm256_loadu_si256(
+        reinterpret_cast<const __m256i*>(query.biased_codes.get()+d));
+    for(size_t lane=0;lane<8;++lane) {
+      const __m256i bytes=_mm256_loadu_si256(
+          reinterpret_cast<const __m256i*>(rows[lane]+d));
+      sums[lane]=_mm256_dpbusd_avx_epi32(sums[lane],bytes,q);
+    }
+  }
+  finish_quantized_biased_distances8(sums,rows,row_norms,query,d,dim,out);
+}
+#endif
 
 #endif
 inline uint32_t quantized_squared_distance(const Compact& cache,size_t row,
@@ -908,6 +962,12 @@ inline void quantized_biased_squared_distance8(
     pointers[lane]=cache.quantized_codes.get()+rows[lane]*cache.dim;
     norms[lane]=cache.quantized_row_norms[rows[lane]];
   }
+#ifdef MVDB_HAVE_AVXVNNI
+  if(query.use_avxvnni) {
+    quantized_biased_squared_distance8_avxvnni(pointers,norms,query,cache.dim,out);
+    return;
+  }
+#endif
   quantized_biased_squared_distance8_avx2(
       pointers,norms,query,cache.dim,out);
 #else
@@ -991,3 +1051,5 @@ inline void squared_distances32_fp32(
 #endif
 }
 } // namespace mvdb::exact
+
+#undef MVDB_HAVE_AVXVNNI

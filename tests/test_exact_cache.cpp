@@ -357,10 +357,15 @@ void test_biased_screen_layout_and_kernel() {
   auto prepared=exact::prepare_quantized_query(cache,query,true);
   require(bool(prepared.biased_codes) && !prepared.codes);
   auto check_distances=[](const exact::Compact &cache,
-                          const exact::QuantizedQuery &prepared,
+                          exact::QuantizedQuery &prepared,
                           const size_t *rows) {
-    uint32_t actual[8];
+    const bool uses_avxvnni=prepared.use_avxvnni;
+    require(uses_avxvnni==(cache.dim>=32 && exact::avxvnni_available()));
+    uint32_t actual[8],fallback[8];
     exact::quantized_biased_squared_distance8(cache,rows,prepared,actual);
+    prepared.use_avxvnni=false;
+    exact::quantized_biased_squared_distance8(cache,rows,prepared,fallback);
+    prepared.use_avxvnni=uses_avxvnni;
     for(size_t lane=0;lane<8;++lane) {
       uint32_t expected=0;
       for(size_t d=0;d<cache.dim;++d) {
@@ -368,13 +373,13 @@ void test_biased_screen_layout_and_kernel() {
         const int delta=row_code-int(prepared.biased_codes[d]);
         expected+=uint32_t(delta*delta);
       }
-      require(actual[lane]==expected);
+      require(actual[lane]==expected && fallback[lane]==expected);
     }
   };
   const size_t contiguous[8]={0,1,2,3,4,5,6,7};
   check_distances(cache,prepared,contiguous);
   const size_t scattered[8]={9,1,6,13,5,0,15,12};
-  for(size_t dim : {size_t(32),size_t(128),size_t(129)}) {
+  for(size_t dim : {size_t(32),size_t(128),size_t(129),size_t(8192)}) {
     auto other=make_cache(1.0f,dim);
     std::vector<float> input(dim);
     for(size_t d=0;d<dim;++d) input[d]=query[d%query.size()];
