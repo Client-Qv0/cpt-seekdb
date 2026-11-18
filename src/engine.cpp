@@ -1123,30 +1123,9 @@ Result Engine::execute_statement(const Statement &st) {
         // Both screens reject records whose approximation cannot beat the worst
         // kept distance, which assumes smaller is better. A descending key keeps
         // the farthest records, so it scans without screening.
+        const bool screen = screen_capable;
         const bool quantized_available = exact::quantized_codes_available(quantized);
         const bool mapped_fp32 = view.mapped && !quantized_available;
-        bool screen = screen_capable;
-        if(screen && view.mapped && !quantized_available) {
-          // An overflowing FP32 approximation cannot reject anything. Avoid
-          // that extra pass for enormous values; exact FP64 refinement remains.
-          const double component_bound=std::sqrt(
-              double(std::numeric_limits<float>::max())/(4*view.dim));
-          const double row_bound=view.quantized_max_abs;
-          double query_squared=0;
-          if(row_bound==0 || row_bound>component_bound)screen=false;
-          else for(float value:projection.query) {
-            const double component=double(value);
-            if(std::abs(component)>component_bound-row_bound) {
-              screen=false;break;
-            }
-            query_squared+=component*component;
-          }
-          // If the query dwarfs a bound on every row norm, the existing 1%
-          // threshold cannot meaningfully prune. Keep the original exact pass.
-          if(screen && std::sqrt(query_squared)>
-              512*row_bound*std::sqrt(double(view.dim))*1.000001)
-            screen=false;
-        }
         if (quantized.biased_codes) ++exact::biased_screen_runs();
         // A cutoff from a full local heap is witnessed by K distinct eligible
         // rows. It can only eliminate rows outside the global top K. Reads
@@ -1165,7 +1144,6 @@ Result Engine::execute_statement(const Statement &st) {
           return double(std::min(code, previous));
         };
         auto scan_contiguous = [&](size_t begin, size_t end, Heap &heap) {
-          bool use_screen=screen && (!mapped_fp32 || end-begin>=512);
           // Survivors are scattered over batches, so refining them one by one
           // leaves the vector kernels unused. Collect them first and refine in
           // blocks of eight, four and a scalar tail, keeping scan order.
@@ -1200,7 +1178,7 @@ Result Engine::execute_statement(const Statement &st) {
           size_t i = begin;
           for (; i + 8 <= end;) {
             size_t batch_count = 8;
-            if (use_screen && screen_enabled && heap.size() == *st.limit) {
+            if (screen_enabled && heap.size() == *st.limit) {
               if (i + 32 <= end) batch_count = 32;
               const double worst = heap.top().distance;
               const bool updated = worst != screened_worst;
@@ -1261,10 +1239,6 @@ Result Engine::execute_statement(const Statement &st) {
                 if (mapped_fp32)
                   screen_enabled = mapped_screen_trial.observe(batch_count, survivors);
               }
-              // A flat distance distribution can make the conservative bound
-              // useless. Only this slice stops sampling; other workers' state
-              // is never modified, and exact refinement remains unchanged.
-              if(mapped_fp32 && survivors==all)use_screen=false;
               if (survivors != all) {
                 for (size_t lane = 0; lane < batch_count; ++lane)
                   if (survivors & (uint32_t(1) << lane)) picked[picked_count++] = i + lane;
@@ -1304,7 +1278,6 @@ Result Engine::execute_statement(const Statement &st) {
         // array stays uint32 and only the active batch is widened.
         auto scan_list = [&](const uint32_t *rows, size_t count, Heap &heap) {
           if (!count) return;
-          bool use_screen=screen && (!mapped_fp32 || count>=512);
           // Survivors are scattered over batches, so refining them one by one
           // leaves the vector kernels unused. Collect them first and refine in
           // blocks of eight, four and a scalar tail, keeping scan order.
@@ -1357,7 +1330,7 @@ Result Engine::execute_statement(const Statement &st) {
           for (; at + 32 <= count; at += 32) {
             size_t batch[32];
             for (size_t lane = 0; lane < 32; ++lane) batch[lane] = rows[at + lane];
-            if (use_screen && screen_enabled && heap.size() == *st.limit) {
+            if (screen_enabled && heap.size() == *st.limit) {
               const double worst = heap.top().distance;
               const bool updated = worst != screened_worst;
               if (updated) {
@@ -1409,7 +1382,6 @@ Result Engine::execute_statement(const Statement &st) {
                 if (mapped_fp32)
                   screen_enabled = mapped_screen_trial.observe(32, survivors);
               }
-              if(mapped_fp32 && survivors==uint32_t(0xffffffffu))use_screen=false;
               if (survivors != uint32_t(0xffffffffu)) {
                 for (size_t lane = 0; lane < 32; ++lane)
                   if (survivors & (uint32_t(1) << lane))

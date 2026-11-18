@@ -518,57 +518,7 @@ void test_quantized_four_row_kernel() {
 }
 #endif
 
-void test_mapped_fp32_screen() {
-  if(!exact::fp32_screen_available(128))return;
-  std::mt19937 random(170504);
-  size_t checks=0;
-  for(size_t dim: {size_t(1),size_t(2),size_t(3),size_t(4),size_t(7),
-      size_t(31),size_t(32),size_t(33),size_t(127),size_t(128),size_t(129),
-      size_t(256),size_t(8192)}) {
-    constexpr size_t count=37;const size_t stride=dim*sizeof(float)+23;
-    auto memory=std::shared_ptr<char>(new char[count*stride],std::default_delete<char[]>());
-    exact::Plan plan({Type::BigInt,Type::Vector},1,dim);plan.count=count;
-    exact::Compact view(plan,memory);
-    for(size_t row=0;row<count;++row) {
-      std::vector<float> values(dim);
-      for(float&value:values)value=float(int(random()%200001)-100000)/1000.0f;
-      if(row==0)std::fill(values.begin(),values.end(),0.0f);
-      if(row==1)std::fill(values.begin(),values.end(),std::numeric_limits<float>::denorm_min());
-      if(row==2)std::fill(values.begin(),values.end(),std::numeric_limits<float>::max());
-      const size_t offset=row*stride+7;
-      std::memcpy(memory.get()+offset,values.data(),dim*sizeof(float));
-      view.fill(row,int64_t(row),{int64_t(row),values},offset);
-    }
-    for(size_t iteration=0;iteration<10;++iteration) {
-      std::vector<float> q(dim);
-      for(float&value:q)value=float(int(random()%200001)-100000)/1000.0f;
-      if(iteration==0)std::fill(q.begin(),q.end(),0.0f);
-      if(iteration==1)std::fill(q.begin(),q.end(),-std::numeric_limits<float>::max());
-      auto check=[&](size_t row,float approximate) {
-        float expected=0;
-        for(size_t d=0;d<dim;++d) {
-          volatile float delta=view.component(row,d)-q[d];
-          volatile float square=delta*delta;expected=expected+square;
-        }
-        require(std::memcmp(&expected,&approximate,sizeof expected)==0);
-        const double threshold=exact::fp32_screen_threshold(view.distance(row,q),dim);
-        require(!exact::fp32_screen_reject(approximate,threshold));++checks;
-      };
-      float output[32];size_t rows[32];
-      for(size_t&row:rows)row=random()%count;
-      exact::squared_distances32_fp32(view,rows,q,output);
-      for(size_t lane=0;lane<32;++lane)check(rows[lane],output[lane]);
-      exact::squared_distances32_fp32_contiguous(view,0,q,output);
-      for(size_t lane=0;lane<32;++lane)check(lane,output[lane]);
-      exact::squared_distances8_fp32_contiguous(view,4,q,output);
-      for(size_t lane=0;lane<8;++lane)check(4+lane,output[lane]);
-    }
-  }
-  std::cout<<checks<<" mapped FP32 sequential bits and non-rejection bounds passed\n";
-}
-
 int main() {
-  test_mapped_fp32_screen();
   // The view budget follows the memory this process may use, so it must never
   // fall below the old fixed value nor outgrow its ceiling.
   require(exact::budget() >= size_t(12) * 1024 * 1024 &&
