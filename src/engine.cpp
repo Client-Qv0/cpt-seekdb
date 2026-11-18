@@ -1199,19 +1199,18 @@ Result Engine::execute_statement(const Statement &st) {
               } else if (quantized_available) {
                 const double cutoff = effective_cutoff(screen_threshold, updated);
                 if (quantized.biased_codes) {
-                  uint32_t approximate[32];
-                  if (batch_count == 32) {
-                    exact::quantized_biased_distances32_contiguous(
-                        view, i, quantized, approximate);
-                  } else {
-                    const size_t rows8[8] = {i, i + 1, i + 2, i + 3,
-                                             i + 4, i + 5, i + 6, i + 7};
+                  for (size_t offset = 0; offset < batch_count; offset += 8) {
+                    uint32_t approximate[8];
+                    const size_t rows8[8] = {
+                        i + offset, i + offset + 1, i + offset + 2,
+                        i + offset + 3, i + offset + 4, i + offset + 5,
+                        i + offset + 6, i + offset + 7};
                     exact::quantized_biased_squared_distance8(
                         view, rows8, quantized, approximate);
+                    for (size_t lane = 0; lane < 8; ++lane)
+                      if (!(double(approximate[lane]) > cutoff))
+                        survivors |= uint32_t(1) << (offset + lane);
                   }
-                  for (size_t lane = 0; lane < batch_count; ++lane)
-                    if (!(double(approximate[lane]) > cutoff))
-                      survivors |= uint32_t(1) << lane;
                 } else {
                   for (size_t offset = 0; offset < batch_count; offset += 4) {
                     uint32_t approximate[4];
